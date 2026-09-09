@@ -1,0 +1,118 @@
+:host {
+  --ca-base: #0f1d28;
+  --ca-surface: #172936;
+  --ca-line: #2b4356;
+  --ca-ink: #eaf1f5;
+  --ca-muted: #8fa9b9;
+  --ca-signal: #ffb020;
+}
+
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.inicio-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, #16303f 100%);
+  --color: var(--ca-ink);
+}
+
+.inicio-shell {
+  min-height: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.sesion {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  ion-icon {
+    font-size: 2.6rem;
+    color: var(--ca-signal);
+  }
+}
+
+.sesion__saludo {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.sesion__email {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  word-break: break-all;
+  color: var(--ca-ink);
+}
+
+.estado__titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.estado__texto {
+  margin: 0 0 1.25rem;
+  max-width: 46ch;
+  font-size: 0.94rem;
+  line-height: 1.55;
+  color: var(--ca-muted);
+}
+
+.datos {
+  margin: 0;
+  padding: 0.25rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.datos__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  dt {
+    font-size: 0.85rem;
+    color: var(--ca-muted);
+    flex-shrink: 0;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.88rem;
+    text-align: right;
+    word-break: break-all;
+    color: var(--ca-ink);
+  }
+
+  ion-icon {
+    vertical-align: -2px;
+    margin-right: 0.2rem;
+    color: var(--ca-signal);
+  }
+}
+
+.accion-salir {
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+  --border-radius: 10px;
+  margin-top: auto;
+  text-transform: none;
+  font-weight: 600;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}

@@ -1,0 +1,37 @@
+rules_version = '2';
+
+// CA-79 : reglas de seguridad iniciales de Firestore para Ciudad Alerta.
+// Punto de partida del Sprint 1: solo la colección de usuarios.
+// Se irán ampliando en los siguientes sprints (reportes, confirmaciones, etc.)
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cada persona solo puede leer y escribir su propio documento.
+    match /usuarios/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+
+      // Al crearse, el nivel y los contadores parten siempre en 0:
+      // así nadie puede darse reputación a sí mismo desde la app.
+      allow create: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.nivel == 0
+                    && request.resource.data.reportes == 0
+                    && request.resource.data.confirmaciones == 0;
+
+      // El usuario puede editar su nombre, pero no su reputación.
+      allow update: if request.auth != null
+                    && request.auth.uid == uid
+                    && request.resource.data.nivel == resource.data.nivel
+                    && request.resource.data.reportes == resource.data.reportes
+                    && request.resource.data.confirmaciones == resource.data.confirmaciones;
+
+      allow delete: if false;
+    }
+
+    // Todo lo que no esté declarado arriba queda bloqueado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

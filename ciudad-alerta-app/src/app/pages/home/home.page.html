@@ -1,0 +1,66 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Ciudad Alerta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="inicio-content" [fullscreen]="true">
+  <div class="inicio-shell">
+    @if (usuario(); as user) {
+      <section class="sesion">
+        <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+        <div>
+          <p class="sesion__saludo">Sesión iniciada como</p>
+          <p class="sesion__email">{{ user.email }}</p>
+        </div>
+      </section>
+
+      <section class="estado">
+        <h2 class="estado__titulo">Tu cuenta está lista</h2>
+        <p class="estado__texto">
+          El acceso, la recuperación de contraseña y la protección de rutas privadas ya
+          funcionan. En el próximo sprint se habilita el reporte de incidencias con foto y
+          ubicación.
+        </p>
+
+        <dl class="datos">
+          <div class="datos__fila">
+            <dt>Identificador</dt>
+            <dd>{{ user.uid }}</dd>
+          </div>
+          <div class="datos__fila">
+            <dt>Correo verificado</dt>
+            <dd>{{ user.emailVerified ? 'Sí' : 'Pendiente' }}</dd>
+          </div>
+          @if (!cargandoPerfil() && perfil(); as datos) {
+            <div class="datos__fila">
+              <dt>Nombre</dt>
+              <dd>{{ datos.displayName }}</dd>
+            </div>
+            <div class="datos__fila">
+              <dt>Nivel de confianza</dt>
+              <dd>
+                <ion-icon name="ribbon-outline" aria-hidden="true"></ion-icon>
+                {{ datos.trustLevel }}
+              </dd>
+            </div>
+            <div class="datos__fila">
+              <dt>Reportes validados</dt>
+              <dd>{{ datos.validatedReports }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+
+      <ion-button
+        class="accion-salir"
+        expand="block"
+        fill="outline"
+        (click)="confirmarCierreSesion()"
+      >
+        <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+        Cerrar sesión
+      </ion-button>
+    }
+  </div>
+</ion-content>

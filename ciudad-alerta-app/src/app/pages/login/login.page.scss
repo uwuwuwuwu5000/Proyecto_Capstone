@@ -1,0 +1,147 @@
+:host {
+  /* Paleta de señalética urbana nocturna: base grafito-azulada + ámbar de alerta. */
+  --ca-base: #0f1d28;
+  --ca-surface: #172936;
+  --ca-line: #2b4356;
+  --ca-ink: #eaf1f5;
+  --ca-muted: #8fa9b9;
+  --ca-signal: #ffb020;
+  --ca-danger: #ff6b5e;
+}
+
+.auth-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, #16303f 100%);
+  --color: var(--ca-ink);
+}
+
+.auth-shell {
+  min-height: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.marca__pin {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50% 50% 50% 4px;
+  background: var(--ca-signal);
+  box-shadow: 0 0 0 6px rgba(255, 176, 32, 0.14);
+  margin-bottom: 0.75rem;
+}
+
+.marca__nombre {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ca-ink);
+}
+
+.marca__bajada {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.selector {
+  --background: rgba(255, 255, 255, 0.06);
+  --color: var(--ca-muted);
+  --color-checked: var(--ca-base);
+  --indicator-color: var(--ca-signal);
+  border-radius: 12px;
+}
+
+.aviso-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid var(--ca-danger);
+  background: rgba(255, 107, 94, 0.12);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--ca-ink);
+
+  ion-icon {
+    font-size: 1.15rem;
+    color: var(--ca-danger);
+    flex-shrink: 0;
+  }
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+ion-input {
+  --background: var(--ca-surface);
+  --color: var(--ca-ink);
+  --placeholder-color: var(--ca-muted);
+  --highlight-color-focused: var(--ca-signal);
+  --border-color: var(--ca-line);
+  --border-radius: 10px;
+  --padding-start: 14px;
+  --padding-end: 14px;
+}
+
+ion-note {
+  margin: -0.4rem 0 0.2rem 0.2rem;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.accion-principal {
+  --background: var(--ca-signal);
+  --background-activated: #e09a12;
+  --color: var(--ca-base);
+  --border-radius: 10px;
+  --box-shadow: none;
+  margin-top: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.accion-secundaria {
+  --color: var(--ca-muted);
+  text-transform: none;
+  margin: 0 auto;
+}
+
+.nota-privacidad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: auto 0 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+
+  ion-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}

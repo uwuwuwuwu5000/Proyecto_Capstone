@@ -1,0 +1,162 @@
+<ion-content class="auth-content" [fullscreen]="true">
+  <div class="auth-shell">
+    <header class="marca">
+      <span class="marca__pin" aria-hidden="true"></span>
+      <h1 class="marca__nombre">Ciudad Alerta</h1>
+      <p class="marca__bajada">Reporta lo que ves en tu barrio y sigue en qué queda.</p>
+    </header>
+
+    <ion-segment
+      class="selector"
+      [value]="modo()"
+      (ionChange)="cambiarModo($event.detail.value)"
+    >
+      <ion-segment-button value="login">Iniciar sesión</ion-segment-button>
+      <ion-segment-button value="registro">Crear cuenta</ion-segment-button>
+    </ion-segment>
+
+    @if (errorMensaje(); as mensaje) {
+      <div class="aviso-error" role="alert">
+        <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon>
+        <span>{{ mensaje }}</span>
+      </div>
+    }
+
+    @if (modo() === 'login') {
+      <form class="formulario" [formGroup]="loginForm" (ngSubmit)="iniciarSesion()">
+        <ion-input
+          formControlName="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          label="Correo"
+          labelPlacement="floating"
+          fill="outline"
+          placeholder="tucorreo@ejemplo.cl"
+        ></ion-input>
+        @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+          <ion-note color="danger">
+            {{ loginForm.controls.email.hasError('required')
+              ? 'Escribe tu correo.'
+              : 'El formato del correo no es válido.' }}
+          </ion-note>
+        }
+
+        <ion-input
+          formControlName="password"
+          type="password"
+          autocomplete="current-password"
+          label="Contraseña"
+          labelPlacement="floating"
+          fill="outline"
+        >
+          <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+        </ion-input>
+        @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+          <ion-note color="danger">
+            {{ loginForm.controls.password.hasError('required')
+              ? 'Escribe tu contraseña.'
+              : 'La contraseña tiene al menos 6 caracteres.' }}
+          </ion-note>
+        }
+
+        <ion-button
+          class="accion-principal"
+          type="submit"
+          expand="block"
+          [disabled]="loginForm.invalid"
+        >
+          Entrar
+        </ion-button>
+
+        <ion-button
+          class="accion-secundaria"
+          type="button"
+          fill="clear"
+          size="small"
+          (click)="recuperarContrasena()"
+        >
+          ¿Olvidaste tu contraseña?
+        </ion-button>
+      </form>
+    } @else {
+      <form class="formulario" [formGroup]="registroForm" (ngSubmit)="registrar()">
+        <ion-input
+          formControlName="displayName"
+          type="text"
+          autocomplete="name"
+          label="Nombre para mostrar"
+          labelPlacement="floating"
+          fill="outline"
+          placeholder="Cómo te verán tus vecinos"
+        ></ion-input>
+        @if (registroForm.controls.displayName.touched && registroForm.controls.displayName.invalid) {
+          <ion-note color="danger">Usa al menos 3 caracteres.</ion-note>
+        }
+
+        <ion-input
+          formControlName="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          label="Correo"
+          labelPlacement="floating"
+          fill="outline"
+          placeholder="tucorreo@ejemplo.cl"
+        ></ion-input>
+        @if (registroForm.controls.email.touched && registroForm.controls.email.invalid) {
+          <ion-note color="danger">
+            {{ registroForm.controls.email.hasError('required')
+              ? 'Escribe tu correo.'
+              : 'El formato del correo no es válido.' }}
+          </ion-note>
+        }
+
+        <ion-input
+          formControlName="password"
+          type="password"
+          autocomplete="new-password"
+          label="Contraseña"
+          labelPlacement="floating"
+          fill="outline"
+          helperText="Mínimo 6 caracteres"
+        >
+          <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+        </ion-input>
+        @if (registroForm.controls.password.touched && registroForm.controls.password.invalid) {
+          <ion-note color="danger">La contraseña necesita al menos 6 caracteres.</ion-note>
+        }
+
+        <ion-input
+          formControlName="confirmPassword"
+          type="password"
+          autocomplete="new-password"
+          label="Repite la contraseña"
+          labelPlacement="floating"
+          fill="outline"
+        >
+          <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+        </ion-input>
+        @if (registroForm.controls.confirmPassword.touched && registroForm.hasError('noCoinciden')) {
+          <ion-note color="danger">Las contraseñas no coinciden.</ion-note>
+        }
+
+        <ion-button
+          class="accion-principal"
+          type="submit"
+          expand="block"
+          [disabled]="registroForm.invalid"
+        >
+          Crear cuenta
+        </ion-button>
+      </form>
+    }
+
+    <p class="nota-privacidad">
+      <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+      <ion-text>
+        Tu correo se usa solo para identificarte dentro de la plataforma y recuperar tu acceso.
+      </ion-text>
+    </p>
+  </div>
+</ion-content>
