@@ -1,0 +1,110 @@
+:host {
+  display: block;
+}
+
+.analizando {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.coincidencias {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(28, 169, 201, 0.35);
+  background: rgba(28, 169, 201, 0.08);
+}
+
+.coincidencias__encabezado {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+
+  ion-icon {
+    font-size: 1.3rem;
+    color: var(--ca-signal);
+    flex-shrink: 0;
+  }
+
+  h3 {
+    margin: 0 0 0.2rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--ca-ink);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--ca-muted);
+  }
+}
+
+.candidato {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+}
+
+.candidato__cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.candidato__estado {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ca-muted);
+}
+
+ion-badge {
+  --background: rgba(28, 169, 201, 0.18);
+  --color: var(--ca-signal);
+  font-variant-numeric: tabular-nums;
+}
+
+.candidato__descripcion {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ca-ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.candidato__motivos {
+  margin: 0 0 0.7rem;
+  padding-left: 1.1rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.candidato__confirmado {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ca-signal);
+}
+
+ion-button {
+  --border-color: var(--ca-line);
+  --color: var(--ca-ink);
+  --border-radius: 8px;
+  text-transform: none;
+  margin: 0;
+}

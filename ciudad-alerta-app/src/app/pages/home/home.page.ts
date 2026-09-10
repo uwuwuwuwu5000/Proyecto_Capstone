@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonButton,
@@ -12,7 +12,15 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { logOutOutline, personCircleOutline, ribbonOutline } from 'ionicons/icons';
+import {
+  addCircleOutline,
+  documentTextOutline,
+  logOutOutline,
+  mapOutline,
+  navigateOutline,
+  personCircleOutline,
+  ribbonOutline,
+} from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
 import { UserProfile } from '../../models/user-profile.model';
@@ -23,6 +31,7 @@ import { UserProfile } from '../../models/user-profile.model';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   imports: [
+    RouterLink,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -44,7 +53,15 @@ export class HomePage implements OnInit {
   readonly cargandoPerfil = signal(true);
 
   constructor() {
-    addIcons({ logOutOutline, personCircleOutline, ribbonOutline });
+    addIcons({
+      addCircleOutline,
+      documentTextOutline,
+      logOutOutline,
+      mapOutline,
+      navigateOutline,
+      personCircleOutline,
+      ribbonOutline,
+    });
   }
 
   async ngOnInit(): Promise<void> {

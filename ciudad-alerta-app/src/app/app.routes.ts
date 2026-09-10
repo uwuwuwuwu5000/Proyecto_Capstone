@@ -22,6 +22,39 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
   },
   {
+    // Formulario de creación de reportes.
+    path: 'report-new',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/report/report.page').then((m) => m.ReportPage),
+  },
+  {
+    // HU-25 · Mapa de incidencias del sector.
+    path: 'map',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/map/map.page').then((m) => m.MapPage),
+  },
+  {
+    // Reportes cercanos con radio seleccionable.
+    path: 'nearby',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/nearby/nearby.page').then((m) => m.NearbyPage),
+  },
+  {
+    // HU-27 · Historial del usuario.
+    path: 'my-reports',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/my-reports/my-reports.page').then((m) => m.MyReportsPage),
+  },
+  {
+    // HU-26 · Detalle. El parámetro llega al input `id` del componente.
+    path: 'report/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./pages/report-detail/report-detail.page').then((m) => m.ReportDetailPage),
+  },
+  {
     path: '**',
     redirectTo: 'home',
   },

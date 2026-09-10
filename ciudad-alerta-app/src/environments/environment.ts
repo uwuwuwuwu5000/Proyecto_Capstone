@@ -10,6 +10,14 @@
  */
 export const environment = {
   production: false,
+
+  /**
+   * Dónde se guardan las fotografías de los reportes.
+   *  'firestore'     → colección `reportPhotos`, funciona en el plan Spark.
+   *  'cloud-storage' → Firebase Storage, requiere plan Blaze desde feb-2026.
+   * Cambiar este valor es lo único necesario para migrar entre ambos.
+   */
+  photoStorage: 'firestore' as 'firestore' | 'cloud-storage',
   firebase: {
     apiKey: "AIzaSyD2wsLMB3n7MZ7FN2J5j52QlyOvvi7zkbA",
     authDomain: "ciudadalerta.firebaseapp.com",

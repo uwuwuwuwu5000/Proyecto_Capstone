@@ -1,5 +1,8 @@
 export const environment = {
   production: true,
+
+  photoStorage: 'firestore' as 'firestore' | 'cloud-storage',
+
   firebase: {
     apiKey: "AIzaSyD2wsLMB3n7MZ7FN2J5j52QlyOvvi7zkbA",
     authDomain: "ciudadalerta.firebaseapp.com",

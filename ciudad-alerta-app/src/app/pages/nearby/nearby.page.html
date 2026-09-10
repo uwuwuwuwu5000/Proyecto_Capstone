@@ -1,0 +1,83 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Cerca de mí</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="cercanos-content" [fullscreen]="true">
+  <div class="cercanos-shell">
+    <ion-segment
+      class="selector-radio"
+      [value]="radio()"
+      (ionChange)="cambiarRadio($event.detail.value)"
+    >
+      @for (metros of radios; track metros) {
+        <ion-segment-button [value]="metros">{{ etiquetaRadio(metros) }}</ion-segment-button>
+      }
+    </ion-segment>
+
+    <ion-select
+      label="Categoría"
+      labelPlacement="stacked"
+      fill="outline"
+      interface="action-sheet"
+      cancelText="Cancelar"
+      [value]="categoria()"
+      (ionChange)="cambiarCategoria($event.detail.value)"
+    >
+      <ion-select-option value="todas">Todas las categorías</ion-select-option>
+      @for (item of categorias; track item.id) {
+        <ion-select-option [value]="item.id">{{ item.label }}</ion-select-option>
+      }
+    </ion-select>
+
+    @if (centro(); as punto) {
+      <app-map-view
+        class="mapa-cercanos"
+        [latitude]="punto.lat"
+        [longitude]="punto.lng"
+        [markers]="marcadores()"
+        [radiusMeters]="radio()"
+        (markerSelected)="abrirDetalle($event)"
+      ></app-map-view>
+    } @else {
+      <button type="button" class="ubicar" (click)="ubicar()">
+        <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
+        Usar mi ubicación para buscar
+      </button>
+    }
+
+    @if (cargando()) {
+      <p class="estado">Buscando reportes en {{ etiquetaRadio(radio()) }} a la redonda…</p>
+    } @else if (centro() && resultados().length === 0) {
+      <p class="estado">
+        No hay reportes en {{ etiquetaRadio(radio()) }} a la redonda. Prueba con un radio mayor
+        o sé el primero en reportar algo en tu sector.
+      </p>
+    } @else {
+      <ul class="listado">
+        @for (item of resultados(); track item.report.id) {
+          <li>
+            <button type="button" class="tarjeta" (click)="abrirDetalle(item.report.id)">
+              <span class="tarjeta__pin" [style.background]="colores[item.report.estado]"></span>
+
+              <span class="tarjeta__cuerpo">
+                <span class="tarjeta__descripcion">{{ item.report.descripcion }}</span>
+                <span class="tarjeta__meta">
+                  <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
+                  {{ formatearDistancia(item.distanciaMetros) }}
+                  · {{ item.report.confirmaciones }} confirmaciones
+                </span>
+              </span>
+
+              <ion-badge>{{ etiquetas[item.report.estado] }}</ion-badge>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</ion-content>

@@ -1,0 +1,143 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Nuevo reporte</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="reporte-content" [fullscreen]="true">
+  <form class="reporte-shell" [formGroup]="formulario" (ngSubmit)="enviar()">
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Evidencia</h2>
+      <p class="bloque__ayuda">
+        Una fotografía del problema ayuda a que tus vecinos puedan confirmarlo.
+      </p>
+
+      @if (foto(); as imagen) {
+        <figure class="preview">
+          <img [src]="imagen.dataUrl" alt="Fotografía del problema reportado" />
+          <figcaption>
+            {{ imagen.width }}×{{ imagen.height }} px ·
+            {{ (imagen.sizeBytes / 1024).toFixed(0) }} KB
+          </figcaption>
+        </figure>
+
+        <div class="acciones-foto">
+          <ion-button fill="outline" size="small" type="button" (click)="tomarFotografia()">
+            <ion-icon slot="start" name="camera-outline" aria-hidden="true"></ion-icon>
+            Cambiar
+          </ion-button>
+          <ion-button fill="clear" size="small" color="danger" type="button" (click)="quitarFotografia()">
+            <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+            Quitar
+          </ion-button>
+        </div>
+      } @else {
+        <div class="acciones-foto">
+          <ion-button fill="outline" expand="block" type="button" (click)="tomarFotografia()">
+            <ion-icon slot="start" name="camera-outline" aria-hidden="true"></ion-icon>
+            Tomar fotografía
+          </ion-button>
+          <ion-button fill="outline" expand="block" type="button" (click)="elegirDeGaleria()">
+            <ion-icon slot="start" name="images-outline" aria-hidden="true"></ion-icon>
+            Elegir de la galería
+          </ion-button>
+        </div>
+      }
+    </section>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Ubicación</h2>
+
+      @if (ubicacion(); as coords) {
+        <app-map-view
+          [latitude]="coords.lat"
+          [longitude]="coords.lng"
+          [interactive]="false"
+        ></app-map-view>
+
+        <p class="coordenadas">
+          {{ coords.lat.toFixed(5) }}, {{ coords.lng.toFixed(5) }}
+          <span>· precisión aproximada de {{ coords.accuracy }} m</span>
+        </p>
+
+        <ion-button fill="clear" size="small" type="button" (click)="obtenerUbicacion()">
+          <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+          Actualizar ubicación
+        </ion-button>
+      } @else {
+        <p class="bloque__ayuda">
+          Necesitamos tu ubicación para saber dónde ocurre el problema. Solo se solicita
+          al crear un reporte.
+        </p>
+
+        <ion-button
+          fill="outline"
+          expand="block"
+          type="button"
+          [disabled]="buscandoUbicacion()"
+          (click)="obtenerUbicacion()"
+        >
+          <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+          {{ buscandoUbicacion() ? 'Buscando señal…' : 'Usar mi ubicación actual' }}
+        </ion-button>
+      }
+    </section>
+
+    <section class="bloque">
+      <h2 class="bloque__titulo">Descripción</h2>
+
+      <ion-select
+        formControlName="categoria"
+        label="Categoría"
+        labelPlacement="floating"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        (ionChange)="onCategoriaChange()"
+      >
+        @for (categoria of categorias; track categoria.id) {
+          <ion-select-option [value]="categoria.id">{{ categoria.label }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-textarea
+        formControlName="descripcion"
+        label="¿Qué está pasando?"
+        labelPlacement="floating"
+        fill="outline"
+        [autoGrow]="true"
+        [counter]="true"
+        [maxlength]="descripcionMax"
+        [rows]="4"
+        placeholder="Describe el problema y cualquier detalle que ayude a ubicarlo."
+      ></ion-textarea>
+
+      @if (descripcionControl.touched && descripcionControl.invalid) {
+        <ion-note color="danger">
+          {{ descripcionControl.hasError('required')
+            ? 'La descripción es obligatoria.'
+            : 'Usa entre ' + descripcionMin + ' y ' + descripcionMax + ' caracteres.' }}
+        </ion-note>
+      }
+    </section>
+
+    <app-similar-reports
+      [candidatos]="coincidencias()"
+      [analizando]="analizando()"
+      (confirmado)="alConfirmarCoincidencia()"
+    ></app-similar-reports>
+
+    <ion-button
+      class="accion-principal"
+      type="submit"
+      expand="block"
+      [disabled]="formulario.invalid || !puedeEnviar()"
+    >
+      Enviar reporte
+    </ion-button>
+  </form>
+</ion-content>

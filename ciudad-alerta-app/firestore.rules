@@ -1,35 +1,173 @@
 rules_version = '2';
 
-// CA-79 : reglas de seguridad iniciales de Firestore para Ciudad Alerta.
-// Punto de partida del Sprint 1: solo la colección de usuarios.
-// Se irán ampliando en los siguientes sprints (reportes, confirmaciones, etc.)
-
+// CA-79 · Reglas de seguridad iniciales de Ciudad Alerta.
+// Principio: nada es público. Toda lectura o escritura exige sesión activa y,
+// en el caso de los perfiles, que el documento pertenezca a quien lo solicita.
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Cada persona solo puede leer y escribir su propio documento.
-    match /usuarios/{uid} {
-      allow read: if request.auth != null && request.auth.uid == uid;
+    // --- Funciones auxiliares ---------------------------------------------
 
-      // Al crearse, el nivel y los contadores parten siempre en 0:
-      // así nadie puede darse reputación a sí mismo desde la app.
-      allow create: if request.auth != null
-                    && request.auth.uid == uid
-                    && request.resource.data.nivel == 0
-                    && request.resource.data.reportes == 0
-                    && request.resource.data.confirmaciones == 0;
+    function estaAutenticado() {
+      return request.auth != null;
+    }
 
-      // El usuario puede editar su nombre, pero no su reputación.
-      allow update: if request.auth != null
-                    && request.auth.uid == uid
-                    && request.resource.data.nivel == resource.data.nivel
-                    && request.resource.data.reportes == resource.data.reportes
-                    && request.resource.data.confirmaciones == resource.data.confirmaciones;
+    function esPropietario(userId) {
+      return estaAutenticado() && request.auth.uid == userId;
+    }
 
+    /**
+     * Rol de gestión, leído desde el perfil del usuario. El propio usuario no
+     * puede modificar su `role` (ver reglas de /users), así que esta lectura es
+     * confiable.
+     */
+    function esGestor() {
+      return estaAutenticado()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['operador', 'admin'];
+    }
+
+    // Campos que el cliente no puede fijar ni modificar por su cuenta:
+    // el nivel de confianza y el conteo de reportes los administrará el backend
+    // (Cloud Functions) cuando se implemente el sistema de reputación.
+    function camposProtegidosIntactos() {
+      return request.resource.data.trustLevel == resource.data.trustLevel
+        && request.resource.data.validatedReports == resource.data.validatedReports
+        && request.resource.data.role == resource.data.role;
+    }
+
+    function creacionConValoresIniciales(userId) {
+      return request.resource.data.uid == userId
+        && request.resource.data.trustLevel == 0
+        && request.resource.data.validatedReports == 0
+        && request.resource.data.role == 'ciudadano'
+        && request.resource.data.email is string
+        && request.resource.data.displayName is string;
+    }
+
+    // --- Perfiles de usuario ----------------------------------------------
+
+    match /users/{userId} {
+      // Cada usuario lee y actualiza únicamente su propio documento.
+      allow get: if esPropietario(userId);
+      allow list: if false;
+
+      allow create: if esPropietario(userId) && creacionConValoresIniciales(userId);
+      allow update: if esPropietario(userId) && camposProtegidosIntactos();
+
+      // El borrado de cuentas se maneja desde el backend, no desde el cliente.
       allow delete: if false;
     }
 
-    // Todo lo que no esté declarado arriba queda bloqueado.
+    // --- Reportes ciudadanos (Sprint 2) ------------------------------------
+
+    function categoriaValida() {
+      return request.resource.data.categoria in [
+        'microbasural', 'luminaria', 'fuga_agua', 'arbol_peligroso',
+        'calle_deteriorada', 'accesibilidad', 'otro'
+      ];
+    }
+
+    function descripcionValida() {
+      return request.resource.data.descripcion is string
+        && request.resource.data.descripcion.size() >= 10
+        && request.resource.data.descripcion.size() <= 500;
+    }
+
+    /** Flujo de estados permitido. Debe reflejar TRANSICIONES en report.model.ts. */
+    function transicionValida(desde, hacia) {
+      return (desde == 'reportado' && hacia in ['en_revision', 'derivado', 'cerrado'])
+        || (desde == 'en_revision' && hacia in ['derivado', 'cerrado'])
+        || (desde == 'derivado' && hacia in ['en_proceso', 'cerrado'])
+        || (desde == 'en_proceso' && hacia in ['resuelto', 'cerrado'])
+        || (desde == 'resuelto' && hacia == 'cerrado');
+    }
+
+    /** Impide que una actualización de estado altere el contenido del reporte. */
+    function soloCambiaEstado() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['estado', 'updatedAt']);
+    }
+
+    function ubicacionValida() {
+      let ubicacion = request.resource.data.ubicacion;
+      return ubicacion.lat is number && ubicacion.lat >= -90 && ubicacion.lat <= 90
+        && ubicacion.lng is number && ubicacion.lng >= -180 && ubicacion.lng <= 180;
+    }
+
+    match /reports/{reportId} {
+      // El mapa público del MVP es visible para cualquier usuario autenticado.
+      allow read: if estaAutenticado();
+
+      allow create: if estaAutenticado()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.estado == 'reportado'
+        && request.resource.data.confirmaciones == 0
+        && descripcionValida()
+        && categoriaValida()
+        && ubicacionValida()
+        && request.resource.data.geohash is string
+        && request.resource.data.geohash.size() > 0
+        && request.resource.data.organismo.id in [
+             'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
+           ];
+
+      // HU-28 · Solo un gestor cambia el estado, y solo por transiciones
+      // válidas. El resto de campos debe quedar intacto.
+      allow update: if esGestor()
+        && transicionValida(resource.data.estado, request.resource.data.estado)
+        && soloCambiaEstado();
+
+      allow delete: if false;
+
+      // Confirmación comunitaria. El id del documento es el uid de quien
+      // confirma, así que un segundo intento sería un update y queda denegado:
+      // la unicidad la garantizan la estructura y estas reglas, no el cliente.
+      match /confirmations/{userId} {
+        allow read: if estaAutenticado();
+
+        allow create: if esPropietario(userId)
+          && request.resource.data.uid == userId
+          && request.resource.data.reportId == reportId
+          && request.resource.data.createdAt == request.time;
+
+        allow update, delete: if false;
+      }
+
+      // HU-28 · Bitácora de cambios de estado. Inmutable una vez escrita.
+      match /statusHistory/{cambioId} {
+        allow read: if estaAutenticado();
+
+        allow create: if esGestor()
+          && request.resource.data.autorUid == request.auth.uid
+          && request.resource.data.reportId == reportId
+          && request.resource.data.createdAt == request.time
+          && transicionValida(request.resource.data.desde, request.resource.data.hacia);
+
+        allow update, delete: if false;
+      }
+    }
+
+    // Fotografías guardadas en Firestore mientras el proyecto siga en el plan
+    // Spark. El id del documento coincide con el del reporte.
+    match /reportPhotos/{reportId} {
+      allow read: if estaAutenticado();
+
+      allow create: if estaAutenticado()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.reportId == reportId
+        && request.resource.data.mimeType in ['image/jpeg', 'image/png', 'image/webp']
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() < 950000;
+
+      // Solo el autor puede borrarla, para permitir revertir un reporte fallido.
+      allow delete: if estaAutenticado()
+        && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // --- Denegación por defecto -------------------------------------------
+    // Cualquier ruta no declarada arriba queda bloqueada.
+
     match /{document=**} {
       allow read, write: if false;
     }

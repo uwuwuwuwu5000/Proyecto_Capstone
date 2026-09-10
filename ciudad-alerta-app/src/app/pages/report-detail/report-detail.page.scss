@@ -1,0 +1,155 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.detalle-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --color: var(--ca-ink);
+}
+
+.detalle-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.encabezado__pin {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.encabezado__fecha {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+ion-badge {
+  --background: rgba(255, 255, 255, 0.08);
+  --color: var(--ca-ink);
+}
+
+.descripcion {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.datos {
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.datos__fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+  dt {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.84rem;
+    color: var(--ca-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.86rem;
+    text-align: right;
+  }
+
+  ion-icon {
+    color: var(--ca-signal);
+  }
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.evidencia {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--ca-line);
+}
+
+.estado {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.confirmado {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ca-signal);
+}
+
+.accion-principal {
+  --background: var(--ca-signal);
+  --color: var(--ca-base);
+  --border-radius: 10px;
+  --box-shadow: none;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.historial {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+
+  span {
+    display: block;
+    color: var(--ca-muted);
+    font-size: 0.82rem;
+  }
+}
+
+.gestion__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  ion-button {
+    --border-color: var(--ca-line);
+    --color: var(--ca-ink);
+    --border-radius: 8px;
+    text-transform: none;
+    margin: 0;
+  }
+}

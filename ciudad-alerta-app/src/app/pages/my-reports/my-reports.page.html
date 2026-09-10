@@ -1,0 +1,55 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mis reportes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="historial-content" [fullscreen]="true">
+  <div class="historial-shell">
+    @if (reportes().length === 0 && !cargando()) {
+      <div class="vacio">
+        <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
+        <h2>Todavía no has reportado nada</h2>
+        <p>
+          Cuando informes un problema urbano, aquí podrás seguir su estado hasta que se
+          resuelva.
+        </p>
+        <ion-button class="accion-principal" expand="block" (click)="irACrear()">
+          <ion-icon slot="start" name="add-circle-outline" aria-hidden="true"></ion-icon>
+          Crear mi primer reporte
+        </ion-button>
+      </div>
+    } @else {
+      <ul class="listado">
+        @for (reporte of reportes(); track reporte.id) {
+          <li>
+            <button type="button" class="tarjeta" (click)="abrirDetalle(reporte.id)">
+              <span class="tarjeta__pin" [style.background]="colores[reporte.estado]"></span>
+
+              <span class="tarjeta__cuerpo">
+                <span class="tarjeta__descripcion">{{ reporte.descripcion }}</span>
+                <span class="tarjeta__meta">
+                  {{ reporte.categoria }} · {{ fechaLegible(reporte) }} ·
+                  {{ reporte.confirmaciones }} confirmaciones
+                </span>
+              </span>
+
+              <ion-badge>{{ etiquetas[reporte.estado] }}</ion-badge>
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (cargando()) {
+        <p class="estado">Cargando…</p>
+      } @else if (hayMas()) {
+        <ion-button fill="outline" expand="block" (click)="cargarMas()">
+          Ver reportes anteriores
+        </ion-button>
+      }
+    }
+  </div>
+</ion-content>

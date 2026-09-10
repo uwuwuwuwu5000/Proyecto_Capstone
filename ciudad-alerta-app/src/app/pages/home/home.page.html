@@ -52,6 +52,28 @@
         </dl>
       </section>
 
+      <nav class="accesos">
+        <ion-button class="accion-reportar" expand="block" routerLink="/report-new">
+          <ion-icon slot="start" name="add-circle-outline" aria-hidden="true"></ion-icon>
+          Crear un reporte
+        </ion-button>
+
+        <ion-button fill="outline" expand="block" routerLink="/map">
+          <ion-icon slot="start" name="map-outline" aria-hidden="true"></ion-icon>
+          Mapa de incidencias
+        </ion-button>
+
+        <ion-button fill="outline" expand="block" routerLink="/nearby">
+          <ion-icon slot="start" name="navigate-outline" aria-hidden="true"></ion-icon>
+          Cerca de mí
+        </ion-button>
+
+        <ion-button fill="outline" expand="block" routerLink="/my-reports">
+          <ion-icon slot="start" name="document-text-outline" aria-hidden="true"></ion-icon>
+          Mis reportes
+        </ion-button>
+      </nav>
+
       <ion-button
         class="accion-salir"
         expand="block"

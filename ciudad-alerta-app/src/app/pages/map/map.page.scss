@@ -1,0 +1,46 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.mapa-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --color: var(--ca-ink);
+}
+
+.mapa-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+ion-select {
+  --background: var(--ca-surface);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-size: 0.9rem;
+}
+
+.mapa-grande {
+  --mapa-alto: 340px;
+}
+
+.estado {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}

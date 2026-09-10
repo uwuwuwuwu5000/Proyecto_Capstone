@@ -1,16 +1,16 @@
 :host {
   /* Paleta de señalética urbana nocturna: base grafito-azulada + ámbar de alerta. */
-  --ca-base: #0f1d28;
-  --ca-surface: #172936;
-  --ca-line: #2b4356;
-  --ca-ink: #eaf1f5;
-  --ca-muted: #8fa9b9;
-  --ca-signal: #ffb020;
-  --ca-danger: #ff6b5e;
+  --ca-base: #111827;
+  --ca-surface: #1b2434;
+  --ca-line: #5c677d;
+  --ca-ink: #f8fafc;
+  --ca-muted: #a5b4c3;
+  --ca-signal: #1ca9c9;
+  --ca-danger: #e0656b;
 }
 
 .auth-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #16303f 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
   --color: var(--ca-ink);
 }
 
@@ -35,7 +35,7 @@
   height: 2.75rem;
   border-radius: 50% 50% 50% 4px;
   background: var(--ca-signal);
-  box-shadow: 0 0 0 6px rgba(255, 176, 32, 0.14);
+  box-shadow: 0 0 0 6px rgba(28, 169, 201, 0.14);
   margin-bottom: 0.75rem;
 }
 
@@ -69,7 +69,7 @@
   gap: 0.6rem;
   padding: 0.8rem 0.9rem;
   border-left: 3px solid var(--ca-danger);
-  background: rgba(255, 107, 94, 0.12);
+  background: rgba(224, 101, 107, 0.12);
   border-radius: 6px;
   font-size: 0.9rem;
   line-height: 1.45;
@@ -107,7 +107,7 @@ ion-note {
 
 .accion-principal {
   --background: var(--ca-signal);
-  --background-activated: #e09a12;
+  --background-activated: #1791ad;
   --color: var(--ca-base);
   --border-radius: 10px;
   --box-shadow: none;

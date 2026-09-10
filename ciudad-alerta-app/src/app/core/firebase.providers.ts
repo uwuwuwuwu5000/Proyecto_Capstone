@@ -13,6 +13,7 @@ import {
   initializeAuth,
 } from 'firebase/auth';
 import { Firestore, getFirestore } from 'firebase/firestore';
+import { FirebaseStorage, getStorage } from 'firebase/storage';
 
 import { environment } from '../../environments/environment';
 
@@ -28,6 +29,12 @@ import { environment } from '../../environments/environment';
 export const FIREBASE_APP = new InjectionToken<FirebaseApp>('FIREBASE_APP');
 export const FIREBASE_AUTH = new InjectionToken<Auth>('FIREBASE_AUTH');
 export const FIRESTORE = new InjectionToken<Firestore>('FIRESTORE');
+
+/**
+ * Solo lo consume CloudStoragePhotoService. Declararlo no cuesta nada: el SDK
+ * no contacta al bucket hasta la primera operación.
+ */
+export const FIREBASE_STORAGE = new InjectionToken<FirebaseStorage>('FIREBASE_STORAGE');
 
 /** Evita reinicializar la app durante el hot reload de `ionic serve`. */
 function createFirebaseApp(): FirebaseApp {
@@ -66,6 +73,11 @@ export function provideFirebase(): EnvironmentProviders {
     {
       provide: FIRESTORE,
       useFactory: (app: FirebaseApp) => getFirestore(app),
+      deps: [FIREBASE_APP],
+    },
+    {
+      provide: FIREBASE_STORAGE,
+      useFactory: (app: FirebaseApp) => getStorage(app),
       deps: [FIREBASE_APP],
     },
   ]);

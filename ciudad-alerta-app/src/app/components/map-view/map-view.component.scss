@@ -1,0 +1,103 @@
+:host {
+  display: block;
+}
+
+.mapa-wrapper {
+  position: relative;
+  width: 100%;
+  height: var(--mapa-alto, 220px);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+}
+
+.mapa {
+  width: 100%;
+  height: 100%;
+}
+
+.mapa--oculto {
+  visibility: hidden;
+}
+
+.mapa-estado {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ca-muted);
+  background: var(--ca-surface);
+
+  p {
+    margin: 0;
+    max-width: 30ch;
+  }
+}
+
+.mapa-estado--error {
+  color: var(--ca-ink);
+}
+
+.mapa-estado__coords {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-estado__accion {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-signal);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* El marcador se declara sin encapsulación porque Leaflet lo inyecta fuera
+   del árbol del componente. */
+:host ::ng-deep .marcador-ciudad-alerta__pin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 4px;
+  transform: rotate(-45deg);
+  background: var(--ca-signal, #1ca9c9);
+  border: 2px solid #111827;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+:host ::ng-deep .marcador-incidencia__pin {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #111827;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+}
+
+:host ::ng-deep .leaflet-container {
+  background: #1a2433;
+  font-family: inherit;
+}
+
+:host ::ng-deep .leaflet-control-attribution {
+  background: rgba(15, 29, 40, 0.8);
+  color: #a5b4c3;
+  font-size: 0.68rem;
+
+  a {
+    color: #1ca9c9;
+  }
+}

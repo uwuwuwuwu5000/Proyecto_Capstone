@@ -1,0 +1,70 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mapa de incidencias</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="mapa-content" [fullscreen]="true">
+  <div class="mapa-shell">
+    <div class="filtros">
+      <ion-select
+        label="Categoría"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().categoria"
+        (ionChange)="cambiarCategoria($event.detail.value)"
+      >
+        <ion-select-option value="todas">Todas</ion-select-option>
+        @for (categoria of categorias; track categoria.id) {
+          <ion-select-option [value]="categoria.id">{{ categoria.label }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        label="Estado"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().estado"
+        (ionChange)="cambiarEstado($event.detail.value)"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (estado of estados; track estado[0]) {
+          <ion-select-option [value]="estado[0]">{{ estado[1] }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+
+    @if (centro(); as punto) {
+      <app-map-view
+        class="mapa-grande"
+        [latitude]="punto.lat"
+        [longitude]="punto.lng"
+        [zoom]="14"
+        [markers]="marcadores()"
+        (markerSelected)="abrirDetalle($event)"
+      ></app-map-view>
+    }
+
+    @if (cargando()) {
+      <p class="estado">Cargando incidencias del sector…</p>
+    } @else if (sinResultados()) {
+      <p class="estado">
+        No hay incidencias registradas en tu sector con estos filtros. Cuando alguien reporte
+        una, aparecerá aquí.
+      </p>
+    } @else {
+      <p class="estado">
+        {{ resultados().length }}
+        {{ resultados().length === 1 ? 'incidencia' : 'incidencias' }} en el sector. Toca un
+        marcador para ver el detalle.
+      </p>
+    }
+  </div>
+</ion-content>

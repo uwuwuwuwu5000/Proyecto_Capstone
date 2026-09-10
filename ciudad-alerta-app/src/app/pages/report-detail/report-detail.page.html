@@ -1,0 +1,127 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/map" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detalle de la incidencia</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="detalle-content" [fullscreen]="true">
+  <div class="detalle-shell">
+    @if (cargando()) {
+      <p class="estado">Cargando la incidencia…</p>
+    } @else if (noEncontrado()) {
+      <p class="estado">
+        No encontramos esta incidencia. Puede que haya sido eliminada o que el enlace no sea
+        válido.
+      </p>
+    } @else if (reporte(); as item) {
+      <header class="encabezado">
+        <span class="encabezado__pin" [style.background]="colores[item.estado]"></span>
+        <div>
+          <ion-badge>{{ etiquetas[item.estado] }}</ion-badge>
+          <p class="encabezado__fecha">{{ fechaLegible(item) }}</p>
+        </div>
+      </header>
+
+      <p class="descripcion">{{ item.descripcion }}</p>
+
+      <dl class="datos">
+        <div class="datos__fila">
+          <dt>Categoría</dt>
+          <dd>{{ item.categoria }}</dd>
+        </div>
+        <div class="datos__fila">
+          <dt><ion-icon name="business-outline" aria-hidden="true"></ion-icon> Responsable</dt>
+          <dd>{{ item.organismo?.nombre ?? 'Sin asignar' }}</dd>
+        </div>
+        <div class="datos__fila">
+          <dt><ion-icon name="people-outline" aria-hidden="true"></ion-icon> Confirmaciones</dt>
+          <dd>{{ confirmaciones() }} {{ confirmaciones() === 1 ? 'vecino' : 'vecinos' }}</dd>
+        </div>
+      </dl>
+
+      <section class="bloque">
+        <h2>Ubicación</h2>
+        <app-map-view
+          [latitude]="item.ubicacion.lat"
+          [longitude]="item.ubicacion.lng"
+          [interactive]="false"
+        ></app-map-view>
+      </section>
+
+      <section class="bloque">
+        <h2>Evidencia</h2>
+
+        @if (!item.foto) {
+          <p class="estado">Este reporte se envió sin fotografía.</p>
+        } @else {
+
+          @if (fotoUrl(); as url) {
+            <img class="evidencia" [src]="url" alt="Fotografía de la incidencia" />
+          } @else if (fotoError()) {
+            <p class="estado">
+              La fotografía no está disponible en este momento. El resto de la información del
+              reporte sigue siendo válida.
+            </p>
+          } @else {
+            <ion-button fill="outline" expand="block" [disabled]="cargandoFoto()" (click)="verFotografia()">
+              <ion-icon slot="start" name="image-outline" aria-hidden="true"></ion-icon>
+              {{ cargandoFoto() ? 'Cargando…' : 'Ver fotografía' }}
+            </ion-button>
+          }
+        }
+      </section>
+
+      <section class="bloque">
+        @if (esAutor()) {
+          <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
+        } @else if (yaConfirmo()) {
+          <p class="confirmado">
+            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+            Ya confirmaste esta incidencia
+          </p>
+        } @else {
+          <ion-button
+            class="accion-principal"
+            expand="block"
+            [disabled]="confirmando()"
+            (click)="confirmar()"
+          >
+            {{ confirmando() ? 'Registrando…' : 'Confirmar que existe' }}
+          </ion-button>
+        }
+      </section>
+
+      @if (historial().length > 0) {
+        <section class="bloque">
+          <h2>Seguimiento</h2>
+          <ol class="historial">
+            @for (cambio of historial(); track $index) {
+              <li>
+                <strong>{{ etiquetas[cambio.hacia] }}</strong>
+                @if (cambio.comentario) {
+                  <span>{{ cambio.comentario }}</span>
+                }
+              </li>
+            }
+          </ol>
+        </section>
+      }
+
+      @if (puedeGestionar() && transiciones().length > 0) {
+        <section class="bloque gestion">
+          <h2>Gestión</h2>
+          <div class="gestion__acciones">
+            @for (estado of transiciones(); track estado) {
+              <ion-button fill="outline" size="small" (click)="cambiarEstado(estado)">
+                {{ etiquetas[estado] }}
+              </ion-button>
+            }
+          </div>
+        </section>
+      }
+    }
+  </div>
+</ion-content>

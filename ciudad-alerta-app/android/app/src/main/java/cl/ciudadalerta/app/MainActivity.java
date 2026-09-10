@@ -1,4 +1,4 @@
-package io.ionic.starter;
+package cl.ciudadalerta.app;
 
 import com.getcapacitor.BridgeActivity;
 

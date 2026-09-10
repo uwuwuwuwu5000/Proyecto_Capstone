@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Reglas de Cloud Storage. Solo aplican si el proyecto está en el plan Blaze y
+// `environment.photoStorage` vale 'cloud-storage'.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Evidencia fotográfica de los reportes: reports/{uid}/{reportId}.jpg
+    match /reports/{userId}/{archivo} {
+      // Cualquier usuario autenticado puede ver la evidencia de un reporte,
+      // igual que en el mapa público del MVP.
+      allow read: if request.auth != null;
+
+      // Solo el autor sube su propia evidencia, con límite de tamaño y
+      // validación de tipo de contenido.
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.size < 2 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      allow update: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

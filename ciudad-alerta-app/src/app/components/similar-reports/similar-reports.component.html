@@ -1,0 +1,50 @@
+@if (analizando()) {
+  <p class="analizando">Buscando reportes cercanos…</p>
+} @else if (candidatos().length > 0) {
+  <section class="coincidencias" role="region" aria-label="Reportes cercanos detectados">
+    <header class="coincidencias__encabezado">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <h3>Ya hay {{ candidatos().length === 1 ? 'un reporte' : 'reportes' }} cerca</h3>
+        <p>
+          Si es la misma situación, confírmala en vez de crear un reporte nuevo. Si es
+          distinta, continúa con el tuyo.
+        </p>
+      </div>
+    </header>
+
+    @for (candidato of candidatos(); track candidato.report.id) {
+      <article class="candidato">
+        <div class="candidato__cabecera">
+          <span class="candidato__estado">{{ candidato.report.estado }}</span>
+          <ion-badge>{{ (candidato.puntaje * 100).toFixed(0) }}% de coincidencia</ion-badge>
+        </div>
+
+        <p class="candidato__descripcion">{{ candidato.report.descripcion }}</p>
+
+        <ul class="candidato__motivos">
+          @for (motivo of candidato.motivos; track motivo) {
+            <li>{{ motivo }}</li>
+          }
+        </ul>
+
+        @if (yaConfirmo(candidato.report.id)) {
+          <p class="candidato__confirmado">
+            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+            Confirmaste este reporte
+          </p>
+        } @else {
+          <ion-button
+            fill="outline"
+            size="small"
+            expand="block"
+            [disabled]="confirmando() === candidato.report.id"
+            (click)="confirmar(candidato)"
+          >
+            {{ confirmando() === candidato.report.id ? 'Registrando…' : 'Es el mismo problema' }}
+          </ion-button>
+        }
+      </article>
+    }
+  </section>
+}
