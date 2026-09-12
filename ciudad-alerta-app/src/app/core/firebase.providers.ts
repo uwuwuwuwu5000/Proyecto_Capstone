@@ -8,12 +8,21 @@ import { FirebaseApp, getApps, initializeApp } from 'firebase/app';
 import {
   Auth,
   browserLocalPersistence,
+  connectAuthEmulator,
   getAuth,
   indexedDBLocalPersistence,
   initializeAuth,
 } from 'firebase/auth';
-import { Firestore, getFirestore } from 'firebase/firestore';
-import { FirebaseStorage, getStorage } from 'firebase/storage';
+import {
+  Firestore,
+  connectFirestoreEmulator,
+  getFirestore,
+} from 'firebase/firestore';
+import {
+  FirebaseStorage,
+  connectStorageEmulator,
+  getStorage,
+} from 'firebase/storage';
 
 import { environment } from '../../environments/environment';
 
@@ -62,6 +71,13 @@ function createFirebaseAuth(app: FirebaseApp): Auth {
   return auth;
 }
 
+/** BUG 71 · Conexión a los emuladores locales cuando el entorno lo pide. */
+function conectarEmuladores(auth: Auth, firestore: Firestore, storage: FirebaseStorage): void {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+  connectStorageEmulator(storage, '127.0.0.1', 9199);
+}
+
 export function provideFirebase(): EnvironmentProviders {
   return makeEnvironmentProviders([
     { provide: FIREBASE_APP, useFactory: createFirebaseApp },
@@ -77,8 +93,16 @@ export function provideFirebase(): EnvironmentProviders {
     },
     {
       provide: FIREBASE_STORAGE,
-      useFactory: (app: FirebaseApp) => getStorage(app),
-      deps: [FIREBASE_APP],
+      useFactory: (app: FirebaseApp, auth: Auth, firestore: Firestore) => {
+        const storage = getStorage(app);
+
+        if (environment.useEmulators) {
+          conectarEmuladores(auth, firestore, storage);
+        }
+
+        return storage;
+      },
+      deps: [FIREBASE_APP, FIREBASE_AUTH, FIRESTORE],
     },
   ]);
 }

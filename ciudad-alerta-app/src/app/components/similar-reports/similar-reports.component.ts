@@ -1,4 +1,4 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { IonBadge, IonButton, IonIcon, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
@@ -34,6 +34,17 @@ export class SimilarReportsComponent {
 
   constructor() {
     addIcons({ checkmarkCircleOutline, warningOutline });
+
+    /**
+     * BUG 38 · El componente se reutiliza entre reportes. Sin este reinicio, un
+     * reporte confirmado en una sesión anterior seguía apareciendo como
+     * confirmado frente a candidatos completamente distintos.
+     */
+    effect(() => {
+      this.candidatos();
+      this.yaConfirmados.set([]);
+      this.confirmando.set(null);
+    });
   }
 
   yaConfirmo(reportId: string): boolean {

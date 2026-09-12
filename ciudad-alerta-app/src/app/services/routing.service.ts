@@ -6,9 +6,8 @@ import {
   getDocs,
   orderBy,
   query,
+  runTransaction,
   serverTimestamp,
-  setDoc,
-  updateDoc,
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 
@@ -83,34 +82,67 @@ export class RoutingService {
       );
     }
 
-    const cambio: StatusChange = {
-      reportId: report.id,
-      desde: report.estado,
-      hacia: nuevoEstado,
-      autorUid: usuario.uid,
-      comentario: comentario.trim().slice(0, 300),
-      createdAt: serverTimestamp(),
-    };
+    const referenciaReporte = doc(this.firestore, 'reports', report.id);
+    const referenciaHistorial = doc(
+      collection(this.firestore, 'reports', report.id, 'statusHistory'),
+    );
 
     try {
-      // El historial primero: si la actualización falla, queda el intento
-      // registrado y no se pierde trazabilidad.
-      await setDoc(
-        doc(collection(this.firestore, 'reports', report.id, 'statusHistory')),
-        cambio,
-      );
+      /**
+       * BUG 14 · Antes se escribía el historial y luego se actualizaba el
+       * estado. Si lo segundo fallaba, quedaba registrada una transición que
+       * nunca ocurrió. La transacción garantiza que ambas cosas pasen o ninguna,
+       * y de paso relee el estado actual: si otro gestor movió el reporte
+       * mientras este diálogo estaba abierto, el cambio se rechaza en vez de
+       * pisarlo.
+       */
+      await runTransaction(this.firestore, async (transaccion) => {
+        const actual = await transaccion.get(referenciaReporte);
 
-      await updateDoc(doc(this.firestore, 'reports', report.id), {
-        estado: nuevoEstado,
-        updatedAt: serverTimestamp(),
+        if (!actual.exists()) {
+          throw new RoutingError('El reporte ya no existe.', 'desconocido');
+        }
+
+        const estadoActual = actual.data()['estado'] as ReportStatus;
+
+        if (estadoActual !== report.estado) {
+          throw new RoutingError(
+            `Otro gestor cambió este reporte a "${estadoActual}". Vuelve a abrirlo para continuar.`,
+            'transicion_invalida',
+          );
+        }
+
+        const cambio: StatusChange = {
+          reportId: report.id,
+          desde: estadoActual,
+          hacia: nuevoEstado,
+          autorUid: usuario.uid,
+          comentario: comentario.trim().slice(0, 300),
+          createdAt: serverTimestamp(),
+        };
+
+        transaccion.set(referenciaHistorial, cambio);
+        transaccion.update(referenciaReporte, {
+          estado: nuevoEstado,
+          updatedAt: serverTimestamp(),
+        });
       });
     } catch (error) {
+      if (error instanceof RoutingError) {
+        throw error;
+      }
+
       throw this.traducir(error);
     }
   }
 
-  /** Historial de cambios de un reporte, del más antiguo al más reciente. */
-  async getStatusHistory(reportId: string): Promise<StatusChange[]> {
+  /**
+   * Historial de cambios, del más antiguo al más reciente.
+   *
+   * BUG 22 · Devuelve `null` si la consulta falla, para no mostrar "sin
+   * seguimiento" cuando en realidad no se pudo leer.
+   */
+  async getStatusHistory(reportId: string): Promise<StatusChange[] | null> {
     try {
       const snapshot = await getDocs(
         query(
@@ -121,7 +153,7 @@ export class RoutingService {
 
       return snapshot.docs.map((d) => d.data() as StatusChange);
     } catch {
-      return [];
+      return null;
     }
   }
 

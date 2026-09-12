@@ -13,6 +13,7 @@ import {
 import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 
 import { FIRESTORE } from '../core/firebase.providers';
+import { AuthService } from './auth.service';
 import { ImageSimilarityService } from './image-similarity.service';
 import {
   ESTADOS_INACTIVOS,
@@ -43,6 +44,7 @@ const UMBRAL_PUNTAJE = 0.4;
 export class DuplicateDetectionService {
   private readonly firestore = inject<Firestore>(FIRESTORE);
   private readonly similarityService = inject(ImageSimilarityService);
+  private readonly authService = inject(AuthService);
 
   /**
    * Busca reportes que podrían corresponder al mismo incidente.
@@ -67,7 +69,17 @@ export class DuplicateDetectionService {
 
     const ahora = Date.now();
 
+    /**
+     * BUG 12 · Los reportes propios no son duplicados que el usuario deba
+     * confirmar: son suyos. El filtro va aquí y no en la consulta porque
+     * Firestore exige que el primer orderBy sea el del campo con desigualdad, y
+     * la consulta ya ordena por geohash para acotar el radio; un
+     * where('uid','!=') rompería la búsqueda geográfica.
+     */
+    const propioUid = this.authService.user?.uid ?? null;
+
     const evaluados = candidatos
+      .filter((report) => report.uid !== propioUid)
       .map((report) => this.evaluar(report, centro, consulta.embedding, ahora))
       .filter((candidato): candidato is MatchCandidate => candidato !== null)
       .filter((candidato) => candidato.puntaje >= UMBRAL_PUNTAJE)

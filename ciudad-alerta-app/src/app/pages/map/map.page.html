@@ -35,8 +35,8 @@
         (ionChange)="cambiarEstado($event.detail.value)"
       >
         <ion-select-option value="todos">Todos</ion-select-option>
-        @for (estado of estados; track estado[0]) {
-          <ion-select-option [value]="estado[0]">{{ estado[1] }}</ion-select-option>
+        @for (estadoItem of estados; track estadoItem[0]) {
+          <ion-select-option [value]="estadoItem[0]">{{ estadoItem[1] }}</ion-select-option>
         }
       </ion-select>
     </div>
@@ -52,19 +52,54 @@
       ></app-map-view>
     }
 
-    @if (cargando()) {
-      <p class="estado">Cargando incidencias del sector…</p>
-    } @else if (sinResultados()) {
-      <p class="estado">
-        No hay incidencias registradas en tu sector con estos filtros. Cuando alguien reporte
-        una, aparecerá aquí.
-      </p>
-    } @else {
-      <p class="estado">
-        {{ resultados().length }}
-        {{ resultados().length === 1 ? 'incidencia' : 'incidencias' }} en el sector. Toca un
-        marcador para ver el detalle.
-      </p>
+    @switch (estado()) {
+      @case ('ubicando') {
+        <p class="estado">Obteniendo tu ubicación…</p>
+      }
+      @case ('sin_ubicacion') {
+        <div class="bloque-estado">
+          <p class="estado">Necesitamos tu ubicación para mostrarte las incidencias cercanas.</p>
+          <ion-button fill="outline" expand="block" (click)="ubicar()">
+            <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+            Usar mi ubicación
+          </ion-button>
+        </div>
+      }
+      @case ('error_ubicacion') {
+        <div class="bloque-estado">
+          <p class="estado estado--error">{{ mensajeError() }}</p>
+          <ion-button fill="outline" expand="block" (click)="ubicar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar ubicación
+          </ion-button>
+        </div>
+      }
+      @case ('cargando') {
+        <p class="estado">Cargando incidencias del sector…</p>
+      }
+      @case ('error_datos') {
+        <div class="bloque-estado">
+          <p class="estado estado--error">{{ mensajeError() }}</p>
+          <ion-button fill="outline" expand="block" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      }
+      @case ('listo') {
+        @if (resultados().length === 0) {
+          <p class="estado">
+            No hay incidencias registradas en tu sector con estos filtros. Cuando alguien
+            reporte una, aparecerá aquí.
+          </p>
+        } @else {
+          <p class="estado">
+            {{ resultados().length }}
+            {{ resultados().length === 1 ? 'incidencia' : 'incidencias' }} en el sector. Toca un
+            marcador para ver el detalle.
+          </p>
+        }
+      }
     }
   </div>
 </ion-content>

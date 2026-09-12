@@ -1,6 +1,7 @@
 import { InjectionToken, Injectable, inject } from '@angular/core';
 import {
   Firestore,
+  WriteBatch,
   deleteDoc,
   doc,
   getDoc,
@@ -34,6 +35,18 @@ import { PhotoReference, ReportPhotoDoc } from '../models/report.model';
 export interface PhotoStorage {
   /** Sube la imagen y devuelve la referencia que se guardará en el reporte. */
   upload(reportId: string, ownerUid: string, photo: CapturedPhoto): Promise<PhotoReference>;
+  /**
+   * BUG 61 · Cuando la implementación guarda en Firestore, la escritura de la
+   * imagen puede sumarse al mismo lote que el reporte y ambas se confirman
+   * juntas. Las implementaciones que escriben fuera de Firestore no la ofrecen,
+   * y en ese caso se usa `upload` con borrado compensatorio.
+   */
+  stageInBatch?(
+    batch: WriteBatch,
+    reportId: string,
+    ownerUid: string,
+    photo: CapturedPhoto,
+  ): PhotoReference;
   /** Resuelve una URL o data URL utilizable en un `<img src>`. */
   resolveUrl(reference: PhotoReference): Promise<string>;
   /** Borra la imagen. Se usa para revertir un reporte que falló al guardarse. */
@@ -70,6 +83,43 @@ export class FirestorePhotoService implements PhotoStorage {
     };
 
     await setDoc(doc(this.firestore, 'reportPhotos', reportId), registro);
+
+    return {
+      kind: 'firestore',
+      path: `reportPhotos/${reportId}`,
+      url: null,
+      mimeType: photo.mimeType,
+      sizeBytes: photo.sizeBytes,
+    };
+  }
+
+  /**
+   * Añade la fotografía al lote en lugar de escribirla por separado. Así no
+   * puede quedar una imagen sin reporte ni un reporte apuntando a una imagen
+   * inexistente.
+   */
+  stageInBatch(
+    batch: WriteBatch,
+    reportId: string,
+    ownerUid: string,
+    photo: CapturedPhoto,
+  ): PhotoReference {
+    if (photo.dataUrl.length > LIMITE_DATA_URL_BYTES) {
+      throw new Error(
+        'La fotografía es demasiado pesada incluso después de comprimirla. Toma otra con menos detalle.',
+      );
+    }
+
+    const registro: ReportPhotoDoc = {
+      reportId,
+      ownerUid,
+      dataUrl: photo.dataUrl,
+      mimeType: photo.mimeType,
+      sizeBytes: photo.sizeBytes,
+      createdAt: serverTimestamp(),
+    };
+
+    batch.set(doc(this.firestore, 'reportPhotos', reportId), registro);
 
     return {
       kind: 'firestore',

@@ -131,9 +131,19 @@ export interface Report {
   ubicacion: GeoPoint;
   foto: PhotoReference | null;
   estado: ReportStatus;
+  /**
+   * Contador denormalizado. Hoy permanece siempre en 0: las reglas impiden que
+   * el cliente lo modifique, y permitirlo dejaría que cualquiera inflara el
+   * contador de cualquier reporte. La interfaz muestra el conteo real de la
+   * subcolección `confirmations`. Mantenerlo en el modelo deja el campo listo
+   * para cuando un trigger de Cloud Functions pueda actualizarlo en servidor.
+   */
   confirmaciones: number;
-  /** Organismo responsable asignado automáticamente según la categoría. */
-  organismo: Organismo;
+  /**
+   * Organismo responsable asignado automáticamente según la categoría.
+   * Opcional porque los reportes creados antes de HU-28 no lo tienen.
+   */
+  organismo?: Organismo;
   /**
    * Geohash de la ubicación. Firestore no tiene consultas geoespaciales, así
    * que se consulta por rangos de geohash y luego se filtra por distancia real.

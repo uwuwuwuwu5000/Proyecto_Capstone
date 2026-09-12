@@ -38,7 +38,13 @@
         </div>
         <div class="datos__fila">
           <dt><ion-icon name="people-outline" aria-hidden="true"></ion-icon> Confirmaciones</dt>
-          <dd>{{ confirmaciones() }} {{ confirmaciones() === 1 ? 'vecino' : 'vecinos' }}</dd>
+          <dd>
+            @if (confirmaciones() === null) {
+              <span class="dato-indisponible">No disponible</span>
+            } @else {
+              {{ confirmaciones() }} {{ confirmaciones() === 1 ? 'vecino' : 'vecinos' }}
+            }
+          </dd>
         </div>
       </dl>
 
@@ -65,6 +71,10 @@
               La fotografía no está disponible en este momento. El resto de la información del
               reporte sigue siendo válida.
             </p>
+            <ion-button fill="outline" size="small" (click)="verFotografia()">
+              <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+              Reintentar
+            </ion-button>
           } @else {
             <ion-button fill="outline" expand="block" [disabled]="cargandoFoto()" (click)="verFotografia()">
               <ion-icon slot="start" name="image-outline" aria-hidden="true"></ion-icon>
@@ -77,6 +87,10 @@
       <section class="bloque">
         @if (esAutor()) {
           <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
+        } @else if (yaConfirmo() === null) {
+          <p class="estado">
+            No pudimos comprobar si ya confirmaste esta incidencia. Revisa tu conexión.
+          </p>
         } @else if (yaConfirmo()) {
           <p class="confirmado">
             <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
@@ -94,11 +108,16 @@
         }
       </section>
 
-      @if (historial().length > 0) {
+      @if (historial() === null) {
+        <section class="bloque">
+          <h2>Seguimiento</h2>
+          <p class="estado">No pudimos cargar el seguimiento de esta incidencia.</p>
+        </section>
+      } @else if (historial()!.length > 0) {
         <section class="bloque">
           <h2>Seguimiento</h2>
           <ol class="historial">
-            @for (cambio of historial(); track $index) {
+            @for (cambio of historial()!; track $index) {
               <li>
                 <strong>{{ etiquetas[cambio.hacia] }}</strong>
                 @if (cambio.comentario) {

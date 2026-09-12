@@ -1,0 +1,803 @@
+INFORME DE BUGS Y MEJORAS — CIUDAD ALERTA
+Fecha: 2026-09-11
+Stack: Angular 22 + Ionic 9 (standalone) + Capacitor 8 + Firebase SDK modular (sin @angular/fire)
+Total de hallazgos: 78
+
+Cada entrada contiene: Nivel (Alto/Medio/Bajo), Ubicación (archivo:línea),
+Problema y una vía concreta de solución.
+
+============================================================
+SECCIÓN A — AUTENTICACIÓN Y SESIÓN (bugs 1–8)
+============================================================
+
+[BUG 1] Código muerto: isLoggedIn()
+Nivel: Bajo  ·  Ubicación: src/app/services/auth.service.ts:131
+Problema: El método isLoggedIn() compara con null y devuelve boolean, pero nunca
+          es llamado desde ningún componente o guard. Código muerto que engaña al
+          lector sobre la superficie de autenticación real.
+Solución: Eliminar el método. Ningún archivo lo importa.
+
+
+[BUG 2] Registro no atómico: cuenta creada sin perfil deja al usuario bloqueado
+Nivel: Alto  ·  Ubicación: src/app/services/auth.service.ts:82-96, 142-156
+Problema: register() primero llama createUserWithEmailAndPassword (crea la cuenta en
+          Auth) y luego createUserDocument (escribe el doc en Firestore). Si el
+          segundo paso falla, la cuenta existe pero no hay perfil. Al reintentar, el
+          cliente recibe email-already-in-use y el usuario queda "atrapado": no puede
+          registrarse ni iniciar sesión.
+Solución: En el catch de createUserDocument, llamar a deleteUser() para revertir la
+          creación. Alternativamente, detectar en register() que la cuenta ya existe
+          pero falta el perfil (getUserProfile lanza) y completar el perfil en vez de
+          reventar con email-already-in-use.
+
+
+[BUG 3] updateProfile puede fallar sin revertir nada
+Nivel: Alto  ·  Ubicación: src/app/services/auth.service.ts:88-95
+Problema: updateProfile (asignar displayName) ocurre con await sin try/catch propio;
+          si falla, el displayName queda vacío y el error se propaga. En register()
+          esto causa que la UI muestre error aunque la cuenta ya se creó.
+Solución: Envolver updateProfile en try/catch propio. Si falla, logear el error y
+          continuar (el perfil se creó; el nombre se puede actualizar después desde
+          "Mi perfil").
+
+
+[BUG 4] setPersistence sin await en Firebase provider nativo
+Nivel: Medio  ·  Ubicación: src/app/core/firebase.providers.ts:61
+Problema: La llamada a setPersistence(auth, indexedDBLocalPersistence) no lleva await;
+          el login puede ejecutarse antes de que se complete el cambio de persistencia,
+          resultando en que el usuario no persista como se espera en la primera carga.
+Solución: Await de setPersistence. Si se requiere que sea no bloqueante, cachear la
+          promesa en una variable y await antes del primer login.
+
+
+[BUG 5] Degradación silenciosa de persistencia en nativo
+Nivel: Medio  ·  Ubicación: src/app/core/firebase.providers.ts:51-57
+Problema: initializeAuth está envuelto en try/catch que, si falla (por ejemplo en
+          reload de hot reload en un dispositivo), devuelve getAuth() sin persistencia
+          configurada. El usuario pierde la sesión sin entender por qué.
+Solución: Re-lanzar el error en vez de degradar, o registrar un warning explícito y
+          configurar la persistencia en el fallback con await setPersistence.
+
+
+[BUG 6] Enumeración de correos en resetPassword
+Nivel: Bajo  ·  Ubicación: src/app/services/auth.service.ts:177-182
+Problema: Si el email no está registrado, el servicio devuelve el error
+          auth/user-not-found. Un atacante puede usar esto para enumerar qué correos
+          están registrados en el sistema.
+Solución: Devolver siempre el mismo mensaje de éxito independientemente de si el
+          usuario existe: "Si el correo está registrado, recibirás un email".
+
+
+[BUG 7] getUserProfile hace cast sin validar forma del documento
+Nivel: Medio  ·  Ubicación: src/app/services/auth.service.ts:138
+Problema: El documento de perfil se castea directamente como UserData; si falta un
+          campo (por corrupción, borrado parcial, o migración incompleta), el
+          componente recibe undefined en propiedades que asume existentes.
+Solución: Validar que el documento tenga al menos uid, email y displayName. Si falta
+          alguno, lanzar un error descriptivo o devolver null.
+
+
+[BUG 8] Inconsistencia de caso del email
+Nivel: Bajo  ·  Ubicación: src/app/services/auth.service.ts:85, 145
+Problema: Se autentica con email.toLowerCase(), pero se guarda el email original del
+          usuario (con posibles mayúsculas). Si un usuario escribe "User@Gmail.com"
+          al registrar, el perfil queda con "User@Gmail.com" pero la sesión
+          opera con "user@gmail.com".
+Solución: Normalizar a lowercase al escribir el perfil: email: email.toLowerCase()
+          en ambas ramas.
+
+
+============================================================
+SECCIÓN B — REPORTES, DUPLICADOS Y CONFIRMACIONES (bugs 9–28)
+============================================================
+
+[BUG 9] report.confirmaciones nunca se incrementa
+Nivel: Alto  ·  Ubicación: src/app/services/confirmation.service.ts:40-68,
+                            firestore.rules:116-118
+Problema: La función confirm() solo crea el documento de confirmación en la
+          subcolección. La regla de firestore prohíbe modificar confirmaciones del
+          reporte padre. En consecuencia, report.confirmaciones siempre queda en 0
+          aunque haya confirmaciones reales. Las vistas "Mis reportes" y "Cerca de
+          mí" muestran siempre "0".
+Solución: En confirm(), ejecutar una transacción que escriba la confirmación y
+          haga increment(1) en report.confirmaciones. Actualizar la regla para
+          permitir increment(1) en el campo confirmaciones del reporte padre.
+
+
+[BUG 10] Auto-confirmación de reportes propios permitida por reglas
+Nivel: Alto  ·  Ubicación: firestore.rules:125-133
+Problema: Las reglas de confirmations.create no verifican que report.uid !=
+          request.auth.uid. Un usuario puede confirmar su propio reporte. La UI
+          lo previene (report-detail.page.ts:86-88) pero es un bypass trivial
+          desde el cliente directo.
+Solución: Añadir a la regla: request.auth.uid != get(/databases/$(database)/
+          documents/reports/$(request.resource.data.reportId)).data.uid
+
+
+[BUG 11] SimilarReportsComponent no excluye reportes propios
+Nivel: Alto  ·  Ubicación: src/app/components/similar-reports/similar-reports.component.ts:43-66
+Problema: El query de similitud filtra por estado y rango geoespacial, pero no
+          excluye los reportes del usuario actual. El usuario ve sus propios
+          reportes como "coincidencias" y puede confirmarlos (ver Bug 10).
+Solución: Añadir al query un filtro where('uid', '!=', this.authService.uid).
+
+
+[BUG 12] DuplicateDetectionService no excluye al autor
+Nivel: Alto  ·  Ubicación: src/app/services/duplicate-detection.service.ts:55-77
+Problema: findExistingReports busca por categoría y geohash sin excluir reportes del
+          propio usuario. Los reportes propios activos aparecen como coincidencias,
+          inflando la señal de duplicación.
+Solución: Añadir al query un where('uid', '!=', uidActual) y propagar el uid del
+          usuario actual al servicio.
+
+
+[BUG 13] Perfil fallido oculta el reporte en el detalle
+Nivel: Alto  ·  Ubicación: src/app/pages/report-detail/report-detail.page.ts:223-238
+Problema: Promise.all incluye getUserProfile y getReportById. Si falla la lectura
+          del perfil (red, permisos), el catch marca noEncontrado = true y la UI
+          muestra "Reporte no encontrado" aunque el reporte exista.
+Solución: Separar las promesas: loadReport independiente; loadProfile con
+          .catch(() => null). noEncontrado solo se activa si falla getReportById.
+
+
+[BUG 14] changeStatus no atómico: transición fantasma
+Nivel: Alto  ·  Ubicación: src/app/services/routing.service.ts:95-109
+Problema: Se escribe el documento de historial y luego se hace updateDoc para
+          cambiar el estado. Si updateDoc falla, queda un registro de historial
+          que indica una transición que nunca ocurrió.
+Solución: Envolver en una transacción de Firestore: leer el doc actual, verificar
+          que el estado coincida con 'desde', escribir historial y actualizar
+          estado en la misma transacción.
+
+
+[BUG 15] Reglas de statusHistory sin coherencia con el estado real
+Nivel: Alto  ·  Ubicación: firestore.rules:136-147
+Problema: Cualquier usuario con permisos puede escribir un historial
+          desde→hacia que contradiga el estado actual del documento. No hay
+          verificación server-side de que la transición sea válida.
+Solución: En la regla: h.hacia == request.resource.data.estado &&
+          h.desde == resource.data.estado. Esto garantiza que el historial
+          es consistente con el cambio de estado.
+
+
+[BUG 16] quitarFotografia no resetea el embedding
+Nivel: Alto  ·  Ubicación: src/app/pages/report/report.page.ts:132-147
+Problema: Al quitar una foto, se elimina la referencia y la imagen, pero el campo
+          embedding queda con el vector anterior. El reporte se guarda sin foto pero
+          con un embedding "huérfano". La detección de duplicados sigue usando la
+          imagen eliminada.
+Solución: Añadir embedding: null al objeto actualiza al momento de quitar la foto.
+
+
+[BUG 17] Raza en capturar(): embedding puede quedar desactualizado
+Nivel: Alto  ·  Ubicación: src/app/pages/report/report.page.ts:253-272
+Problema: Al hacer una segunda foto sin esperar que termine la primera, this.embedding
+          se reasigna por segunda vez. Si el usuario envía el reporte antes de que
+          termine el procesamiento de la segunda foto, se envía el embedding viejo.
+Solución: Nullificar this.embedding = null al inicio del método. Enviar: si
+          this.fotoTemporal && !this.embedding, mostrar "procesando..." y bloquear
+          el envío. También cancelar cualquier tarea en curso al tomar nueva foto.
+
+
+[BUG 18] createReport guarda embedding aunque no haya foto
+Nivel: Medio  ·  Ubicación: src/app/services/report.service.ts:89-93
+Problema: Si datos.embedding llega pero no hay foto (ver Bug 17 o error previo), el
+          reporte se escribe con embedding y sin foto, combinación incoherente.
+Solución: En createReport, omitir embedding si !datos.fotoPath. Validar en reglas
+          que embedding solo exista si fotoPath != "".
+
+
+[BUG 19] Sin idempotencia de envío: reintento crea duplicados
+Nivel: Alto  ·  Ubicación: src/app/services/report.service.ts:74-75
+Problema: El reportId se regenera con crypto.randomUUID() en cada llamada a
+          createReport. Si la app hace timeout pero el servidor recibió la
+          escritura, un reintento crea un segundo reporte idéntico.
+Solución: Generar el ID una sola vez por "sesión" de creación de reporte (por
+          ejemplo al montar el componente) y reutilizarlo. Alternativa:
+          include en el doc un campo idempotencyKey y en la regla verificar
+          que el doc no exista antes de escribir (ya lo hace setDoc con
+          merge:false). Generar ID en el componente y pasarlo al servicio.
+
+
+[BUG 20] countConfirmations trae 0 en caso de error
+Nivel: Alto  ·  Ubicación: src/app/services/confirmation.service.ts:71-84
+Problema: En caso de error de red o permisos, la función devuelve 0. La UI nunca
+          distingue "no hay confirmaciones" de "no se pudo contar".
+Solución: Lanzar el error o devolver null; el componente lo maneja: null → spinner
+          o "no disponible", 0 → "0 confirmaciones".
+
+
+[BUG 21] hasConfirmed devuelve false en caso de error
+Nivel: Alto  ·  Ubicación: src/app/services/confirmation.service.ts:86-101
+Problema: Idéntico a Bug 20; en caso de fallo el componente muestra "Confirmar"
+          aunque la confirmación ya se haya guardado. Si el usuario re-intenta,
+          se crean duplicados.
+Solución: Devolver null en caso de error; el componente desactiva el botón y
+          muestra un mensaje de no-verificación.
+
+
+[BUG 22] getStatusHistory trae [] en caso de error
+Nivel: Medio  ·  Ubicación: src/app/services/routing.service.ts:123-125
+Problema: El error se traga y se devuelve array vacío. El componente muestra
+          "Sin seguimiento" como si no hubiera historial real.
+Solución: Devolver error observable o null; el componente maneja con spinner
+          y reintentar.
+
+
+[BUG 23] Comentario de historial limitado solo en cliente
+Nivel: Bajo  ·  Ubicación: src/app/services/routing.service.ts:91
+Problema: Se aplica slice(0,300) en el cliente pero las reglas no validan la
+          longitud. Un cliente malicioso puede enviar texto de millones de bytes.
+Solución: Añadir en reglas validación: h.comentario.size() <= 512 (con margen).
+          Sincronizar límites en report.model.ts.
+
+
+[BUG 24] reportPhotos crea sin verificar que el reporte exista
+Nivel: Medio  ·  Ubicación: firestore.rules:155-160
+Problema: Un usuario puede crear un documento de foto apuntando a un reportId
+          inexistente, generando fotos huérfanas desde el inicio.
+Solución: Regla: require_exists(/databases/$(database)/documents/reports/$(reportId))
+          en rules de reportPhotos.create.
+
+
+[BUG 25] confirmations crea sin verificar que el reporte exista
+Nivel: Medio  ·  Ubicación: firestore.rules:128-131
+Problema: Similar a Bug 24; se pueden crear confirmaciones para reportes
+          fantasma.
+Solución: require_exists en confirmations.create.
+
+
+[BUG 26] embedding sin validación en reglas
+Nivel: Alto  ·  Ubicación: firestore.rules:97-120
+Problema: El campo embedding se acepta con cualquier tamaño o forma. Un cliente
+          malicioso puede enviar un vector de miles de dimensiones o datos
+          no numéricos, inflando documentos y corrompiendo búsquedas.
+Solución: Regla: embedding.size() <= 256 (o la dimensión real del modelo) &&
+          embedding.every(n => typeof n == 'number'). Usar validación por
+          campos: is array && size ≤ dimensión.
+
+
+[BUG 27] geohash no validado contra las coordenadas
+Nivel: Alto  ·  Ubicación: firestore.rules:108-109
+Problema: El geohash se acepta sin verificar que corresponda a lat/lng. Un
+          cliente malicioso puede sembrar reportes en ubicaciones falsas,
+          afectando los resultados de las búsquedas geoespaciales.
+Solución: Regla: calcular el geohash esperado a partir de lat/lng (si Firestore
+          lo permite con expresiones, o hacerlo en el servidor). A falta de eso,
+          validar longitud y formato del geohash (string 1-12 chars).
+
+
+[BUG 28] ImageSimilarityService sin cache negativo
+Nivel: Medio  ·  Ubicación: src/app/services/image-similarity.service.ts:50-58
+Problema: Si la carga del modelo MobileNet falla, el siguiente computeEmbedding
+          vuelve a descargar ~17 MB. En condiciones de red inestable esto se
+          repite indefinidamente, bloqueando la interfaz cada vez.
+Solución: Añadir flag modeloFallido. Si falla, no reintentar más de 3 veces o
+          esperar un intervalo (exponential backoff). Mostrar error claro al
+          usuario. Usar modeloCargando para evitar carreras.
+
+
+============================================================
+SECCIÓN C — UI/UX Y PLANTILLAS (bugs 29–46)
+============================================================
+
+[BUG 29] ionChange puede leer el valor previo del ion-segment
+Nivel: Medio  ·  Ubicación: src/app/pages/report/report.page.ts:151-153
+Problema: onCategoriaChange() lee this.categoria.value dentro del listener de ionChange.
+          El orden entre el binding de ReactiveForms y el dispatch de IonSegment puede
+          causar que se lea el valor antes de actualizarlo. El detector de duplicados
+          usa la categoría vieja.
+Solución: Confirme si el problema persiste; de ser así, diferir la detección usando
+          setTimeout(0) o un debounce de 50ms tras el cambio, o cambiar a un
+          @ViewChild y manual afterNextRender para sincronizar.
+
+
+[BUG 30] Flicker de coincidencias durante análisis
+Nivel: Bajo  ·  Ubicación: src/app/pages/report/report.page.ts:229-244
+Problema: Mientras analizando es true, las coincidencias viejas siguen visibles.
+          Al terminar se reemplazan, causando un flash de contenido antiguo.
+Solución: Guardar las coincidencias anteriores y mostrarlas como "anteriormente
+          detectadas" con estilo atenuado, o vaciar el array al iniciar análisis
+          y rellenarlo solo al completar.
+
+
+[BUG 31] Perfil "stale" al cambiar de cuenta
+Nivel: Alto  ·  Ubicación: src/app/pages/home/home.page.ts:67-82
+Problema: HomePage carga perfil y trustLevel en ngOnInit. IonicRouteStrategy
+          reutiliza la instancia al navegar a /home tras logout→login. El perfil
+          y el nivel de confianza del usuario anterior persisten en pantalla.
+Solución: Recargar perfil en ionViewWillEnter, o hacer que HomePage se suscriba
+          a authState$ y re-cargue al detectar cambio de uid.
+
+
+[BUG 32] Mapa y "Cerca de mí" muestran datos del usuario anterior
+Nivel: Alto  ·  Ubicación: src/app/pages/map/map.page.ts:77-81,
+                            src/app/pages/nearby/nearby.page.ts:92-96
+Problema: Ambas páginas ubicán el mapa solo si !centro(). Tras cerrar sesión y
+          entrar con otra cuenta (IonicRouteStrategy), la posición y los
+          reportes del usuario anterior permanecen.
+Solución: Recalcular posición en ionViewWillEnter verificando el uid actual
+          contra el último uid conocido. Forzar refresh si cambia.
+
+
+[BUG 33] MapPage sin reintento de geolocalización
+Nivel: Medio  ·  Ubicación: src/app/pages/map/map.page.ts:103-114
+Problema: Si la geolocalización falla, centro() queda null para siempre hasta
+          salir y volver a entrar a la página. No hay botón de reintentar.
+Solución: Mostrar botón "Reintentar ubicación" cuando PositionError. Mantener
+          un flag ubicacionIntentada para distinguir "cargando" de "error".
+
+
+[BUG 34] "Cerca de mí" estado vacío engañoso
+Nivel: Medio  ·  Ubicación: src/app/pages/nearby/nearby.page.html:53-80
+Problema: Con centro()==null y sin cargar, el bloque @else renderiza una lista
+          vacía invisible. El usuario no sabe si está buscando, si no hay
+          reportes o si hubo un error.
+Solución: Distinguir tres estados: sin ubicación (mostrar CTA de ubicación),
+          cargando (spinner), error (retry + mensaje), sin resultados
+          (mensaje descriptivo con link a reportar).
+
+
+[BUG 35] Mapa muestra "0 incidencias" sin centro ni error
+Nivel: Medio  ·  Ubicación: src/app/pages/map/map.page.html:55-68
+Problema: Idéntico a Bug 34 pero para la vista del mapa; sin centro se cuenta
+          0 incidencias.
+Solución: Ocultar el contador mientras !centro(); mostrar estado de carga en
+          su lugar.
+
+
+[BUG 36] verFotografia sin reintento
+Nivel: Bajo  ·  Ubicación: src/app/pages/report-detail/report-detail.page.html:61-73
+Problema: Al fallar la descarga de la foto, el botón se reemplaza por un mensaje
+          de error sin opción a reintentar.
+Solución: Mantener botón "Reintentar" junto al error de carga. Incrementar
+          un contador de intentos para cambiar la URL (evitar caché).
+
+
+[BUG 37] Error duplicado en login (aviso + toast)
+Nivel: Bajo  ·  Ubicación: src/app/pages/login/login.page.ts:219-227
+Problema: mostrarError() activa el bloque visual del formulario Y muestra un toast
+          con el mismo mensaje; el usuario ve el error dos veces.
+Solución: Eliminar el llamado a toastService.error() dentro de mostrarError() y
+          viceversa, o unificar en una sola presentación.
+
+
+[BUG 38] yaConfirmados persiste entre sesiones de creación de reporte
+Nivel: Bajo  ·  Ubicación: src/app/components/similar-reports/similar-reports.component.ts:33
+Problema: El Set yaConfirmados es un campo de clase; como IonicRouteStrategy
+          reutiliza el componente, los reportes confirmados en una sesión
+          anterior aparecen como "ya confirmado" en la siguiente.
+Solución: Resetear yaConfirmados en ngOnInit (ya se hace en ionViewWillEnter,
+          pero con ruta guard la reutilización aún afecta). Añadir reset en
+          el setter de reportId para que al recibir un nuevo reporte se
+          reinicie el estado.
+
+
+[BUG 39] Detalle de reporte no recarga al cambiar de reporte
+Nivel: Alto  ·  Ubicación: src/app/pages/report-detail/report-detail.page.ts:66,99-101
+Problema: El componente recibe id por input (withComponentInputBinding). Si la
+          ruta cambia de /report/A a /report/B sin salir de la vista
+          (mismo routeConfig), Angular reutiliza la instancia y ngOnInit
+          no se ejecuta. La UI muestra datos del reporte anterior.
+Solución: Implementar un setter para id que detecte cambios y lance loadReport()
+          de nuevo. Alternativamente usar @Input set id(...) con
+         ثار onChanges.
+
+
+[BUG 40] Back del detalle fijo a /map
+Nivel: Bajo  ·  Ubicación: src/app/pages/report-detail/report-detail.page.html:4
+Problema: El botón "Volver" siempre navega a /map, aunque el usuario haya venido
+          de "Mis reportes" o "Cerca de mí".
+Solución: Usar history.back() con fallback: if (window.history.length > 1)
+          history.back(); else router.navigate(['/map']).
+
+
+[BUG 41] Sin bloqueo de doble envío de reporte
+Nivel: Medio  ·  Ubicación: src/app/pages/report/report.page.ts:174-215
+Problema: El botón de enviar no se deshabilita al hacer clic. Si el usuario pulsa
+          dos veces rápido, se intenta crear el reporte dos veces (ver Bug 19).
+Solución: Añadir flag enviando = false; en onSubmit: if (enviando) return;
+          enviando = true; al terminar (success o error): enviando = false.
+          Deshabilitar el botón ion-button con [disabled]="enviando || loading".
+
+
+[BUG 42] Login no limpia formularios al cambiar de modo
+Nivel: Bajo  ·  Ubicación: src/app/pages/login/login.page.ts:88-94
+Problema: Al alternar entre "Iniciar sesión" y "Crear cuenta", los valores del
+          formulario anterior persisten en el DOM.
+Solución: this.form.reset() dentro del handler de cambio de modo.
+
+
+[BUG 43] Duplicación de asistencia de contraseña
+Nivel: Bajo  ·  Ubicación: src/app/pages/login/login.page.html:122,126-128
+Problema: helperText muestra la longitud de contraseña y ion-note muestra la
+          validación de complejidad; ambos aparecen simultáneamente,
+          duplicando información.
+Solución: Mostrar helperText solo en modo registro; consolidar la validación
+          en una sola línea.
+
+
+[BUG 44] Sin feedback de precisión en distancias
+Nivel: Bajo  ·  Ubicación: src/app/pages/nearby/nearby.page.ts:129-131
+Problema: La tarjeta de reporte cercano muestra "0 m" o distancias muy precisas
+          sin indicar que es aproximada. La distancia real tiene un error de
+          ±15-50 metros dependiendo de la señal GPS.
+Solución: Redondear a la decena más cercana (10m, 20m...) y mostrar
+          etiqueta "aproximadamente". O usar Flooring simple: Math.round(dist/10)*10.
+
+
+[BUG 45] Mis reportes: error genérico que iguala causas
+Nivel: Bajo  ·  Ubicación: src/app/pages/my-reports/my-reports.page.ts:88-96
+Problema: "No se pudieron cargar los reportes" se muestra tanto por falta de red
+          como por falta de permisos. El usuario no sabe qué hacer.
+Solución: Distinguir: Error.name === 'permission-denied' → "No tienes permisos
+          para ver estos reportes"; otros → "Error de conexión. Reintentar".
+
+
+[BUG 46] index.html con lang="en" y user-scalable=no
+Nivel: Bajo  ·  Ubicación: src/index.html:2,6,11
+Problema: lang="en" afecta SEO y lectores de pantalla. El título es "Ionic App".
+          user-scalable=no viola WCAG 1.4.4 (requiere escalado 200%).
+Solución: Cambiar lang="es", título "Ciudad Alerta", quitar
+          user-scalable=no (o usar maximum-scale=5).
+
+
+============================================================
+SECCIÓN D — MAPA LEAFLET (bugs 47–55)
+============================================================
+
+[BUG 47] tileerror deja error fijo después de 6 fallos
+Nivel: Alto  ·  Ubicación: src/app/components/map-view/map-view.component.ts:285-294
+Problema: Si hay 6 errores de tiles consecutivos (conexión mala momentánea),
+          se muestra overlay de error permanente aunque los tiles se recuperen.
+Solución: Registrar un tileload en el mapa que resetee erroresACumulados a 0
+          cuando un tile se cargue correctamente. Actualizar据此 el flag tileError
+          a false.
+
+
+[BUG 48] Sin recuperación automática de tiles
+Nivel: Alto  ·  Ubicación: src/app/components/map-view/map-view.component.ts:129-136
+Problema: Si la conexión falla, el mapa queda roto. No hay reintento automático;
+          solo un botón "Reintentar" que hace invalidateSize.
+Solución: Escuchar eventos online/offline. Al recuperar conexión, llamar a
+          map.invalidateSize() y resetear erroresACumulados para que los
+          tiles fallen se reintenten.
+
+
+[BUG 49] fitBounds pisa la vista del usuario en cada redibujo
+Nivel: Medio  ·  Ubicación: src/app/components/map-view/map-view.component.ts:278
+Problema: fitBounds se ejecuta cada vez que se renderizan marcadores, incluyendo
+          cuando el usuario ha movido o acercado el mapa manualmente.
+Solución: Ejecutar fitBounds solo la primera vez que se cargan marcadores, o
+          cuando cambia el radio de búsqueda (flag origenDibujo).
+          Opcionalmente guardar y restaurar la vista del usuario.
+
+
+[BUG 50] setTimeout de invalidateSize sin limpiar en destroy
+Nivel: Medio  ·  Ubicación: src/app/components/map-view/map-view.component.ts:188-192
+Problema: El setTimeout para invalidateSize no se limpia en ngOnDestroy, lo que
+          puede causar errores si el componente se destruye antes de que se
+          ejecute el callback.
+Solución: Guardar el ID del setTimeout en una variable y clearTimeout en
+          ngOnDestroy.
+
+
+[BUG 51] Solo se evalúa navigator.onLine una vez
+Nivel: Medio  ·  Ubicación: src/app/components/map-view/map-view.component.ts:143-149
+Problema: navigator.onLine se comprueba al entrar a la página; no hay listeners
+          online/offline. Si el usuario está offline al cargar el mapa, el
+          botón Reintentar no funciona hasta recargar la app.
+Solución: Añadir window.addEventListener('online', ...) y ('offline', ...) en
+          ngOnInit, y limpiarlos en ngOnDestroy.
+
+
+[BUG 52] Centro por defecto = Plaza de Armas de Santiago
+Nivel: Bajo  ·  Ubicación: src/app/components/map-view/map-view.component.ts:153-154
+Problema: Un usuario en otra ciudad ve el mapa centrado en Santiago al abrir
+          por primera vez, lo cual es confuso.
+Solución: Intentar obtener ubicación actual antes de usar el default. Si falla,
+          mostrar un prompt "No se pudo obtener tu ubicación" con opción de
+          buscar ciudad manualmente.
+
+
+[BUG 53] Marcadores sin popup o tooltip
+Nivel: Bajo  ·  Ubicación: src/app/components/map-view/map-view.component.ts:249-252
+Problema: La única forma de ver información de un marcador es hacer clic y
+          navegar al detalle. No hay popup ni tooltip con estado resumido.
+Solución: Añadir marker.bindPopup con titulo + estado + "Clic para ver detalle".
+          Popup mínimo en mobile.
+
+
+[BUG 54] divIcon inyecta color en HTML sin sanitizar
+Nivel: Bajo  ·  Ubicación: src/app/components/map-view/map-view.component.ts:244
+Problema: El color de estado se interpola directamente en el HTML del divIcon.
+          Hoy es constante de COLORES_ESTADO, pero si en el futuro se pasa
+          un valor externo, sería XSS.
+Solución: Usar una clase CSS condicional en vez de estilo inline. Ejemplo:
+          class="pin pin-${status}" con estilos en map-view.component.scss.
+
+
+[BUG 55] Extensión .jpg para archivos image/webp
+Nivel: Medio  ·  Ubicación: src/app/services/photo-storage.service.ts:107-114
+Problema: CloudStoragePhotoService guarda fotos webp con extensión .jpg.
+          La descarga usa extensión para determinar el MIME type, causando
+          inconsistencias.
+Solución: Determinar extensión por MIME type: .webp para image/webp,
+          .jpg para image/jpeg, .png para image/png.
+
+
+============================================================
+SECCIÓN E — SEGURIDAD FIRESTORE/STORAGE (bugs 56–65)
+============================================================
+
+[BUG 56] firebase.json no declara storage.rules
+Nivel: Alto  ·  Ubicación: firebase.json:1-12
+Problema: storage.rules existe en el repo pero firebase.json no lo referencia.
+          firebase deploy nunca publica las reglas de Storage. El bucket
+          queda con reglas de default (prohibe todo) o las que se
+          configuren manualmente.
+Solución: Añadir "storage": {"rules": "storage.rules"} a firebase.json.
+
+
+[BUG 57] reports lectura abierta a todo autenticado
+Nivel: Alto  ·  Ubicación: firestore.rules:99,153
+Problema: Cualquier usuario autenticado puede leer todos los reportes activos
+          con ubicación precisa, embedding y foto de terceros. Los reportes
+          en estado resuelto/cerrado también son legibles.
+Solución (nota de producto): Asumimos que este es el comportamiento deseado
+          para el MVP (app de reportes públicos). Para futuras versiones:
+          considerar restringir lectura a reportes propios + confirmados,
+          o difuminar ubicación en reportes antiguos.
+
+
+[BUG 58] Descripción: discrepancia multibyte cliente↔servidor
+Nivel: Alto  ·  Ubicación: src/app/models/report.model.ts:34,
+                            firestore.rules:72-73
+Problema: El cliente valida 500 unidades UTF-16 (.length). Las reglas
+          validan 500 bytes UTF-8 (.size()). Un texto con solo emojis pasa
+          en cliente (500 code units) pero es rechazado en servidor (500+
+          bytes por emoji × 4 bytes cada uno).
+Solución: Cambiar validación cliente a TextEncoder().encode(texto).length
+          <= 500. O unificar ambos en un límite de 150 caracteres
+          (seguro para ambos).
+
+
+[BUG 59] dataUrl límites inconsistentes (chars vs bytes)
+Nivel: Alto  ·  Ubicación: src/app/services/photo-storage.service.ts:57,
+                            firestore.rules:160
+Problema: El cliente valida .size() (caracteres del base64). Las reglas
+          validan .size() (bytes del string). Con base64, los bytes del
+          string son casi iguales a los caracteres, pero el límite del
+          cliente (900K) es menor que el de reglas (950K).
+Solución: Unificar ambos a 1MB (bytes). En cliente: validar con
+          TextEncoder o simplificar .length <= 1_048_576.
+
+
+[BUG 60] Sin rate limiting de reportes ni confirmaciones
+Nivel: Alto  ·  Ubicación: firestore.rules (general)
+Problema: No hay protección contra spam. Un usuario malicioso puede crear
+          miles de reportes o confirmaciones en poco tiempo.
+Solución: Añadir campo ultimoReporteAt al perfil del usuario. Regla:
+          diff(resource.data.ultimoReporteAt, request.time) > 30s
+          para reports.create. Limitar a 1 confirmación por usuario por
+          reporte (ya lo hace la regla con unique identifier).
+
+
+[BUG 61] ReportPhotos se escribe ANTES que Reports
+Nivel: Alto  ·  Ubicación: src/app/services/report.service.ts:79-113
+Problema: Se crea el documento de foto y luego el reporte. Si la app muere
+          entre ambas (crash, cierre), queda una foto huérfana sin reporte.
+Solución: Revertir el orden: crear reporte primero (sin foto), luego foto,
+          luego actualizar reporte con fotoPath y embedding. El reporte
+          será visible sin foto brevemente pero no queda huérfano.
+          Alternativa: crear ambos en batch (require WriteBatch).
+
+
+[BUG 62] Cleanup de fotos huérfanas no reintenta fallos
+Nivel: Medio  ·  Ubicación: src/app/services/report.service.ts:115-122
+Problema: Si el remove() de la foto falla al borrar un reporte, nunca se
+          reintenta. Las fotos quedan en Storage indefinidamente.
+Solución: En caso de fallo, programar limpieza: Firestore Functions con
+          trigger onWrite de reports con campo fotoPendienteBorrado.
+          O simplificar: aceptar que las fotos se limpiarán con
+          Storage lifecycle rules.
+
+
+[BUG 63] mensajeDeEscritura engañoso
+Nivel: Bajo  ·  Ubicación: src/app/services/report.service.ts:195
+Problema: "Revisa que todos los campos estén completos" se muestra ante
+          permission-denied, que en realidad significa falta de permisos
+          de escritura en el bucket o colección.
+Solución: Distinguir permission-denied ("No tienes permisos para crear
+          reportes") de otros errores de validación.
+
+
+[BUG 64] Reglas users.update permiten campos extra
+Nivel: Medio  ·  Ubicación: firestore.rules:55
+Problema: Las reglas permiten actualizar el documento de usuario pero solo
+          validan los campos role, trustLevel, confirmed. No hay whitelist
+          explícita de campos permitidos.
+Solución: Añadir a la regla que request.resource.data.keys().hasAll(['email',
+          'displayName', 'role', 'trustLevel', 'confirmed', 'uid']).
+
+
+[BUG 65] Credenciales de Firebase en el repo
+Nivel: Bajo  ·  Ubicación: src/environments/environment.ts:22-28,
+                            src/environments/environment.prod.ts
+Problema: Las API keys de Firebase están en el repo (por diseño de Firebase,
+          son públicas). Sin restricción de dominios en la consola GCP,
+          cualquier app puede usarlas.
+Solución: Documentar: configurar en Firebase Console → Authentication →
+          Authorized domains, y App Check. Las keys son públicas por
+          diseño pero las restricciones se configuran en consola.
+
+
+============================================================
+SECCIÓN F — MOBILE/CAPACITOR/ANDROID (bugs 66–72)
+============================================================
+
+[BUG 66] android:allowBackup="true"
+Nivel: Alto  ·  Ubicación: android/app/src/main/AndroidManifest.xml:5
+Problema: Permite extraer la persistencia completa de la app (tokens de
+          Firebase, datos de usuario, fotos en caché) vía adb backup.
+          Un dispositivo perdido o robado puede ser explotado.
+Solución: Cambiar a android:allowBackup="false". Si se necesita backup,
+          usar fullBackupContent con exclusiones explícitas de auth y datos.
+
+
+[BUG 67] android/assets/public está committeado con build stale
+Nivel: Medio  ·  Ubicación: android/app/src/main/assets/public/
+Problema: El contenido del build compilado está en el repo y se actualiza
+          manualmente con cap sync. Puede quedar desincronizado con src/
+          (el www está en .gitignore pero android assets no).
+Solución: Añadir a .gitignore: android/app/src/main/assets/public/.
+          Añadir script npm "sync:cap": "ng build && npx cap sync".
+          Documentar que android assets se generan, no se editan a mano.
+
+
+[BUG 68] Dependencias muertas que aumentan el bundle
+Nivel: Bajo  ·  Ubicación: package.json:26-28
+Problema: @capacitor/status-bar, @capacitor/haptics, @capacitor/keyboard
+          están declaradas pero nunca importadas en código fuente.
+Solución: npm uninstall @capacitor/status-bar @capacitor/haptics
+          @capacitor/keyboard. Quitar del tsconfig si están ahí.
+
+
+[BUG 69] PreloadAllModules descarga todo al arrancar
+Nivel: Alto  ·  Ubicación: src/main.ts:28
+Problema: Con withPreloading(PreloadAllModules), todas las páginas y
+          servicios pesados (TensorFlow ~17MB, Leaflet) se descargan
+          en el primer render. En móvil esto causa splash largo.
+Solución: Cambiar a withPreloading(NoPreloading) o quitar la configuración.
+          Cada módulo se cargará al navegar por primera vez. Añadir
+          lazy load explícito donde no exista.
+
+
+[BUG 70] target es2022 sin polyfills para WebView viejo
+Nivel: Bajo  ·  Ubicación: tsconfig.json:19, angular.json:28
+Problema: Con polyfills: [] y target es2022, dispositivos Android 8-10
+          con WebView sin actualizar podrían romper al no encontrar
+          APIs modernas.
+Solución: Documentar versión mínima de Android (11+). O añadir polyfills
+          mínimos: core-js para Promise, Array.includes, etc.
+
+
+[BUG 71] Emuladores configurados pero nunca conectados
+Nivel: Bajo  ·  Ubicación: firebase.json (emuladores), firebase.providers.ts
+Problema: firebase.json define emuladores para auth y firestore, pero el
+          código nunca llama a connectAuthEmulator/connectFirestoreEmulator.
+          El dev local siempre pega a producción.
+Solución: Añadir environment.useEmulators (boolean). En
+          firebase.providers.ts, si useEmulators, llamar a los
+          connectors. Default false para prod.
+
+
+[BUG 72] Falta ACCESS_NETWORK_STATE en AndroidManifest
+Nivel: Bajo  ·  Ubicación: android/app/src/main/AndroidManifest.xml:40-46
+Problema: El permiso ACCESS_NETWORK_STATE no está declarado. Algunas libs
+          y plugins de Capacitor lo requieren para detectar conectividad.
+Solución: Añadir <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>.
+
+
+============================================================
+SECCIÓN G — TESTS (bugs 73–78)
+============================================================
+
+[BUG 73] Suite completa no compila: importa clase inexistente
+Nivel: Alto  ·  Ubicación: src/app/services/photo-storage.service.spec.ts:2
+Problema: photo-storage.service.spec.ts importa PhotoStorageService, una clase
+          que no existe en el proyecto. tsc -p tsconfig.spec.json falla con
+          error TS2305 y ng test no puede correr ninguna spec.
+Solución: Corregir la importación a PhotoStorageService o
+          CloudStoragePhotoService (la implementación real). Verificar
+          que el nombre coincida con el export del servicio.
+
+
+[BUG 74] Specs sin proveedores Firebase causan NullInjectorError
+Nivel: Alto  ·  Ubicación: src/app/**/*.spec.ts (todas las que inyectan servicios)
+Problema: Los specs de páginas y servicios usan TestBed.inject() pero no
+          proveen los tokens Firebase (FIREBASE_APP, FIREBASE_AUTH,
+          FIRESTORE). En runtime lanzan NullInjectorError.
+Solución: Crear helper provideFirebaseTestTokens() con dobles mock de
+          FIREBASE_APP, FIREBASE_AUTH, FIRESTORE. Incluirlo en todos
+          los TestBed.configureTestingModule que lo necesiten.
+
+
+[BUG 75] Cobertura 0: specs solo verifican "should create"
+Nivel: Alto  ·  Ubicación: todos los *.spec.ts
+Problema: Cada spec solo verifica que el componente se crea. No hay test
+          de comportamiento real (login, creación de reporte, confirmación,
+          etc.).
+Solución: Para cada servicio/página crítica, añadir tests de comportamiento:
+          AuthService: login exitoso, login fallido, registro, logout.
+          ReportService: creación de reporte, error de permisos.
+          ConfirmationService: confirmación exitosa, duplicada.
+          Detalle: carga exitosa, no encontrado, error de perfil.
+
+
+[BUG 76] auth-guard.spec.ts nunca ejecuta el guard
+Nivel: Medio  ·  Ubicación: src/app/guards/auth-guard.spec.ts:13-15
+Problema: El spec solo comprueba que canActivate es una función; nunca la
+          ejecuta ni verifica el comportamiento.
+Solución: Test real: mockear AuthService.authState$ con valores
+          (con usuario/null), verificar que canActivate retorna
+          true/false/redirect según el estado de autenticación.
+
+
+[BUG 77] ReportService.getMyReports es código muerto duplicado
+Nivel: Medio  ·  Ubicación: src/app/services/report.service.ts:126-142
+Problema: ReportService tiene getMyReports() que nunca se usa (el componente
+          my-reports usa ReportQueryService). Dos implementaciones que
+          pueden divergir.
+Solución: Eliminar ReportService.getMyReports(). Mantener la
+          implementación centralizada en ReportQueryService.
+
+
+[BUG 78] AuthService.isLoggedIn es código muerto (duplicado del Bug 1)
+Nivel: Bajo  ·  Ubicación: src/app/services/auth.service.ts:131
+Problema: Duplicado del Bug 1. Método nunca llamado.
+Solución: Idéntica a Bug 1: eliminar.
+
+
+============================================================
+PASOS DE VERIFICACIÓN POST-IMPLEMENTACIÓN
+============================================================
+
+1. tsc --noEmit -p tsconfig.app.json    → debe pasar sin errores
+2. tsc --noEmit -p tsconfig.spec.json   → debe pasar sin errores (Bug 73 corregido)
+3. node node_modules\eslint\bin\eslint.js src  → debe pasar sin warnings
+4. ng test --watch=false --browsers=ChromeHeadless  → debe pasar todas las specs
+5. ng build                              → debe compilar sin errores
+6. Verificar manualmente: login, creación de reporte, detalle, mapa, confirmación
+
+============================================================
+CAMBIOS A DESPLEGAR MANUALMENTE (post-código)
+============================================================
+
+1. firebase deploy --only firestore:rules,storage
+   - Reglas actualizadas de Firestore y Storage
+
+2. Firebase Console → Authentication → Authorized domains
+   - Verificar que los dominios estén restringidos
+
+3. Firebase Console → App Check
+   - Habilitar App Check si no está activo
+
+4. Firebase Console → Firestore → Rules
+   - Verificar que las reglas deployadas coinciden con las del repo
+
+============================================================
+ORDEN PROPUESTO DE PRs
+============================================================
+
+PR 1: Auth y sesión (Fase 1) — bugs 1-8
+PR 2: Reportes, duplicados, confirmaciones (Fase 2) — bugs 9-28
+PR 3: Rules de seguridad + manifest (Fase 5) — bugs 56-65, 66, 71-72
+PR 4: UI/UX y templates (Fase 3) — bugs 29-46
+PR 5: Mapa Leaflet (Fase 4) — bugs 47-55
+PR 6: Config/build (Fase 6) — bugs 67-70
+PR 7: Tests (Fase 7) — bugs 73-78
+
+Cada PR debe pasar verificación 1-5 antes de merge.
+Los PRs 1-3 son prioritarios (datos y seguridad).
+Los PRs 4-7 son mejoras de calidad y experiencia de usuario.

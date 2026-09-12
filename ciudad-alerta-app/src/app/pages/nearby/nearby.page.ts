@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import {
   IonBackButton,
   IonBadge,
+  IonButton,
   IonButtons,
   IonContent,
   IonHeader,
@@ -13,12 +14,12 @@ import {
   IonSelectOption,
   IonTitle,
   IonToolbar,
-  ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { locateOutline, navigateOutline } from 'ionicons/icons';
+import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
 import { MapMarker, MapViewComponent } from '../../components/map-view/map-view.component';
+import { AuthService } from '../../services/auth.service';
 import { GeolocationService, LocationError } from '../../services/geolocation.service';
 import { FiltrosMapa, ReportQueryService } from '../../services/report-query.service';
 import {
@@ -30,6 +31,14 @@ import {
   REPORT_CATEGORIES,
   ReportCategory,
 } from '../../models/report.model';
+
+type EstadoVista =
+  | 'sin_ubicacion'
+  | 'ubicando'
+  | 'error_ubicacion'
+  | 'cargando'
+  | 'listo'
+  | 'error_datos';
 
 /**
  * Reportes cercanos con radio seleccionable (500 m, 1, 2 o 5 km).
@@ -55,13 +64,14 @@ import {
     IonSelect,
     IonSelectOption,
     IonBadge,
+    IonButton,
     IonIcon,
   ],
 })
 export class NearbyPage {
   private readonly queryService = inject(ReportQueryService);
   private readonly geolocationService = inject(GeolocationService);
-  private readonly toastCtrl = inject(ToastController);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly radios = RADIOS_BUSQUEDA;
@@ -73,7 +83,10 @@ export class NearbyPage {
   readonly radio = signal<number>(500);
   readonly categoria = signal<ReportCategory | 'todas'>('todas');
   readonly resultados = signal<NearbyReport[]>([]);
-  readonly cargando = signal(false);
+  readonly estado = signal<EstadoVista>('sin_ubicacion');
+  readonly mensajeError = signal<string | null>(null);
+
+  private uidCargado: string | null = null;
 
   readonly marcadores = computed<MapMarker[]>(() =>
     this.resultados().map(({ report }) => ({
@@ -86,10 +99,19 @@ export class NearbyPage {
   );
 
   constructor() {
-    addIcons({ locateOutline, navigateOutline });
+    addIcons({ locateOutline, navigateOutline, refreshOutline });
   }
 
   async ionViewWillEnter(): Promise<void> {
+    const uidActual = this.authService.user?.uid ?? null;
+
+    if (uidActual !== this.uidCargado) {
+      this.centro.set(null);
+      this.resultados.set([]);
+      this.estado.set('sin_ubicacion');
+      this.uidCargado = uidActual;
+    }
+
     if (!this.centro()) {
       await this.ubicar();
     }
@@ -110,15 +132,19 @@ export class NearbyPage {
   }
 
   async ubicar(): Promise<void> {
+    this.estado.set('ubicando');
+    this.mensajeError.set(null);
+
     try {
       this.centro.set(await this.geolocationService.getCurrentPosition());
       await this.cargar();
     } catch (error) {
-      const mensaje =
+      this.estado.set('error_ubicacion');
+      this.mensajeError.set(
         error instanceof LocationError
           ? error.message
-          : 'No pudimos obtener tu ubicación.';
-      await this.toast(mensaje);
+          : 'No pudimos obtener tu ubicación.',
+      );
     }
   }
 
@@ -126,18 +152,26 @@ export class NearbyPage {
     void this.router.navigate(['/report', reportId]);
   }
 
+  /**
+   * BUG 44 · La distancia se redondea a la decena: el GPS tiene un error de
+   * varias decenas de metros y mostrar "37 m" sugiere una precisión que no existe.
+   */
   formatearDistancia(metros: number): string {
-    return metros < 1000 ? `${metros} m` : `${(metros / 1000).toFixed(1)} km`;
+    if (metros < 1000) {
+      return `${Math.max(10, Math.round(metros / 10) * 10)} m aprox.`;
+    }
+
+    return `${(metros / 1000).toFixed(1)} km aprox.`;
   }
 
-  private async cargar(): Promise<void> {
+  async cargar(): Promise<void> {
     const centro = this.centro();
 
     if (!centro) {
       return;
     }
 
-    this.cargando.set(true);
+    this.estado.set('cargando');
 
     const filtros: FiltrosMapa = { categoria: this.categoria(), estado: 'todos' };
 
@@ -145,22 +179,11 @@ export class NearbyPage {
       this.resultados.set(
         await this.queryService.findNearby(centro, this.radio(), filtros),
       );
+      this.estado.set('listo');
     } catch {
       this.resultados.set([]);
-      await this.toast('No se pudieron cargar los reportes cercanos.');
-    } finally {
-      this.cargando.set(false);
+      this.estado.set('error_datos');
+      this.mensajeError.set('No se pudieron cargar los reportes cercanos.');
     }
-  }
-
-  private async toast(message: string): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      color: 'warning',
-      position: 'bottom',
-      buttons: [{ text: 'Cerrar', role: 'cancel' }],
-    });
-    await toast.present();
   }
 }

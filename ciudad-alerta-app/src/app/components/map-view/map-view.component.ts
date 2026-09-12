@@ -84,9 +84,26 @@ export class MapViewComponent implements OnDestroy {
   private capaMarcadores: L.LayerGroup | null = null;
   private circulo: L.Circle | null = null;
   private tileErrores = 0;
+  /** BUG 50 · Se guardan para poder cancelarlos si el componente se destruye. */
+  private temporizadores: ReturnType<typeof setTimeout>[] = [];
+  private readonly alRecuperarRed = () => this.reintentar();
+  private readonly alPerderRed = () => {
+    this.cargando.set(false);
+    this.error.set(
+      'Se perdió la conexión. El mapa volverá a cargarse cuando vuelva la red.',
+    );
+  };
 
   constructor() {
-    afterNextRender(() => this.inicializar());
+    afterNextRender(() => {
+      this.inicializar();
+
+      // BUG 48 y 51 · El estado de red se consultaba una sola vez, así que un
+      // corte dejaba el mapa roto hasta salir de la pantalla. Ahora se reacciona
+      // a los eventos del navegador.
+      window.addEventListener('online', this.alRecuperarRed);
+      window.addEventListener('offline', this.alPerderRed);
+    });
 
     // Reposiciona el marcador cada vez que cambian las coordenadas de entrada.
     effect(() => {
@@ -119,6 +136,10 @@ export class MapViewComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    window.removeEventListener('online', this.alRecuperarRed);
+    window.removeEventListener('offline', this.alPerderRed);
+    this.temporizadores.forEach((id) => clearTimeout(id));
+    this.temporizadores = [];
     this.map?.remove();
     this.map = null;
     this.marker = null;
@@ -168,6 +189,17 @@ export class MapViewComponent implements OnDestroy {
       });
 
       capa.on('tileerror', () => this.registrarErrorDeTiles());
+
+      // BUG 47 · Un tile que carga bien significa que el servicio respondió:
+      // se limpia también el mensaje de error, no solo el contador.
+      capa.on('tileload', () => {
+        this.tileErrores = 0;
+
+        if (this.error()) {
+          this.error.set(null);
+        }
+      });
+
       capa.on('load', () => {
         this.cargando.set(false);
         this.tileErrores = 0;
@@ -186,10 +218,12 @@ export class MapViewComponent implements OnDestroy {
       // que renderizan el mapa dentro de un @if la altura llega todavía más
       // tarde. Se recalcula varias veces en lugar de una sola.
       for (const espera of [100, 400, 900]) {
-        setTimeout(() => this.map?.invalidateSize(), espera);
+        this.temporizadores.push(
+          setTimeout(() => this.map?.invalidateSize(), espera),
+        );
       }
 
-      setTimeout(() => this.cargando.set(false), 250);
+      this.temporizadores.push(setTimeout(() => this.cargando.set(false), 250));
     } catch {
       this.cargando.set(false);
       this.error.set('No se pudo inicializar el mapa en este dispositivo.');
@@ -239,17 +273,41 @@ export class MapViewComponent implements OnDestroy {
 
     this.capaMarcadores = L.layerGroup(
       marcadores.map((marcador) => {
+        /**
+         * BUG 54 · El pin se construye con la API del DOM en vez de
+         * interpolar el color dentro de una cadena HTML. Hoy el color viene de
+         * una constante interna, pero así la ruta queda cerrada aunque mañana
+         * llegue de otra parte.
+         */
+        const pin = document.createElement('span');
+        pin.className = 'marcador-incidencia__pin';
+        pin.style.background = marcador.color;
+
         const icono = L.divIcon({
           className: 'marcador-incidencia',
-          html: `<span class="marcador-incidencia__pin" style="background:${marcador.color}"></span>`,
+          html: pin,
           iconSize: [20, 20],
           iconAnchor: [10, 20],
         });
 
-        return L.marker([marcador.lat, marcador.lng], {
+        const marcadorLeaflet = L.marker([marcador.lat, marcador.lng], {
           icon: icono,
           title: marcador.titulo,
-        }).on('click', () => this.markerSelected.emit(marcador.id));
+        });
+
+        // BUG 53 · Un toque muestra el resumen; el enlace abre el detalle.
+        marcadorLeaflet.bindPopup(
+          `<strong>${this.escapar(marcador.titulo)}</strong><br><em>Toca de nuevo para ver el detalle</em>`,
+          { closeButton: false, autoPan: true },
+        );
+
+        marcadorLeaflet.on('click', () => {
+          if (marcadorLeaflet.isPopupOpen()) {
+            this.markerSelected.emit(marcador.id);
+          }
+        });
+
+        return marcadorLeaflet;
       }),
     ).addTo(this.map);
   }
@@ -276,6 +334,13 @@ export class MapViewComponent implements OnDestroy {
     }).addTo(this.map);
 
     this.map.fitBounds(this.circulo.getBounds(), { padding: [16, 16] });
+  }
+
+  /** Escapa el texto que va dentro del popup de Leaflet. */
+  private escapar(texto: string): string {
+    const nodo = document.createElement('span');
+    nodo.textContent = texto;
+    return nodo.innerHTML;
   }
 
   /**

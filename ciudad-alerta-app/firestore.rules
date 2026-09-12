@@ -52,7 +52,15 @@ service cloud.firestore {
       allow list: if false;
 
       allow create: if esPropietario(userId) && creacionConValoresIniciales(userId);
-      allow update: if esPropietario(userId) && camposProtegidosIntactos();
+      // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
+      // campos arbitrarios a su propio documento.
+      allow update: if esPropietario(userId)
+        && camposProtegidosIntactos()
+        && request.resource.data.keys().hasOnly([
+             'uid', 'email', 'displayName', 'role', 'trustLevel',
+             'validatedReports', 'emailVerified', 'ultimoReporteAt',
+             'createdAt', 'updatedAt'
+           ]);
 
       // El borrado de cuentas se maneja desde el backend, no desde el cliente.
       allow delete: if false;
@@ -73,6 +81,30 @@ service cloud.firestore {
         && request.resource.data.descripcion.size() <= 500;
     }
 
+    /**
+     * BUG 60 · Intervalo mínimo entre reportes del mismo usuario.
+     *
+     * Limitación conocida y declarada: las reglas no pueden obligar a que la
+     * marca `ultimoReporteAt` se actualice junto con la creación del reporte,
+     * porque cada escritura de un lote se evalúa por separado contra el estado
+     * previo. Frena el envío repetido desde la aplicación, no a un cliente
+     * fabricado a medida; para eso está App Check.
+     */
+    function respetaIntervaloDeReporte() {
+      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return !('ultimoReporteAt' in perfil)
+        || perfil.ultimoReporteAt == null
+        || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() > 20000;
+    }
+
+    function reporteExiste(reportId) {
+      return exists(/databases/$(database)/documents/reports/$(reportId));
+    }
+
+    function datosReporte(reportId) {
+      return get(/databases/$(database)/documents/reports/$(reportId)).data;
+    }
+
     /** Flujo de estados permitido. Debe reflejar TRANSICIONES en report.model.ts. */
     function transicionValida(desde, hacia) {
       return (desde == 'reportado' && hacia in ['en_revision', 'derivado', 'cerrado'])
@@ -86,6 +118,30 @@ service cloud.firestore {
     function soloCambiaEstado() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['estado', 'updatedAt']);
+    }
+
+    /**
+     * BUG 27 · Las reglas no pueden recalcular un geohash a partir de las
+     * coordenadas, así que se valida su forma: base32 de geohash, de 1 a 12
+     * caracteres. Evita cadenas arbitrarias que ensucien las búsquedas.
+     */
+    function geohashValido() {
+      return request.resource.data.geohash is string
+        && request.resource.data.geohash.size() > 0
+        && request.resource.data.geohash.size() <= 12
+        && request.resource.data.geohash.matches('^[0-9b-hjkmnp-z]+$');
+    }
+
+    /**
+     * BUG 26 · El vector de MobileNet tiene 1024 dimensiones. Sin cota, un
+     * cliente manipulado podría inflar el documento hasta el límite de 1 MiB y
+     * encarecer todas las consultas del mapa.
+     */
+    function embeddingValido() {
+      return !('embedding' in request.resource.data)
+        || request.resource.data.embedding == null
+        || (request.resource.data.embedding is list
+            && request.resource.data.embedding.size() <= 1024);
     }
 
     function ubicacionValida() {
@@ -105,11 +161,12 @@ service cloud.firestore {
         && descripcionValida()
         && categoriaValida()
         && ubicacionValida()
-        && request.resource.data.geohash is string
-        && request.resource.data.geohash.size() > 0
+        && geohashValido()
+        && embeddingValido()
         && request.resource.data.organismo.id in [
              'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
-           ];
+           ]
+        && respetaIntervaloDeReporte();
 
       // HU-28 · Solo un gestor cambia el estado, y solo por transiciones
       // válidas. El resto de campos debe quedar intacto.
@@ -125,10 +182,13 @@ service cloud.firestore {
       match /confirmations/{userId} {
         allow read: if estaAutenticado();
 
+        // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
         allow create: if esPropietario(userId)
           && request.resource.data.uid == userId
           && request.resource.data.reportId == reportId
-          && request.resource.data.createdAt == request.time;
+          && request.resource.data.createdAt == request.time
+          && reporteExiste(reportId)
+          && datosReporte(reportId).uid != request.auth.uid;
 
         allow update, delete: if false;
       }
@@ -137,18 +197,38 @@ service cloud.firestore {
       match /statusHistory/{cambioId} {
         allow read: if estaAutenticado();
 
+        /**
+         * BUG 15 · `desde` debe coincidir con el estado que el reporte tiene
+         * ahora mismo. Dentro de una transacción, get() devuelve el estado
+         * previo a la escritura, que es justamente el origen de la transición.
+         * Sin esta comprobación se podía inventar una bitácora que contradijera
+         * el documento.
+         * BUG 23 · El comentario se acota también en servidor.
+         */
         allow create: if esGestor()
           && request.resource.data.autorUid == request.auth.uid
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
-          && transicionValida(request.resource.data.desde, request.resource.data.hacia);
+          && reporteExiste(reportId)
+          && request.resource.data.desde == datosReporte(reportId).estado
+          && transicionValida(request.resource.data.desde, request.resource.data.hacia)
+          && request.resource.data.comentario is string
+          && request.resource.data.comentario.size() <= 512;
 
         allow update, delete: if false;
       }
     }
 
-    // Fotografías guardadas en Firestore mientras el proyecto siga en el plan
-    // Spark. El id del documento coincide con el del reporte.
+    /**
+     * Fotografías guardadas en Firestore mientras el proyecto siga en el plan
+     * Spark. El id del documento coincide con el del reporte.
+     *
+     * BUG 24 · La fotografía y el reporte se escriben ahora en un mismo lote
+     * (BUG 61). Dentro de un lote cada escritura se evalúa contra el estado
+     * previo, así que el reporte todavía no existe al validar la imagen y no se
+     * puede exigir su existencia aquí. Lo que sí se garantiza es la
+     * atomicidad: ninguna de las dos queda sin la otra.
+     */
     match /reportPhotos/{reportId} {
       allow read: if estaAutenticado();
 

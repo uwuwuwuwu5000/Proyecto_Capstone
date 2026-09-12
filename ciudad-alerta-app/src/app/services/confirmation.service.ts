@@ -47,7 +47,9 @@ export class ConfirmationService {
       );
     }
 
-    if (await this.hasConfirmed(reportId)) {
+    // Si la comprobación previa no fue concluyente, se intenta igual: las
+    // reglas rechazan el duplicado y el mensaje resultante es el mismo.
+    if ((await this.hasConfirmed(reportId)) === true) {
       throw new ConfirmationError('Ya confirmaste este reporte.', 'duplicada');
     }
 
@@ -67,8 +69,14 @@ export class ConfirmationService {
     }
   }
 
-  /** Indica si el usuario actual ya confirmó el reporte. */
-  async hasConfirmed(reportId: string): Promise<boolean> {
+  /**
+   * Indica si el usuario actual ya confirmó el reporte.
+   *
+   * BUG 21 · Devuelve `null` cuando la consulta falla. Antes devolvía `false`,
+   * que la interfaz interpretaba como "puede confirmar" y mostraba el botón a
+   * alguien que quizá ya había confirmado.
+   */
+  async hasConfirmed(reportId: string): Promise<boolean | null> {
     const usuario = this.authService.user;
 
     if (!usuario) {
@@ -81,7 +89,7 @@ export class ConfirmationService {
       );
       return snapshot.exists();
     } catch {
-      return false;
+      return null;
     }
   }
 
@@ -89,15 +97,38 @@ export class ConfirmationService {
    * Total de confirmaciones. Usa una consulta de agregación, que cobra una sola
    * lectura en lugar de una por documento.
    */
-  async countConfirmations(reportId: string): Promise<number> {
+  async countConfirmations(reportId: string): Promise<number | null> {
     try {
       const snapshot = await getCountFromServer(
         collection(this.firestore, 'reports', reportId, 'confirmations'),
       );
       return snapshot.data().count;
     } catch {
-      return 0;
+      // BUG 20 · `null` distingue el fallo de consulta de un reporte sin
+      // confirmaciones, que son situaciones muy distintas para el usuario.
+      return null;
     }
+  }
+
+  /**
+   * BUG 9 · Conteo real para varios reportes a la vez.
+   *
+   * El campo `confirmaciones` del documento nunca se incrementa: las reglas
+   * impiden que el cliente lo toque, y permitirlo abriría la puerta a que
+   * cualquiera inflara el contador de cualquier reporte. Denormalizarlo de forma
+   * segura exige un trigger de Cloud Functions, que requiere plan Blaze, así que
+   * el valor se calcula con consultas de agregación (una lectura cada una).
+   */
+  async countMany(reportIds: string[]): Promise<Map<string, number>> {
+    const totales = await Promise.all(
+      reportIds.map(async (id) => [id, await this.countConfirmations(id)] as const),
+    );
+
+    // Los que no se pudieron contar quedan fuera del mapa; la tarjeta
+    // simplemente no muestra el dato.
+    return new Map(
+      totales.filter((par): par is readonly [string, number] => par[1] !== null),
+    );
   }
 
   private traducir(error: unknown): ConfirmationError {

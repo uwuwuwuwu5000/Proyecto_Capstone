@@ -18,6 +18,9 @@ export const environment = {
    * Cambiar este valor es lo único necesario para migrar entre ambos.
    */
   photoStorage: 'firestore' as 'firestore' | 'cloud-storage',
+
+  useEmulators: false,
+  
   firebase: {
     apiKey: "AIzaSyD2wsLMB3n7MZ7FN2J5j52QlyOvvi7zkbA",
     authDomain: "ciudadalerta.firebaseapp.com",

@@ -16,6 +16,14 @@ export interface UserProfile {
   trustLevel: number;
   validatedReports: number;
   emailVerified: boolean;
+  /**
+   * Momento del último reporte creado. Sostiene el intervalo mínimo entre
+   * envíos (BUG 60). Ausente en los perfiles creados antes de esta versión.
+   */
+  ultimoReporteAt?: Timestamp | FieldValue | null;
   createdAt: Timestamp | FieldValue;
   updatedAt: Timestamp | FieldValue;
 }
+
+/** Intervalo mínimo entre reportes de un mismo usuario, en milisegundos. */
+export const INTERVALO_MINIMO_REPORTE_MS = 30_000;

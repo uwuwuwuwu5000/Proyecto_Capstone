@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   AlertController,
@@ -40,7 +40,7 @@ import { UserProfile } from '../../models/user-profile.model';
     IonIcon,
   ],
 })
-export class HomePage implements OnInit {
+export class HomePage {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
@@ -51,6 +51,9 @@ export class HomePage implements OnInit {
   readonly usuario = this.authService.currentUser;
   readonly perfil = signal<UserProfile | null>(null);
   readonly cargandoPerfil = signal(true);
+
+  /** uid cuyo perfil está actualmente en pantalla. */
+  private uidCargado: string | null = null;
 
   constructor() {
     addIcons({
@@ -64,18 +67,35 @@ export class HomePage implements OnInit {
     });
   }
 
-  async ngOnInit(): Promise<void> {
+  /**
+   * BUG 31 · Ionic reutiliza la instancia de la página al volver a entrar, y con
+   * `ngOnInit` el perfil de la cuenta anterior quedaba en pantalla tras cerrar
+   * sesión e ingresar con otra. `ionViewWillEnter` corre en cada entrada, y la
+   * comparación de uid evita recargas innecesarias.
+   */
+  async ionViewWillEnter(): Promise<void> {
     const actual = this.authService.user;
 
     if (!actual) {
+      this.perfil.set(null);
+      this.uidCargado = null;
       this.cargandoPerfil.set(false);
       return;
     }
 
+    if (this.uidCargado === actual.uid && this.perfil() !== null) {
+      return;
+    }
+
+    this.cargandoPerfil.set(true);
+    this.perfil.set(null);
+
     try {
       this.perfil.set(await this.authService.getUserProfile(actual.uid));
+      this.uidCargado = actual.uid;
     } catch {
       this.perfil.set(null);
+      this.uidCargado = null;
     } finally {
       this.cargandoPerfil.set(false);
     }

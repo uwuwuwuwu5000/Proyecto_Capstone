@@ -89,8 +89,17 @@ export class LoginPage {
     if (valor !== 'login' && valor !== 'registro') {
       return;
     }
+
     this.modo.set(valor);
     this.errorMensaje.set(null);
+
+    // BUG 42 · Limpiar el formulario que se abandona evita arrastrar datos a
+    // medio escribir entre ambos modos.
+    if (valor === 'login') {
+      this.registroForm.reset();
+    } else {
+      this.loginForm.reset();
+    }
   }
 
   async iniciarSesion(): Promise<void> {
@@ -222,7 +231,8 @@ export class LoginPage {
         ? error.message
         : 'No pudimos completar la operación. Intenta nuevamente.';
 
+    // BUG 37 · El aviso del formulario es suficiente; el toast duplicaba el
+    // mismo texto y el usuario veía el error dos veces.
     this.errorMensaje.set(mensaje);
-    void this.mostrarToast(mensaje, 'danger');
   }
 }

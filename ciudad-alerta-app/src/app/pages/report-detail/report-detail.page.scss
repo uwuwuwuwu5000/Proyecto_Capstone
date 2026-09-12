@@ -98,6 +98,11 @@ ion-badge {
   border: 1px solid var(--ca-line);
 }
 
+.dato-indisponible {
+  color: var(--ca-muted);
+  font-style: italic;
+}
+
 .estado {
   margin: 0;
   font-size: 0.86rem;

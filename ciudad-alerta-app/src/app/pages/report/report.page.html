@@ -135,9 +135,9 @@
       class="accion-principal"
       type="submit"
       expand="block"
-      [disabled]="formulario.invalid || !puedeEnviar()"
+      [disabled]="formulario.invalid || !puedeEnviar() || enviando()"
     >
-      Enviar reporte
+      {{ enviando() ? 'Enviando…' : 'Enviar reporte' }}
     </ion-button>
   </form>
 </ion-content>

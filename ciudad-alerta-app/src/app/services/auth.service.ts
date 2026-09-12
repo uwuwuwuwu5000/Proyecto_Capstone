@@ -5,6 +5,7 @@ import {
   User,
   UserCredential,
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -19,7 +20,7 @@ import {
   setDoc,
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
-import { Observable, firstValueFrom, map, shareReplay } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 
 import { FIREBASE_AUTH, FIRESTORE } from '../core/firebase.providers';
 import { UserProfile } from '../models/user-profile.model';
@@ -71,28 +72,63 @@ export class AuthService {
 
   /**
    * CA-48 · Registro con correo y contraseña.
-   * Crea la cuenta en Firebase Auth y el documento base en `users/{uid}`.
-   * Los duplicados los rechaza Firebase con `auth/email-already-in-use`.
+   *
+   * BUG 2 · El registro son dos operaciones: crear la cuenta en Auth y escribir
+   * el perfil en Firestore. Si la segunda fallaba, quedaba una cuenta sin perfil
+   * y el usuario no podía ni registrarse (recibía email-already-in-use) ni usar
+   * la app. Ahora, si el perfil no se puede escribir, la cuenta recién creada se
+   * elimina para dejar el sistema como estaba.
    */
   async register(
     email: string,
     password: string,
     displayName?: string,
   ): Promise<UserCredential> {
+    const correo = email.trim().toLowerCase();
+    let credential: UserCredential;
+
     try {
-      const credential = await createUserWithEmailAndPassword(
-        this.auth,
-        email.trim().toLowerCase(),
-        password,
-      );
-
-      const nombre = (displayName ?? '').trim() || email.split('@')[0];
-      await updateProfile(credential.user, { displayName: nombre });
-      await this.createUserDocument(credential.user, nombre);
-
-      return credential;
+      credential = await createUserWithEmailAndPassword(this.auth, correo, password);
     } catch (error) {
       throw this.toAuthFailure(error);
+    }
+
+    const nombre = (displayName ?? '').trim() || correo.split('@')[0];
+
+    // BUG 3 · El nombre para mostrar es accesorio: si falla, no tiene sentido
+    // abortar un registro que por lo demás fue correcto.
+    try {
+      await updateProfile(credential.user, { displayName: nombre });
+    } catch {
+      console.warn('No se pudo asignar el nombre para mostrar en Auth.');
+    }
+
+    try {
+      await this.createUserDocument(credential.user, nombre);
+    } catch (error) {
+      await this.revertirCuenta(credential.user);
+      throw new AuthFailure(
+        'No pudimos completar tu registro. Vuelve a intentarlo en unos segundos.',
+        'perfil-no-creado',
+      );
+    }
+
+    return credential;
+  }
+
+  /**
+   * Elimina la cuenta recién creada cuando el perfil no pudo escribirse.
+   * Si el borrado también falla, se informa para que el usuario sepa qué hacer:
+   * recuperar la contraseña es la vía para retomar esa cuenta huérfana.
+   */
+  private async revertirCuenta(user: User): Promise<void> {
+    try {
+      await deleteUser(user);
+    } catch {
+      console.error(
+        'Registro incompleto: la cuenta existe en Auth pero no tiene perfil en Firestore.',
+        user.uid,
+      );
     }
   }
 
@@ -127,15 +163,37 @@ export class AuthService {
     }
   }
 
-  /** CA-50 · Resuelve una sola vez el estado de sesión (lo usa el guard). */
-  isLoggedIn(): Promise<boolean> {
-    return firstValueFrom(this.isAuthenticated$);
-  }
-
-  /** Lee el perfil almacenado en Firestore para el usuario indicado. */
+  /**
+   * Lee el perfil almacenado en Firestore.
+   *
+   * BUG 7 · Se valida la forma del documento antes de devolverlo: un perfil
+   * incompleto por una migración a medias rompía las pantallas que asumen sus
+   * campos presentes.
+   */
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     const snapshot = await getDoc(doc(this.firestore, 'users', uid));
-    return snapshot.exists() ? (snapshot.data() as UserProfile) : null;
+
+    if (!snapshot.exists()) {
+      return null;
+    }
+
+    const datos = snapshot.data() as Partial<UserProfile>;
+    const completo =
+      typeof datos.uid === 'string' &&
+      typeof datos.email === 'string' &&
+      typeof datos.displayName === 'string';
+
+    if (!completo) {
+      console.warn('Perfil incompleto en users/', uid);
+      return null;
+    }
+
+    return {
+      ...(datos as UserProfile),
+      role: datos.role ?? 'ciudadano',
+      trustLevel: datos.trustLevel ?? 0,
+      validatedReports: datos.validatedReports ?? 0,
+    };
   }
 
   /** Documento base del ciudadano; los campos de confianza quedan sembrados en 0. */

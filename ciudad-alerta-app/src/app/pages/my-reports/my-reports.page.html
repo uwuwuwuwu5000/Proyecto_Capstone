@@ -32,8 +32,10 @@
               <span class="tarjeta__cuerpo">
                 <span class="tarjeta__descripcion">{{ reporte.descripcion }}</span>
                 <span class="tarjeta__meta">
-                  {{ reporte.categoria }} · {{ fechaLegible(reporte) }} ·
-                  {{ reporte.confirmaciones }} confirmaciones
+                  {{ reporte.categoria }} · {{ fechaLegible(reporte) }}
+                  @if (confirmacionesDe(reporte.id); as total) {
+                    · {{ total }} {{ total === 1 ? 'confirmación' : 'confirmaciones' }}
+                  }
                 </span>
               </span>
 

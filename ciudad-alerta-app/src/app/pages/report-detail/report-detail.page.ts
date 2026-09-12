@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import {
   AlertController,
   IonBackButton,
@@ -18,6 +19,7 @@ import {
   checkmarkCircleOutline,
   imageOutline,
   peopleOutline,
+  refreshOutline,
 } from 'ionicons/icons';
 
 import { MapViewComponent } from '../../components/map-view/map-view.component';
@@ -53,7 +55,7 @@ import {
     IonBadge,
   ],
 })
-export class ReportDetailPage implements OnInit {
+export class ReportDetailPage {
   private readonly queryService = inject(ReportQueryService);
   private readonly reportService = inject(ReportService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -76,11 +78,14 @@ export class ReportDetailPage implements OnInit {
   readonly fotoError = signal(false);
   readonly cargandoFoto = signal(false);
 
-  readonly confirmaciones = signal(0);
-  readonly yaConfirmo = signal(false);
+  /** null significa "no se pudo contar", distinto de cero confirmaciones. */
+  readonly confirmaciones = signal<number | null>(null);
+  /** null = no se pudo comprobar si este usuario ya confirmó. */
+  readonly yaConfirmo = signal<boolean | null>(false);
   readonly confirmando = signal(false);
 
-  readonly historial = signal<StatusChange[]>([]);
+  /** null = el historial no se pudo leer, distinto de no tener movimientos. */
+  readonly historial = signal<StatusChange[] | null>([]);
   readonly puedeGestionar = signal(false);
 
   readonly esAutor = computed(
@@ -93,11 +98,26 @@ export class ReportDetailPage implements OnInit {
   });
 
   constructor() {
-    addIcons({ businessOutline, checkmarkCircleOutline, imageOutline, peopleOutline });
-  }
+    addIcons({
+      businessOutline,
+      checkmarkCircleOutline,
+      imageOutline,
+      peopleOutline,
+      refreshOutline,
+    });
 
-  async ngOnInit(): Promise<void> {
-    await this.cargar();
+    /**
+     * BUG 39 · Al navegar de un detalle a otro, el router reutiliza la instancia
+     * del componente y `ngOnInit` no se vuelve a ejecutar. Un effect sobre el
+     * input garantiza la recarga cada vez que cambia el identificador.
+     */
+    effect(() => {
+      const identificador = this.id();
+
+      if (identificador) {
+        void this.cargar(identificador);
+      }
+    });
   }
 
   fechaLegible(reporte: Report): string {
@@ -108,15 +128,15 @@ export class ReportDetailPage implements OnInit {
   async verFotografia(): Promise<void> {
     const reporte = this.reporte();
 
-    if (!reporte?.foto || this.fotoUrl()) {
+    if (!reporte?.foto || this.cargandoFoto()) {
       return;
     }
 
     this.cargandoFoto.set(true);
+    this.fotoError.set(false);
 
     try {
       this.fotoUrl.set(await this.reportService.resolvePhotoUrl(reporte));
-      this.fotoError.set(false);
     } catch {
       this.fotoError.set(true);
     } finally {
@@ -136,7 +156,7 @@ export class ReportDetailPage implements OnInit {
     try {
       await this.confirmationService.confirm(reporte.id);
       this.yaConfirmo.set(true);
-      this.confirmaciones.update((total) => total + 1);
+      this.confirmaciones.update((total) => (total === null ? null : total + 1));
       await this.toast('Confirmación registrada. Gracias por validar.', 'success');
     } catch (error) {
       if (error instanceof ConfirmationError && error.code === 'duplicada') {
@@ -207,37 +227,73 @@ export class ReportDetailPage implements OnInit {
     }
   }
 
-  private async cargar(): Promise<void> {
-    this.cargando.set(true);
+  /**
+   * BUG 13 · La carga del reporte y la de los datos complementarios están
+   * separadas a propósito. Antes viajaban en un mismo `Promise.all`, y un fallo
+   * al leer el perfil del usuario hacía que la pantalla informara "no
+   * encontrado" sobre un reporte que sí existía.
+   */
+  private async cargar(reportId: string): Promise<void> {
+    this.reiniciarEstado();
+
+    let reporte: Report | null;
 
     try {
-      const reporte = await this.queryService.getById(this.id());
-
-      if (!reporte) {
-        this.noEncontrado.set(true);
-        return;
-      }
-
-      this.reporte.set(reporte);
-
-      const [total, confirmado, historial, perfil] = await Promise.all([
-        this.confirmationService.countConfirmations(reporte.id),
-        this.confirmationService.hasConfirmed(reporte.id),
-        this.routingService.getStatusHistory(reporte.id),
-        this.authService.user
-          ? this.authService.getUserProfile(this.authService.user.uid)
-          : Promise.resolve(null),
-      ]);
-
-      this.confirmaciones.set(total);
-      this.yaConfirmo.set(confirmado);
-      this.historial.set(historial);
-      this.puedeGestionar.set(perfil?.role === 'operador' || perfil?.role === 'admin');
+      reporte = await this.queryService.getById(reportId);
     } catch {
-      this.noEncontrado.set(true);
-    } finally {
       this.cargando.set(false);
+      this.noEncontrado.set(true);
+      return;
     }
+
+    if (!reporte) {
+      this.cargando.set(false);
+      this.noEncontrado.set(true);
+      return;
+    }
+
+    this.reporte.set(reporte);
+    this.cargando.set(false);
+
+    // Datos complementarios: cada uno falla por su cuenta sin afectar la vista.
+    void this.confirmationService
+      .countConfirmations(reporte.id)
+      .then((total) => this.confirmaciones.set(total))
+      .catch(() => this.confirmaciones.set(null));
+
+    void this.confirmationService
+      .hasConfirmed(reporte.id)
+      .then((confirmado) => this.yaConfirmo.set(confirmado))
+      .catch(() => this.yaConfirmo.set(null));
+
+    void this.routingService
+      .getStatusHistory(reporte.id)
+      .then((historial) => this.historial.set(historial))
+      .catch(() => this.historial.set(null));
+
+    const usuario = this.authService.user;
+
+    if (usuario) {
+      void this.authService
+        .getUserProfile(usuario.uid)
+        .then((perfil) =>
+          this.puedeGestionar.set(perfil?.role === 'operador' || perfil?.role === 'admin'),
+        )
+        .catch(() => this.puedeGestionar.set(false));
+    }
+  }
+
+  private reiniciarEstado(): void {
+    this.cargando.set(true);
+    this.noEncontrado.set(false);
+    this.reporte.set(null);
+    this.fotoUrl.set(null);
+    this.fotoError.set(false);
+    this.cargandoFoto.set(false);
+    this.confirmaciones.set(null);
+    this.yaConfirmo.set(false);
+    this.historial.set([]);
+    this.puedeGestionar.set(false);
   }
 
   private async toast(

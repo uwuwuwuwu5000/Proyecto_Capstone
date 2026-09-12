@@ -92,6 +92,8 @@ export class ReportPage {
   /** Coincidencias detectadas y estado del análisis. */
   readonly coincidencias = signal<MatchCandidate[]>([]);
   readonly analizando = signal(false);
+  /** BUG 41 · Impide que un doble toque dispare dos creaciones de reporte. */
+  readonly enviando = signal(false);
   /** Vector visual de la foto actual, reutilizado al guardar el reporte. */
   private embedding: number[] | null = null;
 
@@ -138,7 +140,13 @@ export class ReportPage {
         {
           text: 'Quitar',
           role: 'destructive',
-          handler: () => this.foto.set(null),
+          handler: () => {
+            this.foto.set(null);
+            // BUG 16 · Sin esto el vector de la imagen borrada seguía viajando
+            // al reporte y alimentando la detección de coincidencias.
+            this.embedding = null;
+            void this.detectarCoincidencias();
+          },
         },
       ],
     });
@@ -172,6 +180,10 @@ export class ReportPage {
   }
 
   async enviar(): Promise<void> {
+    if (this.enviando()) {
+      return;
+    }
+
     if (this.formulario.invalid) {
       this.formulario.markAllAsTouched();
       return;
@@ -183,6 +195,8 @@ export class ReportPage {
       await this.toast('Registra la ubicación antes de enviar el reporte.', 'warning');
       return;
     }
+
+    this.enviando.set(true);
 
     const loading = await this.loadingCtrl.create({
       message: 'Enviando reporte',
@@ -211,6 +225,8 @@ export class ReportPage {
       const mensaje =
         error instanceof Error ? error.message : 'No se pudo enviar el reporte.';
       await this.toast(mensaje, 'danger');
+    } finally {
+      this.enviando.set(false);
     }
   }
 
@@ -227,6 +243,9 @@ export class ReportPage {
     }
 
     this.analizando.set(true);
+    // BUG 30 · Vaciar antes de consultar evita el parpadeo de resultados
+    // antiguos mientras llega la búsqueda nueva.
+    this.coincidencias.set([]);
 
     try {
       const encontrados = await this.duplicateDetection.findSimilar({
@@ -254,6 +273,8 @@ export class ReportPage {
     try {
       const foto = await origen();
       this.foto.set(foto);
+      // El vector anterior deja de ser válido apenas cambia la imagen.
+      this.embedding = null;
 
       // El vector se calcula una vez y se reutiliza en la detección y al guardar.
       this.embedding = await this.similarityService.computeEmbedding(foto.dataUrl);
