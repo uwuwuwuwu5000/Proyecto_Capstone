@@ -1,0 +1,537 @@
+================================================================================
+CIUDAD ALERTA · SEGUNDA AUDITORÍA EXHAUSTIVA — HALLAZGOS NUEVOS
+================================================================================
+Fecha: 2026-09-12
+Alcance: SOLO defectos nuevos. Los 78 ítems del v1 (docs/bugs-pendientes.txt)
+quedan intactos y NO se repiten aquí. Los residuales del v1 que se recomienda
+reabrir (6, 28, 52, 56, 57, 58, 66, 68, 72, 73-76) se listan como recordatorio
+al final, sin duplicarse.
+
+Metodología y verificaciones ejecutadas:
+  - tsc --noEmit -p tsconfig.app.json ......... OK (exit 0)
+  - eslint src ................................ OK (exit 0, 0 advertencias)
+  - ng build --configuration production ....... OK (exit 0) con warnings:
+      * Budget de estilos excedido (3 archivos)
+      * Dependencias CommonJS: leaflet, geofire-common, node-fetch,
+        seedrandom, long
+      * Chunk inicial de 876 kB
+  - tsc --noEmit -p tsconfig.spec.json ........ FALLA (TS2305 en
+      photo-storage.service.spec.ts:2 — ya era el v1 #73)
+  - Deploy: capacitor.config.json no existe (falta `npx cap sync`);
+      firebase.json no referencia storage.rules
+  - 20 archivos *.spec.ts inspeccionados uno a uno (todos smoke-tests)
+
+Formato: cada entrada tiene Nivel, Ubicación (archivo:línea), Problema y
+Solución (camino de implementación). Los niveles siguen el criterio del v1.
+
+================================================================================
+SECCIÓN A — BUILD, BUNDLE Y DEPENDENCIAS
+================================================================================
+
+v2-A1 · Nivel: Media
+Ubicación: src/index.html (bundle) / angular.json:50-55
+Problema: El chunk inicial arranca en 876 kB (181.88 kB gzip). Los budgets
+  initial de angular.json (maximumWarning: 2 MB, maximumError: 5 MB) son
+  demasiado holgados para detectar regresiones; el bundle ya está dominado por
+  firebase + tfjs y nadie vería crecer 100 kB más.
+Solución: Ajustar budgets initial a maximumWarning 450 kB / maximumError 800 kB
+  y añadir budgets por chunk; mover la carga de tfjs a un chunk lazy (ver A2).
+
+v2-A2 · Nivel: Alta
+Ubicación: package.json:31-35 (tfjs) + salida de build (platform_node.js)
+Problema: Aunque se importan subrutas de tfjs-data para evitar el loader node,
+  @tensorflow/tfjs-core (import top-level en image-similarity.service.ts:9-10)
+  arrastra su plataforma node.js: el bundle del navegador incluye
+  `node-fetch`, `seedrandom` y `long` (warnings CommonJS), lo que agrava el
+  peso del initial chunk y abre un riesgo de evaluación de código de Node en
+  el cliente.
+Solución: Importar tfjs de forma dinámica solo dentro de
+  image-similarity.service.ts (load() lazy) usando los backends webgl/cpu en
+  runtime; verificar con el bundle analyzer que platform_node.js desaparece.
+  Si no desaparece, pillar en allowedCommonJsDependencies + comentario.
+
+v2-A3 · Nivel: Media
+Ubicación: build (map-view.component.ts:12, duplicate-detection.service.ts:5)
+Problema: leaflet y geofire-common son CommonJS → "optimization bailouts" en
+  cada build; el minificador no puede tree-shake del todo y el warning es
+  ruido constante que oculta advertencias reales.
+Solución: Declarar `allowedCommonJsDependencies: ['leaflet','geofire-common']`
+  en angular.json (documentando por qué) para silenciar el falso positivo.
+
+v2-A4 · Nivel: Baja
+Ubicación: angular.json:53-55 + login.page.scss / report-detail.page.scss /
+  nearby.page.scss
+Problema: Tres SCSS superan el budget de estilos del componente en producción:
+  login 2.25 kB, report-detail 2.04 kB, nearby 2.07 kB (budget warning 2 kB).
+  El propio CI del proyecto falla ruidosamente en cada build.
+Solución: Refactorizar/eliminar reglas redundantes (muchas repiten estilos de
+  variables.scss) o subir el budget warning a 3 kB justificándolo.
+
+v2-A5 · Nivel: Media
+Ubicación: eslint.config.js:5-24
+Problema: La config solo extiende angular.configs.tsRecommended +
+  templateRecommended; NO incluye tseslint.configs.recommended. Reglas
+  estándar de TypeScript (no-explicit-any, no-unused-vars, no-empty-object-
+  type, etc.) están desactivadas y el análisis estático de seguridad es poco
+  profundo respecto al v1.
+Solución: Añadir tseslint.configs.recommended como base y habilitar el script
+  `lint:fix`; correrlo y corregir lo que aflore en un PR aparte.
+
+v2-A6 · Nivel: Baja
+Ubicación: package.json:6-13
+Problema: Scripts ausentes que el equipo necesita vía memoria: no hay
+  `sync:cap` (a pesar de los fixes de Capacitor), `test:coverage`,
+  `deploy:firestore`, `lint:fix`.
+Solución: Añadir scripts: "sync:cap": "cap sync", "test:coverage",
+  "lint:fix". Documentar en CONTRIBUTING.
+
+v2-A7 · Nivel: Baja
+Ubicación: package.json:3-5
+Problema: El scaffold heredó autor/homepage/description del template de Ionic
+  ("Ionic Framework", "An Ionic Project", ionicframework.com). La metadata del
+  paquete apunta a un proyecto ajeno.
+Solución: Actualizar name/author/homepage/description con los datos reales del
+  proyecto.
+
+================================================================================
+SECCIÓN B — i18n Y ACCESIBILIDAD
+================================================================================
+
+v2-B1 · Nivel: Alta
+Ubicación: Todos los templates (login, home, report, report-detail, map,
+  nearby, my-reports, similar-reports, app.component)
+Problema: No existe internacionalización: 100% de los textos hardcodeados en
+  español y localStorage, sin @angular/localize, sin attrs i18n, sin pipe de
+  traducción. Bloquea cualquier expansión y dificulta accesibilidad
+  (screen readers asumen el idioma por atributo).
+Solución: Adoptar Angular Localize (i18n@next options en angular.json):
+  marcar textos con `i18n` attrs, generar catálogo base en production build y
+  crear archivos es-MX/es-CL. PR grande, hacerlo por páginas.
+
+v2-B2 · Nivel: Media
+Ubicación: login.page.html:38,56 / variables.scss:25
+Problema: `color="danger"` usa el #eb445a por defecto de Ionic; texto en rojo
+  sobre fondo oscuro (#1b2434) queda en ~4.1:1, bajo el 4.5:1 de WCAG AA.
+  La variable propia --ca-danger (#e0656b) existe pero nunca se mapea a
+  --ion-color-danger.
+Solución: Definir overrides en global.scss: --ion-color-danger (base/contrast/
+  shade/tint) con #e0656b y re-verificar el ratio; igual para warnings.
+
+v2-B3 · Nivel: Media
+Ubicación: similar-reports.component.scss:69-73
+Problema: El badge "N% coincidencia" usa cian (#1ca9c9 en texto) sobre un
+  fondo rgba(28,169,201,.18), ratio ≈ 4.2:1 según la construcción del color.
+Solución: Subir el contraste con un fondo más oscuro (#0f5b6e) o texto claro
+  (--ca-white) para el porcentaje, o abandonar el fondo translúcido.
+
+v2-B4 · Nivel: Baja
+Ubicación: app.component.html:2 y todos los toolbars con botón volver
+Problema: ion-back-button se renderiza sin texto y con el aria-label
+  predeterminado de Ionic ("back") en inglés; en una app es está la
+  "descripción" anunciada. 
+Solución: `[text]="''"` y `aria-label="Volver"` (o moverlo a la cadena i18n).
+
+v2-B5 · Nivel: Baja
+Ubicación: src/index.html:13-16
+Problema: El viewport impone minimum-scale=1.0: impide el pinch-out por debajo
+  del 100%, una violación parcial de WCAG 1.4.4 (misma familia que el bug 46
+  del v1, pero este caso no se corrigió: solo se quitó user-scalable=no).
+Solución: Eliminar minimum-scale y maximum-scale, dejando solo viewport-fit +
+  width + initial-scale.
+
+v2-B6 · Nivel: Media
+Ubicación: src/index.html:27-31
+Problema: La app se declara PWA (mobile-web-app-capable, apple-mobile-web-app-
+  capable, theme-color) pero no existe manifest.webmanifest, ni service worker,
+  ni los iconos apple-touch-icon enlazados. Las metas prometen una instalación
+  que el navegador no puede completar.
+Solución: Añadir manifest + SW (Angular PWA @angular/pwa) o, si el alcance del
+  capstone no lo exige, quitar las metas engañosas y documentar la decisión.
+
+v2-B7 · Nivel: Baja
+Ubicación: login.page.html:9-16 y nearby.page.html:12-20
+Problema: ion-segment (modo/rol y radio) sin aria-label; un screen reader
+  anuncia botones sin contexto.
+Solución: `aria-label="Modo de inicio"` / `aria-label="Radio de búsqueda"`.
+
+v2-B8 · Nivel: Baja
+Ubicación: variables.scss:52 + map-view.component.ts:282-285
+Problema: El pin de "resuelto" usa --ca-white (#f8fafc): prácticamente
+  invisible si el color de fondo de la burbuja del mapa es claro (y en el tema
+  claro del mapa OSM el contraste es cercano a 0).
+Solución: Elegir un verde para resuelto (o contornar el pin con sombra) y
+  verificar contraste sobre el tile de OSM.
+
+================================================================================
+SECCIÓN C — ESTILOS, TEMA Y UI
+================================================================================
+
+v2-C1 · Nivel: Alta
+Ubicación: variables.scss:8-53 + global.scss:37
+Problema: La paleta vive en variables.scss con valores oscuros y además
+  global.scss carga dark.system.css. No hay tema claro real: en un sistema con
+  prefers-color-scheme: light la app mezcla controles Ionic claros sobre
+  superficies oscuras y viceversa. Es el origen de varios bugs visuales.
+Solución: Decidir el modelo: (a) modo oscuro forzado — eliminar
+  dark.system.css, mover la paleta a :root única y declararlo; o (b) tema
+  claro y oscuro con prefers-color-scheme via variables scoped. Implementar y
+  hacer barrido visual en las 8 pantallas.
+
+v2-C2 · Nivel: Media
+Ubicación: variables.scss:19,25 / global.scss (literales)
+Problema: Variables muertas o duplicadas: --ca-surface-alt (variables.scss:19)
+  no se referencia en ningún CSS/TS; colores literales hardcodeados repiten
+  tokens (p.ej. #0b1320, #1ca9c9) en varios SCSS en vez de usar las variables.
+Solución: Eliminar --ca-surface-alt; barrido con grep de cada token y
+  sustitución por variables.
+
+v2-C3 · Nivel: Media
+Ubicación: login.page.scss vs report.page.scss; similar-reports.component.scss
+Problema: Inconsistencia visual entre pantallas: en login los botones usan
+  estilos redondeados propios y en report los ion-button crudos; los radio
+  buttons y badges repiten formas distintas en cada página. Fricción de vector
+  de marca que el v1 no persiguió.
+Solución: Crear una pequeña capa de componentes de UI propios (botón primario/
+  secundario, badge, skeleton) y reemplazar los estilos ad-hoc de las páginas
+  por esos componentes.
+
+v2-C4 · Nivel: Baja
+Ubicación: report.page.scss, login.page.scss (estilos de botones)
+Problema: A pesar de tematizar botones, no hay pseudo-clases :hover/:active en
+  muchos casos (botones personalizados en report si son crudos) → sin feedback
+  táctil de presión en la WebView.
+Solución: Añadir :active con opacidad/translateY y :hover para escritorio en
+  los botones de las páginas.
+
+v2-C5 · Nivel: Baja
+Ubicación: report-detail.page.scss:72-76
+Problema: Las tarjetas de descripción no tienen overflow-wrap; descripciones de
+  reporte con palabras muy largas (o URLs) desbordan el ancho y rompen el
+  layout en pantallas pequeñas.
+Solución: Añadir overflow-wrap: anywhere a los textos de detalle.
+
+================================================================================
+SECCIÓN D — LÓGICA Y ESTADOS DE PANTALLA
+================================================================================
+
+v2-D1 · Nivel: Media
+Ubicación: map-view.component.ts:298-308
+Problema: El manejador de click se registra DESPUÉS de bindPopup; Leaflet abre
+  el popup y dispara el click en el mismo toque, así que `isPopupOpen()` ya es
+  true al primer toque y el componente navega directamente al detalle: el popup
+  nunca llega a verse. El fallback "Toca de nuevo" no funciona. Además el popup
+  usa estilos por defecto claros en una app oscura.
+Solución: En el click, distinguir el toque que abre el popup del que ya estaba
+  abierto (p.ej. guardar Date.now() al abrir y exigir >300 ms entre apertura y
+  click, o emitir solo si el popup estaba abierto ANTES del click — hay que
+  capturarlo en un estado previo al handler). Alternativa simple: emitir
+  siempre en click y mover el "detalle" a un botón real dentro del popup.
+  Estilizar el popup (dark) con CSS propio.
+
+v2-D2 · Nivel: Media
+Ubicación: similar-reports.component.html:19
+Problema: El estado del candidato se muestra crudo (p.ej. "en_revision") en
+  lugar de la etiqueta legible que ya existe en constants.ts
+  (ETIQUETAS_ESTADO), usada en report-detail.page.ts.
+Solución: Reemplazar el directo por ETIQUETAS_ESTADO[estado] con fallback.
+
+v2-D3 · Nivel: Media
+Ubicación: similar-reports.component.html:16-29
+Problema: MatchCandidate trae distanciaMetros y el modelo de duplicados solo en
+  Nearby lo muestra; la tarjeta de similar-reports la ignora, pese a ser la
+  métrica más relevante para decidir "es duplicado".
+Solución: Mostrar la distancia formateada (reutilizar formatearDistancia de
+  nearby / constants) junto al % de coincidencia.
+
+v2-D4 · Nivel: Baja
+Ubicación: similar-reports.component.ts:50-71
+Problema: yaConfirmados vive en memoria de la sesión; si el usuario confirmó un
+  candidato en una sesión anterior, el primer toque de una nueva sesión
+  intenta confirmar de nuevo y obtiene el error de duplicado en el backend.
+Solución: Cargar confirmaciones existentes al montar (query por uid+candidato)
+  para inicializar yaConfirmados, o ignorar el "already exists" del backend con
+  estado "ya resuelto".
+
+v2-D5 · Nivel: Baja
+Ubicación: similar-reports.component.html:37-45
+Problema: Al confirmar un candidato solo se deshabilita ese botón (confirmando
+  == candidato.id); los demás quedan activos y permiten confirmar dos
+  candidatos a la vez, generando logros duplicados en Firestore y conteos
+  inconsistentes.
+Solución: Deshabilitar todos los botones mientras confirmando() != null y
+  mostrar spinner solo en el activo.
+
+v2-D6 · Nivel: Media
+Ubicación: report-detail.page.ts:84,294 + report-detail.page.html:90-108
+Problema: En el primer render los confirmadores previos ven brevemente el botón
+  "Confirmar que existe" (confirmaciones() es null hasta resolver y el template
+  no puede distinguir "cargando" de "false"); hay un parpadeo y un estímulo
+  erróneo para un usuario que ya confirmó.
+Solución: Modelar el estado como un string union ('cargando' | 'disponible' |
+  'confirmado' | 'error') y renderizar spinner mientras se resuelve.
+
+v2-D7 · Nivel: Baja
+Ubicación: report-detail.page.ts:296-300
+Problema: En confirmar(), si countConfirmations falló antes (confirmaciones() es
+  null), tras una confirmación con éxito se calcula `total === null ? null :
+  total + 1`; el contador queda "No disponible" aunque ya existe 1 confirmación.
+Solución: Si confirmar() tiene éxito y total es null, volver a leer el count
+  o asumir 1 y refrescar la pantalla.
+
+v2-D8 · Nivel: Media
+Ubicación: report-detail.page.html:111-130
+Problema: El historial de estados se muestra en orden ascendente (más viejo
+  arriba), sin fechas y sin mensaje cuando está vacío; en un reporte nuevo el
+  único movimiento ("en_revision") puede entenderse como el más reciente.
+Solución: Mostrar fecha relativa de cada cambio, ordenar desc, y renderizar
+  "Sin movimientos registrados" cuando historial es [].
+
+v2-D9 · Nivel: Media
+Ubicación: my-reports.page.html:12-25
+Problema: La página no maneja error y arranca con la lista vacía antes de la
+  primera consulta (parpadeo de "No tienes reportes" durante la carga);
+  cualquier fallo de red muestra esa misma pantalla vacía sin mensaje.
+Solución: Añadir señal cargando inicial=true, rama de error con retry, y solo
+  mostrar "vacío" cuando la carga terminó sin resultados.
+
+v2-D10 · Nivel: Baja
+Ubicación: report.page.html:134-141
+Problema: El botón "Publicar" está disabled mientras no hay ubicación, pero la
+  ayuda ("Se necesita tu ubicación para reportar") solo sale en un toast que
+  nunca se dispara al estar el botón deshabilitado → el usuario queda sin
+  explicación del bloqueo (mismo patrón que BUG 11-resuelto pero en report).
+Solución: Mostrar un ion-note bajo el botón cuando falta ubicación.
+
+v2-D11 · Nivel: Baja
+Ubicación: map.page.html:22-33 / nearby.page.html:23-33
+Problema: Los @switch sobre el estado de vista no tienen rama @default; si
+  mañana se agrega un estado (o un enum cambia) la pantalla queda en blanco.
+Solución: Añadir @default reutilizando la plantilla de error o un mensaje
+  genérico.
+
+v2-D12 · Nivel: Baja
+Ubicación: map-view.component.ts:64-72,177-184
+Problema: Los inputs interactive y zoom solo se aplican en inicializar():
+  cambiarlos en tiempo de ejecución no reconfigura el mapa (Leaflet conserva
+  dragging/zoomControl/scrollWheelZoom y el zoom actual).
+Solución: efecto que aplique setZoom cuando cambie zoom() y active/deactive el
+  dragging/scroll con un toggle simple.
+
+================================================================================
+SECCIÓN E — DATOS, FIRESTORE, STORAGE Y REGLAS DE SEGURIDAD
+================================================================================
+
+v2-E1 · Nivel: Media
+Ubicación: report-query.service.ts:141-144
+Problema: getMyReports devuelve página de exactamente `limit` elementos y deja
+  cursor != null; la siguiente consulta (startAfter(cursor)) vuelve vacía.
+  my-reports seguirá llamando cargarMas con páginas vacías hasta salir de la
+  pantalla.
+Solución: En my-reports tratar la página vacía como fin y no pedir más
+  (igual que se hace en map), o usar limit(N+1) como centinela.
+
+v2-E2 · Nivel: Media
+Ubicación: firestore.rules:20-28 + constantes del cliente (report.page.ts:99 /
+  duplicate-detection.service.ts)
+Problema: Dos problemas: (1) respetaIntervaloDeReporte hace get() del perfil;
+  si el perfil no existe (cuenta creada antes de ese fix), el get() falla y el
+  create se deniega con permission-denied genérico; (2) la constante del
+  intervalo está en 20.000 ms en las rules frente a 30.000 ms en el cliente —
+  dos umbrales que se desincronizan si solo se cambia uno.
+Solución: Exigir que el perfil exista al momento del registro (inyectar el
+  create del perfil como parte del signUp) y centralizar la constante del
+  intervalo en un único lugar (constante de reglas + comentario que referencie
+  la constante TS, con prueba de reglas en CI).
+
+v2-E3 · Nivel: Baja
+Ubicación: storage.rules
+Problema: Las reglas validan el path y que el autor pueda borrar, pero no
+  vinculan el objeto con un reporte existente ni validan el nombre del archivo;
+  un cliente malicioso puede subir cualquier binario a su carpeta y borrar la
+  foto de un reporte activo (la evidencia desaparece aunque el reporte siga).
+Solución: Nombrar las fotos con el reportId y validar el patrón en las reglas;
+  además, borrar la foto solo cuando el reporte no se creó (compensatorio
+  dentro de la transacción, ya implementado) y prohibir delete a nivel de
+  reglas para reportes confirmados (aunque el cliente ya lo evita).
+
+v2-E4 · Nivel: Baja
+Ubicación: geolocation.service.ts:39-43
+Problema: requestPermission() devuelve true en el catch sin distinguir el
+  motivo; si la petición de permiso falla por un error de sistema (no por
+  denegación), el flujo procede igual a getCurrentPosition() con UX confusa.
+Solución: Devolver un estado (granted | denied | error) y manejar las tres
+  ramas en las páginas.
+
+v2-E5 · Nivel: Baja
+Ubicación: map-view.component.html (archivo entero), assets/shapes.svg,
+  report-detail.page.ts:2
+Problema: Código muerto: map-view.component.html es un placeholder (el
+  componente usa template inline) y hace suponer que el resultado de una
+  auditoría entre en conflicto con el componentStyle?; shapes.svg no se
+  referencia; import de Location sin uso en report-detail.page.ts:2.
+Solución: Eliminar los tres restos. Añadir una regla eslint o CI que falle con
+  imports no usados para evitar recaídas.
+
+v2-E6 · Nivel: Baja
+Ubicación: auth.service.ts:41-60 (authState$) + auth-guard.ts:8-20
+Problema: authState$ usa shareReplay({bufferSize:1, refCount:true}); el único
+  suscriptor habitual en rutas protegidas es el guard con take(1), lo que
+  desuscribe onAuthStateChanged al terminar y lo vuelve a suscribir en cada
+  navegación — un recableado que, ante un logout simultáneo, puede entregar el
+  valor viejo en un guard (la promesa se resuelve con el último buffer antes de
+  que el evento nuevo llegue). En la práctica hoy no falla, pero es frágil y
+  difícil de razonar.
+Solución: Mantener una suscripción permanente a onAuthStateChanged en el
+  constructor (sin refCount) y exponer una señal; los guards consumen la señal.
+  Implica revisar el ciclo de 6 guards, pero elimina el riesgo de carrera.
+
+================================================================================
+SECCIÓN F — NATIVO ANDROID Y EMPAQUETADO
+================================================================================
+
+v2-F1 · Nivel: Baja
+Ubicación: android/app/build.gradle:21 (minifyEnabled false)
+Problema: El build release no aplica R8: APK sin ofuscación y con el peso
+  completo (con los 400+ kB de tfjs y Firebase). Aunque es un capstone, dejar
+  la puerta abierta a que alguien lo active rompe el flujo del proyecto.
+Solución: Habilitar minifyEnabled + shrinkResources con -dontwarn de
+  leaflet/geofire-common y verificar el APK resultante; o documentar la
+  decisión de depuración en el README.
+
+v2-F2 · Nivel: Baja
+Ubicación: android/app/src/main/res/xml/config.xml:3
+Problema: `<access origin="*" />` (whitelist legacy de Cordova/Capacitor)
+  concede acceso de carga a cualquier origen; aunque la WebView real está
+  limitada por capabilities de Capacitor, la configuración heredada es
+  permisiva y confunde auditorías.
+Solución: Reducir a `https://firebaseapp.com https://firebaseio.com
+  https://googleapis.com` (los orígenes que la app usa) o eliminar el archivo
+  si no se necesita.
+
+v2-F3 · Nivel: Baja
+Ubicación: android/app/src/main/res/xml/file_paths.xml:3
+Problema: El FileProvider expone external-path path=".": toda la raíz externa
+  es accesible para cualquier app que invoque el ContentProvider de Ciudad
+  Alerta. Es el default del template pero es más ancho de lo necesario.
+Solución: Acotarlo a la carpeta de capturas (.external_files/pictures u otro
+  subdirectorio usado por el plugin Camera) y verificar que el flujo de cámara
+  sigue funcionando.
+
+v2-F4 · Nivel: Baja
+Ubicación: android/capacitor.settings.gradle:4-6 + deps muertas en
+  package.json:27-29
+Problema: Los plugins @capacitor/haptics, @capacitor/keyboard y
+  @capacitor/status-bar siguen incluidos en el Gradle de Android y en
+  dependencies, aunque la app no los usa (el grep del v1 #68 solo marcó el
+  package.json). Cada sync futuro volverá a registrarlos.
+Solución: Eliminarlos también del proyecto nativo al desinstalarlos (el ticket
+  v1 #68 debe incluir este paso en contar como cerrado).
+
+v2-F5 · Nivel: Baja
+Ubicación: android/app/src/test/... y android/app/src/main/java/... 
+Problema: Los tests placeholder (ExampleUnitTest, ExampleInstrumentedTest)
+  viven en el paquete genérico com.getcapacitor.myapp, no en
+  cl/ciudadalerta/app; y el versionName 1.0 / versionCode 1 nunca se resolvió
+  (el host del v1 lo dejó pendiente).
+Solución: Borrar los tests de ejemplo del package genérico, revisar
+  applicationId en build.gradle (cl.ciudadalerta.app) y dejar versionCode/Name
+  acordados con la release plan.
+
+================================================================================
+SECCIÓN G — TESTS Y CALIDAD (NUEVOS; EL BLOQUEO DE COMPILACIÓN TS2305 YA ES EL
+V1 #73 Y NO SE REPITE)
+================================================================================
+
+v2-G1 · Nivel: Alta
+Ubicación: report.service.spec.ts:9, routing.service.spec.ts:9,
+  report-query.service.spec.ts:9, duplicate-detection.service.spec.ts:9,
+  confirmation.service.spec.ts:9 y specs de pages (report-detail:9-11,
+  report:9-11, login:9-11, home:9-11, map:9-11, nearby:9-11, my-reports:9-11)
+Problema: Ningún TestBed provee los 4 tokens de Firebase (FIREBASE_APP,
+  FIREBASE_AUTH, FIRESTORE, FIREBASE_STORAGE) que los servicios inyectan vía
+  firebase.providers.ts; al instanciarlos (aunque sea para toBeTruthy) la
+  inyección en runtime estallaría en NullInjectorError encadenado. Hoy la suite
+  no se ejecuta porque aborta antes en el TS2305 (v1 #73), pero al corregirlo
+  esto cae.
+Solución: proveer en test-setup.ts un proveedor global con mocks de los tokens
+  (o el emulador), y en cada spec los providers del árbol real. Patrón único:
+  un helper `provisionSettings()`.
+
+v2-G2 · Nivel: Alta
+Ubicación: los 20 *.spec.ts (ausencia de aserciones)
+Problema: 20/20 descripciones son smoke-tests "should be created" con
+  expect(x).toBeTruthy(): cero aserciones de negocio, cero spies, cero
+  fakeAsync/waitForAsync. De hecho las páginas ni llaman detectChanges().
+  La cobertura de la lógica de la app es efectivamente 0% aunque "Los tests
+  pasan".
+Solución: Escribir las aserciones por servicio/página conforme al plan del v1:
+  empezar por los servicios puros (routing, report-query, geolocation) y luego
+  pages. Esto es un PR por feature.
+
+v2-G3 · Nivel: Alta
+Ubicación: auth-guard.spec.ts:14
+Problema: auth-guard.spec.ts declara executeGuard y su único test verifica que
+  la función exista; nunca invoca authGuard ni guestGuard (este último exportado
+  en auth-guard.ts:23 sin spec alguno). No hay guest-guard.spec.ts.
+Solución: Reemplazar por pruebas: usuario autenticado → true; usuario null →
+  UrlTree de /login para authGuard y /home para guestGuard.
+
+v2-G4 · Nivel: Alta
+Ubicación: angular.json:99-105 / raíz del repo
+Problema: No existe vitest.config.ts (la config queda solo en el builder
+  @angular/build:unit-test); tampoco hay opción coverage ni setup de emuladores/
+  seed. El equipo no puede correr cobertura ni isolated tests, y no hay
+  protecciones de reglas de Firestore en CI.
+Solución: Añadir vitest.config.ts (para `npx vitest run`), script
+  test:coverage y un job de CI que además valide las reglas con firestore-
+  emulator.
+
+v2-G5 · Nivel: Media
+Ubicación: image-similarity.service.spec.ts:12-14
+Problema: El servicio importa tfjs (core, webgl, cpu) y mobilenet de verdad
+  (top-level) y el único test es un toBeTruthy que jamás toca el modelo; el
+  backoff/reintento del cargador de red (BUG 28 del v1) queda sin control.
+Solución: Mockear tfjs/mobilenet en el spec y cubrir computeEmbedding con
+  fallback webgl→cpu, error de carga y reintentos.
+
+v2-G6 · Nivel: Media
+Ubicación: src/test-setup.ts:4-15
+Problema: El único polyfill es window.matchMedia; para escribir tests reales de
+  geolocalización, cámara y leaflet en jsdom faltan fakes del plug-in de
+  Capacitor, canvas 2D/toBlob, WebGL y navigator.geolocation (con capsule de
+  LocationError).
+Solución: Extender test-setup.ts con los mocks de @capacitor/geolocation y
+  @capacitor/camera, un fake de canvas y de navigator.geolocation con emisión
+  de errores (denegado/timeout/no_disponible).
+
+v2-G7 · Nivel: Baja
+Ubicación: photo-storage.service.spec.ts (post-fix del v1 #73)
+Problema: Una vez corregido el import, el spec tampoco cubre el límite de
+  900_000 bytes del método (photo-storage.service.ts:70 y :107), el "doc no
+  existe" de resolveUrl, remove ni el flujo stageInBatch.
+Solución: Incorporar esos casos al mismo PR que arregla el #73 del v1.
+
+================================================================================
+RECORDATORIO — PENDIENTES CONFIRMADOS DEL V1 (NO SON NUEVOS)
+================================================================================
+V1#6   resetPassword: enumeración de emails (auth.service.ts:238)
+V1#28  findNearby sin límite (report-query.service.ts:60-101)
+V1#52  mapa cae al centro de Santiago sin coordenadas (map-view.component.ts:
+       173-175)
+V1#56  firebase.json no incluye storage.rules
+V1#57  reports legibles en lectura para cualquier autenticado (firestore.rules)
+V1#58  descripción 500 UTF-16 en cliente vs 500 bytes en servidor
+V1#66  allowBackup=true en AndroidManifest.xml
+V1#68  deps Capacitor muertas en package.json (borrar también del nativo,
+       ver v2-F4)
+V1#72  falta ACCESS_NETWORK_STATE en AndroidManifest.xml
+V1#73  photo-storage.service.spec.ts:2 TS2305 (bloquea toda la suite)
+V1#74-76 resto del bloque de tests (smoke y cobertura; ver sección G)
+
+Verificación adicional para el próximo round: ninguna de las entradas anteriores
+fue re-cuentada aquí; si al corregir las secciones A-G aflora una superposición,
+moverla al v1 y cruzar referencias.
+
+================================================================================
+FIN DEL INFORME V2 · 40 hallazgos nuevos (A7, B8, C5, D12, E6, F5, G7)
+================================================================================

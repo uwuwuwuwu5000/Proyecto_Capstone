@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+
+###############################################################################
+# Entorno de desarrollo
+#
+# Permite compilar y ejecutar el proyecto sin instalar Node, npm ni la CLI de
+# Ionic en el equipo. Resuelve las diferencias de versión entre los integrantes
+# del equipo, que fue una fuente real de problemas durante el Sprint 1.
+#
+# No reemplaza a Android Studio: la compilación del APK sigue siendo local,
+# porque requiere el SDK de Android y acceso al dispositivo por USB.
+###############################################################################
+FROM node:22-alpine
+
+# git es necesario para algunas dependencias; los demás paquetes permiten
+# compilar módulos nativos si alguna dependencia lo requiere.
+RUN apk add --no-cache git python3 make g++
+
+WORKDIR /app
+
+RUN npm install -g @ionic/cli@latest
+
+# El código se monta como volumen desde docker-compose, así que aquí solo se
+# preparan las dependencias.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+EXPOSE 8100
+
+# --host 0.0.0.0 es obligatorio: sin eso el servidor solo escucha dentro del
+# contenedor y no es accesible desde el navegador del equipo.
+CMD ["ionic", "serve", "--host", "0.0.0.0", "--port", "8100", "--no-open"]

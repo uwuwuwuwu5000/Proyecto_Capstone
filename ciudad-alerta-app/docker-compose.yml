@@ -1,0 +1,84 @@
+###############################################################################
+# Ciudad Alerta — entorno contenerizado
+#
+#   docker compose up web                 portal web de producción
+#   docker compose --profile dev up       servidor de desarrollo con recarga
+#   docker compose up emulators           Firebase local para pruebas
+#   docker compose --profile dev up       dev + emuladores juntos
+###############################################################################
+
+services:
+  # Portal web compilado y servido con Nginx. Es el despliegue real del
+  # proyecto: lo que un municipio abriría en el navegador.
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ciudad-alerta-web:latest
+    container_name: ciudad-alerta-web
+    ports:
+      - "8090:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Servidor de desarrollo con recarga automática. Solo se levanta con el
+  # perfil "dev" para que un `docker compose up` normal no lo arranque.
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: ciudad-alerta-dev:latest
+    container_name: ciudad-alerta-dev
+    profiles: ["dev"]
+    ports:
+      - "8100:8100"
+    volumes:
+      # El código se monta desde el equipo para que los cambios se reflejen al
+      # instante. node_modules queda como volumen anónimo para no pisar las
+      # dependencias instaladas dentro de la imagen con las del host, que
+      # pueden ser de otro sistema operativo.
+      - .:/app
+      - /app/node_modules
+    environment:
+      # Necesario para que la recarga funcione con volúmenes montados en
+      # Windows y macOS, donde los eventos del sistema de archivos no se
+      # propagan al contenedor.
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - emulators
+
+  # Auth, Firestore y Storage locales.
+  emulators:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.emulators
+    image: ciudad-alerta-emulators:latest
+    container_name: ciudad-alerta-emulators
+    ports:
+      - "4000:4000"   # panel de administración
+      - "8080:8080"   # Firestore
+      - "9099:9099"   # Authentication
+      - "9199:9199"   # Storage
+    volumes:
+      # Las reglas se montan para poder editarlas y ver el efecto sin
+      # reconstruir la imagen.
+      - ./firestore.rules:/firebase/firestore.rules:ro
+      - ./storage.rules:/firebase/storage.rules:ro
+      - ./firestore.indexes.json:/firebase/firestore.indexes.json:ro
+      - ./firebase.json:/firebase/firebase.json:ro
+      # Persiste los datos entre reinicios; borrar este volumen deja la base
+      # limpia para una ronda de pruebas nueva.
+      - emulator-data:/firebase/datos
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  emulator-data:

@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+
+###############################################################################
+# Emuladores de Firebase
+#
+# Auth, Firestore y Storage locales. Sirven para dos cosas:
+#  1. Desarrollar y probar sin tocar los datos del proyecto real.
+#  2. Ejecutar las pruebas automatizadas de reglas de seguridad, que necesitan
+#     un Firestore contra el que escribir.
+#
+# Los emuladores están escritos en Java, de ahí la dependencia del JRE.
+###############################################################################
+FROM node:22-alpine
+
+RUN apk add --no-cache openjdk17-jre bash
+
+RUN npm install -g firebase-tools@latest
+
+WORKDIR /firebase
+
+# Reglas, índices y configuración se montan como volumen para que los cambios
+# se reflejen sin reconstruir la imagen.
+COPY firebase.json firestore.rules firestore.indexes.json storage.rules ./
+
+# Descarga previa de los binarios de los emuladores: sin esto, el primer
+# arranque de cada contenedor vuelve a bajarlos.
+RUN firebase setup:emulators:firestore && firebase setup:emulators:storage
+
+EXPOSE 4000 8080 9099 9199
+
+CMD ["firebase", "emulators:start", \
+     "--only", "auth,firestore,storage", \
+     "--project", "ciudadalerta"]
