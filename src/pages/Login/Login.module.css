@@ -1,0 +1,136 @@
+.wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 36px 32px;
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.6rem;
+  color: var(--ca-ink);
+}
+
+.subtitle {
+  margin: 6px 0 24px;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--ca-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.submit {
+  margin-top: 4px;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submit:hover:not(:disabled) {
+  background: var(--ca-signal-dark);
+}
+
+.submit:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.submit:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.linkButton {
+  display: block;
+  margin: 18px auto 0;
+  padding: 4px;
+  border: none;
+  background: none;
+  color: var(--ca-signal);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.registerHint {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+}
+
+.registerLink {
+  color: var(--ca-signal);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.error {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(224, 101, 107, 0.14);
+  border: 1px solid var(--ca-danger);
+  color: var(--ca-danger);
+  font-size: 0.9rem;
+}
+
+.notice {
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(28, 169, 201, 0.14);
+  border: 1px solid var(--ca-signal);
+  color: var(--ca-signal);
+  font-size: 0.9rem;
+}

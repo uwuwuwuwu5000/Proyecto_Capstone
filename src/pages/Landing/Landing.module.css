@@ -1,0 +1,135 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.hero {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 24px 56px;
+  text-align: center;
+}
+
+.heroTitle {
+  margin: 0 0 16px;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.heroSubtitle {
+  margin: 0 auto 32px;
+  max-width: 560px;
+  font-size: 1.15rem;
+  color: var(--ca-muted);
+}
+
+.cta {
+  display: inline-block;
+  padding: 12px 28px;
+  border-radius: 10px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.cta:hover {
+  background: var(--ca-signal-dark);
+}
+
+.cta:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 3px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+.stepCard {
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  padding: 28px 22px;
+  text-align: center;
+}
+
+.stepIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.stepTitle {
+  margin: 14px 0 8px;
+  font-size: 1.2rem;
+  color: var(--ca-ink);
+}
+
+.stepText {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--ca-muted);
+}
+
+.mapSection {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+  text-align: center;
+}
+
+.mapTitle {
+  margin: 0 0 8px;
+  font-size: 1.6rem;
+  color: var(--ca-ink);
+}
+
+.mapCaption {
+  margin: 0 auto 24px;
+  max-width: 560px;
+  font-size: 0.98rem;
+  color: var(--ca-muted);
+}
+
+.mapWrapper {
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.footer {
+  margin-top: auto;
+  padding: 20px 24px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+  border-top: 1px solid var(--ca-line);
+}
+
+@media (max-width: 780px) {
+  .steps {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+  }
+
+  .hero {
+    padding: 48px 20px 40px;
+  }
+
+  .heroTitle {
+    font-size: 2.1rem;
+  }
+}

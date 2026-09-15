@@ -1,0 +1,143 @@
+.map {
+  height: 420px;
+  width: 100%;
+  border-radius: 12px;
+  z-index: 0;
+  background: var(--ca-base);
+}
+
+@media (max-width: 780px) {
+  .map {
+    height: 300px;
+  }
+}
+
+.status {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+}
+
+.statusError {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: var(--ca-danger);
+}
+
+.foto {
+  margin-top: 6px;
+}
+
+.foto img {
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.confirmar {
+  margin-top: 8px;
+}
+
+.confirmarBoton {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirmarBoton:hover:not(:disabled) {
+  background: var(--ca-signal-dark);
+}
+
+.confirmarBoton:disabled {
+  opacity: 0.65;
+  cursor: progress;
+}
+
+.confirmarHecho {
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.confirmarMensaje {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: var(--ca-danger);
+}
+
+/* Pin de marcador coloreado por estado (ver crearIconoEstado en MapaSantiago.tsx). */
+.pin span {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--ca-ink);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 18px;
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+}
+
+.leyendaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.leyendaPunto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid var(--ca-ink);
+  flex: none;
+}
+
+/* ---- Chrome de Leaflet: estas clases son globales (las crea la librería,
+   no React), por eso van con :global() en vez de como módulos normales. ---- */
+
+:global(.leaflet-popup-content-wrapper) {
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  border: 1px solid var(--ca-line);
+}
+
+:global(.leaflet-popup-tip) {
+  background: var(--ca-surface);
+}
+
+:global(.leaflet-popup-content a) {
+  color: var(--ca-signal);
+}
+
+:global(.leaflet-control-zoom a) {
+  background: var(--ca-surface);
+  color: var(--ca-ink) !important;
+  border-color: var(--ca-line) !important;
+}
+
+:global(.leaflet-control-zoom a:hover) {
+  background: var(--ca-surface-alt);
+}
+
+:global(.leaflet-control-attribution) {
+  background: rgba(17, 24, 39, 0.75);
+  color: var(--ca-muted);
+}
+
+:global(.leaflet-control-attribution a) {
+  color: var(--ca-signal);
+}

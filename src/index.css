@@ -1,0 +1,52 @@
+:root {
+  /* Paleta base "Ciudad Alerta" — idéntica a variables.scss de la app móvil */
+  --ca-black: #111827;
+  --ca-blue: #1ca9c9;
+  --ca-slate: #5c677d;
+  --ca-fog: #a5b4c3;
+  --ca-white: #f8fafc;
+
+  /* Roles semánticos (mismos nombres que la app móvil, para que el equipo
+     hable el mismo idioma en ambos códigos) */
+  --ca-base: #111827; /* fondo de cabeceras/toolbars; texto sobre el botón de acento */
+  --ca-surface: #1b2434; /* tarjetas, secciones elevadas */
+  --ca-surface-alt: #1a2433; /* inputs, selects */
+  --ca-line: #5c677d; /* bordes, separadores */
+  --ca-ink: #f8fafc; /* texto principal sobre fondo oscuro */
+  --ca-muted: #a5b4c3; /* texto secundario */
+  --ca-signal: #1ca9c9; /* acento/acción: botones, marcador de mapa, focus */
+  --ca-signal-dark: #1791ad; /* estado pressed/activated del acento */
+  --ca-danger: #e0656b; /* errores y alertas */
+
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  line-height: 1.5;
+  color: var(--ca-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ca-base);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+}

@@ -1,0 +1,99 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: var(--ca-base);
+  color: var(--ca-ink);
+  border-bottom: 1px solid var(--ca-line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  color: var(--ca-ink);
+  text-decoration: none;
+}
+
+.brandMark {
+  font-size: 0.9rem;
+  color: var(--ca-signal);
+}
+
+.loginButton {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.loginButton:hover {
+  background: var(--ca-signal-dark);
+}
+
+.loginButton:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.session {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.greeting {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.logoutButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-danger);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  opacity: 0.8;
+}
+
+.logoutButton:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 12px 16px;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .loginButton {
+    padding: 7px 14px;
+    font-size: 0.9rem;
+  }
+
+  .greeting {
+    font-size: 0.85rem;
+  }
+}

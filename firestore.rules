@@ -1,0 +1,260 @@
+rules_version = '2';
+
+// CA-79 · Reglas de seguridad iniciales de Ciudad Alerta.
+// Principio: nada es público. Toda lectura o escritura exige sesión activa y,
+// en el caso de los perfiles, que el documento pertenezca a quien lo solicita.
+//
+// Este archivo es el que realmente vive publicado en el proyecto Firebase
+// compartido (mismo que usa la app móvil) — no es una copia aproximada.
+// Cualquier cambio aquí debe coordinarse con quien mantiene la app móvil
+// antes de publicarlo, porque afecta a ambos clientes por igual.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Funciones auxiliares ---------------------------------------------
+
+    function estaAutenticado() {
+      return request.auth != null;
+    }
+
+    function esPropietario(userId) {
+      return estaAutenticado() && request.auth.uid == userId;
+    }
+
+    /**
+     * Rol de gestión, leído desde el perfil del usuario. El propio usuario no
+     * puede modificar su `role` (ver reglas de /users), así que esta lectura es
+     * confiable.
+     */
+    function esGestor() {
+      return estaAutenticado()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['operador', 'admin'];
+    }
+
+    // Campos que el cliente no puede fijar ni modificar por su cuenta:
+    // el nivel de confianza y el conteo de reportes los administrará el backend
+    // (Cloud Functions) cuando se implemente el sistema de reputación.
+    function camposProtegidosIntactos() {
+      return request.resource.data.trustLevel == resource.data.trustLevel
+        && request.resource.data.validatedReports == resource.data.validatedReports
+        && request.resource.data.role == resource.data.role;
+    }
+
+    function creacionConValoresIniciales(userId) {
+      return request.resource.data.uid == userId
+        && request.resource.data.trustLevel == 0
+        && request.resource.data.validatedReports == 0
+        && request.resource.data.role == 'ciudadano'
+        && request.resource.data.email is string
+        && request.resource.data.displayName is string;
+    }
+
+    // --- Perfiles de usuario ----------------------------------------------
+
+    match /users/{userId} {
+      // Cada usuario lee y actualiza únicamente su propio documento.
+      allow get: if esPropietario(userId);
+      allow list: if false;
+
+      allow create: if esPropietario(userId) && creacionConValoresIniciales(userId);
+      // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
+      // campos arbitrarios a su propio documento.
+      allow update: if esPropietario(userId)
+        && camposProtegidosIntactos()
+        && request.resource.data.keys().hasOnly([
+             'uid', 'email', 'displayName', 'role', 'trustLevel',
+             'validatedReports', 'emailVerified', 'ultimoReporteAt',
+             'createdAt', 'updatedAt'
+           ]);
+
+      // El borrado de cuentas se maneja desde el backend, no desde el cliente.
+      allow delete: if false;
+    }
+
+    // --- Reportes ciudadanos (Sprint 2) ------------------------------------
+
+    function categoriaValida() {
+      return request.resource.data.categoria in [
+        'microbasural', 'luminaria', 'fuga_agua', 'arbol_peligroso',
+        'calle_deteriorada', 'accesibilidad', 'otro'
+      ];
+    }
+
+    function descripcionValida() {
+      return request.resource.data.descripcion is string
+        && request.resource.data.descripcion.size() >= 10
+        && request.resource.data.descripcion.size() <= 500;
+    }
+
+    /**
+     * BUG 60 · Intervalo mínimo entre reportes del mismo usuario.
+     *
+     * Limitación conocida y declarada: las reglas no pueden obligar a que la
+     * marca `ultimoReporteAt` se actualice junto con la creación del reporte,
+     * porque cada escritura de un lote se evalúa por separado contra el estado
+     * previo. Frena el envío repetido desde la aplicación, no a un cliente
+     * fabricado a medida; para eso está App Check.
+     */
+    function respetaIntervaloDeReporte() {
+      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return !('ultimoReporteAt' in perfil)
+        || perfil.ultimoReporteAt == null
+        || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() > 20000;
+    }
+
+    function reporteExiste(reportId) {
+      return exists(/databases/$(database)/documents/reports/$(reportId));
+    }
+
+    function datosReporte(reportId) {
+      return get(/databases/$(database)/documents/reports/$(reportId)).data;
+    }
+
+    /** Flujo de estados permitido. Debe reflejar TRANSICIONES en report.model.ts. */
+    function transicionValida(desde, hacia) {
+      return (desde == 'reportado' && hacia in ['en_revision', 'derivado', 'cerrado'])
+        || (desde == 'en_revision' && hacia in ['derivado', 'cerrado'])
+        || (desde == 'derivado' && hacia in ['en_proceso', 'cerrado'])
+        || (desde == 'en_proceso' && hacia in ['resuelto', 'cerrado'])
+        || (desde == 'resuelto' && hacia == 'cerrado');
+    }
+
+    /** Impide que una actualización de estado altere el contenido del reporte. */
+    function soloCambiaEstado() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['estado', 'updatedAt']);
+    }
+
+    /**
+     * BUG 27 · Las reglas no pueden recalcular un geohash a partir de las
+     * coordenadas, así que se valida su forma: base32 de geohash, de 1 a 12
+     * caracteres. Evita cadenas arbitrarias que ensucien las búsquedas.
+     */
+    function geohashValido() {
+      return request.resource.data.geohash is string
+        && request.resource.data.geohash.size() > 0
+        && request.resource.data.geohash.size() <= 12
+        && request.resource.data.geohash.matches('^[0-9b-hjkmnp-z]+$');
+    }
+
+    /**
+     * BUG 26 · El vector de MobileNet tiene 1024 dimensiones. Sin cota, un
+     * cliente manipulado podría inflar el documento hasta el límite de 1 MiB y
+     * encarecer todas las consultas del mapa.
+     */
+    function embeddingValido() {
+      return !('embedding' in request.resource.data)
+        || request.resource.data.embedding == null
+        || (request.resource.data.embedding is list
+            && request.resource.data.embedding.size() <= 1024);
+    }
+
+    function ubicacionValida() {
+      let ubicacion = request.resource.data.ubicacion;
+      return ubicacion.lat is number && ubicacion.lat >= -90 && ubicacion.lat <= 90
+        && ubicacion.lng is number && ubicacion.lng >= -180 && ubicacion.lng <= 180;
+    }
+
+    match /reports/{reportId} {
+      // El mapa público del MVP es visible para cualquier usuario autenticado.
+      allow read: if estaAutenticado();
+
+      allow create: if estaAutenticado()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.estado == 'reportado'
+        && request.resource.data.confirmaciones == 0
+        && descripcionValida()
+        && categoriaValida()
+        && ubicacionValida()
+        && geohashValido()
+        && embeddingValido()
+        && request.resource.data.organismo.id in [
+             'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
+           ]
+        && respetaIntervaloDeReporte();
+
+      // HU-28 · Solo un gestor cambia el estado, y solo por transiciones
+      // válidas. El resto de campos debe quedar intacto.
+      allow update: if esGestor()
+        && transicionValida(resource.data.estado, request.resource.data.estado)
+        && soloCambiaEstado();
+
+      allow delete: if false;
+
+      // Confirmación comunitaria. El id del documento es el uid de quien
+      // confirma, así que un segundo intento sería un update y queda denegado:
+      // la unicidad la garantizan la estructura y estas reglas, no el cliente.
+      match /confirmations/{userId} {
+        allow read: if estaAutenticado();
+
+        // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
+        allow create: if esPropietario(userId)
+          && request.resource.data.uid == userId
+          && request.resource.data.reportId == reportId
+          && request.resource.data.createdAt == request.time
+          && reporteExiste(reportId)
+          && datosReporte(reportId).uid != request.auth.uid;
+
+        allow update, delete: if false;
+      }
+
+      // HU-28 · Bitácora de cambios de estado. Inmutable una vez escrita.
+      match /statusHistory/{cambioId} {
+        allow read: if estaAutenticado();
+
+        /**
+         * BUG 15 · `desde` debe coincidir con el estado que el reporte tiene
+         * ahora mismo. Dentro de una transacción, get() devuelve el estado
+         * previo a la escritura, que es justamente el origen de la transición.
+         * Sin esta comprobación se podía inventar una bitácora que contradijera
+         * el documento.
+         * BUG 23 · El comentario se acota también en servidor.
+         */
+        allow create: if esGestor()
+          && request.resource.data.autorUid == request.auth.uid
+          && request.resource.data.reportId == reportId
+          && request.resource.data.createdAt == request.time
+          && reporteExiste(reportId)
+          && request.resource.data.desde == datosReporte(reportId).estado
+          && transicionValida(request.resource.data.desde, request.resource.data.hacia)
+          && request.resource.data.comentario is string
+          && request.resource.data.comentario.size() <= 512;
+
+        allow update, delete: if false;
+      }
+    }
+
+    /**
+     * Fotografías guardadas en Firestore mientras el proyecto siga en el plan
+     * Spark. El id del documento coincide con el del reporte.
+     *
+     * BUG 24 · La fotografía y el reporte se escriben ahora en un mismo lote
+     * (BUG 61). Dentro de un lote cada escritura se evalúa contra el estado
+     * previo, así que el reporte todavía no existe al validar la imagen y no se
+     * puede exigir su existencia aquí. Lo que sí se garantiza es la
+     * atomicidad: ninguna de las dos queda sin la otra.
+     */
+    match /reportPhotos/{reportId} {
+      allow read: if estaAutenticado();
+
+      allow create: if estaAutenticado()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.reportId == reportId
+        && request.resource.data.mimeType in ['image/jpeg', 'image/png', 'image/webp']
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() < 950000;
+
+      // Solo el autor puede borrarla, para permitir revertir un reporte fallido.
+      allow delete: if estaAutenticado()
+        && resource.data.ownerUid == request.auth.uid;
+      allow update: if false;
+    }
+
+    // --- Denegación por defecto -------------------------------------------
+    // Cualquier ruta no declarada arriba queda bloqueada.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
