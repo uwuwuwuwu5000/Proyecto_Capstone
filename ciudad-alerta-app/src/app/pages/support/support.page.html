@@ -1,0 +1,64 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Quejas y sugerencias</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="soporte-content" [fullscreen]="true">
+  <div class="soporte-shell">
+    <ion-button class="accion-principal" expand="block" (click)="nuevo()">
+      <ion-icon slot="start" name="add-circle-outline" aria-hidden="true"></ion-icon>
+      Escribir a soporte
+    </ion-button>
+
+    @switch (estado()) {
+      @case ('cargando') {
+        <p class="estado">Cargando tus conversaciones…</p>
+      }
+      @case ('error') {
+        <div class="bloque-estado">
+          <p class="estado">No pudimos cargar tus conversaciones. Revisa tu conexión.</p>
+          <ion-button fill="outline" expand="block" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      }
+      @default {
+        @if (tickets().length === 0) {
+          <div class="vacio">
+            <ion-icon name="chatbubbles-outline" aria-hidden="true"></ion-icon>
+            <h2>Aún no has escrito a soporte</h2>
+            <p>
+              Si algo de la aplicación no funciona como esperas, o tienes una idea para
+              mejorarla, cuéntanoslo. Un administrador te responderá por aquí mismo.
+            </p>
+          </div>
+        } @else {
+          <ul class="listado">
+            @for (ticket of tickets(); track ticket.id) {
+              <li>
+                <button type="button" class="tarjeta" (click)="abrir(ticket.id)">
+                  <span class="tarjeta__pin" [style.background]="colores[ticket.estado]"></span>
+
+                  <span class="tarjeta__cuerpo">
+                    <span class="tarjeta__asunto">{{ ticket.asunto }}</span>
+                    <span class="tarjeta__adelanto">{{ ticket.lastMessagePreview }}</span>
+                    <span class="tarjeta__meta">
+                      {{ etiquetasTipo[ticket.tipo] }} · {{ fecha(ticket) }}
+                    </span>
+                  </span>
+
+                  <ion-badge>{{ etiquetasEstado[ticket.estado] }}</ion-badge>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </div>
+</ion-content>

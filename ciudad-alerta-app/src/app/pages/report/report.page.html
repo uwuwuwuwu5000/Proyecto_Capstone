@@ -50,7 +50,12 @@
     </section>
 
     <section class="bloque">
-      <h2 class="bloque__titulo">Ubicación</h2>
+      <h2 class="bloque__titulo">
+        Ubicación
+        @if (!ubicacion()) {
+          <span class="etiqueta-obligatorio">Obligatorio</span>
+        }
+      </h2>
 
       @if (ubicacion(); as coords) {
         <app-map-view
@@ -130,6 +135,13 @@
       [analizando]="analizando()"
       (confirmado)="alConfirmarCoincidencia()"
     ></app-similar-reports>
+
+    @if (!puedeEnviar()) {
+      <ion-note class="aviso-bloqueo" role="alert">
+        <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
+        Falta la ubicación. Pulsa "Usar mi ubicación actual" para poder enviar el reporte.
+      </ion-note>
+    }
 
     <ion-button
       class="accion-principal"

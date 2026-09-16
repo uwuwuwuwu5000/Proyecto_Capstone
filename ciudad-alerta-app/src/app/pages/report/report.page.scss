@@ -25,10 +25,24 @@
 }
 
 .bloque__titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -0.01em;
+}
+
+.etiqueta-obligatorio {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(224, 101, 107, 0.16);
+  color: var(--ca-danger);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .bloque__ayuda {
@@ -101,6 +115,25 @@ ion-textarea {
 ion-note {
   margin-left: 0.2rem;
   font-size: 0.82rem;
+}
+
+.aviso-bloqueo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 -0.4rem;
+  padding: 0.6rem 0.7rem;
+  border-left: 3px solid var(--ca-danger);
+  border-radius: 6px;
+  background: rgba(224, 101, 107, 0.1);
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--ca-ink);
+
+  ion-icon {
+    flex-shrink: 0;
+    color: var(--ca-danger);
+  }
 }
 
 .accion-principal {

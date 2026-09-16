@@ -120,6 +120,19 @@
   text-transform: none;
 }
 
+.accion-staff {
+  --background: transparent;
+  --border-color: var(--ca-signal);
+  --border-style: solid;
+  --border-width: 1px;
+  --color: var(--ca-signal);
+  --border-radius: 10px;
+  --box-shadow: none;
+  text-transform: none;
+  font-weight: 600;
+  margin: 0;
+}
+
 .accion-salir {
   --color: var(--ca-ink);
   --border-color: var(--ca-line);

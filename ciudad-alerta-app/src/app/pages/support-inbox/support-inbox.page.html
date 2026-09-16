@@ -1,0 +1,93 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Bandeja de soporte</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bandeja-content" [fullscreen]="true">
+  <div class="bandeja-shell">
+    <div class="filtros">
+      <ion-select
+        label="Tipo"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().tipo"
+        (ionChange)="cambiarTipo($event.detail.value)"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (item of tipos; track item[0]) {
+          <ion-select-option [value]="item[0]">{{ item[1] }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        label="Estado"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().estado"
+        (ionChange)="cambiarEstado($event.detail.value)"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (item of estados; track item[0]) {
+          <ion-select-option [value]="item[0]">{{ item[1] }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+
+    @switch (estado()) {
+      @case ('cargando') {
+        <p class="estado">Cargando la bandeja…</p>
+      }
+      @case ('error') {
+        <div class="bloque-estado">
+          <p class="estado">
+            No pudimos cargar la bandeja. Comprueba tu conexión y que tu cuenta tenga rol de
+            gestión.
+          </p>
+          <ion-button fill="outline" expand="block" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      }
+      @default {
+        @if (tickets().length === 0) {
+          <p class="estado">No hay conversaciones con estos filtros.</p>
+        } @else {
+          <p class="estado">
+            {{ tickets().length }}
+            {{ tickets().length === 1 ? 'conversación' : 'conversaciones' }}
+          </p>
+
+          <ul class="listado">
+            @for (ticket of tickets(); track ticket.id) {
+              <li>
+                <button type="button" class="tarjeta" (click)="abrir(ticket.id)">
+                  <span class="tarjeta__pin" [style.background]="colores[ticket.estado]"></span>
+
+                  <span class="tarjeta__cuerpo">
+                    <span class="tarjeta__asunto">{{ ticket.asunto }}</span>
+                    <span class="tarjeta__adelanto">{{ ticket.lastMessagePreview }}</span>
+                    <span class="tarjeta__meta">
+                      {{ etiquetasTipo[ticket.tipo] }} · {{ ticket.autorNombre }} ·
+                      {{ fecha(ticket) }}
+                    </span>
+                  </span>
+
+                  <ion-badge>{{ etiquetasEstado[ticket.estado] }}</ion-badge>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </div>
+</ion-content>

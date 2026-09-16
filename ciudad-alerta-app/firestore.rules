@@ -90,11 +90,25 @@ service cloud.firestore {
      * previo. Frena el envío repetido desde la aplicación, no a un cliente
      * fabricado a medida; para eso está App Check.
      */
+    /**
+     * Umbral del intervalo entre reportes, en milisegundos.
+     * Debe mantenerse igual a INTERVALO_MINIMO_REPORTE_MS en
+     * src/app/models/user-profile.model.ts (v2-E2).
+     */
+    function intervaloMinimoMs() {
+      return 30000;
+    }
+
     function respetaIntervaloDeReporte() {
-      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return !('ultimoReporteAt' in perfil)
-        || perfil.ultimoReporteAt == null
-        || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() > 20000;
+      // v2-E2 · Si el perfil no existe, el get() fallaría y la creación se
+      // denegaría con un permission-denied incomprensible. Las cuentas creadas
+      // antes del registro de perfil quedan cubiertas por esta comprobación.
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        || !('ultimoReporteAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt == null
+        || request.time.toMillis()
+             - get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt.toMillis()
+           >= intervaloMinimoMs();
     }
 
     function reporteExiste(reportId) {
@@ -243,6 +257,95 @@ service cloud.firestore {
       allow delete: if estaAutenticado()
         && resource.data.ownerUid == request.auth.uid;
       allow update: if false;
+    }
+
+    // --- Soporte: quejas y sugerencias -------------------------------------
+
+    function esAutorDelTicket(ticketId) {
+      return estaAutenticado()
+        && get(/databases/$(database)/documents/supportTickets/$(ticketId)).data.uid
+           == request.auth.uid;
+    }
+
+    function ticketValido() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.tipo in ['queja', 'sugerencia']
+        && request.resource.data.estado == 'abierto'
+        && request.resource.data.asignadoA == null
+        && request.resource.data.asunto is string
+        && request.resource.data.asunto.size() >= 5
+        && request.resource.data.asunto.size() <= 120
+        && request.resource.data.lastMessagePreview is string
+        && request.resource.data.lastMessagePreview.size() <= 100;
+    }
+
+    /**
+     * Al responder o escribir, el cliente actualiza el adelanto del ticket. Se
+     * permite solo sobre los campos de actividad, nunca sobre el autor, el tipo
+     * ni el asunto.
+     */
+    function actualizacionDeActividad() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['lastMessageAt', 'lastMessagePreview', 'updatedAt', 'estado', 'asignadoA'])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.tipo == resource.data.tipo
+        && request.resource.data.asunto == resource.data.asunto;
+    }
+
+    function transicionTicketValida(desde, hacia) {
+      return (desde == 'abierto' && hacia in ['en_atencion', 'cerrado'])
+        || (desde == 'en_atencion' && hacia == 'cerrado')
+        || (desde == 'cerrado' && hacia == 'en_atencion')
+        || desde == hacia;
+    }
+
+    match /supportTickets/{ticketId} {
+      // El autor ve lo suyo; el equipo de soporte ve todo.
+      allow get: if esGestor() || (estaAutenticado() && resource.data.uid == request.auth.uid);
+      /**
+       * En una consulta de listado, Firestore evalúa la regla contra cada
+       * documento candidato y rechaza la consulta completa si alguno pudiera
+       * incumplirla. Así, un ciudadano solo puede listar si su consulta filtra
+       * por su propio uid; sin ese filtro, la consulta es rechazada entera.
+       */
+      allow list: if esGestor()
+        || (estaAutenticado() && resource.data.uid == request.auth.uid);
+
+      allow create: if estaAutenticado() && ticketValido();
+
+      // El autor solo mueve la actividad al escribir; el estado lo cambia el
+      // equipo de soporte.
+      allow update: if actualizacionDeActividad()
+        && transicionTicketValida(resource.data.estado, request.resource.data.estado)
+        && (
+             esGestor()
+             || (
+                  resource.data.uid == request.auth.uid
+                  && request.resource.data.estado == resource.data.estado
+                  && request.resource.data.asignadoA == resource.data.asignadoA
+                )
+           );
+
+      // Las conversaciones no se borran: son evidencia de la atención prestada.
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if esGestor() || esAutorDelTicket(ticketId);
+
+        allow create: if (esGestor() || esAutorDelTicket(ticketId))
+          && request.resource.data.autorUid == request.auth.uid
+          && request.resource.data.ticketId == ticketId
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() >= 2
+          && request.resource.data.texto.size() <= 1000
+          && request.resource.data.autorRol in ['ciudadano', 'staff']
+          // Solo el equipo de soporte puede firmar como soporte.
+          && (request.resource.data.autorRol == 'ciudadano' || esGestor());
+
+        // Los mensajes son inmutables: nadie reescribe lo que ya dijo.
+        allow update, delete: if false;
+      }
     }
 
     // --- Denegación por defecto -------------------------------------------

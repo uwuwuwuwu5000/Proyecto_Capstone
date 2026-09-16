@@ -72,6 +72,18 @@
           <ion-icon slot="start" name="document-text-outline" aria-hidden="true"></ion-icon>
           Mis reportes
         </ion-button>
+
+        <ion-button fill="outline" expand="block" routerLink="/support">
+          <ion-icon slot="start" name="chatbubbles-outline" aria-hidden="true"></ion-icon>
+          Quejas y sugerencias
+        </ion-button>
+
+        @if (esStaff()) {
+          <ion-button class="accion-staff" expand="block" routerLink="/support-inbox">
+            <ion-icon slot="start" name="file-tray-full-outline" aria-hidden="true"></ion-icon>
+            Bandeja de soporte
+          </ion-button>
+        }
       </nav>
 
       <ion-button

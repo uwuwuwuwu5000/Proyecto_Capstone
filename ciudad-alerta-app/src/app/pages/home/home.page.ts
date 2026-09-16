@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   AlertController,
@@ -14,7 +14,9 @@ import {
 import { addIcons } from 'ionicons';
 import {
   addCircleOutline,
+  chatbubblesOutline,
   documentTextOutline,
+  fileTrayFullOutline,
   logOutOutline,
   mapOutline,
   navigateOutline,
@@ -50,6 +52,16 @@ export class HomePage {
   /** Usuario autenticado expuesto como señal por el servicio. */
   readonly usuario = this.authService.currentUser;
   readonly perfil = signal<UserProfile | null>(null);
+
+  /**
+   * La bandeja de soporte solo aparece para los roles de gestión. Es una ayuda
+   * de interfaz: el acceso real lo controlan `staffGuard` y las reglas de
+   * Firestore, que rechazan la lectura a cualquier otro rol.
+   */
+  readonly esStaff = computed(() => {
+    const rol = this.perfil()?.role;
+    return rol === 'operador' || rol === 'admin';
+  });
   readonly cargandoPerfil = signal(true);
 
   /** uid cuyo perfil está actualmente en pantalla. */
@@ -58,7 +70,9 @@ export class HomePage {
   constructor() {
     addIcons({
       addCircleOutline,
+      chatbubblesOutline,
       documentTextOutline,
+      fileTrayFullOutline,
       logOutOutline,
       mapOutline,
       navigateOutline,

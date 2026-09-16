@@ -1,0 +1,107 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button
+        [defaultHref]="esStaff() ? '/support-inbox' : '/support'"
+        text=""
+        aria-label="Volver"
+      ></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ ticket()?.asunto ?? 'Conversación' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="chat-content" [fullscreen]="true">
+  @switch (estado()) {
+    @case ('cargando') {
+      <p class="estado">Cargando la conversación…</p>
+    }
+    @case ('no_encontrado') {
+      <p class="estado">Esta conversación ya no está disponible.</p>
+    }
+    @case ('error') {
+      <p class="estado">No pudimos cargar la conversación. Revisa tu conexión.</p>
+    }
+    @default {
+      @if (ticket(); as actual) {
+        <div class="chat-shell">
+          <header class="ficha">
+            <span class="ficha__pin" [style.background]="colores[actual.estado]"></span>
+            <div class="ficha__datos">
+              <ion-badge>{{ etiquetasTipo[actual.tipo] }}</ion-badge>
+              <ion-badge>{{ etiquetasEstado[actual.estado] }}</ion-badge>
+            </div>
+            @if (esStaff()) {
+              <p class="ficha__autor">{{ actual.autorNombre }} · {{ actual.autorEmail }}</p>
+            }
+          </header>
+
+          @if (esStaff() && transiciones().length > 0) {
+            <div class="gestion">
+              @for (opcion of transiciones(); track opcion) {
+                <ion-button fill="outline" size="small" (click)="cambiarEstado(opcion)">
+                  {{ etiquetasEstado[opcion] }}
+                </ion-button>
+              }
+            </div>
+          }
+
+          <ul class="mensajes">
+            @for (mensaje of mensajes(); track mensaje.id) {
+              <li
+                class="mensaje"
+                [class.mensaje--propio]="esPropio(mensaje)"
+                [class.mensaje--staff]="mensaje.autorRol === 'staff'"
+              >
+                <span class="mensaje__autor">
+                  {{ mensaje.autorNombre }}
+                  @if (mensaje.autorRol === 'staff') {
+                    <span class="mensaje__rol">Soporte</span>
+                  }
+                </span>
+                <p class="mensaje__texto">{{ mensaje.texto }}</p>
+                <span class="mensaje__fecha">{{ fecha(mensaje) }}</span>
+              </li>
+            }
+          </ul>
+
+          @if (mensajes().length === 0) {
+            <p class="estado">Todavía no hay mensajes en esta conversación.</p>
+          }
+        </div>
+      }
+    }
+  }
+</ion-content>
+
+@if (estado() === 'listo') {
+  <ion-footer class="pie">
+    @if (puedeEscribir()) {
+      <div class="redactor">
+        <ion-textarea
+          [(ngModel)]="borrador"
+          [autoGrow]="true"
+          [rows]="1"
+          [maxlength]="mensajeMax"
+          fill="outline"
+          placeholder="Escribe tu mensaje"
+          aria-label="Mensaje para soporte"
+        ></ion-textarea>
+
+        <ion-button
+          class="redactor__enviar"
+          [disabled]="enviando() || borrador.trim().length === 0"
+          (click)="enviar()"
+          aria-label="Enviar mensaje"
+        >
+          <ion-icon slot="icon-only" name="send-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </div>
+    } @else {
+      <p class="cerrado">
+        Esta conversación está cerrada. Si el problema persiste, abre una nueva desde
+        Quejas y sugerencias.
+      </p>
+    }
+  </ion-footer>
+}

@@ -1,0 +1,75 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/support" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Escribir a soporte</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="nuevo-content" [fullscreen]="true">
+  <form class="nuevo-shell" [formGroup]="formulario" (ngSubmit)="enviar()">
+    <section class="bloque">
+      <h2 class="bloque__titulo">¿De qué se trata?</h2>
+
+      <ion-segment
+        class="selector-tipo"
+        aria-label="Tipo de contacto"
+        [value]="tipo()"
+        (ionChange)="cambiarTipo($event.detail.value)"
+      >
+        <ion-segment-button value="queja">Queja</ion-segment-button>
+        <ion-segment-button value="sugerencia">Sugerencia</ion-segment-button>
+      </ion-segment>
+
+      <p class="bloque__ayuda">{{ textoAyuda() }}</p>
+    </section>
+
+    <section class="bloque">
+      <ion-input
+        formControlName="asunto"
+        type="text"
+        label="Asunto"
+        labelPlacement="floating"
+        fill="outline"
+        [maxlength]="asuntoMax"
+        placeholder="Resume el tema en una línea"
+      ></ion-input>
+      @if (asuntoControl.touched && asuntoControl.invalid) {
+        <ion-note color="danger">
+          Usa entre {{ asuntoMin }} y {{ asuntoMax }} caracteres.
+        </ion-note>
+      }
+
+      <ion-textarea
+        formControlName="mensaje"
+        label="Tu mensaje"
+        labelPlacement="floating"
+        fill="outline"
+        [autoGrow]="true"
+        [counter]="true"
+        [maxlength]="mensajeMax"
+        [rows]="6"
+        placeholder="Describe con el detalle que quieras"
+      ></ion-textarea>
+      @if (mensajeControl.touched && mensajeControl.invalid) {
+        <ion-note color="danger">
+          El mensaje no puede ir vacío y admite hasta {{ mensajeMax }} caracteres.
+        </ion-note>
+      }
+    </section>
+
+    <ion-button
+      class="accion-principal"
+      type="submit"
+      expand="block"
+      [disabled]="formulario.invalid || enviando()"
+    >
+      {{ enviando() ? 'Abriendo…' : 'Abrir conversación' }}
+    </ion-button>
+
+    <p class="nota-privacidad">
+      Un administrador verá tu nombre y tu correo junto al mensaje, para poder responderte.
+    </p>
+  </form>
+</ion-content>
