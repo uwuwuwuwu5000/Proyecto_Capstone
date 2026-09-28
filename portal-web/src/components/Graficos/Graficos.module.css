@@ -1,0 +1,253 @@
+/*
+ * Gráficos de una sola serie sobre la superficie oscura (--ca-surface).
+ * Color de marca validado contra #1b2434 (banda de luminosidad, croma y
+ * contraste): --ca-signal-dark. El hover levanta la marca a --ca-signal.
+ */
+
+.columnasFigura {
+  --marca: var(--ca-signal-dark);
+  --marca-activa: var(--ca-signal);
+  --guia: rgba(165, 180, 195, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Espacio para la etiqueta del máximo cuando la columna llega al tope. */
+  padding-top: 18px;
+}
+
+.columnasMarco {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+
+.ejeY {
+  position: relative;
+  width: 2.5em;
+  height: 200px;
+  font-size: 0.72rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ejeY span {
+  position: absolute;
+  right: 0;
+  transform: translateY(50%);
+}
+
+.areaColumnas {
+  position: relative;
+  height: 200px;
+}
+
+.lineaGuia {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--guia);
+}
+
+.columnas {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+
+.columna {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.columna:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.columnaActiva {
+  background: rgba(165, 180, 195, 0.06);
+}
+
+.barraColumna {
+  display: block;
+  width: min(24px, 70%);
+  min-height: 2px;
+  background: var(--marca);
+  border-radius: 4px 4px 0 0;
+}
+
+.columnaActiva .barraColumna {
+  background: var(--marca-activa);
+}
+
+.etiquetaTope {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -4px);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: var(--ca-base);
+  box-shadow: var(--shadow-card);
+  white-space: nowrap;
+  pointer-events: none;
+  font-size: 0.75rem;
+  color: var(--ca-muted);
+}
+
+.tooltip strong {
+  font-size: 0.95rem;
+  color: var(--ca-ink);
+}
+
+.ejeX {
+  display: flex;
+  margin-left: calc(2.5em + 10px);
+  font-size: 0.72rem;
+  color: var(--ca-muted);
+}
+
+.ejeX span {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.tablaVista {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.tablaVista summary {
+  cursor: pointer;
+  width: fit-content;
+}
+
+.tabla {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--guia, rgba(165, 180, 195, 0.16));
+  text-align: left;
+  color: var(--ca-ink);
+}
+
+.tabla th {
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+
+.numero {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Barras horizontales ---- */
+
+.barras {
+  --marca: var(--ca-signal-dark);
+  --marca-activa: var(--ca-signal);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.barraFila {
+  display: grid;
+  grid-template-columns: minmax(96px, 38%) 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.barraFilaActiva {
+  background: rgba(165, 180, 195, 0.06);
+}
+
+.barraFila:focus-visible {
+  box-shadow: 0 0 0 2px var(--ca-signal);
+}
+
+.barraEtiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--ca-ink);
+}
+
+.barraPunto {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--ca-ink);
+}
+
+.barraCarril {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.barra {
+  height: 14px;
+  min-width: 2px;
+  background: var(--marca);
+  border-radius: 0 4px 4px 0;
+}
+
+.barraFilaActiva .barra {
+  background: var(--marca-activa);
+}
+
+.barraValor {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  white-space: nowrap;
+}
+
+.barraPorcentaje {
+  font-weight: 400;
+  color: var(--ca-muted);
+}

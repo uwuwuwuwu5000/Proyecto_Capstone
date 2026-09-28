@@ -12,6 +12,22 @@
   }
 }
 
+/* Variante "pantallaCompleta": el mapa ocupa todo el alto disponible del
+   contenedor (que a su vez debe tener una altura definida — ver Mapa.module.css). */
+.raizCompleta {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.mapCompleto {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  z-index: 0;
+  background: var(--ca-base);
+}
+
 .status {
   margin: 10px 0 0;
   font-size: 0.9rem;

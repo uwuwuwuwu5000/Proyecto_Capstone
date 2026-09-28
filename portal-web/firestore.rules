@@ -3,11 +3,6 @@ rules_version = '2';
 // CA-79 · Reglas de seguridad iniciales de Ciudad Alerta.
 // Principio: nada es público. Toda lectura o escritura exige sesión activa y,
 // en el caso de los perfiles, que el documento pertenezca a quien lo solicita.
-//
-// Este archivo es el que realmente vive publicado en el proyecto Firebase
-// compartido (mismo que usa la app móvil) — no es una copia aproximada.
-// Cualquier cambio aquí debe coordinarse con quien mantiene la app móvil
-// antes de publicarlo, porque afecta a ambos clientes por igual.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -26,9 +21,60 @@ service cloud.firestore {
      * puede modificar su `role` (ver reglas de /users), así que esta lectura es
      * confiable.
      */
+    /**
+     * Administradores por correo.
+     *
+     * Duplicada a propósito en src/app/core/admin-emails.ts. Esta es la que
+     * manda: se evalúa contra el correo del token de autenticación, que emite
+     * Firebase y el cliente no puede falsificar. Al modificar la lista hay que
+     * actualizar ambos archivos y volver a desplegar.
+     */
+    function esCorreoAdministrador() {
+      return estaAutenticado()
+        && request.auth.token.email in [
+             'es.ibarra@duocuc.cl',
+             'cla.torres@duocuc.cl',
+             'rodri.hernandezc@duocuc.cl',
+             'rodri.hernandezc@admin.cl',
+             'rodrigo@admin.cl'
+           ];
+    }
+
+    /** Rol admin estricto: el operador gestiona incidencias, no catálogos. */
+    function esAdministrador() {
+      return estaAutenticado()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     function esGestor() {
       return estaAutenticado()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['operador', 'admin'];
+    }
+
+    /**
+     * Quién puede gestionar (cambiar de estado) un reporte concreto: un admin
+     * cualquiera, o una cuenta operador cuyo operadorId sea el asignado al
+     * reporte y cuyo operador siga activo. Un reporte sin operadorId solo lo
+     * gestiona un admin.
+     */
+    function puedeGestionarReporte(reporte) {
+      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return estaAutenticado()
+        && (
+             perfil.role == 'admin'
+             || (
+                  perfil.role == 'operador'
+                  && perfil.get('operadorId', null) is string
+                  && reporte.get('operadorId', null) == perfil.operadorId
+                  && get(/databases/$(database)/documents/operadores/$(perfil.operadorId)).data.activo == true
+                )
+           );
+    }
+
+    /** Las cuentas operador no confirman reportes: los gestionan. */
+    function esCuentaOperador() {
+      let perfil = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(perfil) && get(perfil).data.role == 'operador';
     }
 
     // Campos que el cliente no puede fijar ni modificar por su cuenta:
@@ -37,16 +83,56 @@ service cloud.firestore {
     function camposProtegidosIntactos() {
       return request.resource.data.trustLevel == resource.data.trustLevel
         && request.resource.data.validatedReports == resource.data.validatedReports
-        && request.resource.data.role == resource.data.role;
+        && (
+             request.resource.data.role == resource.data.role
+             // Única promoción de rol admitida: una cuenta de la lista de
+             // administradores que todavía figure como ciudadano. Permite
+             // regularizar cuentas creadas antes de existir la lista.
+             || (request.resource.data.role == 'admin' && esCorreoAdministrador())
+           );
+    }
+
+    /**
+     * `emailVerified` refleja un dato de Firebase Auth. Si una actualización
+     * lo modifica, el nuevo valor debe coincidir con el del token, que emite
+     * Firebase: nadie puede declararse verificado sin haberlo hecho. Si el
+     * campo no cambia, la condición no interviene, para no bloquear otras
+     * actualizaciones del perfil.
+     */
+    function verificacionCoherente() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified'])
+        || request.resource.data.emailVerified == request.auth.token.email_verified;
     }
 
     function creacionConValoresIniciales(userId) {
       return request.resource.data.uid == userId
         && request.resource.data.trustLevel == 0
         && request.resource.data.validatedReports == 0
-        && request.resource.data.role == 'ciudadano'
+        // Un correo de la lista puede nacer con rol admin; cualquier otro, no.
+        && (
+             request.resource.data.role == 'ciudadano'
+             || (request.resource.data.role == 'admin' && esCorreoAdministrador())
+           )
         && request.resource.data.email is string
         && request.resource.data.displayName is string;
+    }
+
+    /**
+     * Alta de una cuenta de organismo (role 'operador') hecha por un admin
+     * desde el panel. El propio usuario no puede crear este documento porque
+     * todavía no tiene sesión cuando el admin lo da de alta, así que esta
+     * rama la firma el admin, no `esPropietario`.
+     */
+    function creacionCuentaOperador(userId) {
+      let datos = request.resource.data;
+      return datos.uid == userId
+        && datos.role == 'operador'
+        && datos.trustLevel == 0
+        && datos.validatedReports == 0
+        && datos.email is string
+        && datos.displayName is string
+        && datos.operadorId is string
+        && exists(/databases/$(database)/documents/operadores/$(datos.operadorId));
     }
 
     // --- Perfiles de usuario ----------------------------------------------
@@ -56,15 +142,20 @@ service cloud.firestore {
       allow get: if esPropietario(userId);
       allow list: if false;
 
-      allow create: if esPropietario(userId) && creacionConValoresIniciales(userId);
+      // El alta normal la hace cada quien sobre su propio uid; la de una
+      // cuenta de organismo la hace un admin desde el panel, firmando con su
+      // propia sesión (por eso esa rama no exige esPropietario).
+      allow create: if (esPropietario(userId) && creacionConValoresIniciales(userId))
+        || (esAdministrador() && creacionCuentaOperador(userId));
       // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
       // campos arbitrarios a su propio documento.
       allow update: if esPropietario(userId)
         && camposProtegidosIntactos()
+        && verificacionCoherente()
         && request.resource.data.keys().hasOnly([
              'uid', 'email', 'displayName', 'role', 'trustLevel',
              'validatedReports', 'emailVerified', 'ultimoReporteAt',
-             'createdAt', 'updatedAt'
+             'operadorId', 'createdAt', 'updatedAt'
            ]);
 
       // El borrado de cuentas se maneja desde el backend, no desde el cliente.
@@ -95,11 +186,25 @@ service cloud.firestore {
      * previo. Frena el envío repetido desde la aplicación, no a un cliente
      * fabricado a medida; para eso está App Check.
      */
+    /**
+     * Umbral del intervalo entre reportes, en milisegundos.
+     * Debe mantenerse igual a INTERVALO_MINIMO_REPORTE_MS en
+     * src/app/models/user-profile.model.ts (v2-E2).
+     */
+    function intervaloMinimoMs() {
+      return 30000;
+    }
+
     function respetaIntervaloDeReporte() {
-      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-      return !('ultimoReporteAt' in perfil)
-        || perfil.ultimoReporteAt == null
-        || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() > 20000;
+      // v2-E2 · Si el perfil no existe, el get() fallaría y la creación se
+      // denegaría con un permission-denied incomprensible. Las cuentas creadas
+      // antes del registro de perfil quedan cubiertas por esta comprobación.
+      return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        || !('ultimoReporteAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
+        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt == null
+        || request.time.toMillis()
+             - get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt.toMillis()
+           >= intervaloMinimoMs();
     }
 
     function reporteExiste(reportId) {
@@ -138,21 +243,68 @@ service cloud.firestore {
     }
 
     /**
-     * BUG 26 · El vector de MobileNet tiene 1024 dimensiones. Sin cota, un
-     * cliente manipulado podría inflar el documento hasta el límite de 1 MiB y
-     * encarecer todas las consultas del mapa.
+     * BUG 26 · Cota al vector de características para que un cliente
+     * manipulado no infle el documento hasta el límite de 1 MiB.
+     *
+     * La app usa MobileNet v2 con alpha 1.0, cuyo vector tiene 1280
+     * dimensiones. La cota original de 1024 correspondía a MobileNet v1 y
+     * rechazaba todo reporte con fotografía en cuanto el modelo lograba
+     * cargarse. Si se cambia de modelo, este valor debe acompañarlo.
      */
     function embeddingValido() {
       return !('embedding' in request.resource.data)
         || request.resource.data.embedding == null
         || (request.resource.data.embedding is list
-            && request.resource.data.embedding.size() <= 1024);
+            && request.resource.data.embedding.size() <= 1280);
+    }
+
+    /**
+     * La comuna es opcional (puede no detectarse), pero si viene debe ser un
+     * texto acotado. La fuente se restringe a los tres valores conocidos para
+     * poder auditar la calidad del dato.
+     */
+    function comunaValida() {
+      let datos = request.resource.data;
+      return (!('comuna' in datos) || datos.comuna == null
+              || (datos.comuna is string && datos.comuna.size() <= 80))
+        && (!('region' in datos) || datos.region == null
+              || (datos.region is string && datos.region.size() <= 120))
+        && (!('comunaFuente' in datos)
+              || datos.comunaFuente in ['limites_oficiales', 'nominatim', 'no_disponible']);
+    }
+
+    /**
+     * El nombre del autor debe coincidir con el `displayName` de su perfil.
+     * Sin esta comprobación, cualquiera podría firmar un reporte con el nombre
+     * de otra persona. Las cuentas sin perfil —anteriores a su creación
+     * automática— quedan exentas de la comparación, pero no del formato.
+     */
+    function autorNombreValido() {
+      let datos = request.resource.data;
+      let perfil = /databases/$(database)/documents/users/$(request.auth.uid);
+      return !('autorNombre' in datos)
+        || (datos.autorNombre is string
+            && datos.autorNombre.size() >= 1
+            && datos.autorNombre.size() <= 60
+            && (!exists(perfil) || get(perfil).data.displayName == datos.autorNombre));
     }
 
     function ubicacionValida() {
       let ubicacion = request.resource.data.ubicacion;
       return ubicacion.lat is number && ubicacion.lat >= -90 && ubicacion.lat <= 90
         && ubicacion.lng is number && ubicacion.lng >= -180 && ubicacion.lng <= 180;
+    }
+
+    /**
+     * `operadorId` lo calcula la app móvil: detecta la comuna y busca, entre
+     * los operadores activos, cuál tiene esa comuna cubierta a través de su
+     * organismo. Es opcional mientras convive con el campo `organismo`
+     * anterior; si viene, debe apuntar a un operador que exista de verdad.
+     */
+    function operadorReporteValido() {
+      let datos = request.resource.data;
+      return !('operadorId' in datos) || datos.operadorId == null
+        || exists(/databases/$(database)/documents/operadores/$(datos.operadorId));
     }
 
     match /reports/{reportId} {
@@ -168,18 +320,46 @@ service cloud.firestore {
         && ubicacionValida()
         && geohashValido()
         && embeddingValido()
-        && request.resource.data.organismo.id in [
-             'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
-           ]
+        && comunaValida()
+        && autorNombreValido()
+        // El organismo debe ser uno de los genéricos, o una municipalidad que
+        // exista realmente en la colección `organismos`.
+        && (
+             request.resource.data.organismo.id in [
+               'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
+             ]
+             || exists(/databases/$(database)/documents/organismos/$(request.resource.data.organismo.id))
+           )
+        && operadorReporteValido()
         && respetaIntervaloDeReporte();
 
-      // HU-28 · Solo un gestor cambia el estado, y solo por transiciones
-      // válidas. El resto de campos debe quedar intacto.
-      allow update: if esGestor()
-        && transicionValida(resource.data.estado, request.resource.data.estado)
-        && soloCambiaEstado();
+      /**
+       * Migración: reportes creados antes de que existiera `operadorId` (o
+       * antes de que la app móvil lo calculara) no lo tienen. Esta rama deja
+       * que un admin lo asigne o corrija después, sin tocar nada más del
+       * reporte. Es la única vía para escribir `operadorId` fuera de la
+       * creación.
+       */
+      function reasignacionOperadorValida() {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['operadorId', 'updatedAt'])
+          && operadorReporteValido();
+      }
 
-      allow delete: if false;
+      // HU-28 · Solo un admin o el operador asignado al reporte cambia el
+      // estado, y solo por transiciones válidas. El resto de campos debe
+      // quedar intacto.
+      allow update: if (
+             puedeGestionarReporte(resource.data)
+             && transicionValida(resource.data.estado, request.resource.data.estado)
+             && soloCambiaEstado()
+           )
+        || (esAdministrador() && reasignacionOperadorValida());
+
+      // Solo un admin elimina, desde el panel "Administrar reportes". El
+      // panel borra en el mismo lote la foto y las subcolecciones, para no
+      // dejar documentos huérfanos.
+      allow delete: if esAdministrador();
 
       // Confirmación comunitaria. El id del documento es el uid de quien
       // confirma, así que un segundo intento sería un update y queda denegado:
@@ -193,9 +373,12 @@ service cloud.firestore {
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
-          && datosReporte(reportId).uid != request.auth.uid;
+          && datosReporte(reportId).uid != request.auth.uid
+          && !esCuentaOperador();
 
-        allow update, delete: if false;
+        allow update: if false;
+        // Solo al eliminar el reporte completo desde el panel de admin.
+        allow delete: if esAdministrador();
       }
 
       // HU-28 · Bitácora de cambios de estado. Inmutable una vez escrita.
@@ -210,17 +393,19 @@ service cloud.firestore {
          * el documento.
          * BUG 23 · El comentario se acota también en servidor.
          */
-        allow create: if esGestor()
-          && request.resource.data.autorUid == request.auth.uid
+        allow create: if request.resource.data.autorUid == request.auth.uid
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
+          && puedeGestionarReporte(datosReporte(reportId))
           && request.resource.data.desde == datosReporte(reportId).estado
           && transicionValida(request.resource.data.desde, request.resource.data.hacia)
           && request.resource.data.comentario is string
           && request.resource.data.comentario.size() <= 512;
 
-        allow update, delete: if false;
+        allow update: if false;
+        // Solo al eliminar el reporte completo desde el panel de admin.
+        allow delete: if esAdministrador();
       }
     }
 
@@ -244,10 +429,191 @@ service cloud.firestore {
         && request.resource.data.dataUrl is string
         && request.resource.data.dataUrl.size() < 950000;
 
-      // Solo el autor puede borrarla, para permitir revertir un reporte fallido.
-      allow delete: if estaAutenticado()
-        && resource.data.ownerUid == request.auth.uid;
+      // El autor puede borrarla, para permitir revertir un reporte fallido; un
+      // admin también, al eliminar el reporte completo.
+      allow delete: if (estaAutenticado() && resource.data.ownerUid == request.auth.uid)
+        || esAdministrador();
       allow update: if false;
+    }
+
+    // --- Organismos: municipalidades de Chile --------------------------------
+
+    function organismoValido(organismoId) {
+      let datos = request.resource.data;
+      return datos.id == organismoId
+        && organismoId.matches('^muni_[0-9]{5}$')
+        && datos.tipo == 'municipio'
+        && datos.nombre is string
+        && datos.nombre.size() > 0
+        && datos.nombre.size() <= 120
+        && datos.comunasAtendidas is list
+        && datos.comunasAtendidas.size() >= 1
+        && datos.comunasAtendidas.size() <= 5
+        && datos.activo is bool
+        // Opcional: polígono de la zona que cubre este organismo, editable
+        // desde el panel de administración.
+        && (
+             !('zonaCobertura' in datos)
+             || datos.zonaCobertura == null
+             || (
+                  datos.zonaCobertura.type in ['Polygon', 'MultiPolygon']
+                  && datos.zonaCobertura.coordinates is list
+                )
+           );
+    }
+
+    match /organismos/{organismoId} {
+      // Cualquier usuario autenticado puede leer el catálogo: se necesita al
+      // crear un reporte para asignar su municipalidad.
+      allow read: if estaAutenticado();
+
+      // Solo el rol admin lo carga o corrige. Nadie lo borra desde la app:
+      // un organismo retirado se marca con `activo: false`, para no dejar
+      // reportes históricos apuntando a un documento inexistente.
+      allow create, update: if esAdministrador() && organismoValido(organismoId);
+      allow delete: if false;
+    }
+
+    // --- Operadores: quién gestiona los reportes de un organismo -------------
+    // A diferencia de /organismos (catálogo externo de municipalidades), esta
+    // colección la mantiene el panel de administración: cada operador tiene
+    // su propio id y nombre, y apunta a un organismo responsable que ya
+    // existe en el catálogo. Las cuentas con role 'operador' referencian un
+    // operadorId acá (ver /users).
+
+    function operadorValido(operadorId) {
+      let datos = request.resource.data;
+      return datos.id == operadorId
+        && operadorId.matches('^[a-z][a-z0-9_]{2,39}$')
+        && datos.nombre is string
+        && datos.nombre.size() > 0
+        && datos.nombre.size() <= 120
+        // El organismo responsable debe existir de verdad en el catálogo.
+        && datos.organismoId is string
+        && exists(/databases/$(database)/documents/organismos/$(datos.organismoId))
+        && datos.activo is bool
+        && (!('telefonoContacto' in datos) || datos.telefonoContacto == null
+              || (datos.telefonoContacto is string && datos.telefonoContacto.size() <= 30))
+        && (!('correoContacto' in datos) || datos.correoContacto == null
+              || (datos.correoContacto is string && datos.correoContacto.size() <= 120))
+        && (!('direccionContacto' in datos) || datos.direccionContacto == null
+              || (datos.direccionContacto is string && datos.direccionContacto.size() <= 160));
+    }
+
+    match /operadores/{operadorId} {
+      // La app móvil la necesita leer para asignar el operadorId al crear
+      // un reporte, y el portal web para el selector de cuentas.
+      allow read: if estaAutenticado();
+      allow create, update: if esAdministrador() && operadorValido(operadorId);
+      allow delete: if false;
+    }
+
+    // --- Soporte: quejas y sugerencias -------------------------------------
+
+    function esAutorDelTicket(ticketId) {
+      return estaAutenticado()
+        && get(/databases/$(database)/documents/supportTickets/$(ticketId)).data.uid
+           == request.auth.uid;
+    }
+
+    function ticketValido() {
+      return request.resource.data.uid == request.auth.uid
+        && request.resource.data.tipo in ['queja', 'sugerencia']
+        && request.resource.data.estado == 'abierto'
+        && request.resource.data.asignadoA == null
+        && request.resource.data.asunto is string
+        && request.resource.data.asunto.size() >= 5
+        && request.resource.data.asunto.size() <= 120
+        && request.resource.data.lastMessagePreview is string
+        && request.resource.data.lastMessagePreview.size() <= 100;
+    }
+
+    /**
+     * Al responder o escribir, el cliente actualiza el adelanto del ticket. Se
+     * permite solo sobre los campos de actividad, nunca sobre el autor, el tipo
+     * ni el asunto.
+     */
+    function actualizacionDeActividad() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['lastMessageAt', 'lastMessagePreview', 'updatedAt', 'estado', 'asignadoA'])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.tipo == resource.data.tipo
+        && request.resource.data.asunto == resource.data.asunto;
+    }
+
+    function transicionTicketValida(desde, hacia) {
+      return (desde == 'abierto' && hacia in ['en_atencion', 'cerrado'])
+        || (desde == 'en_atencion' && hacia == 'cerrado')
+        || (desde == 'cerrado' && hacia == 'en_atencion')
+        || desde == hacia;
+    }
+
+    match /supportTickets/{ticketId} {
+      // El autor ve lo suyo; el equipo de soporte ve todo.
+      allow get: if esGestor() || (estaAutenticado() && resource.data.uid == request.auth.uid);
+      /**
+       * En una consulta de listado, Firestore evalúa la regla contra cada
+       * documento candidato y rechaza la consulta completa si alguno pudiera
+       * incumplirla. Así, un ciudadano solo puede listar si su consulta filtra
+       * por su propio uid; sin ese filtro, la consulta es rechazada entera.
+       */
+      allow list: if esGestor()
+        || (estaAutenticado() && resource.data.uid == request.auth.uid);
+
+      allow create: if estaAutenticado() && ticketValido();
+
+      // El autor solo mueve la actividad al escribir; el estado lo cambia el
+      // equipo de soporte.
+      allow update: if actualizacionDeActividad()
+        && transicionTicketValida(resource.data.estado, request.resource.data.estado)
+        && (
+             esGestor()
+             || (
+                  resource.data.uid == request.auth.uid
+                  && request.resource.data.estado == resource.data.estado
+                  && request.resource.data.asignadoA == resource.data.asignadoA
+                )
+           );
+
+      // Las conversaciones no se borran: son evidencia de la atención prestada.
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if esGestor() || esAutorDelTicket(ticketId);
+
+        /**
+         * El primer mensaje viaja en el mismo lote que la creación del ticket.
+         * Dentro de un lote cada escritura se evalúa contra el estado PREVIO,
+         * así que en ese momento el ticket todavía no existe y `esAutorDelTicket`
+         * fallaría al hacer get() sobre un documento inexistente, denegando toda
+         * apertura de conversación.
+         *
+         * Por eso se admite el mensaje cuando el ticket aún no existe, siempre
+         * que el autor sea quien escribe y firme como ciudadano. El lote
+         * garantiza que ambas escrituras se confirman juntas.
+         */
+        allow create: if (
+             esGestor()
+             || esAutorDelTicket(ticketId)
+             || (
+                  estaAutenticado()
+                  && !exists(/databases/$(database)/documents/supportTickets/$(ticketId))
+                  && request.resource.data.autorRol == 'ciudadano'
+                )
+           )
+          && request.resource.data.autorUid == request.auth.uid
+          && request.resource.data.ticketId == ticketId
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() >= 2
+          && request.resource.data.texto.size() <= 1000
+          && request.resource.data.autorRol in ['ciudadano', 'staff']
+          // Solo el equipo de soporte puede firmar como soporte.
+          && (request.resource.data.autorRol == 'ciudadano' || esGestor());
+
+        // Los mensajes son inmutables: nadie reescribe lo que ya dijo.
+        allow update, delete: if false;
+      }
     }
 
     // --- Denegación por defecto -------------------------------------------

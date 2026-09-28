@@ -25,6 +25,51 @@
   color: var(--ca-signal);
 }
 
+.right {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.navLink {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: var(--ca-signal);
+}
+
+.navLink:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.adminButton {
+  padding: 6px 14px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ca-signal);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.adminButton:hover {
+  background: var(--ca-signal);
+  color: var(--ca-base);
+}
+
+.adminButton:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
 .loginButton {
   padding: 8px 18px;
   border: none;

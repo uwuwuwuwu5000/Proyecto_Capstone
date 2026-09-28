@@ -1,0 +1,242 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.cuerpo {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.panel {
+  width: 320px;
+  flex: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Si en pantallas bajas aún hay que desplazar, barra fina y sin flechas. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--ca-line) transparent;
+  padding: 16px;
+  border-right: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 780px) {
+  .cuerpo {
+    flex-direction: column;
+  }
+
+  .panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--ca-line);
+    max-height: 45vh;
+  }
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 1.3rem;
+  color: var(--ca-ink);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(224, 101, 107, 0.14);
+  border: 1px solid var(--ca-danger);
+  color: var(--ca-danger);
+  font-size: 0.85rem;
+}
+
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.statChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+  color: var(--ca-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  opacity: 0.55;
+  text-align: left;
+}
+
+.statChipActivo {
+  color: var(--ca-ink);
+  opacity: 1;
+}
+
+.statPunto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.statNumero {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.input {
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  font-size: 0.92rem;
+  font-family: inherit;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.fechas {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fechas legend {
+  padding: 0;
+  margin-bottom: 6px;
+}
+
+.rangos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rango {
+  padding: 4px 9px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ca-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rango:hover {
+  color: var(--ca-ink);
+  background: rgba(165, 180, 195, 0.08);
+}
+
+.rango:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.rangoActivo,
+.rangoActivo:hover {
+  border-color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.14);
+  color: var(--ca-ink);
+}
+
+.fechaFila {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.fechaEtiqueta {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.resumen {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.mapaWrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.mapa {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+  background: var(--ca-base);
+}
+
+.mapa :global(.leaflet-marker-icon) {
+  cursor: pointer;
+}
+
+.mapa :global(.leaflet-tooltip) {
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  border: 1px solid var(--ca-line);
+  box-shadow: var(--shadow-card);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.mapa :global(.leaflet-tooltip-top::before) {
+  border-top-color: var(--ca-line);
+}
+
+/* Tamaño fijo desde el primer momento: Leaflet posiciona el tooltip al abrirse,
+   y si la foto lo agrandara al terminar de cargar, taparía el pin. */
+.tooltipFoto {
+  width: 180px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ca-line);
+}

@@ -1,0 +1,32 @@
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+  flex: none;
+}
+
+@media (max-width: 560px) {
+  .tabs {
+    padding: 0 16px;
+  }
+}
+
+.tab {
+  padding: 10px 14px;
+  border-bottom: 2px solid transparent;
+  color: var(--ca-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tab:hover {
+  color: var(--ca-ink);
+}
+
+.tabActiva {
+  color: var(--ca-ink);
+  border-bottom-color: var(--ca-signal);
+}

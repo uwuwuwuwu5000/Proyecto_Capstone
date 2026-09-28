@@ -1,0 +1,212 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+  color: var(--ca-ink);
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--ca-muted);
+}
+
+/* ---- Periodo: una sola fila, arriba de todo lo que filtra ---- */
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+
+.periodos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.periodo {
+  padding: 7px 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ca-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.periodo:hover {
+  color: var(--ca-ink);
+  background: rgba(165, 180, 195, 0.08);
+}
+
+.periodo:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.periodoActivo,
+.periodoActivo:hover {
+  border-color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.14);
+  color: var(--ca-ink);
+}
+
+.fechas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ---- KPIs ---- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.kpiEtiqueta {
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.kpiValor {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--ca-ink);
+}
+
+.kpiNota {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+/* ---- Tarjetas de gráficos ---- */
+
+.tarjeta {
+  min-width: 0;
+  padding: 18px 20px 20px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.tarjetaTitulo {
+  margin: 0 0 14px;
+  font-size: 1rem;
+  color: var(--ca-ink);
+}
+
+.dosColumnas,
+.dosColumnasAncha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dosColumnasAncha {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+@media (max-width: 860px) {
+  .dosColumnas,
+  .dosColumnasAncha {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tablaScroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  min-width: 480px;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.tabla th,
+.tabla td {
+  padding: 8px 8px;
+  text-align: left;
+  border-bottom: 1px solid rgba(165, 180, 195, 0.16);
+  color: var(--ca-ink);
+  vertical-align: middle;
+}
+
+.tabla th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ca-muted);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.nowrap {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.soloLector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.ranking {
+  margin: 0;
+  padding: 0 0 0 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.ranking li {
+  padding-left: 4px;
+}
+
+.ranking li > * {
+  vertical-align: middle;
+}
+
+.rankingNombre {
+  color: var(--ca-ink);
+  overflow-wrap: anywhere;
+}
+
+.rankingValor {
+  float: right;
+  margin-left: 12px;
+  font-weight: 600;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}

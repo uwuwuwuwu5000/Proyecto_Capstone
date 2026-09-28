@@ -1,0 +1,423 @@
+.main {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: 24px 16px 48px;
+  }
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px 16px;
+  padding: 18px 20px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.filtroAncho {
+  grid-column: 1 / -1;
+}
+
+.filtrosPie {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.estadoCarga {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.etiqueta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.entrada {
+  padding: 9px 11px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+}
+
+.entrada:focus {
+  outline: none;
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.enlaceBoton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-muted);
+  font-size: 0.88rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.enlaceBoton:hover:not(:disabled) {
+  color: var(--ca-ink);
+}
+
+.enlaceBoton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.accionBoton {
+  padding: 4px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ca-signal);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.accionBoton:hover:not(:disabled) {
+  border-color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.1);
+}
+
+.accionBoton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.errorTexto {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-danger);
+}
+
+.avisoTexto {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-signal);
+}
+
+.cambioRapido {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface-alt);
+}
+
+.cambioRapidoFila {
+  display: flex;
+  gap: 8px;
+}
+
+.cambioRapidoFila select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Detalle del reporte (<dialog> nativo) ---- */
+
+.dialogo {
+  width: min(880px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  border: 1px solid var(--ca-line);
+  border-radius: 14px;
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.dialogo::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.dialogoContenido {
+  padding: 20px 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dialogoCabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dialogoTitulo {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.cerrarBoton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.cerrarBoton:hover {
+  border-color: var(--ca-signal);
+}
+
+.dialogoCuerpo {
+  display: grid;
+  /* Columna de foto de ancho fijo: con minmax(0, …) se encogía hasta el
+     ancho del texto "Cargando foto…" mientras la imagen no llegaba. */
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 680px) {
+  .dialogoCuerpo {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dialogoFoto {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--ca-line);
+  align-self: start;
+}
+
+.dialogoInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dialogoInfo .datos {
+  width: 100%;
+}
+
+.dialogoInfo a {
+  color: var(--ca-signal);
+}
+
+.descripcionCompleta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--ca-ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.historialTitulo {
+  margin: 6px 0 0;
+  font-size: 1rem;
+}
+
+.historial {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.historial li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  font-size: 0.88rem;
+}
+
+.historialFecha {
+  font-size: 0.75rem;
+  color: var(--ca-muted);
+}
+
+.historialComentario {
+  color: var(--ca-muted);
+  font-style: italic;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.foto {
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  background: var(--ca-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fotoVacia {
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.cuerpoTarjeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px 16px;
+}
+
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.categoria {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: var(--ca-ink);
+}
+
+.estadoPunto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--ca-ink);
+  flex: none;
+}
+
+.descripcion {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.datos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.datos dt {
+  color: var(--ca-muted);
+}
+
+.datos dd {
+  margin: 0;
+  color: var(--ca-ink);
+  overflow-wrap: anywhere;
+}
+
+.edicion {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.acciones {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eliminarBoton {
+  padding: 4px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ca-danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.eliminarBoton:hover:not(:disabled) {
+  border-color: var(--ca-danger);
+  background: rgba(224, 101, 107, 0.1);
+}
+
+.eliminarBoton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.vincularBoton {
+  margin-top: 16px;
+}

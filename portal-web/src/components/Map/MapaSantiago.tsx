@@ -18,11 +18,18 @@ import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
+import {
+  ESTADOS_EN_ORDEN,
+  ETIQUETA_POR_CATEGORIA,
+  ETIQUETA_POR_ESTADO,
+  COLOR_POR_ESTADO,
+} from '../../constants/reportes'
+import { ICONOS_POR_ESTADO, ICONO_ESTADO_DESCONOCIDO } from './estadoIconos'
 import styles from './MapaSantiago.module.css'
 
 // El ícono por defecto de Leaflet apunta a rutas relativas que Vite no
 // resuelve al empaquetar; se deja como respaldo por si algún marcador queda
-// sin ícono explícito (los del mapa siempre usan crearIconoEstado más abajo).
+// sin ícono explícito (los del mapa siempre usan ICONOS_POR_ESTADO más abajo).
 const iconoPorDefecto = L.icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
@@ -37,51 +44,6 @@ L.Marker.prototype.options.icon = iconoPorDefecto
 // Centro aproximado de Santiago (Plaza de Armas), para cuando aún no hay
 // reportes que centren el mapa por sí solos.
 const CENTRO_SANTIAGO: [number, number] = [-33.4372, -70.6506]
-
-// Colores de estado de reportes (paleta "Ciudad Alerta", igual que la app móvil).
-const COLOR_POR_ESTADO: Record<string, string> = {
-  reportado: '#1ca9c9',
-  en_revision: '#7fd3e4',
-  derivado: '#a5b4c3',
-  en_proceso: '#4a90a4',
-  resuelto: '#f8fafc',
-  cerrado: '#5c677d',
-}
-const ESTADOS_EN_ORDEN = [
-  'reportado',
-  'en_revision',
-  'derivado',
-  'en_proceso',
-  'resuelto',
-  'cerrado',
-]
-const ETIQUETA_POR_ESTADO: Record<string, string> = {
-  reportado: 'Reportado',
-  en_revision: 'En revisión',
-  derivado: 'Derivado',
-  en_proceso: 'En proceso',
-  resuelto: 'Resuelto',
-  cerrado: 'Cerrado',
-}
-
-function crearIconoEstado(color: string): L.DivIcon {
-  return L.divIcon({
-    className: styles.pin,
-    html: `<span style="background:${color}"></span>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -10],
-  })
-}
-
-// Un ícono por estado, precalculado una sola vez (no en cada render).
-const ICONOS_POR_ESTADO: Record<string, L.DivIcon> = Object.fromEntries(
-  Object.entries(COLOR_POR_ESTADO).map(([estado, color]) => [
-    estado,
-    crearIconoEstado(color),
-  ]),
-)
-const ICONO_ESTADO_DESCONOCIDO = crearIconoEstado(COLOR_POR_ESTADO.reportado)
 
 // La foto de un reporte llega por una de dos vías (foto.kind en el doc):
 // ya con URL resuelta (Cloud Storage) o como referencia a un doc en
@@ -158,8 +120,21 @@ function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte | null {
   }
 }
 
-export default function MapaSantiago() {
-  const { user, loading: sesionCargando } = useAuth()
+interface MapaSantiagoProps {
+  /**
+   * 'tarjeta' (por defecto): tamaño fijo, para incrustar dentro de una
+   * página (Landing). 'pantallaCompleta': ocupa todo el alto disponible de
+   * su contenedor — pensado para una página dedicada solo al mapa.
+   */
+  variante?: 'tarjeta' | 'pantallaCompleta'
+}
+
+export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps) {
+  const completo = variante === 'pantallaCompleta'
+  const { user, perfil, loading: sesionCargando } = useAuth()
+  // Las cuentas operador ven el mapa público, pero no confirman reportes:
+  // los gestionan (las reglas también se lo impiden).
+  const esOperador = perfil?.role === 'operador'
 
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [cargando, setCargando] = useState(true)
@@ -318,12 +293,15 @@ export default function MapaSantiago() {
   }, [user, sesionCargando])
 
   return (
-    <div>
+    <div className={completo ? styles.raizCompleta : undefined}>
       <MapContainer
         center={CENTRO_SANTIAGO}
         zoom={12}
-        scrollWheelZoom={false}
-        className={styles.map}
+        // A pantalla completa el mapa es lo único de la página: conviene
+        // que el scroll del mouse haga zoom. Incrustado en la Landing se
+        // desactiva para no secuestrar el scroll de la página.
+        scrollWheelZoom={completo}
+        className={completo ? styles.mapCompleto : styles.map}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -351,7 +329,9 @@ export default function MapaSantiago() {
               }}
             >
               <Popup>
-                <strong>{reporte.categoria}</strong>
+                <strong>
+                  {ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}
+                </strong>
                 <br />
                 {reporte.descripcion}
                 <br />
@@ -363,7 +343,7 @@ export default function MapaSantiago() {
                 {estadoConteo?.total !== undefined && estadoConteo.total}
                 {!estadoConteo && '—'}
 
-                {!esAutor && (
+                {!esAutor && !esOperador && (
                   <div className={styles.confirmar}>
                     {yaConfirmado ? (
                       <span className={styles.confirmarHecho}>

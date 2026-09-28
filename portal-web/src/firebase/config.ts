@@ -1,6 +1,6 @@
 // Inicialización del SDK de Firebase.
 // Se usan Firebase Authentication y Cloud Firestore.
-import { initializeApp } from 'firebase/app'
+import { getApps, initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
@@ -33,3 +33,16 @@ const app = initializeApp(firebaseConfig)
 // Instancias únicas compartidas por toda la app.
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+
+// Sprint 4 · Al crear una cuenta de organismo desde el panel de admin,
+// createUserWithEmailAndPassword() iniciaría sesión como esa cuenta nueva en
+// vez de mantener al admin logueado. Se evita con una segunda instancia de
+// Firebase, con su propio Auth aislado — nunca toca la sesión principal.
+const NOMBRE_APP_APROVISIONAMIENTO = 'aprovisionamiento-admin'
+
+export function getAuthAprovisionamiento() {
+  const existente = getApps().find((a) => a.name === NOMBRE_APP_APROVISIONAMIENTO)
+  const appSecundaria =
+    existente ?? initializeApp(firebaseConfig, NOMBRE_APP_APROVISIONAMIENTO)
+  return getAuth(appSecundaria)
+}
