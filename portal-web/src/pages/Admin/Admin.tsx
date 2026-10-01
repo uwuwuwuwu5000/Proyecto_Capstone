@@ -61,6 +61,16 @@ export default function Admin() {
               Revisa, edita o elimina reportes y vincúlalos con su operador.
             </span>
           </Link>
+
+          <Link to="/admin/categorias" className={styles.opcion}>
+            <span className={styles.opcionIcono} aria-hidden="true">
+              🏷️
+            </span>
+            <span className={styles.opcionTitulo}>Categorías</span>
+            <span className={styles.opcionTexto}>
+              Crea, edita, ordena y activa o desactiva las categorías de los reportes.
+            </span>
+          </Link>
         </div>
       </main>
     </div>

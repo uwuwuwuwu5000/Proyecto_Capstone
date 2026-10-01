@@ -1,7 +1,13 @@
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
-import MapaSantiago from '../../components/Map/MapaSantiago'
 import Navbar from '../../components/Navbar/Navbar'
+import CargandoPagina from '../../components/Carga/CargandoPagina'
+import ErrorDeCarga from '../../components/Carga/ErrorDeCarga'
 import styles from './Landing.module.css'
+
+// El mapa (y Leaflet, que es lo más pesado) llega aparte: el resto de la
+// Landing se muestra sin esperarlo.
+const MapaSantiago = lazy(() => import('../../components/Map/MapaSantiago'))
 
 const pasos = [
   {
@@ -60,7 +66,11 @@ export default function Landing() {
             ver dónde están ocurriendo los problemas de tu barrio.
           </p>
           <div className={styles.mapWrapper}>
-            <MapaSantiago />
+            <ErrorDeCarga alto="bloque">
+              <Suspense fallback={<CargandoPagina alto="bloque" />}>
+                <MapaSantiago />
+              </Suspense>
+            </ErrorDeCarga>
           </div>
         </section>
       </main>

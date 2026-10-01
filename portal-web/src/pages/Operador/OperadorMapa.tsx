@@ -12,12 +12,8 @@ import { formatearFecha, mapearReporte } from '../../components/Reportes/reporte
 import type { Reporte } from '../../components/Reportes/reporte'
 import { RANGOS_RAPIDOS, rangoRapido } from '../../components/Reportes/rangosRapidos'
 import { ICONOS_POR_ESTADO, ICONO_ESTADO_DESCONOCIDO } from '../../components/Map/estadoIconos'
-import {
-  ESTADOS_EN_ORDEN,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-  COLOR_POR_ESTADO,
-} from '../../constants/reportes'
+import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import styles from './OperadorMapa.module.css'
 
 const CENTRO_SANTIAGO: [number, number] = [-33.4372, -70.6506]
@@ -30,6 +26,7 @@ function tieneUbicacion(reporte: Reporte): reporte is ReporteUbicado {
 
 export default function OperadorMapa() {
   const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
+  const { etiqueta } = useCategorias()
 
   const [detalleId, setDetalleId] = useState<string | null>(null)
   const [reportes, setReportes] = useState<ReporteUbicado[]>([])
@@ -119,10 +116,8 @@ export default function OperadorMapa() {
 
   const categoriasPresentes = useMemo(() => {
     const set = new Set(reportes.map((r) => r.categoria))
-    return Array.from(set).sort((a, b) =>
-      (ETIQUETA_POR_CATEGORIA[a] ?? a).localeCompare(ETIQUETA_POR_CATEGORIA[b] ?? b, 'es'),
-    )
-  }, [reportes])
+    return Array.from(set).sort((a, b) => etiqueta(a).localeCompare(etiqueta(b), 'es'))
+  }, [reportes, etiqueta])
 
   const reportesFiltrados = useMemo(
     () => reportesSinFiltroEstado.filter((reporte) => estadosSeleccionados.has(reporte.estado)),
@@ -218,7 +213,7 @@ export default function OperadorMapa() {
               <option value="">Todas</option>
               {categoriasPresentes.map((categoria) => (
                 <option key={categoria} value={categoria}>
-                  {ETIQUETA_POR_CATEGORIA[categoria] ?? categoria}
+                  {etiqueta(categoria)}
                 </option>
               ))}
             </select>
@@ -293,7 +288,7 @@ export default function OperadorMapa() {
                       <FotoReporte foto={reporte.foto} inmediata />
                     </div>
                   )}
-                  <strong>{ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}</strong>
+                  <strong>{etiqueta(reporte.categoria)}</strong>
                   {' · '}
                   {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
                   <br />

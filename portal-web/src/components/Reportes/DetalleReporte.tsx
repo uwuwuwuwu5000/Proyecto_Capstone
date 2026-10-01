@@ -1,22 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { collection, getCountFromServer, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, getCountFromServer } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
-import { ETIQUETA_POR_CATEGORIA, ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import FotoReporte from './FotoReporte'
 import { EstadoPildora } from './TarjetaReporte'
 import { cambiarEstadoReporte, formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
+import { cargarHistorial } from './historial'
+import HistorialEstados from './HistorialEstados'
+import type { CambioEstado } from './historial'
 import styles from './Reportes.module.css'
-
-interface CambioEstado {
-  id: string
-  desde: string
-  hacia: string
-  comentario: string
-  fecha: Date | null
-}
 
 interface DetalleReporteProps {
   reporte: Reporte
@@ -32,7 +28,8 @@ export default function DetalleReporte({
   onCerrar,
   gestionable = false,
 }: DetalleReporteProps) {
-  const { user } = useAuth()
+  const { user, perfil } = useAuth()
+  const { etiqueta } = useCategorias()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const [confirmaciones, setConfirmaciones] = useState<number | null>(null)
   const [historial, setHistorial] = useState<CambioEstado[] | null>(null)
@@ -60,7 +57,11 @@ export default function DetalleReporte({
     setAvisoCambio('')
     try {
       const hacia = estadoNuevo
-      await cambiarEstadoReporte(reporte, hacia, comentario, user.uid)
+      await cambiarEstadoReporte(reporte, hacia, comentario, {
+        uid: user.uid,
+        nombre: perfil?.displayName ?? null,
+        rol: perfil?.role ?? null,
+      })
       setComentario('')
       setAvisoCambio(`Estado cambiado a "${ETIQUETA_POR_ESTADO[hacia] ?? hacia}".`)
     } catch (err) {
@@ -84,28 +85,14 @@ export default function DetalleReporte({
   // estado del reporte abierto cambia mientras el detalle está visible.
   useEffect(() => {
     let cancelado = false
-    const reporteRef = collection(db, 'reports', reporte.id, 'confirmations')
     Promise.all([
-      getCountFromServer(reporteRef),
-      getDocs(
-        query(collection(db, 'reports', reporte.id, 'statusHistory'), orderBy('createdAt', 'desc')),
-      ),
+      getCountFromServer(collection(db, 'reports', reporte.id, 'confirmations')),
+      cargarHistorial(reporte.id),
     ])
-      .then(([conteo, historialSnap]) => {
+      .then(([conteo, cambios]) => {
         if (cancelado) return
         setConfirmaciones(conteo.data().count)
-        setHistorial(
-          historialSnap.docs.map((d) => {
-            const data = d.data()
-            return {
-              id: d.id,
-              desde: typeof data.desde === 'string' ? data.desde : '',
-              hacia: typeof data.hacia === 'string' ? data.hacia : '',
-              comentario: typeof data.comentario === 'string' ? data.comentario : '',
-              fecha: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : null,
-            }
-          }),
-        )
+        setHistorial(cambios)
       })
       .catch((err) => {
         console.error('Error al cargar el detalle del reporte:', err)
@@ -130,7 +117,7 @@ export default function DetalleReporte({
       <div className={styles.dialogoContenido}>
         <div className={styles.dialogoCabecera}>
           <h2 id="detalle-reporte-titulo" className={styles.dialogoTitulo}>
-            {ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}
+            {etiqueta(reporte.categoria)}
           </h2>
           <button
             type="button"
@@ -240,25 +227,7 @@ export default function DetalleReporte({
         <h3 className={styles.historialTitulo}>Historial de estados</h3>
         {error && <p className={styles.estadoCarga}>{error}</p>}
         {!error && historial === null && <p className={styles.estadoCarga}>Cargando…</p>}
-        {historial?.length === 0 && (
-          <p className={styles.estadoCarga}>Todavía no hay cambios de estado.</p>
-        )}
-        {historial && historial.length > 0 && (
-          <ol className={styles.historial}>
-            {historial.map((cambio) => (
-              <li key={cambio.id}>
-                <span className={styles.historialFecha}>{formatearFecha(cambio.fecha, true)}</span>
-                <span>
-                  {ETIQUETA_POR_ESTADO[cambio.desde] ?? cambio.desde} →{' '}
-                  <strong>{ETIQUETA_POR_ESTADO[cambio.hacia] ?? cambio.hacia}</strong>
-                </span>
-                {cambio.comentario && (
-                  <span className={styles.historialComentario}>“{cambio.comentario}”</span>
-                )}
-              </li>
-            ))}
-          </ol>
-        )}
+        {historial && <HistorialEstados cambios={historial} fechaCreacion={reporte.fecha} />}
       </div>
     </dialog>
   )

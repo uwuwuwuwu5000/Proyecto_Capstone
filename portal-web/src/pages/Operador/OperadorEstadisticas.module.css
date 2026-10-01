@@ -65,6 +65,18 @@
   gap: 12px;
 }
 
+.exportar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.exportar button {
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+
 /* ---- KPIs ---- */
 
 .kpis {
@@ -99,6 +111,66 @@
 .kpiNota {
   font-size: 0.78rem;
   color: var(--ca-muted);
+}
+
+/* ---- Tiempo de respuesta ---- */
+
+.seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: opacity 0.2s ease;
+}
+
+/* Al recalcular se mantiene lo anterior, atenuado: sin saltos ni parpadeos. */
+.recalculando {
+  opacity: 0.6;
+}
+
+.seccionTitulo {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+  color: var(--ca-ink);
+}
+
+.seccionNota,
+.tablaNota {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.tablaNota {
+  margin-top: 10px;
+}
+
+.numero {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.enlaceFila {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-ink);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--ca-line);
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.enlaceFila:hover {
+  text-decoration-color: var(--ca-signal);
+}
+
+.enlaceFila:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ---- Tarjetas de gráficos ---- */

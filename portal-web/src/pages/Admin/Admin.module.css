@@ -156,24 +156,6 @@
   box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
 }
 
-.categorias {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.categoriaChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--ca-line);
-  border-radius: 999px;
-  font-size: 0.85rem;
-  color: var(--ca-muted);
-  cursor: pointer;
-}
-
 .checkboxRow {
   display: flex;
   align-items: center;

@@ -13,11 +13,21 @@ import { EstadoPildora } from '../../components/Reportes/TarjetaReporte'
 import { formatearFecha, mapearReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
 import {
-  COLOR_POR_ESTADO,
-  ESTADOS_EN_ORDEN,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-} from '../../constants/reportes'
+  ESTADOS_FINALIZADOS,
+  calcularTiempos,
+  formatearDuracion,
+  mediana,
+  promedio,
+} from '../../components/Reportes/tiempos'
+import { COLOR_POR_ESTADO, ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
+import { useHistoriales } from '../../hooks/useHistoriales'
+import {
+  construirCsvReportes,
+  descargarCsv,
+  paraNombreArchivo,
+} from '../../components/Reportes/exportar'
+import { fechaInput } from '../../components/Reportes/rangosRapidos'
 import {
   NOMBRE_GRANULARIDAD,
   PERIODOS,
@@ -30,14 +40,13 @@ import type { Periodo } from './periodos'
 import comun from '../../components/Reportes/Reportes.module.css'
 import styles from './OperadorEstadisticas.module.css'
 
-const ESTADOS_FINALIZADOS = new Set(['resuelto', 'cerrado'])
-
 function porcentaje(parte: number, total: number): string {
   return total > 0 ? `${Math.round((parte / total) * 100)}% del total` : '—'
 }
 
 export default function OperadorEstadisticas() {
   const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
+  const { etiqueta } = useCategorias()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [cargandoReportes, setCargandoReportes] = useState(true)
@@ -47,6 +56,8 @@ export default function OperadorEstadisticas() {
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [detalleId, setDetalleId] = useState<string | null>(null)
+  const [progresoCsv, setProgresoCsv] = useState<{ hechos: number; total: number } | null>(null)
+  const [errorExportar, setErrorExportar] = useState('')
 
   useEffect(() => {
     if (!autorizado || !operadorId) {
@@ -107,7 +118,7 @@ export default function OperadorEstadisticas() {
     const filasCategoria: FilaBarra[] = Object.entries(porCategoria)
       .map(([categoria, valor]) => ({
         clave: categoria,
-        etiqueta: ETIQUETA_POR_CATEGORIA[categoria] ?? categoria,
+        etiqueta: etiqueta(categoria),
         valor,
       }))
       .sort((a, b) => b.valor - a.valor)
@@ -126,9 +137,69 @@ export default function OperadorEstadisticas() {
       filasCategoria,
       topAutores,
     }
-  }, [enPeriodo])
+  }, [enPeriodo, etiqueta])
 
   const serie = useMemo(() => construirSerie(enPeriodo, rango), [enPeriodo, rango])
+
+  const {
+    historiales,
+    cargando: calculandoTiempos,
+    error: errorTiempos,
+  } = useHistoriales(enPeriodo)
+
+  const tiempos = useMemo(() => {
+    const primeras: number[] = []
+    const resoluciones: number[] = []
+    const porCategoria = new Map<
+      string,
+      { total: number; primeras: number[]; resoluciones: number[] }
+    >()
+    let sinRegistro = 0
+
+    for (const r of enPeriodo) {
+      const cambios = historiales.get(r.id)
+      if (!cambios) {
+        continue // su historial todavía no llega
+      }
+      const categoria = porCategoria.get(r.categoria) ?? { total: 0, primeras: [], resoluciones: [] }
+      categoria.total += 1
+      porCategoria.set(r.categoria, categoria)
+
+      // Cambió de estado sin dejar registro: no hay cómo medirlo.
+      if (r.estado !== 'reportado' && cambios.length === 0) {
+        sinRegistro += 1
+        continue
+      }
+      const { primeraAtencionMs, resolucionMs } = calcularTiempos(r, cambios)
+      if (primeraAtencionMs !== null) {
+        primeras.push(primeraAtencionMs)
+        categoria.primeras.push(primeraAtencionMs)
+      }
+      if (resolucionMs !== null) {
+        resoluciones.push(resolucionMs)
+        categoria.resoluciones.push(resolucionMs)
+      }
+    }
+
+    const filasCategoria = Array.from(porCategoria, ([id, datos]) => ({
+      id,
+      nombre: etiqueta(id),
+      total: datos.total,
+      primeraAtencion: mediana(datos.primeras),
+      resolucion: mediana(datos.resoluciones),
+    })).sort((a, b) => b.total - a.total)
+
+    return {
+      medianaPrimera: mediana(primeras),
+      promedioPrimera: promedio(primeras),
+      atendidos: primeras.length,
+      medianaResolucion: mediana(resoluciones),
+      promedioResolucion: promedio(resoluciones),
+      resueltos: resoluciones.length,
+      sinRegistro,
+      filasCategoria,
+    }
+  }, [enPeriodo, historiales, etiqueta])
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
@@ -137,6 +208,49 @@ export default function OperadorEstadisticas() {
   const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
   const ultimos = enPeriodo.slice(0, 8)
   const cargandoTodo = cargando || cargandoReportes
+  const sinAtender = enPeriodo.filter((r) => r.estado === 'reportado').length
+  const ahora = Date.now()
+  const abiertosAntiguos = enPeriodo
+    .filter((r): r is Reporte & { fecha: Date } => !ESTADOS_FINALIZADOS.has(r.estado) && r.fecha !== null)
+    .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
+    .slice(0, 5)
+  const primeraVez = calculandoTiempos && tiempos.atendidos === 0 && tiempos.resueltos === 0
+
+  // Partes del nombre de archivo: operador y rango (yyyy-mm-dd).
+  const nombreBase = paraNombreArchivo(operadorNombre ?? operadorId ?? 'operador')
+  const rangoArchivo =
+    !rango.inicio && !rango.fin
+      ? 'todo'
+      : `${rango.inicio ? fechaInput(rango.inicio) : 'inicio'}_${fechaInput(rango.fin ?? new Date())}`
+
+  async function exportarCsv() {
+    setErrorExportar('')
+    try {
+      const csv = await construirCsvReportes(enPeriodo, {
+        etiquetaCategoria: etiqueta,
+        nombreOperador: () => operadorNombre ?? operadorId ?? '',
+        historiales,
+        onProgreso: (hechos, total) => setProgresoCsv({ hechos, total }),
+      })
+      descargarCsv(csv, `reportes_${nombreBase}_${rangoArchivo}.csv`)
+    } catch (err) {
+      console.error('Error al exportar el CSV:', err)
+      setErrorExportar('No pudimos generar el CSV. Inténtalo nuevamente.')
+    } finally {
+      setProgresoCsv(null)
+    }
+  }
+
+  // El navegador propone el título de la página como nombre del PDF.
+  function exportarPdf() {
+    const tituloOriginal = document.title
+    document.title = `estadisticas_${nombreBase}_${rangoArchivo}`
+    const restaurar = () => {
+      document.title = tituloOriginal
+    }
+    window.addEventListener('afterprint', restaurar, { once: true })
+    window.print()
+  }
 
   return (
     <div className={styles.page}>
@@ -149,9 +263,12 @@ export default function OperadorEstadisticas() {
           <p className={styles.subtitulo}>
             Reportes asignados a {operadorNombre ?? 'tu operador'} · {describirRango(rango)}
           </p>
+          <p className={`solo-impresion ${styles.subtitulo}`}>
+            Generado el {new Date().toLocaleString('es-CL', { dateStyle: 'long', timeStyle: 'short' })}
+          </p>
         </div>
 
-        <div className={styles.filtros} role="group" aria-label="Periodo">
+        <div className={styles.filtros} role="group" aria-label="Periodo" data-no-imprimir>
           <div className={styles.periodos}>
             {PERIODOS.map(({ clave, etiqueta }) => (
               <button
@@ -189,7 +306,30 @@ export default function OperadorEstadisticas() {
               </label>
             </div>
           )}
+          <div className={styles.exportar}>
+            <button
+              type="button"
+              className={comun.accionBoton}
+              onClick={exportarCsv}
+              disabled={cargandoTodo || enPeriodo.length === 0 || progresoCsv !== null}
+              title="Listado de los reportes del periodo, sin imágenes"
+            >
+              {progresoCsv
+                ? `Preparando CSV… ${progresoCsv.hechos}/${progresoCsv.total}`
+                : 'Exportar CSV'}
+            </button>
+            <button
+              type="button"
+              className={comun.accionBoton}
+              onClick={exportarPdf}
+              disabled={cargandoTodo || primeraVez}
+              title="Se abre el diálogo de impresión: elige «Guardar como PDF»"
+            >
+              Exportar PDF
+            </button>
+          </div>
         </div>
+        {errorExportar && <p className={comun.errorTexto}>{errorExportar}</p>}
 
         {error && <p className={comun.errorTexto}>{error}</p>}
         {cargandoTodo && !error && <p className={comun.estadoCarga}>Cargando estadísticas…</p>}
@@ -240,6 +380,143 @@ export default function OperadorEstadisticas() {
                   <GraficoColumnas datos={serie.puntos} medida="Reportes" />
                 </section>
 
+                <section
+                  className={`${styles.seccion} ${calculandoTiempos && !primeraVez ? styles.recalculando : ''}`}
+                  aria-labelledby="tiempo-respuesta-titulo"
+                  aria-busy={calculandoTiempos}
+                >
+                  <div>
+                    <h2 id="tiempo-respuesta-titulo" className={styles.seccionTitulo}>
+                      Tiempo de respuesta
+                    </h2>
+                    <p className={styles.seccionNota}>
+                      Mediana: la mitad de los reportes se atendió (o resolvió) en menos de ese
+                      tiempo. Se mide desde que el ciudadano creó el reporte.
+                    </p>
+                  </div>
+
+                  {errorTiempos && <p className={comun.errorTexto}>{errorTiempos}</p>}
+
+                  <div className={styles.kpis}>
+                    <div className={styles.kpi}>
+                      <span className={styles.kpiEtiqueta}>Primera atención</span>
+                      <span className={styles.kpiValor}>
+                        {primeraVez
+                          ? '…'
+                          : tiempos.medianaPrimera !== null
+                            ? formatearDuracion(tiempos.medianaPrimera)
+                            : '—'}
+                      </span>
+                      <span className={styles.kpiNota}>
+                        {tiempos.promedioPrimera !== null
+                          ? `Promedio ${formatearDuracion(tiempos.promedioPrimera)} · ${tiempos.atendidos} atendidos`
+                          : 'Aún no hay reportes atendidos'}
+                        {sinAtender > 0 && ` · ${sinAtender} sin atender`}
+                      </span>
+                    </div>
+                    <div className={styles.kpi}>
+                      <span className={styles.kpiEtiqueta}>Hasta resolver o cerrar</span>
+                      <span className={styles.kpiValor}>
+                        {primeraVez
+                          ? '…'
+                          : tiempos.medianaResolucion !== null
+                            ? formatearDuracion(tiempos.medianaResolucion)
+                            : '—'}
+                      </span>
+                      <span className={styles.kpiNota}>
+                        {tiempos.promedioResolucion !== null
+                          ? `Promedio ${formatearDuracion(tiempos.promedioResolucion)} · ${tiempos.resueltos} finalizados`
+                          : 'Aún no hay reportes finalizados'}
+                      </span>
+                    </div>
+                    <div className={styles.kpi}>
+                      <span className={styles.kpiEtiqueta}>Abierto más antiguo</span>
+                      <span className={styles.kpiValor}>
+                        {abiertosAntiguos[0]
+                          ? formatearDuracion(ahora - abiertosAntiguos[0].fecha.getTime())
+                          : '—'}
+                      </span>
+                      <span className={styles.kpiNota}>
+                        {abiertosAntiguos[0]
+                          ? `${etiqueta(abiertosAntiguos[0].categoria)} · ${
+                              ETIQUETA_POR_ESTADO[abiertosAntiguos[0].estado] ??
+                              abiertosAntiguos[0].estado
+                            }`
+                          : 'No hay reportes abiertos'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.dosColumnasAncha}>
+                    <section className={styles.tarjeta}>
+                      <h3 className={styles.tarjetaTitulo}>Por categoría (mediana)</h3>
+                      <div className={styles.tablaScroll}>
+                        <table className={styles.tabla}>
+                          <thead>
+                            <tr>
+                              <th scope="col">Categoría</th>
+                              <th scope="col" className={styles.numero}>
+                                Reportes
+                              </th>
+                              <th scope="col" className={styles.numero}>
+                                Primera atención
+                              </th>
+                              <th scope="col" className={styles.numero}>
+                                Hasta resolver o cerrar
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {tiempos.filasCategoria.map((fila) => (
+                              <tr key={fila.id}>
+                                <td>{fila.nombre}</td>
+                                <td className={styles.numero}>{fila.total}</td>
+                                <td className={styles.numero}>
+                                  {fila.primeraAtencion !== null
+                                    ? formatearDuracion(fila.primeraAtencion)
+                                    : '—'}
+                                </td>
+                                <td className={styles.numero}>
+                                  {fila.resolucion !== null ? formatearDuracion(fila.resolucion) : '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className={styles.tablaNota}>
+                        "—": todavía no hay reportes de esa categoría atendidos o finalizados.
+                        {tiempos.sinRegistro > 0 &&
+                          ` Se excluyen ${tiempos.sinRegistro} reporte(s) que cambiaron de estado sin quedar registrados en el historial.`}
+                      </p>
+                    </section>
+
+                    <section className={styles.tarjeta}>
+                      <h3 className={styles.tarjetaTitulo}>Abiertos más antiguos</h3>
+                      {abiertosAntiguos.length === 0 ? (
+                        <p className={comun.estadoCarga}>No hay reportes abiertos en el periodo.</p>
+                      ) : (
+                        <ol className={styles.ranking}>
+                          {abiertosAntiguos.map((r) => (
+                            <li key={r.id}>
+                              <button
+                                type="button"
+                                className={styles.enlaceFila}
+                                onClick={() => setDetalleId(r.id)}
+                              >
+                                {etiqueta(r.categoria)}
+                              </button>
+                              <span className={styles.rankingValor}>
+                                {formatearDuracion(ahora - r.fecha.getTime())}
+                              </span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </section>
+                  </div>
+                </section>
+
                 <div className={styles.dosColumnas}>
                   <section className={styles.tarjeta}>
                     <h2 className={styles.tarjetaTitulo}>Por estado</h2>
@@ -262,7 +539,7 @@ export default function OperadorEstadisticas() {
                             <th scope="col">Categoría</th>
                             <th scope="col">Autor</th>
                             <th scope="col">Estado</th>
-                            <th scope="col">
+                            <th scope="col" data-no-imprimir>
                               <span className={styles.soloLector}>Acciones</span>
                             </th>
                           </tr>
@@ -271,12 +548,12 @@ export default function OperadorEstadisticas() {
                           {ultimos.map((r) => (
                             <tr key={r.id}>
                               <td className={styles.nowrap}>{formatearFecha(r.fecha, true)}</td>
-                              <td>{ETIQUETA_POR_CATEGORIA[r.categoria] ?? r.categoria}</td>
+                              <td>{etiqueta(r.categoria)}</td>
                               <td>{r.autorNombre ?? 'Sin nombre'}</td>
                               <td>
                                 <EstadoPildora estado={r.estado} />
                               </td>
-                              <td>
+                              <td data-no-imprimir>
                                 <button
                                   type="button"
                                   className={comun.accionBoton}

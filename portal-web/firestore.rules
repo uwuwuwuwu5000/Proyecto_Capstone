@@ -164,11 +164,13 @@ service cloud.firestore {
 
     // --- Reportes ciudadanos (Sprint 2) ------------------------------------
 
+    /** S4-02 · La categoría debe existir en el catálogo /categorias y estar activa. */
     function categoriaValida() {
-      return request.resource.data.categoria in [
-        'microbasural', 'luminaria', 'fuga_agua', 'arbol_peligroso',
-        'calle_deteriorada', 'accesibilidad', 'otro'
-      ];
+      let categoria = request.resource.data.categoria;
+      let ruta = /databases/$(database)/documents/categorias/$(categoria);
+      return categoria is string
+        && exists(ruta)
+        && get(ruta).data.activa == true;
     }
 
     function descripcionValida() {
@@ -392,8 +394,23 @@ service cloud.firestore {
          * Sin esta comprobación se podía inventar una bitácora que contradijera
          * el documento.
          * BUG 23 · El comentario se acota también en servidor.
+         *
+         * `autorNombre` y `autorRol` son opcionales (la app móvil todavía no
+         * los envía), pero si vienen deben coincidir con el perfil de quien
+         * escribe: así el historial público muestra quién hizo el cambio sin
+         * que nadie pueda firmar con el nombre de otra cuenta.
          */
         allow create: if request.resource.data.autorUid == request.auth.uid
+          && (
+               !('autorNombre' in request.resource.data)
+               || request.resource.data.autorNombre
+                    == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName
+             )
+          && (
+               !('autorRol' in request.resource.data)
+               || request.resource.data.autorRol
+                    == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+             )
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
@@ -471,6 +488,42 @@ service cloud.firestore {
       // un organismo retirado se marca con `activo: false`, para no dejar
       // reportes históricos apuntando a un documento inexistente.
       allow create, update: if esAdministrador() && organismoValido(organismoId);
+      allow delete: if false;
+    }
+
+    // --- Categorías: catálogo administrable (S4-02) --------------------------
+    // El id del documento es el valor que se guarda en `reporte.categoria`,
+    // por eso no se puede cambiar ni borrar: una categoría retirada se marca
+    // con `activa: false` y los reportes antiguos siguen mostrando su nombre.
+
+    function categoriaCatalogoValida(categoriaId) {
+      let datos = request.resource.data;
+      return datos.keys().hasOnly(['id', 'nombre', 'descripcion', 'orden', 'activa', 'createdAt', 'updatedAt'])
+        && datos.id == categoriaId
+        && categoriaId.matches('^[a-z][a-z0-9_]{2,39}$')
+        && datos.nombre is string
+        && datos.nombre.size() > 0
+        && datos.nombre.size() <= 60
+        && (!('descripcion' in datos) || datos.descripcion == null
+              || (datos.descripcion is string && datos.descripcion.size() <= 200))
+        && datos.orden is int
+        && datos.orden >= 0
+        && datos.orden <= 999
+        && datos.activa is bool
+        && datos.updatedAt == request.time;
+    }
+
+    match /categorias/{categoriaId} {
+      // La app móvil y el portal la leen para ofrecer y mostrar categorías.
+      allow read: if estaAutenticado();
+      allow create: if esAdministrador()
+        && categoriaCatalogoValida(categoriaId)
+        && request.resource.data.createdAt == request.time;
+      // createdAt no cambia: además impide que un "crear" pise una categoría
+      // que ya existe.
+      allow update: if esAdministrador()
+        && categoriaCatalogoValida(categoriaId)
+        && request.resource.data.createdAt == resource.data.createdAt;
       allow delete: if false;
     }
 

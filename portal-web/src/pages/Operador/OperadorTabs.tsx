@@ -7,7 +7,7 @@ export default function OperadorTabs() {
     isActive ? `${styles.tab} ${styles.tabActiva}` : styles.tab
 
   return (
-    <nav className={styles.tabs} aria-label="Panel de operador">
+    <nav className={styles.tabs} aria-label="Panel de operador" data-no-imprimir>
       <NavLink to="/operador" end className={clase}>
         Mapa
       </NavLink>

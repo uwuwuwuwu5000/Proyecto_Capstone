@@ -74,22 +74,33 @@ export function formatearFecha(fecha: Date | null, conHora = false): string {
   })
 }
 
+export interface AutorCambio {
+  uid: string
+  /** displayName del perfil; las reglas exigen que coincida. */
+  nombre: string | null
+  /** role del perfil; las reglas exigen que coincida. */
+  rol: string | null
+}
+
 /**
  * Cambia el estado y deja la entrada en statusHistory en el mismo lote, igual
  * que la app móvil. Las reglas validan la transición y que quien escribe
- * pueda gestionar este reporte.
+ * pueda gestionar este reporte. El nombre y rol del autor quedan guardados
+ * para que el historial público muestre quién hizo cada cambio.
  */
 export async function cambiarEstadoReporte(
   reporte: Reporte,
   hacia: string,
   comentario: string,
-  autorUid: string,
+  autor: AutorCambio,
 ): Promise<void> {
   const reporteRef = doc(db, 'reports', reporte.id)
   const lote = writeBatch(db)
   lote.update(reporteRef, { estado: hacia, updatedAt: serverTimestamp() })
   lote.set(doc(collection(reporteRef, 'statusHistory')), {
-    autorUid,
+    autorUid: autor.uid,
+    ...(autor.nombre ? { autorNombre: autor.nombre } : {}),
+    ...(autor.rol ? { autorRol: autor.rol } : {}),
     reportId: reporte.id,
     desde: reporte.estado,
     hacia,

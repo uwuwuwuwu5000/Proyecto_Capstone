@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react'
-import {
-  COLOR_POR_ESTADO,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-} from '../../constants/reportes'
+import { COLOR_POR_ESTADO, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import FotoReporte from './FotoReporte'
 import { formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
@@ -18,6 +15,8 @@ interface TarjetaReporteProps {
 }
 
 export default function TarjetaReporte({ reporte, operadorNombre, children }: TarjetaReporteProps) {
+  const { etiqueta } = useCategorias()
+
   return (
     <article className={styles.tarjeta}>
       <FotoReporte foto={reporte.foto} />
@@ -25,7 +24,7 @@ export default function TarjetaReporte({ reporte, operadorNombre, children }: Ta
       <div className={styles.cuerpoTarjeta}>
         <div className={styles.cabecera}>
           <span className={styles.categoria}>
-            {ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}
+            {etiqueta(reporte.categoria)}
           </span>
           <EstadoPildora estado={reporte.estado} />
         </div>

@@ -20,13 +20,16 @@ import { FILTROS_VACIOS, filtrarReportes, hayFiltrosActivos } from '../../compon
 import type { Filtros } from '../../components/Reportes/filtros'
 import { cambiarEstadoReporte, mapearReporte } from '../../components/Reportes/reporte'
 import type { OperadorResumen, Reporte } from '../../components/Reportes/reporte'
+import { construirCsvReportes, descargarCsv } from '../../components/Reportes/exportar'
+import { fechaInput } from '../../components/Reportes/rangosRapidos'
+import { useCategorias } from '../../context/CategoriasContext'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
 import styles from './Admin.module.css'
 import propios from '../../components/Reportes/Reportes.module.css'
 
 export default function AdminReportes() {
   const { cargando, autorizado } = useRequiereAdmin()
-  const { user } = useAuth()
+  const { user, perfil } = useAuth()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [cargandoReportes, setCargandoReportes] = useState(true)
@@ -44,6 +47,10 @@ export default function AdminReportes() {
   const [errorEdicion, setErrorEdicion] = useState('')
 
   const [eliminandoId, setEliminandoId] = useState<string | null>(null)
+
+  const { etiqueta } = useCategorias()
+  const [progresoCsv, setProgresoCsv] = useState<{ hechos: number; total: number } | null>(null)
+  const [errorExportar, setErrorExportar] = useState('')
 
   const [vinculando, setVinculando] = useState(false)
   const [vinculoError, setVinculoError] = useState('')
@@ -152,7 +159,11 @@ export default function AdminReportes() {
         })
       }
       if (estadoNuevo !== reporte.estado) {
-        await cambiarEstadoReporte(reporte, estadoNuevo, comentario, user.uid)
+        await cambiarEstadoReporte(reporte, estadoNuevo, comentario, {
+          uid: user.uid,
+          nombre: perfil?.displayName ?? null,
+          rol: perfil?.role ?? null,
+        })
       }
       setEditandoId(null)
     } catch (err) {
@@ -191,6 +202,25 @@ export default function AdminReportes() {
       setError('No pudimos eliminar el reporte. Inténtalo nuevamente.')
     } finally {
       setEliminandoId(null)
+    }
+  }
+
+  async function exportarCsv() {
+    setErrorExportar('')
+    try {
+      const csv = await construirCsvReportes(reportesFiltrados, {
+        etiquetaCategoria: etiqueta,
+        nombreOperador: (operadorId) =>
+          operadorId ? operadorPorId.get(operadorId)?.nombre ?? operadorId : 'Sin asignar',
+        onProgreso: (hechos, total) => setProgresoCsv({ hechos, total }),
+      })
+      const sufijo = hayFiltrosActivos(filtros) ? '_filtrados' : ''
+      descargarCsv(csv, `reportes_${fechaInput(new Date())}${sufijo}.csv`)
+    } catch (err) {
+      console.error('Error al exportar el CSV:', err)
+      setErrorExportar('No pudimos generar el CSV. Inténtalo nuevamente.')
+    } finally {
+      setProgresoCsv(null)
     }
   }
 
@@ -251,6 +281,23 @@ export default function AdminReportes() {
           visibles={reportesFiltrados.length}
           total={reportes.length}
         />
+
+        <div className={propios.barraExportar}>
+          <button
+            type="button"
+            className={styles.editarBoton}
+            onClick={exportarCsv}
+            disabled={cargandoReportes || reportesFiltrados.length === 0 || progresoCsv !== null}
+          >
+            {progresoCsv
+              ? `Preparando CSV… ${progresoCsv.hechos}/${progresoCsv.total}`
+              : `Exportar CSV (${reportesFiltrados.length} reportes)`}
+          </button>
+          <span className={propios.estadoCarga}>
+            Incluye los reportes que cumplen los filtros actuales, sin imágenes.
+          </span>
+        </div>
+        {errorExportar && <p className={styles.error}>{errorExportar}</p>}
 
         {error && <p className={styles.error}>{error}</p>}
         {cargandoReportes && <p className={propios.estadoCarga}>Cargando reportes…</p>}

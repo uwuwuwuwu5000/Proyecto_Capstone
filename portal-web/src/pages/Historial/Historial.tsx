@@ -12,11 +12,8 @@ import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navbar/Navbar'
-import {
-  COLOR_POR_ESTADO,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-} from '../../constants/reportes'
+import { COLOR_POR_ESTADO, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import styles from './Historial.module.css'
 
 interface ReporteHistorial {
@@ -48,6 +45,7 @@ function mapearReporte(docSnap: QueryDocumentSnapshot): ReporteHistorial {
 
 export default function Historial() {
   const { user, loading: sesionCargando } = useAuth()
+  const { etiqueta } = useCategorias()
   const [reportes, setReportes] = useState<ReporteHistorial[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -139,7 +137,7 @@ export default function Historial() {
               <tbody>
                 {reportes.map((reporte) => (
                   <tr key={reporte.id}>
-                    <td>{ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}</td>
+                    <td>{etiqueta(reporte.categoria)}</td>
                     <td className={styles.descripcion}>{reporte.descripcion}</td>
                     <td>
                       <span

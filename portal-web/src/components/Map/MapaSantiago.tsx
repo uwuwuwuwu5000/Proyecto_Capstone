@@ -1,5 +1,4 @@
 import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
@@ -18,13 +17,12 @@ import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
-import {
-  ESTADOS_EN_ORDEN,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-  COLOR_POR_ESTADO,
-} from '../../constants/reportes'
+import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import { ICONOS_POR_ESTADO, ICONO_ESTADO_DESCONOCIDO } from './estadoIconos'
+import HistorialEstados from '../Reportes/HistorialEstados'
+import { cargarHistorial } from '../Reportes/historial'
+import type { CambioEstado } from '../Reportes/historial'
 import styles from './MapaSantiago.module.css'
 
 // El ícono por defecto de Leaflet apunta a rutas relativas que Vite no
@@ -120,6 +118,14 @@ function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte | null {
   }
 }
 
+interface EstadoHistorial {
+  cargando: boolean
+  /** Estado del reporte cuando se leyó el historial. */
+  estado: string
+  cambios?: CambioEstado[]
+  error?: string
+}
+
 interface MapaSantiagoProps {
   /**
    * 'tarjeta' (por defecto): tamaño fijo, para incrustar dentro de una
@@ -132,6 +138,7 @@ interface MapaSantiagoProps {
 export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps) {
   const completo = variante === 'pantallaCompleta'
   const { user, perfil, loading: sesionCargando } = useAuth()
+  const { etiqueta } = useCategorias()
   // Las cuentas operador ven el mapa público, pero no confirman reportes:
   // los gestionan (las reglas también se lo impiden).
   const esOperador = perfil?.role === 'operador'
@@ -149,6 +156,40 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
   const [confirmando, setConfirmando] = useState<Record<string, boolean>>({})
   // Mensaje puntual tras intentar confirmar (p. ej. "Ya confirmaste este reporte").
   const [mensajeConfirmacion, setMensajeConfirmacion] = useState<Record<string, string>>({})
+  // Historial de estados, pedido solo al apretar "Ver historial". Se guarda
+  // con el estado que tenía el reporte al leerlo: si cambió, se vuelve a leer.
+  const [historiales, setHistoriales] = useState<Record<string, EstadoHistorial>>({})
+  const [historialAbierto, setHistorialAbierto] = useState<Record<string, boolean>>({})
+
+  async function alternarHistorial(reporte: Reporte) {
+    const abrir = !historialAbierto[reporte.id]
+    setHistorialAbierto((prev) => ({ ...prev, [reporte.id]: abrir }))
+    const actual = historiales[reporte.id]
+    if (!abrir || actual?.cargando || (actual?.cambios && actual.estado === reporte.estado)) {
+      return
+    }
+    setHistoriales((prev) => ({
+      ...prev,
+      [reporte.id]: { cargando: true, estado: reporte.estado },
+    }))
+    try {
+      const cambios = await cargarHistorial(reporte.id)
+      setHistoriales((prev) => ({
+        ...prev,
+        [reporte.id]: { cargando: false, estado: reporte.estado, cambios },
+      }))
+    } catch (err) {
+      console.error('Error al leer el historial de estados:', err)
+      setHistoriales((prev) => ({
+        ...prev,
+        [reporte.id]: {
+          cargando: false,
+          estado: reporte.estado,
+          error: 'No se pudo cargar el historial.',
+        },
+      }))
+    }
+  }
 
   async function confirmarReporte(reporte: Reporte) {
     if (!user || confirmando[reporte.id] || confirmados[reporte.id]) {
@@ -313,6 +354,8 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
           const esAutor = !!user && reporte.uid === user.uid
           const yaConfirmado = !!confirmados[reporte.id]
           const confirmandoAhora = !!confirmando[reporte.id]
+          const historial = historiales[reporte.id]
+          const verHistorial = !!historialAbierto[reporte.id]
 
           return (
             <Marker
@@ -330,12 +373,12 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
             >
               <Popup>
                 <strong>
-                  {ETIQUETA_POR_CATEGORIA[reporte.categoria] ?? reporte.categoria}
+                  {etiqueta(reporte.categoria)}
                 </strong>
                 <br />
                 {reporte.descripcion}
                 <br />
-                Estado: {reporte.estado}
+                Estado: {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
                 <br />
                 Confirmaciones:{' '}
                 {estadoConteo?.cargando && 'cargando…'}
@@ -389,6 +432,32 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
                     )}
                   </div>
                 )}
+
+                <div className={styles.historial}>
+                  <button
+                    type="button"
+                    className={styles.historialBoton}
+                    onClick={() => alternarHistorial(reporte)}
+                    aria-expanded={verHistorial}
+                  >
+                    {verHistorial ? 'Ocultar historial de estados' : 'Ver historial de estados'}
+                  </button>
+                  {verHistorial && (
+                    <>
+                      {historial?.cargando && <p className={styles.historialAviso}>Cargando…</p>}
+                      {historial?.error && (
+                        <p className={styles.historialAviso}>{historial.error}</p>
+                      )}
+                      {historial?.cambios && (
+                        <HistorialEstados
+                          cambios={historial.cambios}
+                          fechaCreacion={reporte.fecha}
+                          compacto
+                        />
+                      )}
+                    </>
+                  )}
+                </div>
               </Popup>
             </Marker>
           )

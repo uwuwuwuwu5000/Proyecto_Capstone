@@ -130,7 +130,7 @@ export default function GraficoColumnas({ datos, medida }: GraficoColumnasProps)
         ))}
       </div>
 
-      <details className={styles.tablaVista}>
+      <details className={styles.tablaVista} data-no-imprimir>
         <summary aria-controls={idTabla}>Ver como tabla</summary>
         <table id={idTabla} className={styles.tabla}>
           <thead>

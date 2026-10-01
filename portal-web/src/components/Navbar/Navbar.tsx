@@ -12,7 +12,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className={styles.navbar}>
+    <header className={styles.navbar} data-no-imprimir>
       <Link to="/" className={styles.brand}>
         <span className={styles.brandMark} aria-hidden="true">
           ◆

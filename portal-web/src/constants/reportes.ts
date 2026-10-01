@@ -1,7 +1,6 @@
-// Constantes del dominio "reportes", compartidas entre el mapa y el
-// historial. Los valores (categoría/estado) coinciden con los enums que
-// validan las Firestore Rules — ver firestore.rules, categoriaValida() y
-// transicionValida().
+// Constantes de los estados de un reporte. Deben coincidir con
+// transicionValida() en firestore.rules. Las categorías no están aquí: salen
+// del catálogo /categorias (ver context/CategoriasContext.tsx).
 
 /** Colores de estado (paleta "Ciudad Alerta", igual que la app móvil). */
 export const COLOR_POR_ESTADO: Record<string, string> = {
@@ -39,14 +38,4 @@ export const TRANSICIONES: Record<string, string[]> = {
   en_proceso: ['resuelto', 'cerrado'],
   resuelto: ['cerrado'],
   cerrado: [],
-}
-
-export const ETIQUETA_POR_CATEGORIA: Record<string, string> = {
-  microbasural: 'Microbasural',
-  luminaria: 'Luminaria',
-  fuga_agua: 'Fuga de agua',
-  arbol_peligroso: 'Árbol peligroso',
-  calle_deteriorada: 'Calle deteriorada',
-  accesibilidad: 'Accesibilidad',
-  otro: 'Otro',
 }

@@ -1,8 +1,5 @@
-import {
-  ESTADOS_EN_ORDEN,
-  ETIQUETA_POR_CATEGORIA,
-  ETIQUETA_POR_ESTADO,
-} from '../../constants/reportes'
+import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { useCategorias } from '../../context/CategoriasContext'
 import { FILTROS_VACIOS, SIN_OPERADOR, hayFiltrosActivos } from './filtros'
 import type { Filtros } from './filtros'
 import type { OperadorResumen } from './reporte'
@@ -24,6 +21,9 @@ export default function FiltrosReportes({
   visibles,
   total,
 }: FiltrosReportesProps) {
+  // Incluye las inactivas: hay reportes antiguos con categorías desactivadas.
+  const { categorias } = useCategorias()
+
   function cambiar<K extends keyof Filtros>(clave: K, valor: Filtros[K]) {
     onChange({ ...filtros, [clave]: valor })
   }
@@ -49,9 +49,10 @@ export default function FiltrosReportes({
           onChange={(e) => cambiar('categoria', e.target.value)}
         >
           <option value="">Todas</option>
-          {Object.entries(ETIQUETA_POR_CATEGORIA).map(([valor, etiqueta]) => (
-            <option key={valor} value={valor}>
-              {etiqueta}
+          {categorias.map((categoria) => (
+            <option key={categoria.id} value={categoria.id}>
+              {categoria.nombre}
+              {categoria.activa ? '' : ' (inactiva)'}
             </option>
           ))}
         </select>

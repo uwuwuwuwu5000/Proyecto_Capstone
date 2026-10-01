@@ -20,7 +20,7 @@ import pagina from './OperadorReportes.module.css'
 
 export default function OperadorReportes() {
   const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
-  const { user } = useAuth()
+  const { user, perfil } = useAuth()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [cargandoReportes, setCargandoReportes] = useState(true)
@@ -80,7 +80,11 @@ export default function OperadorReportes() {
     setGuardando(true)
     setErrorCambio('')
     try {
-      await cambiarEstadoReporte(reporte, estadoNuevo, comentario, user.uid)
+      await cambiarEstadoReporte(reporte, estadoNuevo, comentario, {
+        uid: user.uid,
+        nombre: perfil?.displayName ?? null,
+        rol: perfil?.role ?? null,
+      })
       setCambiandoId(null)
     } catch (err) {
       console.error('Error al cambiar el estado del reporte:', err)

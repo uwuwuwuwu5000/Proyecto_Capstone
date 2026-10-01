@@ -50,3 +50,61 @@ h2,
 h3 {
   line-height: 1.2;
 }
+
+/* Solo visible al imprimir / guardar como PDF (p. ej. la fecha de generación). */
+.solo-impresion {
+  display: none;
+}
+
+/* ---- Impresión y "Guardar como PDF" ----
+   El tema oscuro impreso daría texto blanco sobre papel blanco: al imprimir
+   se cambia a una paleta clara. Todo lo marcado con data-no-imprimir (barra
+   de navegación, pestañas, filtros, botones) se oculta. */
+@media print {
+  :root {
+    --ca-base: #ffffff;
+    --ca-surface: #ffffff;
+    --ca-surface-alt: #f3f5f8;
+    --ca-line: #c5ccd6;
+    --ca-ink: #111827;
+    --ca-muted: #4b5563;
+    --shadow-card: none;
+    color-scheme: light;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  /* Las barras de los gráficos son fondos de color: sin esto, el navegador
+     no las imprime. */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  [data-no-imprimir] {
+    display: none !important;
+  }
+
+  .solo-impresion {
+    display: block;
+  }
+
+  section,
+  article,
+  table,
+  li {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}

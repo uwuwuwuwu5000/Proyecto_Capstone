@@ -80,6 +80,37 @@
   color: var(--ca-muted);
 }
 
+.historial {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 220px;
+}
+
+.historialBoton {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-signal);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.historialBoton:hover {
+  color: var(--ca-ink);
+}
+
+.historialAviso {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
 .confirmarMensaje {
   margin: 4px 0 0;
   font-size: 0.8rem;

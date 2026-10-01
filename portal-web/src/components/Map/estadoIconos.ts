@@ -1,4 +1,8 @@
 import L from 'leaflet'
+// Los estilos base de Leaflet van aquí, en el módulo que importan todos los
+// mapas: con la carga por partes, cada mapa vive en su propio archivo y no
+// puede depender de que otro los haya cargado antes.
+import 'leaflet/dist/leaflet.css'
 import { COLOR_POR_ESTADO } from '../../constants/reportes'
 import styles from './MapaSantiago.module.css'
 

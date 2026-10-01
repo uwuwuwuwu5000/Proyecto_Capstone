@@ -1,0 +1,79 @@
+.pagina,
+.bloque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--ca-muted);
+  font-size: 0.9rem;
+  /* Invisible los primeros 200 ms: si la descarga es rápida, no parpadea. */
+  animation: aparecer 0.2s ease 0.2s both;
+}
+
+.pagina {
+  min-height: 100vh;
+  background: var(--ca-base);
+}
+
+.bloque {
+  min-height: 420px;
+  border-radius: 12px;
+  background: var(--ca-surface);
+}
+
+@media (max-width: 780px) {
+  .bloque {
+    min-height: 300px;
+  }
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--ca-line);
+  border-top-color: var(--ca-signal);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+
+.mensaje {
+  margin: 0;
+  color: var(--ca-ink);
+}
+
+.boton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton:hover {
+  background: var(--ca-signal-dark);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

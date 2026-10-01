@@ -38,6 +38,18 @@
   gap: 8px;
 }
 
+.barraExportar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.barraExportar button {
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+
 .estadoCarga {
   margin: 0;
   font-size: 0.9rem;
@@ -273,6 +285,41 @@
 .historialComentario {
   color: var(--ca-muted);
   font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.historialCambio {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  color: var(--ca-ink);
+}
+
+.historialPunto {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--ca-ink);
+  flex: none;
+}
+
+.historialAutor {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+/* Versión para el popup del mapa: más compacta y con su propio scroll. */
+.historialCompacto {
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.historialCompacto li {
+  padding: 6px 8px;
+  font-size: 0.8rem;
 }
 
 .grid {
