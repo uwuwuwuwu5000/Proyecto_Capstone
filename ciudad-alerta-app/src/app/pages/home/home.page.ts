@@ -1,8 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+
+import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
 import {
   AlertController,
   IonButton,
+  IonButtons,
   IonContent,
   IonHeader,
   IonIcon,
@@ -14,7 +17,10 @@ import {
 import { addIcons } from 'ionicons';
 import {
   addCircleOutline,
+  albumsOutline,
+  businessOutline,
   chatbubblesOutline,
+  mailUnreadOutline,
   documentTextOutline,
   fileTrayFullOutline,
   logOutOutline,
@@ -34,6 +40,8 @@ import { UserProfile } from '../../models/user-profile.model';
   styleUrls: ['./home.page.scss'],
   imports: [
     RouterLink,
+    ThemeToggleComponent,
+    IonButtons,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -64,13 +72,22 @@ export class HomePage {
   });
   readonly cargandoPerfil = signal(true);
 
+  /** Estado del flujo de verificación de correo. */
+  readonly correoVerificado = signal(false);
+  readonly enviandoVerificacion = signal(false);
+  readonly verificacionEnviada = signal(false);
+  readonly comprobandoVerificacion = signal(false);
+
   /** uid cuyo perfil está actualmente en pantalla. */
   private uidCargado: string | null = null;
 
   constructor() {
     addIcons({
       addCircleOutline,
+      albumsOutline,
+      businessOutline,
       chatbubblesOutline,
+      mailUnreadOutline,
       documentTextOutline,
       fileTrayFullOutline,
       logOutOutline,
@@ -97,14 +114,24 @@ export class HomePage {
       return;
     }
 
-    if (this.uidCargado === actual.uid && this.perfil() !== null) {
-      return;
-    }
-
+    /**
+     * El perfil se relee en cada entrada, sin caché por uid.
+     *
+     * Antes se omitía la recarga cuando el uid coincidía con el ya cargado, y
+     * eso dejaba el rol congelado: una cuenta promovida a `admin` seguía viendo
+     * el menú de ciudadano durante toda la sesión, incluso tras cerrar sesión y
+     * volver a entrar con el mismo usuario, porque Ionic conserva la instancia
+     * de la página. Es una lectura de documento por entrada, coste asumible
+     * frente a mostrar permisos equivocados.
+     */
     this.cargandoPerfil.set(true);
-    this.perfil.set(null);
+    this.correoVerificado.set(actual.emailVerified);
 
     try {
+      // Repara el perfil si falta y alinea el rol con la lista de
+      // administradores, por si la cuenta se promovió después del último acceso.
+      await this.authService.asegurarPerfil();
+
       this.perfil.set(await this.authService.getUserProfile(actual.uid));
       this.uidCargado = actual.uid;
     } catch {
@@ -113,6 +140,74 @@ export class HomePage {
     } finally {
       this.cargandoPerfil.set(false);
     }
+  }
+
+  /** Envía el correo con el enlace de verificación. */
+  async enviarVerificacion(): Promise<void> {
+    if (this.enviandoVerificacion()) {
+      return;
+    }
+
+    this.enviandoVerificacion.set(true);
+
+    try {
+      await this.authService.enviarVerificacionCorreo();
+      this.verificacionEnviada.set(true);
+
+      const correo = this.authService.user?.email ?? 'tu correo';
+      await this.mostrarToast(
+        `Te enviamos un enlace a ${correo}. Revisa también la carpeta de spam.`,
+        'success',
+      );
+    } catch (error) {
+      const mensaje =
+        error instanceof AuthFailure
+          ? error.message
+          : 'No pudimos enviar el correo de verificación.';
+      await this.mostrarToast(mensaje, 'danger');
+    } finally {
+      this.enviandoVerificacion.set(false);
+    }
+  }
+
+  /**
+   * El usuario verifica desde su bandeja de correo, fuera de la app, así que
+   * hay que pedirle a Firebase el estado actualizado.
+   */
+  async comprobarVerificacion(): Promise<void> {
+    this.comprobandoVerificacion.set(true);
+
+    try {
+      const verificado = await this.authService.comprobarVerificacion();
+      this.correoVerificado.set(verificado);
+
+      if (verificado) {
+        this.perfil.update((actual) =>
+          actual ? { ...actual, emailVerified: true } : actual,
+        );
+        await this.mostrarToast('Correo verificado. ¡Gracias!', 'success');
+      } else {
+        await this.mostrarToast(
+          'Todavía no aparece como verificado. Abre el enlace del correo y vuelve a intentarlo.',
+          'danger',
+        );
+      }
+    } catch {
+      await this.mostrarToast('No pudimos comprobar la verificación.', 'danger');
+    } finally {
+      this.comprobandoVerificacion.set(false);
+    }
+  }
+
+  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message,
+      duration: 3500,
+      color,
+      position: 'bottom',
+      buttons: [{ text: 'Cerrar', role: 'cancel' }],
+    });
+    await toast.present();
   }
 
   /** CA-77 · Cierre de sesión con confirmación previa. */

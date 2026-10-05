@@ -1,6 +1,9 @@
 <ion-header class="cabecera" [translucent]="true">
   <ion-toolbar>
     <ion-title>Ciudad Alerta</ion-title>
+    <ion-buttons slot="end">
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -14,6 +17,49 @@
           <p class="sesion__email">{{ user.email }}</p>
         </div>
       </section>
+
+      @if (!correoVerificado()) {
+        <section class="verificacion" role="region" aria-label="Verificación de correo">
+          <div class="verificacion__encabezado">
+            <ion-icon name="mail-unread-outline" aria-hidden="true"></ion-icon>
+            <div>
+              <h2>Verifica tu correo</h2>
+              <p>
+                Confirmar tu correo nos ayuda a validar que los reportes vienen de personas
+                reales y te permite recuperar tu cuenta si olvidas la contraseña.
+              </p>
+            </div>
+          </div>
+
+          <div class="verificacion__acciones">
+            <ion-button
+              class="accion-verificar"
+              expand="block"
+              [disabled]="enviandoVerificacion()"
+              (click)="enviarVerificacion()"
+            >
+              {{
+                enviandoVerificacion()
+                  ? 'Enviando…'
+                  : verificacionEnviada()
+                    ? 'Reenviar correo'
+                    : 'Enviar correo de verificación'
+              }}
+            </ion-button>
+
+            @if (verificacionEnviada()) {
+              <ion-button
+                fill="outline"
+                expand="block"
+                [disabled]="comprobandoVerificacion()"
+                (click)="comprobarVerificacion()"
+              >
+                {{ comprobandoVerificacion() ? 'Comprobando…' : 'Ya lo verifiqué' }}
+              </ion-button>
+            }
+          </div>
+        </section>
+      }
 
       <section class="estado">
         <h2 class="estado__titulo">Tu cuenta está lista</h2>
@@ -30,7 +76,7 @@
           </div>
           <div class="datos__fila">
             <dt>Correo verificado</dt>
-            <dd>{{ user.emailVerified ? 'Sí' : 'Pendiente' }}</dd>
+            <dd>{{ correoVerificado() ? 'Sí' : 'Pendiente' }}</dd>
           </div>
           @if (!cargandoPerfil() && perfil(); as datos) {
             <div class="datos__fila">
@@ -79,6 +125,16 @@
         </ion-button>
 
         @if (esStaff()) {
+          <ion-button class="accion-staff" expand="block" routerLink="/admin-reports">
+            <ion-icon slot="start" name="albums-outline" aria-hidden="true"></ion-icon>
+            Todas las incidencias
+          </ion-button>
+
+          <ion-button class="accion-staff" expand="block" routerLink="/admin-organismos">
+            <ion-icon slot="start" name="business-outline" aria-hidden="true"></ion-icon>
+            Municipalidades
+          </ion-button>
+
           <ion-button class="accion-staff" expand="block" routerLink="/support-inbox">
             <ion-icon slot="start" name="file-tray-full-outline" aria-hidden="true"></ion-icon>
             Bandeja de soporte

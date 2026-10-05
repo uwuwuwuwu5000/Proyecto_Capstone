@@ -1,22 +1,29 @@
 /**
  * Paleta de Ciudad Alerta.
  *
- * Cinco colores: azul de acento, dos grises intermedios, blanco y negro azulado.
- * Los tonos de superficie se derivan del negro base para poder separar planos
- * sin salirse de la familia cromática.
+ * Cinco colores de marca: azul de acento, dos grises intermedios, blanco y
+ * negro azulado. Existen dos temas —oscuro, por defecto, y claro— que se
+ * alternan con la clase `tema-claro` en el elemento <html>. ThemeService
+ * gestiona esa clase y recuerda la preferencia del usuario.
+ *
+ * Los componentes usan solo los roles semánticos (--ca-base, --ca-ink, etc.),
+ * nunca los colores directos: así un mismo componente se ve bien en ambos
+ * temas sin condicionales.
  */
 :root {
-  /* Paleta base */
+  /* Paleta de marca */
   --ca-black: #111827;
   --ca-blue: #1ca9c9;
   --ca-slate: #5c677d;
   --ca-fog: #a5b4c3;
   --ca-white: #f8fafc;
 
-  /* Roles semánticos usados en los componentes */
+  /* ------------------------------------------------------------------ */
+  /* Tema oscuro (por defecto)                                           */
+  /* ------------------------------------------------------------------ */
+
   --ca-base: var(--ca-black);
   --ca-surface: #1b2434;
-  --ca-surface-alt: #1a2433;
   --ca-line: var(--ca-slate);
   --ca-ink: var(--ca-white);
   --ca-muted: var(--ca-fog);
@@ -24,13 +31,45 @@
   --ca-signal-dark: #1791ad;
   --ca-danger: #e0656b;
 
-  /* Ionic: color primario y neutros */
+  /* Tonos auxiliares que antes estaban fijos en cada hoja de estilos */
+  --ca-fondo-fin: #1a2433;
+  --ca-velo: rgba(255, 255, 255, 0.06);
+  --ca-velo-fuerte: rgba(255, 255, 255, 0.08);
+  --ca-insignia: #0f5b6e;
+  --ca-atribucion: rgba(17, 24, 39, 0.8);
+
+  /* Ionic */
   --ion-color-primary: #1ca9c9;
   --ion-color-primary-rgb: 28, 169, 201;
   --ion-color-primary-contrast: #111827;
   --ion-color-primary-contrast-rgb: 17, 24, 39;
   --ion-color-primary-shade: #1791ad;
   --ion-color-primary-tint: #33b4d0;
+
+  /*
+   * v2-B2 · El rojo por defecto de Ionic (#eb445a) sobre las superficies
+   * oscuras queda en torno a 4,1:1, bajo el 4,5:1 que exige WCAG AA.
+   */
+  --ion-color-danger: #e0656b;
+  --ion-color-danger-rgb: 224, 101, 107;
+  --ion-color-danger-contrast: #111827;
+  --ion-color-danger-contrast-rgb: 17, 24, 39;
+  --ion-color-danger-shade: #c5595e;
+  --ion-color-danger-tint: #e3747a;
+
+  --ion-color-warning: #f0b429;
+  --ion-color-warning-rgb: 240, 180, 41;
+  --ion-color-warning-contrast: #111827;
+  --ion-color-warning-contrast-rgb: 17, 24, 39;
+  --ion-color-warning-shade: #d39e24;
+  --ion-color-warning-tint: #f2bc3e;
+
+  --ion-color-success: #3fbf8f;
+  --ion-color-success-rgb: 63, 191, 143;
+  --ion-color-success-contrast: #111827;
+  --ion-color-success-contrast-rgb: 17, 24, 39;
+  --ion-color-success-shade: #37a87e;
+  --ion-color-success-tint: #52c59a;
 
   --ion-background-color: #111827;
   --ion-background-color-rgb: 17, 24, 39;
@@ -51,4 +90,98 @@
   --ion-color-step-800: #a5b4c3;
   --ion-color-step-900: #d0d9e2;
   --ion-color-step-950: #f8fafc;
+
+  color-scheme: dark;
+}
+
+/* -------------------------------------------------------------------- */
+/* Tema claro                                                            */
+/*                                                                       */
+/* Se invierten base y tinta, y se oscurecen los acentos: el cian de     */
+/* marca sobre blanco da 2,6:1, insuficiente para texto. Como color de   */
+/* texto y bordes se usa una variante más oscura del mismo tono, que     */
+/* supera 4,5:1. El cian original se conserva como fondo de los botones, */
+/* donde el texto encima es negro y el contraste sí es suficiente.       */
+/* -------------------------------------------------------------------- */
+html.tema-claro {
+  --ca-base: var(--ca-white);
+  --ca-surface: #ffffff;
+  --ca-line: var(--ca-fog);
+  --ca-ink: var(--ca-black);
+  --ca-muted: var(--ca-slate);
+  --ca-signal: #0e7490;
+  --ca-signal-dark: #0b5f76;
+  --ca-danger: #b4232b;
+
+  --ca-fondo-fin: #e8eef4;
+  --ca-velo: rgba(17, 24, 39, 0.05);
+  --ca-velo-fuerte: rgba(17, 24, 39, 0.08);
+  --ca-insignia: #0e7490;
+  --ca-atribucion: rgba(248, 250, 252, 0.9);
+
+  --ion-color-primary: #0e7490;
+  --ion-color-primary-rgb: 14, 116, 144;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #0b5f76;
+  --ion-color-primary-tint: #26829b;
+
+  --ion-color-danger: #b4232b;
+  --ion-color-danger-rgb: 180, 35, 43;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #9e1f26;
+  --ion-color-danger-tint: #bb3940;
+
+  --ion-color-warning: #a16207;
+  --ion-color-warning-rgb: 161, 98, 7;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #8e5606;
+  --ion-color-warning-tint: #aa7220;
+
+  --ion-color-success: #15803d;
+  --ion-color-success-rgb: 21, 128, 61;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #127136;
+  --ion-color-success-tint: #2c8d50;
+
+  --ion-background-color: #f8fafc;
+  --ion-background-color-rgb: 248, 250, 252;
+  --ion-text-color: #111827;
+  --ion-text-color-rgb: 17, 24, 39;
+
+  --ion-color-step-50: #eef2f6;
+  --ion-color-step-100: #e2e8ef;
+  --ion-color-step-150: #d6dee7;
+  --ion-color-step-200: #cad3de;
+  --ion-color-step-250: #bec9d6;
+  --ion-color-step-300: #b2bfcd;
+  --ion-color-step-350: #a5b4c3;
+  --ion-color-step-400: #8c99aa;
+  --ion-color-step-500: #7a8699;
+  --ion-color-step-600: #5c677d;
+  --ion-color-step-700: #475264;
+  --ion-color-step-800: #333c4c;
+  --ion-color-step-900: #1f2735;
+  --ion-color-step-950: #111827;
+
+  color-scheme: light;
+}
+
+/* Transición suave al alternar; se desactiva para quien la prefiere reducida. */
+html.tema-transicion,
+html.tema-transicion * {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.tema-transicion,
+  html.tema-transicion * {
+    transition: none !important;
+  }
 }

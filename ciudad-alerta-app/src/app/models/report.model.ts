@@ -70,6 +70,44 @@ export interface Organismo {
   id: string;
   nombre: string;
   tipo: TipoOrganismo;
+  /** Comuna que atiende, en el caso de las municipalidades. */
+  comuna?: string | null;
+}
+
+/**
+ * Documento de la colección `organismos`.
+ *
+ * El id de cada municipalidad es `muni_` seguido del código CUT de su comuna:
+ * `muni_13101` es la Municipalidad de Santiago. Usar el código oficial como
+ * identificador hace que la asignación sea directa —de la comuna detectada al
+ * documento— sin consultas por nombre, que fallan con las variantes
+ * ortográficas.
+ */
+export interface OrganismoDoc {
+  id: string;
+  nombre: string;
+  tipo: TipoOrganismo;
+  /** Códigos CUT de las comunas que atiende. Casi siempre uno solo. */
+  comunasAtendidas: string[];
+  comuna: string | null;
+  codigoRegion: string | null;
+  region: string | null;
+  activo: boolean;
+}
+
+/**
+ * Operador que gestiona los reportes de un organismo, en `operadores/{id}`.
+ * Lo administra el portal web; la app solo lo lee para asignar reportes.
+ */
+export interface OperadorDoc {
+  id: string;
+  nombre: string;
+  /** Organismo al que pertenece. Debe existir en `organismos`. */
+  organismoId: string;
+  activo: boolean;
+  telefonoContacto?: string | null;
+  correoContacto?: string | null;
+  direccionContacto?: string | null;
 }
 
 /**
@@ -111,12 +149,20 @@ export const ETIQUETAS_ESTADO: Readonly<Record<ReportStatus, string>> = {
 };
 
 /** Color del marcador según estado, usado en el mapa de incidencias. */
+/**
+ * Colores de los marcadores.
+ *
+ * v2-B8 · `resuelto` usaba el blanco de la paleta y resultaba casi invisible
+ * sobre los tiles claros de OpenStreetMap. Se usa un verde, que además aporta
+ * el significado convencional de "resuelto"; es la única excepción deliberada
+ * a la paleta de marca, justificada por legibilidad sobre el mapa.
+ */
 export const COLORES_ESTADO: Readonly<Record<ReportStatus, string>> = {
   reportado: '#1ca9c9',
   en_revision: '#7fd3e4',
   derivado: '#a5b4c3',
   en_proceso: '#4a90a4',
-  resuelto: '#f8fafc',
+  resuelto: '#3fbf8f',
   cerrado: '#5c677d',
 };
 
@@ -140,6 +186,27 @@ export interface Report {
    */
   confirmaciones: number;
   /**
+   * Comuna donde ocurre la incidencia, detectada a partir de la ubicación.
+   * Null si no pudo determinarse (fuera de los límites cargados, o reportes
+   * creados antes de esta funcionalidad).
+   */
+  comuna?: string | null;
+  /** Región correspondiente a la comuna, cuando la fuente la informa. */
+  region?: string | null;
+  /** Cómo se obtuvo la comuna: permite auditar la calidad del dato. */
+  comunaFuente?: 'limites_oficiales' | 'nominatim' | 'no_disponible';
+  /**
+   * Nombre para mostrar del autor al momento de reportar. Es una copia: si el
+   * usuario cambia su nombre después, el reporte conserva el original, igual
+   * que ocurre con el organismo asignado.
+   */
+  autorNombre?: string;
+  /**
+   * Operador que gestiona el reporte, asignado automáticamente según el
+   * organismo. Null si ese organismo todavía no tiene un operador activo.
+   */
+  operadorId?: string | null;
+  /**
    * Organismo responsable asignado automáticamente según la categoría.
    * Opcional porque los reportes creados antes de HU-28 no lo tienen.
    */
@@ -150,7 +217,7 @@ export interface Report {
    */
   geohash: string;
   /**
-   * Vector de características de la fotografía (MobileNet, 1024 dimensiones,
+   * Vector de características de la fotografía (MobileNet, 1280 dimensiones,
    * normalizado). Permite comparar imágenes sin descargarlas. Null si el
    * reporte no trae foto o si el modelo no pudo cargarse.
    */

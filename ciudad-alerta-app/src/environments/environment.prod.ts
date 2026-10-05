@@ -5,6 +5,9 @@ export const environment = {
 
   useEmulators: false,
 
+  comunaResolver: 'limites_oficiales' as 'limites_oficiales' | 'nominatim',
+
+  nominatimEmail: '',
   firebase: {
     apiKey: "AIzaSyD2wsLMB3n7MZ7FN2J5j52QlyOvvi7zkbA",
     authDomain: "ciudadalerta.firebaseapp.com",

@@ -1,0 +1,123 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Todas las incidencias</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bandeja-content" [fullscreen]="true">
+  <div class="bandeja-shell">
+    <ion-select
+      class="filtro-comuna"
+      label="Comuna"
+      labelPlacement="stacked"
+      fill="outline"
+      interface="action-sheet"
+      cancelText="Cancelar"
+      [value]="filtros().comuna"
+      (ionChange)="cambiarComuna($event.detail.value)"
+    >
+      <ion-select-option value="todas">Todas las comunas</ion-select-option>
+      @for (comuna of comunasConocidas(); track comuna) {
+        <ion-select-option [value]="comuna">{{ comuna }}</ion-select-option>
+      }
+    </ion-select>
+
+    <div class="filtros">
+      <ion-select
+        label="Categoría"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().categoria"
+        (ionChange)="cambiarCategoria($event.detail.value)"
+      >
+        <ion-select-option value="todas">Todas</ion-select-option>
+        @for (categoria of categorias; track categoria.id) {
+          <ion-select-option [value]="categoria.id">{{ categoria.label }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        label="Estado"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="filtros().estado"
+        (ionChange)="cambiarEstado($event.detail.value)"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (item of estados; track item[0]) {
+          <ion-select-option [value]="item[0]">{{ item[1] }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+
+    @switch (estado()) {
+      @case ('cargando') {
+        <p class="estado">Cargando incidencias…</p>
+      }
+      @case ('error') {
+        <div class="bloque-estado">
+          <p class="estado">
+            No pudimos cargar las incidencias. Comprueba tu conexión y que tu cuenta tenga rol
+            de gestión.
+          </p>
+          <ion-button fill="outline" expand="block" (click)="recargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      }
+      @default {
+        @if (reportes().length === 0) {
+          <p class="estado">No hay incidencias registradas con estos filtros.</p>
+        } @else {
+          <p class="estado">
+            {{ reportes().length }}
+            {{ reportes().length === 1 ? 'incidencia' : 'incidencias' }} en pantalla
+          </p>
+
+          <ul class="listado">
+            @for (reporte of reportes(); track reporte.id) {
+              <li>
+                <button type="button" class="tarjeta" (click)="abrir(reporte.id)">
+                  <span class="tarjeta__pin" [style.background]="colores[reporte.estado]"></span>
+
+                  <span class="tarjeta__cuerpo">
+                    <span class="tarjeta__descripcion">{{ reporte.descripcion }}</span>
+                    <span class="tarjeta__meta">
+                      {{ reporte.comuna ?? 'Comuna sin identificar' }} ·
+                      {{ reporte.autorNombre ?? 'Autor no registrado' }}
+                    </span>
+                    <span class="tarjeta__meta">
+                      {{ reporte.categoria }} · {{ fecha(reporte) }}
+                      @if (reporte.organismo) {
+                        · {{ reporte.organismo.nombre }}
+                      }
+                      @if (reporte.foto) {
+                        <ion-icon name="image-outline" aria-label="Con fotografía"></ion-icon>
+                      }
+                    </span>
+                  </span>
+
+                  <ion-badge>{{ etiquetas[reporte.estado] }}</ion-badge>
+                </button>
+              </li>
+            }
+          </ul>
+
+          @if (hayMas()) {
+            <ion-button fill="outline" expand="block" (click)="cargarMas()">
+              Cargar más incidencias
+            </ion-button>
+          }
+        }
+      }
+    }
+  </div>
+</ion-content>

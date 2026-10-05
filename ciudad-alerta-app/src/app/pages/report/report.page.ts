@@ -32,6 +32,7 @@ import {
 
 import { MapViewComponent } from '../../components/map-view/map-view.component';
 import { SimilarReportsComponent } from '../../components/similar-reports/similar-reports.component';
+import { ComunaDetectada, ComunaService } from '../../services/comuna.service';
 import { DuplicateDetectionService } from '../../services/duplicate-detection.service';
 import { ImageSimilarityService } from '../../services/image-similarity.service';
 import { CameraService, CapturedPhoto, PhotoError } from '../../services/camera.service';
@@ -75,6 +76,7 @@ export class ReportPage {
   private readonly geolocationService = inject(GeolocationService);
   private readonly duplicateDetection = inject(DuplicateDetectionService);
   private readonly similarityService = inject(ImageSimilarityService);
+  private readonly comunaService = inject(ComunaService);
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
@@ -88,6 +90,10 @@ export class ReportPage {
   readonly foto = signal<CapturedPhoto | null>(null);
   readonly ubicacion = signal<GeoPoint | null>(null);
   readonly buscandoUbicacion = signal(false);
+
+  /** Comuna detectada para la ubicación actual. */
+  readonly comuna = signal<ComunaDetectada | null>(null);
+  readonly detectandoComuna = signal(false);
 
   /** Coincidencias detectadas y estado del análisis. */
   readonly coincidencias = signal<MatchCandidate[]>([]);
@@ -167,7 +173,9 @@ export class ReportPage {
       const coordenadas = await this.geolocationService.getCurrentPosition();
       this.ubicacion.set(coordenadas);
       await this.toast('Ubicación registrada.', 'success');
-      await this.detectarCoincidencias();
+
+      // Ambas consultas son independientes y corren en paralelo.
+      await Promise.all([this.detectarComuna(coordenadas), this.detectarCoincidencias()]);
     } catch (error) {
       const mensaje =
         error instanceof LocationError
@@ -214,6 +222,7 @@ export class ReportPage {
         ubicacion: coordenadas,
         foto: this.foto(),
         embedding: this.embedding,
+        comuna: this.comuna(),
       });
 
       await loading.dismiss();
@@ -227,6 +236,19 @@ export class ReportPage {
       await this.toast(mensaje, 'danger');
     } finally {
       this.enviando.set(false);
+    }
+  }
+
+  /** Detecta la comuna de la ubicación. Si falla, el reporte se envía igual. */
+  private async detectarComuna(coordenadas: GeoPoint): Promise<void> {
+    this.detectandoComuna.set(true);
+
+    try {
+      this.comuna.set(await this.comunaService.detectar(coordenadas));
+    } catch {
+      this.comuna.set(null);
+    } finally {
+      this.detectandoComuna.set(false);
     }
   }
 
@@ -298,6 +320,7 @@ export class ReportPage {
     this.ubicacion.set(null);
     this.coincidencias.set([]);
     this.embedding = null;
+    this.comuna.set(null);
   }
 
   private async toast(

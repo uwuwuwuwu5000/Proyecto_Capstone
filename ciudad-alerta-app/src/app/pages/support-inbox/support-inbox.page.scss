@@ -5,7 +5,7 @@
 }
 
 .bandeja-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
   --color: var(--ca-ink);
 }
 
@@ -148,7 +148,7 @@ ion-select {
 }
 
 ion-badge {
-  --background: rgba(255, 255, 255, 0.08);
+  --background: var(--ca-velo-fuerte);
   --color: var(--ca-muted);
   font-size: 0.68rem;
   flex-shrink: 0;

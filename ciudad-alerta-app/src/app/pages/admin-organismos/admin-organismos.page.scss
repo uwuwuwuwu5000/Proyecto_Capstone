@@ -1,0 +1,124 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.organismos-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
+  --color: var(--ca-ink);
+}
+
+.organismos-shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.resumen {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  background: var(--ca-surface);
+
+  ion-icon {
+    font-size: 1.8rem;
+    color: var(--ca-signal);
+    flex-shrink: 0;
+  }
+}
+
+.resumen__cifra {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  span {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--ca-muted);
+  }
+}
+
+.resumen__texto {
+  margin: 0.3rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.accion-principal {
+  --background: var(--ca-signal);
+  --background-activated: var(--ca-signal-dark);
+  --color: var(--ca-base);
+  --border-radius: 10px;
+  --box-shadow: none;
+  font-weight: 600;
+  text-transform: none;
+  margin: 0;
+}
+
+ion-progress-bar {
+  --progress-background: var(--ca-signal);
+  border-radius: 4px;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.consulta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+ion-select {
+  --background: var(--ca-surface);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+}
+
+.listado {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ca-velo-fuerte);
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--ca-velo);
+  }
+}
+
+.listado__nombre {
+  font-size: 0.88rem;
+}
+
+.listado__codigo {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}

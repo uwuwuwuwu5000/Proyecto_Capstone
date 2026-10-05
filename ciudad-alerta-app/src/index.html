@@ -7,13 +7,11 @@
     <base href="/" />
 
     <!--
-      BUG 46 · Se elimina user-scalable=no: impedir el zoom incumple la pauta
-      WCAG 1.4.4, que exige poder ampliar el contenido hasta el 200%.
+      BUG 46 y v2-B5 · Sin user-scalable, sin minimum-scale y sin maximum-scale.
+      Cualquiera de los tres limita el zoom e incumple la pauta WCAG 1.4.4, que
+      exige poder ampliar el contenido hasta el 200%.
     -->
-    <meta
-      name="viewport"
-      content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0"
-    />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-tap-highlight" content="no" />
     <meta
@@ -22,13 +20,41 @@
     />
     <meta name="theme-color" content="#111827" />
 
+    <!--
+      Aplica el tema guardado antes de que arranque Angular. Sin esto, quien
+      eligió el tema claro vería un destello del oscuro mientras la aplicación
+      carga, porque ThemeService solo existe una vez iniciado el framework.
+      Replica la lógica de leerPreferencia() en theme.service.ts.
+    -->
+    <script>
+      (function () {
+        var tema;
+        try {
+          tema = localStorage.getItem('ciudad-alerta.tema');
+        } catch (e) {}
+        if (tema !== 'claro' && tema !== 'oscuro') {
+          tema =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'claro'
+              : 'oscuro';
+        }
+        if (tema === 'claro') {
+          document.documentElement.classList.add('tema-claro');
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', '#f8fafc');
+        }
+      })();
+    </script>
+
     <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
 
-    <!-- Progressive Web App -->
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="Ciudad Alerta" />
+    <!--
+      v2-B6 · Se retiran las metas de aplicación web progresiva. Prometían una
+      instalación que el navegador no puede completar: no hay manifest, ni
+      service worker, ni iconos enlazados. La distribución móvil del proyecto es
+      el APK generado con Capacitor; convertir el portal en PWA queda declarado
+      como evolución futura y exigiría añadir @angular/pwa.
+    -->
   </head>
 
   <body>

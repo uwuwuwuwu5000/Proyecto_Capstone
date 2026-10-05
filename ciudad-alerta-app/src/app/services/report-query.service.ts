@@ -33,6 +33,13 @@ export interface FiltrosMapa {
   estado: ReportStatus | 'todos';
 }
 
+export interface FiltrosBandejaReportes {
+  categoria: ReportCategory | 'todas';
+  estado: ReportStatus | 'todos';
+  /** Comuna exacta, tal como quedó normalizada al detectarla. */
+  comuna: string | 'todas';
+}
+
 export interface PaginaReportes {
   reportes: Report[];
   /** Cursor para pedir la siguiente página. Null si no hay más. */
@@ -100,6 +107,63 @@ export class ReportQueryService {
       .sort((a, b) => a.distanciaMetros - b.distanciaMetros);
   }
 
+  /**
+   * Todos los reportes del sistema, ordenados por fecha de creación.
+   *
+   * A diferencia de `findNearby`, no depende de la ubicación del usuario ni del
+   * geohash: la bandeja de gestión necesita ver la totalidad de las incidencias,
+   * incluidas las de sectores donde el funcionario no se encuentra. Las reglas
+   * solo permiten leer reportes a usuarios autenticados, y la pantalla que la
+   * consume está restringida a roles de gestión.
+   */
+  async todosLosReportes(
+    filtros: FiltrosBandejaReportes = { categoria: 'todas', estado: 'todos', comuna: 'todas' },
+    tamanoPagina = 20,
+    cursor: QueryDocumentSnapshot | null = null,
+  ): Promise<PaginaReportes> {
+    /**
+     * Una sola igualdad viaja en la consulta, para no necesitar un índice por
+     * cada combinación de filtros; el resto se aplica sobre el resultado. La
+     * comuna tiene prioridad porque es el filtro más selectivo para un
+     * organismo, que trabaja sobre su área de responsabilidad.
+     */
+    const campoServidor: 'comuna' | 'categoria' | 'estado' | null =
+      filtros.comuna !== 'todas'
+        ? 'comuna'
+        : filtros.categoria !== 'todas'
+          ? 'categoria'
+          : filtros.estado !== 'todos'
+            ? 'estado'
+            : null;
+
+    const restricciones = [
+      ...(campoServidor ? [where(campoServidor, '==', filtros[campoServidor])] : []),
+      orderBy('createdAt', 'desc'),
+      ...(cursor ? [startAfter(cursor)] : []),
+      limit(tamanoPagina + 1),
+    ];
+
+    const snapshot = await getDocs(
+      query(collection(this.firestore, 'reports'), ...restricciones),
+    );
+
+    const hayMas = snapshot.docs.length > tamanoPagina;
+    const documentos = hayMas ? snapshot.docs.slice(0, tamanoPagina) : snapshot.docs;
+
+    const reportes = documentos
+      .map((d) => ({ id: d.id, ...d.data() }) as Report)
+      .filter(
+        (reporte) =>
+          (filtros.categoria === 'todas' || reporte.categoria === filtros.categoria) &&
+          (filtros.estado === 'todos' || reporte.estado === filtros.estado),
+      );
+
+    return {
+      reportes,
+      cursor: hayMas ? documentos[documentos.length - 1] : null,
+    };
+  }
+
   /** HU-26 · Un reporte por id. Devuelve null si no existe. */
   async getById(reportId: string): Promise<Report | null> {
     const snapshot: DocumentSnapshot = await getDoc(
@@ -125,23 +189,28 @@ export class ReportQueryService {
       return { reportes: [], cursor: null };
     }
 
+    /**
+     * v2-E1 · Se pide un documento de más como centinela. Antes, una página
+     * exactamente llena dejaba el cursor activo aunque no quedara nada después,
+     * y la pantalla ofrecía "ver anteriores" para devolver una lista vacía.
+     */
     const restricciones = [
       where('uid', '==', usuario.uid),
       orderBy('createdAt', 'desc'),
       ...(cursor ? [startAfter(cursor)] : []),
-      limit(tamanoPagina),
+      limit(tamanoPagina + 1),
     ];
 
     const snapshot = await getDocs(
       query(collection(this.firestore, 'reports'), ...restricciones),
     );
 
+    const hayMas = snapshot.docs.length > tamanoPagina;
+    const documentos = hayMas ? snapshot.docs.slice(0, tamanoPagina) : snapshot.docs;
+
     return {
-      reportes: snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report),
-      cursor:
-        snapshot.docs.length === tamanoPagina
-          ? snapshot.docs[snapshot.docs.length - 1]
-          : null,
+      reportes: documentos.map((d) => ({ id: d.id, ...d.data() }) as Report),
+      cursor: hayMas ? documentos[documentos.length - 1] : null,
     };
   }
 

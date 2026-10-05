@@ -1,5 +1,9 @@
 <ion-content class="auth-content" [fullscreen]="true">
   <div class="auth-shell">
+    <div class="auth-tema">
+      <app-theme-toggle></app-theme-toggle>
+    </div>
+
     <header class="marca">
       <span class="marca__pin" aria-hidden="true"></span>
       <h1 class="marca__nombre">Ciudad Alerta</h1>
@@ -8,6 +12,7 @@
 
     <ion-segment
       class="selector"
+      aria-label="Iniciar sesión o crear cuenta"
       [value]="modo()"
       (ionChange)="cambiarModo($event.detail.value)"
     >

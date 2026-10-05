@@ -66,9 +66,19 @@
   color: var(--ca-muted);
 }
 
+/* v2-B3 · El cian sobre fondo translúcido quedaba en 4,2:1, bajo el mínimo AA.
+   Con fondo sólido oscuro y texto claro el ratio supera 7:1. */
 ion-badge {
-  --background: rgba(28, 169, 201, 0.18);
-  --color: var(--ca-signal);
+  --background: var(--ca-insignia);
+  --color: var(--ca-white);
+  font-variant-numeric: tabular-nums;
+}
+
+.candidato__distancia {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ca-signal);
   font-variant-numeric: tabular-nums;
 }
 
@@ -81,6 +91,7 @@ ion-badge {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .candidato__motivos {
@@ -107,4 +118,16 @@ ion-button {
   --border-radius: 8px;
   text-transform: none;
   margin: 0;
+
+  /* v2-C4 · Retroalimentación táctil en la WebView. */
+  &:active {
+    opacity: 0.85;
+    transform: translateY(1px);
+  }
+}
+
+ion-spinner {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.35rem;
 }

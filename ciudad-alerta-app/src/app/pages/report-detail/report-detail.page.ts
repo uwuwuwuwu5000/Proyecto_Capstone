@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
-import { Location } from '@angular/common';
 import {
   AlertController,
   IonBackButton,
@@ -80,8 +79,15 @@ export class ReportDetailPage {
 
   /** null significa "no se pudo contar", distinto de cero confirmaciones. */
   readonly confirmaciones = signal<number | null>(null);
-  /** null = no se pudo comprobar si este usuario ya confirmó. */
-  readonly yaConfirmo = signal<boolean | null>(false);
+  /**
+   * v2-D6 · Estado explícito en vez de un booleano con null. Antes, mientras se
+   * resolvía la consulta el template no podía distinguir "cargando" de "no ha
+   * confirmado", y quien ya había confirmado veía aparecer y desaparecer el
+   * botón de confirmar.
+   */
+  readonly estadoConfirmacion = signal<
+    'cargando' | 'disponible' | 'confirmado' | 'error'
+  >('cargando');
   readonly confirmando = signal(false);
 
   /** null = el historial no se pudo leer, distinto de no tener movimientos. */
@@ -124,6 +130,11 @@ export class ReportDetailPage {
     return this.queryService.formatearFecha(reporte.createdAt);
   }
 
+  /** Fecha de un movimiento del historial. */
+  fechaCambio(cambio: StatusChange): string {
+    return this.queryService.formatearFecha(cambio.createdAt as Report['createdAt']);
+  }
+
   /** La fotografía se descarga solo cuando el usuario la pide (HU-26). */
   async verFotografia(): Promise<void> {
     const reporte = this.reporte();
@@ -155,12 +166,27 @@ export class ReportDetailPage {
 
     try {
       await this.confirmationService.confirm(reporte.id);
-      this.yaConfirmo.set(true);
-      this.confirmaciones.update((total) => (total === null ? null : total + 1));
+      this.estadoConfirmacion.set('confirmado');
+
+      /**
+       * v2-D7 · Si el conteo previo había fallado, sumar uno a null dejaba el
+       * dato como "no disponible" pese a existir ya una confirmación. Se vuelve
+       * a consultar el total.
+       */
+      const actual = this.confirmaciones();
+
+      if (actual === null) {
+        this.confirmaciones.set(
+          await this.confirmationService.countConfirmations(reporte.id),
+        );
+      } else {
+        this.confirmaciones.set(actual + 1);
+      }
+
       await this.toast('Confirmación registrada. Gracias por validar.', 'success');
     } catch (error) {
       if (error instanceof ConfirmationError && error.code === 'duplicada') {
-        this.yaConfirmo.set(true);
+        this.estadoConfirmacion.set('confirmado');
       }
 
       const mensaje =
@@ -263,12 +289,22 @@ export class ReportDetailPage {
 
     void this.confirmationService
       .hasConfirmed(reporte.id)
-      .then((confirmado) => this.yaConfirmo.set(confirmado))
-      .catch(() => this.yaConfirmo.set(null));
+      .then((confirmado) => {
+        if (confirmado === null) {
+          this.estadoConfirmacion.set('error');
+          return;
+        }
+
+        this.estadoConfirmacion.set(confirmado ? 'confirmado' : 'disponible');
+      })
+      .catch(() => this.estadoConfirmacion.set('error'));
 
     void this.routingService
       .getStatusHistory(reporte.id)
-      .then((historial) => this.historial.set(historial))
+      .then((historial) =>
+        // v2-D8 · Se invierte para mostrar el movimiento más reciente arriba.
+        this.historial.set(historial === null ? null : [...historial].reverse()),
+      )
       .catch(() => this.historial.set(null));
 
     const usuario = this.authService.user;
@@ -291,7 +327,7 @@ export class ReportDetailPage {
     this.fotoError.set(false);
     this.cargandoFoto.set(false);
     this.confirmaciones.set(null);
-    this.yaConfirmo.set(false);
+    this.estadoConfirmacion.set('cargando');
     this.historial.set([]);
     this.puedeGestionar.set(false);
   }

@@ -5,7 +5,7 @@
 }
 
 .detalle-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
   --color: var(--ca-ink);
 }
 
@@ -39,7 +39,7 @@
 }
 
 ion-badge {
-  --background: rgba(255, 255, 255, 0.08);
+  --background: var(--ca-velo-fuerte);
   --color: var(--ca-ink);
 }
 
@@ -47,11 +47,13 @@ ion-badge {
   margin: 0;
   font-size: 1rem;
   line-height: 1.55;
+  /* v2-C5 · Evita que una URL larga desborde el ancho en pantallas pequeñas. */
+  overflow-wrap: anywhere;
 }
 
 .datos {
   margin: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--ca-velo-fuerte);
 }
 
 .datos__fila {
@@ -59,7 +61,7 @@ ion-badge {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.65rem 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--ca-velo);
 
   dt {
     display: flex;
@@ -142,7 +144,12 @@ ion-badge {
     display: block;
     color: var(--ca-muted);
     font-size: 0.82rem;
+    overflow-wrap: anywhere;
   }
+}
+
+.historial__fecha {
+  font-variant-numeric: tabular-nums;
 }
 
 .gestion__acciones {

@@ -1,7 +1,7 @@
 <ion-header class="cabecera" [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/map" text=""></ion-back-button>
+      <ion-back-button defaultHref="/map" text="" aria-label="Volver"></ion-back-button>
     </ion-buttons>
     <ion-title>Detalle de la incidencia</ion-title>
   </ion-toolbar>
@@ -32,6 +32,16 @@
           <dt>Categoría</dt>
           <dd>{{ item.categoria }}</dd>
         </div>
+        <div class="datos__fila">
+          <dt>Comuna</dt>
+          <dd>{{ item.comuna ?? 'Sin identificar' }}</dd>
+        </div>
+        @if (puedeGestionar()) {
+          <div class="datos__fila">
+            <dt>Reportado por</dt>
+            <dd>{{ item.autorNombre ?? 'No registrado' }}</dd>
+          </div>
+        }
         <div class="datos__fila">
           <dt><ion-icon name="business-outline" aria-hidden="true"></ion-icon> Responsable</dt>
           <dd>{{ item.organismo?.nombre ?? 'Sin asignar' }}</dd>
@@ -87,24 +97,33 @@
       <section class="bloque">
         @if (esAutor()) {
           <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
-        } @else if (yaConfirmo() === null) {
-          <p class="estado">
-            No pudimos comprobar si ya confirmaste esta incidencia. Revisa tu conexión.
-          </p>
-        } @else if (yaConfirmo()) {
-          <p class="confirmado">
-            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-            Ya confirmaste esta incidencia
-          </p>
         } @else {
-          <ion-button
-            class="accion-principal"
-            expand="block"
-            [disabled]="confirmando()"
-            (click)="confirmar()"
-          >
-            {{ confirmando() ? 'Registrando…' : 'Confirmar que existe' }}
-          </ion-button>
+          @switch (estadoConfirmacion()) {
+            @case ('cargando') {
+              <p class="estado">Comprobando tu participación…</p>
+            }
+            @case ('error') {
+              <p class="estado">
+                No pudimos comprobar si ya confirmaste esta incidencia. Revisa tu conexión.
+              </p>
+            }
+            @case ('confirmado') {
+              <p class="confirmado">
+                <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                Ya confirmaste esta incidencia
+              </p>
+            }
+            @case ('disponible') {
+              <ion-button
+                class="accion-principal"
+                expand="block"
+                [disabled]="confirmando()"
+                (click)="confirmar()"
+              >
+                {{ confirmando() ? 'Registrando…' : 'Confirmar que existe' }}
+              </ion-button>
+            }
+          }
         }
       </section>
 
@@ -113,19 +132,27 @@
           <h2>Seguimiento</h2>
           <p class="estado">No pudimos cargar el seguimiento de esta incidencia.</p>
         </section>
-      } @else if (historial()!.length > 0) {
+      } @else {
         <section class="bloque">
           <h2>Seguimiento</h2>
-          <ol class="historial">
-            @for (cambio of historial()!; track $index) {
-              <li>
-                <strong>{{ etiquetas[cambio.hacia] }}</strong>
-                @if (cambio.comentario) {
-                  <span>{{ cambio.comentario }}</span>
-                }
-              </li>
-            }
-          </ol>
+
+          @if (historial()!.length === 0) {
+            <p class="estado">
+              Sin movimientos registrados todavía. Los cambios de estado aparecerán aquí.
+            </p>
+          } @else {
+            <ol class="historial">
+              @for (cambio of historial()!; track $index) {
+                <li>
+                  <strong>{{ etiquetas[cambio.hacia] }}</strong>
+                  <span class="historial__fecha">{{ fechaCambio(cambio) }}</span>
+                  @if (cambio.comentario) {
+                    <span>{{ cambio.comentario }}</span>
+                  }
+                </li>
+              }
+            </ol>
+          }
         </section>
       }
 

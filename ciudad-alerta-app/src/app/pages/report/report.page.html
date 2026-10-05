@@ -69,6 +69,18 @@
           <span>· precisión aproximada de {{ coords.accuracy }} m</span>
         </p>
 
+        <p class="comuna-detectada">
+          @if (detectandoComuna()) {
+            Identificando la comuna…
+          } @else if (comuna()?.comuna) {
+            Comuna: <strong>{{ comuna()!.comuna }}</strong>
+          } @else {
+            <span class="comuna-detectada__aviso">
+              No pudimos identificar la comuna. El reporte se enviará igual.
+            </span>
+          }
+        </p>
+
         <ion-button fill="clear" size="small" type="button" (click)="obtenerUbicacion()">
           <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
           Actualizar ubicación

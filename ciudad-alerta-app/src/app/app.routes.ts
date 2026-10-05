@@ -68,6 +68,22 @@ export const routes: Routes = [
       import('./pages/support-new/support-new.page').then((m) => m.SupportNewPage),
   },
   {
+    // Bandeja de gestión de incidencias. Solo roles operador y admin.
+    path: 'admin-reports',
+    canActivate: [staffGuard],
+    loadComponent: () =>
+      import('./pages/admin-reports/admin-reports.page').then((m) => m.AdminReportsPage),
+  },
+  {
+    // Catálogo de municipalidades. Visible para gestión; la carga, solo admin.
+    path: 'admin-organismos',
+    canActivate: [staffGuard],
+    loadComponent: () =>
+      import('./pages/admin-organismos/admin-organismos.page').then(
+        (m) => m.AdminOrganismosPage,
+      ),
+  },
+  {
     // Bandeja del equipo de soporte. Solo roles operador y admin.
     path: 'support-inbox',
     canActivate: [staffGuard],

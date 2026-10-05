@@ -5,7 +5,7 @@
 }
 
 .nuevo-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
   --color: var(--ca-ink);
 }
 
@@ -39,7 +39,7 @@
 }
 
 .selector-tipo {
-  --background: rgba(255, 255, 255, 0.06);
+  --background: var(--ca-velo);
   --color: var(--ca-muted);
   --color-checked: var(--ca-base);
   --indicator-color: var(--ca-signal);

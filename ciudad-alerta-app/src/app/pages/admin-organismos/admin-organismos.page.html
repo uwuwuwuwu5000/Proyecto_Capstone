@@ -1,0 +1,88 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Municipalidades</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="organismos-content" [fullscreen]="true">
+  <div class="organismos-shell">
+    <section class="resumen">
+      <ion-icon name="business-outline" aria-hidden="true"></ion-icon>
+      <div>
+        <p class="resumen__cifra">
+          @if (cargadas() === null) {
+            —
+          } @else {
+            {{ cargadas() }} <span>de {{ totalEsperado }}</span>
+          }
+        </p>
+        <p class="resumen__texto">
+          @if (completo()) {
+            Catálogo completo. Los reportes municipales se asignan a la municipalidad de su
+            comuna.
+          } @else {
+            Mientras el catálogo no esté completo, los reportes de comunas sin municipalidad
+            cargada se asignan al organismo genérico de su categoría.
+          }
+        </p>
+      </div>
+    </section>
+
+    @if (esAdmin()) {
+      <ion-button
+        class="accion-principal"
+        expand="block"
+        [disabled]="sincronizando()"
+        (click)="confirmarSincronizacion()"
+      >
+        <ion-icon slot="start" name="cloud-upload-outline" aria-hidden="true"></ion-icon>
+        {{ sincronizando() ? 'Cargando…' : (completo() ? 'Volver a sincronizar' : 'Cargar municipalidades') }}
+      </ion-button>
+
+      @if (sincronizando()) {
+        <ion-progress-bar [value]="progreso()"></ion-progress-bar>
+      }
+    } @else {
+      <p class="nota">La carga del catálogo está reservada al rol administrador.</p>
+    }
+
+    <section class="consulta">
+      <h2>Consultar por región</h2>
+
+      <ion-select
+        label="Región"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        placeholder="Elige una región"
+        [value]="regionElegida()"
+        (ionChange)="elegirRegion($event.detail.value)"
+      >
+        @for (region of regiones(); track region.codigo) {
+          <ion-select-option [value]="region.codigo">{{ region.nombre }}</ion-select-option>
+        }
+      </ion-select>
+
+      @if (cargandoLista()) {
+        <p class="nota">Cargando…</p>
+      } @else if (regionElegida() && municipalidades().length === 0) {
+        <p class="nota">
+          No hay municipalidades de esta región en la base de datos. Carga el catálogo primero.
+        </p>
+      } @else if (municipalidades().length > 0) {
+        <ul class="listado">
+          @for (muni of municipalidades(); track muni.id) {
+            <li>
+              <span class="listado__nombre">{{ muni.nombre }}</span>
+              <span class="listado__codigo">{{ muni.comunasAtendidas.join(', ') }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+</ion-content>

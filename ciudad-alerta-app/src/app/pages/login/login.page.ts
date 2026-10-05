@@ -25,6 +25,7 @@ import { addIcons } from 'ionicons';
 import { alertCircleOutline, mailOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
+import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
 
 type Modo = 'login' | 'registro';
 
@@ -42,6 +43,7 @@ function passwordsIguales(group: AbstractControl): ValidationErrors | null {
   styleUrls: ['./login.page.scss'],
   imports: [
     ReactiveFormsModule,
+    ThemeToggleComponent,
     IonContent,
     IonSegment,
     IonSegmentButton,

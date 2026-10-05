@@ -15,6 +15,7 @@ import { geohashForLocation } from 'geofire-common';
 import { FIRESTORE } from '../core/firebase.providers';
 import { AuthService } from './auth.service';
 import { CapturedPhoto } from './camera.service';
+import { ComunaDetectada, ComunaService } from './comuna.service';
 import { ImageSimilarityService } from './image-similarity.service';
 import { RoutingService } from './routing.service';
 import { PHOTO_STORAGE } from './photo-storage.service';
@@ -37,6 +38,11 @@ export interface NuevoReporte {
    * viene, el servicio lo calcula antes de guardar para no perder la señal.
    */
   embedding?: number[] | null;
+  /**
+   * Comuna ya detectada al registrar la ubicación. Si no viene, el servicio la
+   * detecta antes de guardar.
+   */
+  comuna?: ComunaDetectada | null;
 }
 
 export class ReportError extends Error {
@@ -53,6 +59,7 @@ export class ReportService {
   private readonly photoStorage = inject(PHOTO_STORAGE);
   private readonly similarityService = inject(ImageSimilarityService);
   private readonly routingService = inject(RoutingService);
+  private readonly comunaService = inject(ComunaService);
 
   /**
    * Crea el reporte junto con su evidencia fotográfica.
@@ -71,7 +78,30 @@ export class ReportService {
     const descripcion = datos.descripcion.trim();
     this.validarDescripcion(descripcion);
     this.validarUbicacion(datos.ubicacion);
-    await this.validarFrecuencia(usuario.uid);
+
+    // El perfil se lee una sola vez: aporta el control de frecuencia y el
+    // nombre del autor.
+    const perfil = await this.authService.getUserProfile(usuario.uid).catch(() => null);
+    this.validarFrecuencia(perfil?.ultimoReporteAt);
+
+    /**
+     * El nombre sale del perfil en Firestore, no de Authentication: las reglas
+     * comparan contra ese mismo campo, y así nadie puede firmar un reporte con
+     * un nombre que no es el suyo.
+     */
+    const autorNombre = (
+      perfil?.displayName ||
+      usuario.displayName ||
+      usuario.email?.split('@')[0] ||
+      'Vecino'
+    ).slice(0, 60);
+
+    const comuna = datos.comuna ?? (await this.comunaService.detectar(datos.ubicacion));
+
+    // 1. Organismo: la municipalidad de la comuna donde se hizo el reporte.
+    // 2. Operador: el operador activo de ese organismo, si existe.
+    const organismo = await this.routingService.resolveOrganismo(datos.categoria, comuna);
+    const operadorId = await this.routingService.resolveOperador(organismo.id);
 
     const referencia = doc(collection(this.firestore, 'reports'));
     const reportId = referencia.id;
@@ -94,13 +124,18 @@ export class ReportService {
       descripcion,
       categoria: datos.categoria,
       ubicacion: datos.ubicacion,
+      comuna: comuna.comuna,
+      region: comuna.region,
+      comunaFuente: comuna.fuente,
+      autorNombre,
       // La referencia se añade en la rama correspondiente, según si la
       // fotografía viaja en el mismo lote o se sube por separado.
       foto: null,
       estado: 'reportado',
       confirmaciones: 0,
-      // HU-28 · Enrutamiento automático según la categoría del reporte.
-      organismo: this.routingService.resolveOrganismo(datos.categoria),
+      // HU-28 · Enrutamiento automático según la comuna.
+      organismo,
+      operadorId,
       // Permite consultar reportes cercanos sin soporte geoespacial nativo.
       geohash: geohashForLocation([datos.ubicacion.lat, datos.ubicacion.lng]),
       embedding,
@@ -181,10 +216,7 @@ export class ReportService {
    * `ultimoReporteAt`. La protección real contra clientes falsos es App Check,
    * que se habilita en la consola y sí funciona en el plan actual.
    */
-  private async validarFrecuencia(uid: string): Promise<void> {
-    const perfil = await this.authService.getUserProfile(uid).catch(() => null);
-    const ultimo = perfil?.ultimoReporteAt;
-
+  private validarFrecuencia(ultimo: unknown): void {
     if (!(ultimo instanceof Timestamp)) {
       return;
     }
@@ -239,6 +271,11 @@ export class ReportService {
   }
 
   private mensajeDeEscritura(error: unknown): string {
+    // El mensaje para el usuario es genérico; el código exacto queda en la
+    // consola para poder diagnosticar con chrome://inspect sin adivinar qué
+    // condición de las reglas falló.
+    console.error('Error al guardar el reporte:', error);
+
     if (error instanceof FirebaseError) {
       // BUG 63 · `permission-denied` no significa que falten campos: significa
       // que las reglas rechazaron la escritura.

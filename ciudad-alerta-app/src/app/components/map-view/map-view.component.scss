@@ -88,12 +88,53 @@
 }
 
 :host ::ng-deep .leaflet-container {
-  background: #1a2433;
+  background: var(--ca-fondo-fin);
   font-family: inherit;
 }
 
+:host ::ng-deep .popup-ciudad-alerta .leaflet-popup-content-wrapper,
+:host ::ng-deep .popup-ciudad-alerta .leaflet-popup-tip {
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  border: 1px solid var(--ca-line);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+:host ::ng-deep .popup-ciudad-alerta .leaflet-popup-content {
+  margin: 0.7rem 0.85rem;
+  min-width: 180px;
+}
+
+:host ::ng-deep .popup-ciudad-alerta__titulo {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--ca-ink);
+}
+
+:host ::ng-deep .popup-ciudad-alerta__accion {
+  width: 100%;
+  padding: 0.4rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.85;
+    transform: translateY(1px);
+  }
+}
+
+:host ::ng-deep .popup-ciudad-alerta .leaflet-popup-close-button {
+  color: var(--ca-muted);
+}
+
 :host ::ng-deep .leaflet-control-attribution {
-  background: rgba(15, 29, 40, 0.8);
+  background: var(--ca-atribucion);
   color: #a5b4c3;
   font-size: 0.68rem;
 

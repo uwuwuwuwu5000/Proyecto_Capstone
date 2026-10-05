@@ -5,7 +5,7 @@
 }
 
 .reporte-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
   --color: var(--ca-ink);
 }
 
@@ -87,6 +87,20 @@
     text-transform: none;
     margin: 0;
   }
+}
+
+.comuna-detectada {
+  margin: -0.4rem 0 0;
+  font-size: 0.86rem;
+  color: var(--ca-muted);
+
+  strong {
+    color: var(--ca-ink);
+  }
+}
+
+.comuna-detectada__aviso {
+  font-size: 0.82rem;
 }
 
 .coordenadas {

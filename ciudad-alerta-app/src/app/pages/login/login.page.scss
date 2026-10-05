@@ -10,7 +10,7 @@
 }
 
 .auth-content {
-  --background: linear-gradient(180deg, var(--ca-base) 0%, #1a2433 100%);
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
   --color: var(--ca-ink);
 }
 
@@ -22,6 +22,12 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.auth-tema {
+  display: flex;
+  justify-content: flex-end;
+  margin: -1.5rem -0.5rem -1rem 0;
 }
 
 .marca {
@@ -56,7 +62,7 @@
 }
 
 .selector {
-  --background: rgba(255, 255, 255, 0.06);
+  --background: var(--ca-velo);
   --color: var(--ca-muted);
   --color-checked: var(--ca-base);
   --indicator-color: var(--ca-signal);
@@ -129,7 +135,7 @@ ion-note {
   gap: 0.55rem;
   margin: auto 0 0;
   padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--ca-velo-fuerte);
   font-size: 0.82rem;
   line-height: 1.5;
   color: var(--ca-muted);
