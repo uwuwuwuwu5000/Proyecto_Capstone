@@ -16,6 +16,8 @@ export interface UserProfile {
   trustLevel: number;
   validatedReports: number;
   emailVerified: boolean;
+  /** En cuentas de rol `operador`, el operador que representan. */
+  operadorId?: string | null;
   /**
    * Momento del último reporte creado. Sostiene el intervalo mínimo entre
    * envíos (BUG 60). Ausente en los perfiles creados antes de esta versión.

@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
     </ion-buttons>
-    <ion-title>Todas las incidencias</ion-title>
+    <ion-title>{{ operadorId() ? 'Reportes asignados' : 'Todas las incidencias' }}</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -75,7 +75,13 @@
       }
       @default {
         @if (reportes().length === 0) {
-          <p class="estado">No hay incidencias registradas con estos filtros.</p>
+          <p class="estado">
+            {{
+              operadorId()
+                ? 'No tienes reportes asignados con estos filtros.'
+                : 'No hay incidencias registradas con estos filtros.'
+            }}
+          </p>
         } @else {
           <p class="estado">
             {{ reportes().length }}

@@ -13,13 +13,62 @@
     <section class="bloque">
       <h2 class="bloque__titulo">Evidencia</h2>
       <p class="bloque__ayuda">
-        Una fotografía del problema ayuda a que tus vecinos puedan confirmarlo.
+        Una fotografía del problema ayuda a que tus vecinos puedan confirmarlo. Antes de
+        publicarla, difuminamos los rostros de las personas que aparezcan.
       </p>
 
-      @if (foto(); as imagen) {
+      @if (protegiendo()) {
+        <div class="privacidad privacidad--proceso" role="status">
+          <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+          <span>Protegiendo la privacidad de las personas en la foto…</span>
+        </div>
+      } @else if (fotoSinProteger(); as pendiente) {
+        <div class="privacidad privacidad--error" role="alert">
+          <ion-icon name="shield-outline" aria-hidden="true"></ion-icon>
+          <span>
+            No pudimos difuminar los rostros de esta foto, así que no se publicará. Reintenta con
+            conexión o quítala para enviar el reporte sin foto.
+          </span>
+        </div>
+
+        @if (errorTecnico(); as detalle) {
+          <details class="detalle-tecnico">
+            <summary>Detalle técnico</summary>
+            <code>{{ detalle }}</code>
+          </details>
+        }
+
+        <div class="acciones-foto">
+          <ion-button fill="outline" size="small" type="button" (click)="reintentarProteccion()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+          <ion-button
+            fill="clear"
+            size="small"
+            color="danger"
+            type="button"
+            (click)="descartarFotoSinProteger()"
+          >
+            <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+            Quitar
+          </ion-button>
+        </div>
+      } @else if (foto(); as imagen) {
         <figure class="preview">
-          <img [src]="imagen.dataUrl" alt="Fotografía del problema reportado" />
+          <img [src]="imagen.dataUrl" alt="Fotografía del problema reportado, con rostros difuminados" />
           <figcaption>
+            @if (imagen.privacidad; as privacidad) {
+              <span class="preview__privacidad">
+                <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+                @if (privacidad.rostros + privacidad.personas === 0) {
+                  Sin personas detectadas
+                } @else {
+                  {{ privacidad.rostros + privacidad.personas }}
+                  {{ privacidad.rostros + privacidad.personas === 1 ? 'persona difuminada' : 'personas difuminadas' }}
+                }
+              </span>
+            }
             {{ imagen.width }}×{{ imagen.height }} px ·
             {{ (imagen.sizeBytes / 1024).toFixed(0) }} KB
           </figcaption>

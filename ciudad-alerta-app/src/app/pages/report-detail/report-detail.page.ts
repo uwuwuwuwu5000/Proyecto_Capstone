@@ -92,7 +92,20 @@ export class ReportDetailPage {
 
   /** null = el historial no se pudo leer, distinto de no tener movimientos. */
   readonly historial = signal<StatusChange[] | null>([]);
+
+  /** Rol de gestión del usuario, sea o no el responsable de este reporte. */
+  readonly esGestor = signal(false);
+
+  /**
+   * Si puede cambiar el estado de este reporte en particular.
+   *
+   * Replica la regla `puedeGestionarReporte`: un admin gestiona cualquier
+   * reporte; un operador, solo los que tienen asignado su `operadorId`. Antes
+   * se mostraban los botones a cualquier operador en cualquier reporte, y el
+   * cambio fallaba con "sin permisos".
+   */
   readonly puedeGestionar = signal(false);
+  readonly motivoSinGestion = signal<string | null>(null);
 
   readonly esAutor = computed(
     () => this.reporte()?.uid === this.authService.user?.uid,
@@ -242,6 +255,9 @@ export class ReportDetailPage {
     try {
       await this.routingService.changeStatus(reporte, nuevoEstado, comentario);
       this.reporte.set({ ...reporte, estado: nuevoEstado });
+
+      const historial = await this.routingService.getStatusHistory(reporte.id);
+      this.historial.set(historial === null ? null : [...historial].reverse());
       this.historial.set(await this.routingService.getStatusHistory(reporte.id));
       await this.toast('Estado actualizado.', 'success');
     } catch (error) {
@@ -312,11 +328,39 @@ export class ReportDetailPage {
     if (usuario) {
       void this.authService
         .getUserProfile(usuario.uid)
-        .then((perfil) =>
-          this.puedeGestionar.set(perfil?.role === 'operador' || perfil?.role === 'admin'),
-        )
+        .then((perfil) => this.evaluarGestion(reporte, perfil))
         .catch(() => this.puedeGestionar.set(false));
     }
+  }
+
+  private evaluarGestion(
+    reporte: Report,
+    perfil: { role?: string; operadorId?: string | null } | null,
+  ): void {
+    const rol = perfil?.role;
+    this.esGestor.set(rol === 'admin' || rol === 'operador');
+
+    if (rol === 'admin') {
+      this.puedeGestionar.set(true);
+      this.motivoSinGestion.set(null);
+      return;
+    }
+
+    if (rol === 'operador') {
+      const esSuyo = !!perfil?.operadorId && reporte.operadorId === perfil.operadorId;
+      this.puedeGestionar.set(esSuyo);
+      this.motivoSinGestion.set(
+        esSuyo
+          ? null
+          : reporte.operadorId
+            ? 'Este reporte está asignado a otro operador. Solo él o un administrador pueden cambiar su estado.'
+            : 'Este reporte no tiene operador asignado. Un administrador puede asignarlo o cambiar su estado.',
+      );
+      return;
+    }
+
+    this.puedeGestionar.set(false);
+    this.motivoSinGestion.set(null);
   }
 
   private reiniciarEstado(): void {
@@ -330,6 +374,8 @@ export class ReportDetailPage {
     this.estadoConfirmacion.set('cargando');
     this.historial.set([]);
     this.puedeGestionar.set(false);
+    this.esGestor.set(false);
+    this.motivoSinGestion.set(null);
   }
 
   private async toast(

@@ -11,6 +11,8 @@ import {
 } from '@angular/core';
 import * as L from 'leaflet';
 
+import { ETIQUETAS_ESTADO, EventoHistorial } from '../../models/report.model';
+
 /** Marcador de incidencia para el mapa general. */
 export interface MapMarker {
   id: string;
@@ -73,6 +75,13 @@ export class MapViewComponent implements OnDestroy {
   /** Emite el id del marcador seleccionado. */
   readonly markerSelected = output<string>();
 
+  /**
+   * Si se entrega, el popup de cada marcador muestra el enlace "Ver historial
+   * de estados" y usa esta función para cargarlo. La carga ocurre solo al
+   * pulsar el enlace, nunca al abrir el mapa ni el popup.
+   */
+  readonly cargarHistorial = input<((id: string) => Promise<EventoHistorial[]>) | null>(null);
+
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -121,6 +130,37 @@ export class MapViewComponent implements OnDestroy {
 
       if (this.map) {
         this.dibujarMarcadores(marcadores);
+      }
+    });
+
+    /**
+     * v2-D12 · `zoom` e `interactive` solo se aplicaban al inicializar, así que
+     * cambiarlos en caliente no tenía efecto: Leaflet conservaba el arrastre y
+     * el nivel de acercamiento originales.
+     */
+    effect(() => {
+      const nivel = this.zoom();
+
+      if (this.map && this.map.getZoom() !== nivel) {
+        this.map.setZoom(nivel);
+      }
+    });
+
+    effect(() => {
+      const interactivo = this.interactive();
+
+      if (!this.map) {
+        return;
+      }
+
+      if (interactivo) {
+        this.map.dragging.enable();
+        this.map.scrollWheelZoom.enable();
+        this.map.touchZoom.enable();
+      } else {
+        this.map.dragging.disable();
+        this.map.scrollWheelZoom.disable();
+        this.map.touchZoom.disable();
       }
     });
 
@@ -295,16 +335,17 @@ export class MapViewComponent implements OnDestroy {
           title: marcador.titulo,
         });
 
-        // BUG 53 · Un toque muestra el resumen; el enlace abre el detalle.
-        marcadorLeaflet.bindPopup(
-          `<strong>${this.escapar(marcador.titulo)}</strong><br><em>Toca de nuevo para ver el detalle</em>`,
-          { closeButton: false, autoPan: true },
-        );
-
-        marcadorLeaflet.on('click', () => {
-          if (marcadorLeaflet.isPopupOpen()) {
-            this.markerSelected.emit(marcador.id);
-          }
+        /**
+         * v2-D1 · Antes el detalle se abría con el segundo toque, comprobando
+         * `isPopupOpen()`. Leaflet abre el popup y dispara el click en el mismo
+         * gesto, así que la comprobación ya era verdadera al primer toque y el
+         * resumen nunca llegaba a verse. Ahora el popup se muestra al tocar y
+         * lleva un botón explícito para abrir el detalle.
+         */
+        marcadorLeaflet.bindPopup(() => this.construirPopup(marcador, marcadorLeaflet), {
+          closeButton: true,
+          autoPan: true,
+          className: 'popup-ciudad-alerta',
         });
 
         return marcadorLeaflet;
@@ -336,11 +377,120 @@ export class MapViewComponent implements OnDestroy {
     this.map.fitBounds(this.circulo.getBounds(), { padding: [16, 16] });
   }
 
-  /** Escapa el texto que va dentro del popup de Leaflet. */
-  private escapar(texto: string): string {
-    const nodo = document.createElement('span');
-    nodo.textContent = texto;
-    return nodo.innerHTML;
+  /**
+   * Construye el contenido del popup con la API del DOM, sin interpolar HTML:
+   * los textos vienen de reportes de usuarios y se asignan con textContent.
+   */
+  private construirPopup(marcador: MapMarker, capa: L.Marker): HTMLElement {
+    const contenedor = document.createElement('div');
+    contenedor.className = 'popup-ciudad-alerta__cuerpo';
+
+    // Sin esto, desplazar la línea de tiempo con el dedo movería el mapa, y un
+    // toque dentro del popup podría cerrarlo.
+    L.DomEvent.disableClickPropagation(contenedor);
+    L.DomEvent.disableScrollPropagation(contenedor);
+
+    const titulo = document.createElement('p');
+    titulo.className = 'popup-ciudad-alerta__titulo';
+    titulo.textContent = marcador.titulo;
+
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'popup-ciudad-alerta__accion';
+    boton.textContent = 'Ver detalle';
+    boton.addEventListener('click', () => this.markerSelected.emit(marcador.id));
+
+    contenedor.append(titulo, boton);
+
+    const cargador = this.cargarHistorial();
+
+    if (cargador) {
+      contenedor.append(this.construirSeccionHistorial(marcador.id, cargador, capa));
+    }
+
+    return contenedor;
+  }
+
+  private construirSeccionHistorial(
+    id: string,
+    cargador: (id: string) => Promise<EventoHistorial[]>,
+    capa: L.Marker,
+  ): HTMLElement {
+    const seccion = document.createElement('div');
+    seccion.className = 'popup-ciudad-alerta__historial';
+
+    const enlace = document.createElement('button');
+    enlace.type = 'button';
+    enlace.className = 'popup-ciudad-alerta__enlace';
+    enlace.textContent = 'Ver historial de estados';
+
+    const zona = document.createElement('div');
+    zona.className = 'popup-ciudad-alerta__linea';
+    zona.setAttribute('aria-live', 'polite');
+
+    enlace.addEventListener('click', async () => {
+      enlace.remove();
+      zona.textContent = 'Cargando…';
+      capa.getPopup()?.update();
+
+      try {
+        const eventos = await cargador(id);
+        zona.replaceChildren(this.construirLineaDeTiempo(eventos));
+      } catch {
+        zona.textContent = 'No se pudo cargar el historial de cambios.';
+      }
+
+      // El contenido cambió de alto: se recalcula la posición del popup.
+      capa.getPopup()?.update();
+    });
+
+    seccion.append(enlace, zona);
+    return seccion;
+  }
+
+  private construirLineaDeTiempo(eventos: EventoHistorial[]): HTMLElement {
+    const lista = document.createElement('ol');
+    lista.className = 'linea-tiempo';
+
+    for (const evento of eventos) {
+      const item = document.createElement('li');
+      item.className = 'linea-tiempo__evento';
+
+      const fecha = document.createElement('span');
+      fecha.className = 'linea-tiempo__fecha';
+      fecha.textContent = evento.fecha
+        ? evento.fecha.toLocaleString('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'Fecha no disponible';
+
+      const estado = document.createElement('strong');
+      estado.className = 'linea-tiempo__estado';
+      estado.textContent = evento.desde
+        ? `${ETIQUETAS_ESTADO[evento.desde] ?? evento.desde} → ${ETIQUETAS_ESTADO[evento.hacia] ?? evento.hacia}`
+        : ETIQUETAS_ESTADO[evento.hacia] ?? evento.hacia;
+
+      const autor = document.createElement('span');
+      autor.className = 'linea-tiempo__autor';
+      autor.textContent = evento.autor;
+
+      item.append(fecha, estado, autor);
+
+      if (evento.comentario) {
+        const comentario = document.createElement('p');
+        comentario.className = 'linea-tiempo__comentario';
+        comentario.textContent = evento.comentario;
+        item.append(comentario);
+      }
+
+      lista.append(item);
+    }
+
+    return lista;
   }
 
   /**

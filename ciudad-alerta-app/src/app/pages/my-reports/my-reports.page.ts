@@ -14,7 +14,13 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
+
+import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
+import {
+  addCircleOutline,
+  documentTextOutline,
+  refreshOutline,
+} from 'ionicons/icons';
 
 import { ConfirmationService } from '../../services/confirmation.service';
 import { ReportQueryService } from '../../services/report-query.service';
@@ -27,6 +33,7 @@ import { COLORES_ESTADO, ETIQUETAS_ESTADO, Report } from '../../models/report.mo
   templateUrl: './my-reports.page.html',
   styleUrls: ['./my-reports.page.scss'],
   imports: [
+    AvisosCampanaComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -53,19 +60,32 @@ export class MyReportsPage {
    * el conteo real se consulta aparte para cada página de resultados.
    */
   readonly confirmaciones = signal<Map<string, number>>(new Map());
+  /**
+   * v2-D9 · La pantalla arrancaba con la lista vacía, así que durante la
+   * primera consulta mostraba "todavía no has reportado nada", y un fallo de
+   * red dejaba ese mismo mensaje sin explicación.
+   */
+  readonly estado = signal<'cargando' | 'listo' | 'error'>('cargando');
   readonly cargando = signal(false);
   readonly hayMas = signal(false);
+  readonly mensajeError = signal<string | null>(null);
 
   private cursor: QueryDocumentSnapshot | null = null;
 
   constructor() {
-    addIcons({ addCircleOutline, documentTextOutline });
+    addIcons({ addCircleOutline, documentTextOutline, refreshOutline });
   }
 
   async ionViewWillEnter(): Promise<void> {
     this.reportes.set([]);
     this.confirmaciones.set(new Map());
     this.cursor = null;
+    this.estado.set('cargando');
+    await this.cargarPagina();
+  }
+
+  async reintentar(): Promise<void> {
+    this.estado.set('cargando');
     await this.cargarPagina();
   }
 
@@ -112,6 +132,8 @@ export class MyReportsPage {
       this.cursor = pagina.cursor;
       this.hayMas.set(pagina.cursor !== null);
 
+      this.estado.set('listo');
+
       // El conteo llega después para no retrasar la aparición del listado.
       void this.cargarConfirmaciones(pagina.reportes.map((r) => r.id));
     } catch (error) {
@@ -120,6 +142,9 @@ export class MyReportsPage {
         error instanceof Error && error.message.includes('permission')
           ? 'No tienes permisos para ver estos reportes. Vuelve a iniciar sesión.'
           : 'No pudimos cargar tu historial. Revisa tu conexión e inténtalo otra vez.';
+
+      this.estado.set('error');
+      this.mensajeError.set(mensaje);
 
       const toast = await this.toastCtrl.create({
         message: mensaje,

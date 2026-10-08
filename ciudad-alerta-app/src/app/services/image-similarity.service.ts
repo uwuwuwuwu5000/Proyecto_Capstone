@@ -1,53 +1,46 @@
 import { Injectable, signal } from '@angular/core';
-/**
- * Se importan los submódulos concretos en vez del paquete paraguas
- * `@tensorflow/tfjs`. Ese incluye `tfjs-data`, que depende de `node-fetch` y
- * arrastra módulos exclusivos de Node (`buffer`, `stream`), imposibles de
- * empaquetar para el navegador. La app solo necesita el núcleo, el conversor
- * de modelos y los backends de ejecución.
- */
-import * as tf from '@tensorflow/tfjs-core';
-import '@tensorflow/tfjs-converter';
-import '@tensorflow/tfjs-backend-webgl';
-import '@tensorflow/tfjs-backend-cpu';
-import * as mobilenet from '@tensorflow-models/mobilenet';
 
 /**
- * Comparación visual de fotografías con MobileNet v2 sobre TensorFlow.js.
+ * Comparación visual de fotografías con MobileNet sobre TensorFlow.js.
  *
- * El modelo es gratuito, se ejecuta en el dispositivo y no requiere API key ni
- * servidor. En vez de clasificar, se usa la penúltima capa de la red
- * (`infer(img, true)`) para obtener un vector de 1024 dimensiones que describe
- * la imagen. Dos fotos del mismo objeto producen vectores cercanos, y la
- * cercanía se mide con similitud coseno.
+ * v2-A2 · TensorFlow se carga con `import()` dinámico dentro del método de
+ * carga, no con imports de nivel superior. Con imports estáticos, el empaquetado
+ * incluía en el chunk inicial la plataforma Node de tfjs-core —`node-fetch`,
+ * `seedrandom`, `long`— aunque el usuario solo fuera a iniciar sesión. Ahora ese
+ * código vive en un chunk aparte que se descarga la primera vez que alguien
+ * adjunta una fotografía.
  *
- * Limitación conocida y asumida: el mismo problema urbano fotografiado desde
- * ángulos muy distintos puede dar una similitud baja. Por eso el resultado
- * pondera el puntaje de coincidencia, pero nunca decide por sí solo.
+ * Los tipos se importan como tipo puro: `import type` desaparece en compilación
+ * y no arrastra el módulo al bundle.
  */
+import type * as TF from '@tensorflow/tfjs-core';
+import type * as MobileNet from '@tensorflow-models/mobilenet';
+
+import { prepararTensorflow, resolverModulo } from '../core/tensorflow';
+
 @Injectable({ providedIn: 'root' })
 export class ImageSimilarityService {
   /** Expuesto para mostrar "analizando imagen…" en la UI. */
   readonly cargandoModelo = signal(false);
   readonly modeloDisponible = signal<boolean | null>(null);
 
-  private modelo: mobilenet.MobileNet | null = null;
-  private cargaEnCurso: Promise<mobilenet.MobileNet | null> | null = null;
+  private tf: typeof TF | null = null;
+  private modelo: MobileNet.MobileNet | null = null;
+  private cargaEnCurso: Promise<MobileNet.MobileNet | null> | null = null;
 
   /**
    * BUG 28 · Sin memoria de los fallos, cada intento volvía a descargar ~17 MB.
-   * Con red inestable eso se repetía en cada fotografía. Se limitan los
-   * reintentos y se espera un tiempo creciente entre ellos.
+   * Con red inestable eso se repetía en cada fotografía.
    */
   private intentosFallidos = 0;
   private proximoIntento = 0;
   private static readonly MAX_INTENTOS = 3;
 
   /**
-   * Carga el modelo una sola vez. La primera llamada descarga ~17 MB, así que
-   * conviene invocarla cuando el usuario ya tomó la fotografía y no al arrancar.
+   * Carga el modelo una sola vez. La primera llamada descarga la librería y los
+   * pesos, así que conviene invocarla cuando el usuario ya tomó la fotografía.
    */
-  private async cargarModelo(): Promise<mobilenet.MobileNet | null> {
+  private async cargarModelo(): Promise<MobileNet.MobileNet | null> {
     if (this.modelo) {
       return this.modelo;
     }
@@ -68,14 +61,24 @@ export class ImageSimilarityService {
 
     this.cargaEnCurso = (async () => {
       try {
-        await this.prepararBackend();
+        const [tf, moduloMobilenet] = await Promise.all([
+          prepararTensorflow(),
+          import('@tensorflow-models/mobilenet'),
+        ]);
+
+        // Mismo problema de formato que los modelos de privacidad.
+        const mobilenet = resolverModulo<typeof MobileNet>(moduloMobilenet, 'load');
+
+        this.tf = tf;
         this.modelo = await mobilenet.load({ version: 2, alpha: 1.0 });
         this.intentosFallidos = 0;
         this.modeloDisponible.set(true);
         return this.modelo;
-      } catch {
+      } catch (error) {
         // Sin conexión o WebGL no disponible: la detección sigue funcionando
-        // solo con ubicación, categoría y tiempo.
+        // solo con ubicación, categoría y tiempo. Antes este error no se
+        // registraba, y un fallo permanente pasaba inadvertido.
+        console.error('Duplicados: no se pudo cargar MobileNet.', error);
         this.intentosFallidos += 1;
         this.proximoIntento = Date.now() + 30_000 * this.intentosFallidos;
         this.modeloDisponible.set(false);
@@ -87,20 +90,6 @@ export class ImageSimilarityService {
     })();
 
     return this.cargaEnCurso;
-  }
-
-  /**
-   * WebGL es mucho más rápido, pero no está disponible en todas las WebView de
-   * Android. Si falla, se cae al backend de CPU antes que renunciar al modelo.
-   */
-  private async prepararBackend(): Promise<void> {
-    try {
-      await tf.setBackend('webgl');
-      await tf.ready();
-    } catch {
-      await tf.setBackend('cpu');
-      await tf.ready();
-    }
   }
 
   /**
@@ -123,7 +112,7 @@ export class ImageSimilarityService {
     }
 
     try {
-      const tensor = modelo.infer(imagen, true) as tf.Tensor;
+      const tensor = modelo.infer(imagen, true) as TF.Tensor;
       // `data()` devuelve una unión de TypedArrays; el embedding siempre es
       // float32, así que se concreta el tipo para que Array.from dé number[].
       const datos = (await tensor.data()) as Float32Array;

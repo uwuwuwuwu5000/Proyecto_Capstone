@@ -164,6 +164,31 @@ export class ReportQueryService {
     };
   }
 
+  /**
+   * Reportes asignados a un operador, del más reciente al más antiguo.
+   *
+   * Filtra solo por `operadorId` y ordena en el cliente: así no necesita un
+   * índice compuesto. Un operador municipal maneja un volumen acotado en el
+   * piloto; si crece, conviene paginar con un índice `operadorId` + `createdAt`.
+   */
+  async reportesDeOperador(operadorId: string, maximo = 100): Promise<Report[]> {
+    const snapshot = await getDocs(
+      query(
+        collection(this.firestore, 'reports'),
+        where('operadorId', '==', operadorId),
+        limit(maximo),
+      ),
+    );
+
+    return snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Report)
+      .sort(
+        (a, b) =>
+          (b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0) -
+          (a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0),
+      );
+  }
+
   /** HU-26 · Un reporte por id. Devuelve null si no existe. */
   async getById(reportId: string): Promise<Report | null> {
     const snapshot: DocumentSnapshot = await getDoc(

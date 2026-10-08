@@ -16,11 +16,14 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+
+import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
 import { MapMarker, MapViewComponent } from '../../components/map-view/map-view.component';
 import { AuthService } from '../../services/auth.service';
 import { GeolocationService, LocationError } from '../../services/geolocation.service';
+import { HistorialService } from '../../services/historial.service';
 import { FiltrosMapa, ReportQueryService } from '../../services/report-query.service';
 import {
   COLORES_ESTADO,
@@ -52,6 +55,7 @@ type EstadoVista =
   templateUrl: './nearby.page.html',
   styleUrls: ['./nearby.page.scss'],
   imports: [
+    AvisosCampanaComponent,
     MapViewComponent,
     IonHeader,
     IonToolbar,
@@ -71,6 +75,7 @@ type EstadoVista =
 export class NearbyPage {
   private readonly queryService = inject(ReportQueryService);
   private readonly geolocationService = inject(GeolocationService);
+  private readonly historialService = inject(HistorialService);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -97,6 +102,21 @@ export class NearbyPage {
       titulo: report.descripcion.slice(0, 60),
     })),
   );
+
+  /**
+   * Carga la línea de tiempo de un reporte cuando el usuario pulsa "Ver
+   * historial de estados" en el popup. El reporte ya está en memoria desde la
+   * búsqueda; solo se lee su historial, y solo en ese momento.
+   */
+  readonly cargadorHistorial = (reportId: string) => {
+    const reporte = this.resultados().find((item) => item.report.id === reportId)?.report;
+
+    if (!reporte) {
+      return Promise.reject(new Error('Reporte no encontrado en la vista actual.'));
+    }
+
+    return this.historialService.lineaDeTiempo(reporte);
+  };
 
   constructor() {
     addIcons({ locateOutline, navigateOutline, refreshOutline });

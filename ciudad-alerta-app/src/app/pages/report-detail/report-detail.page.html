@@ -156,6 +156,20 @@
         </section>
       }
 
+      @if (esGestor() && motivoSinGestion(); as motivo) {
+        <section class="bloque gestion">
+          <h2>Gestión</h2>
+          <p class="estado">{{ motivo }}</p>
+        </section>
+      }
+
+      @if (puedeGestionar() && transiciones().length === 0) {
+        <section class="bloque gestion">
+          <h2>Gestión</h2>
+          <p class="estado">Este reporte está cerrado y ya no admite cambios de estado.</p>
+        </section>
+      }
+
       @if (puedeGestionar() && transiciones().length > 0) {
         <section class="bloque gestion">
           <h2>Gestión</h2>

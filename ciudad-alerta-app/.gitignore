@@ -71,3 +71,12 @@ Thumbs.db
 
 # Comunas
 ciudad-alerta-app/src/assets/geo/comunas.json
+
+scripts/respaldos/
+*firebase-adminsdk*.json
+
+keystore.properties
+*.jks
+apk-demo/
+scripts/respaldos/
+*firebase-adminsdk*.json

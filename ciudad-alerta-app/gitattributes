@@ -1,0 +1,4 @@
+# Los pesos de los modelos de TensorFlow son binarios sin extensión
+# ("group1-shard1of5"). Sin esta línea, Git en Windows podría tratarlos como
+# texto y convertir saltos de línea, corrompiendo los pesos sin avisar.
+src/assets/models/** binary

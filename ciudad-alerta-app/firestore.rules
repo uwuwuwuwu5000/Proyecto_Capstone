@@ -155,6 +155,28 @@ service cloud.firestore {
 
       // El borrado de cuentas se maneja desde el backend, no desde el cliente.
       allow delete: if false;
+
+      /**
+       * Qué avisos ya vio el usuario. Un único documento, `estado`, que solo
+       * su dueño lee y escribe. La lista de vistos se acota para que no crezca
+       * sin límite; la app la compacta con `vistosHasta` al acercarse al tope.
+       */
+      match /avisos/{docId} {
+        allow read: if esPropietario(userId);
+
+        allow create, update: if esPropietario(userId)
+          && docId == 'estado'
+          && request.resource.data.keys().hasOnly(['vistos', 'vistosHasta', 'updatedAt'])
+          && request.resource.data.vistos is list
+          && request.resource.data.vistos.size() <= 300
+          && (
+               !('vistosHasta' in request.resource.data)
+               || request.resource.data.vistosHasta == null
+               || request.resource.data.vistosHasta is timestamp
+             );
+
+        allow delete: if false;
+      }
     }
 
     // --- Reportes ciudadanos (Sprint 2) ------------------------------------
@@ -223,6 +245,38 @@ service cloud.firestore {
       return !('ultimoReporteAt' in perfil)
         || perfil.ultimoReporteAt == null
         || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() >= intervaloMinimoMs();
+    }
+
+    /**
+     * Firma pública de un cambio de estado.
+     *
+     * `autorRol` debe coincidir con el rol real de quien escribe, leído de su
+     * perfil. `autorNombre` es opcional para no romper clientes que aún no lo
+     * envían (se muestran como "Autor no registrado"), pero si viene:
+     *  - de un admin, es libre: la interfaz lo muestra siempre como
+     *    "Administración Ciudad Alerta" a partir del rol;
+     *  - de un operador, debe ser exactamente el nombre del organismo al que
+     *    pertenece. Así nadie firma un cambio a nombre de otra municipalidad.
+     */
+    function firmaHistorialValida() {
+      let datos = request.resource.data;
+      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return (!('autorRol' in datos) || datos.autorRol == perfil.role)
+        && (
+             !('autorNombre' in datos)
+             || (
+                  datos.autorNombre is string
+                  && datos.autorNombre.size() > 0
+                  && datos.autorNombre.size() <= 120
+                  && (perfil.role != 'operador'
+                      || datos.autorNombre == nombreOrganismoDeOperador(perfil.operadorId))
+                )
+           );
+    }
+
+    function nombreOrganismoDeOperador(operadorId) {
+      let operador = get(/databases/$(database)/documents/operadores/$(operadorId)).data;
+      return get(/databases/$(database)/documents/organismos/$(operador.organismoId)).data.nombre;
     }
 
     function reporteExiste(reportId) {
@@ -307,6 +361,19 @@ service cloud.firestore {
             && (!exists(perfil) || get(perfil).data.displayName == datos.autorNombre));
     }
 
+    /**
+     * Toda foto de reporte debe haber pasado por el difuminado de rostros y
+     * personas, que la app hace en el teléfono antes de subirla. La regla no
+     * puede inspeccionar la imagen, pero sí impide que una versión antigua de
+     * la app —sin difuminado— publique fotos: esas versiones no envían este
+     * dato.
+     */
+    function fotoProtegida() {
+      let foto = request.resource.data.get('foto', null);
+      return foto == null
+        || foto.get('privacidad', {}).get('aplicada', false) == true;
+    }
+
     function ubicacionValida() {
       let ubicacion = request.resource.data.ubicacion;
       return ubicacion.lat is number && ubicacion.lat >= -90 && ubicacion.lat <= 90
@@ -375,6 +442,7 @@ service cloud.firestore {
         && autorNombreValido()
         && organismoReporteValido()
         && operadorReporteValido()
+        && fotoProtegida()
         && respetaIntervaloDeReporte();
 
       /**
@@ -459,7 +527,8 @@ service cloud.firestore {
           && request.resource.data.desde == datosReporte(reportId).estado
           && transicionValida(request.resource.data.desde, request.resource.data.hacia)
           && request.resource.data.comentario is string
-          && request.resource.data.comentario.size() <= 512;
+          && request.resource.data.comentario.size() <= 512
+          && firmaHistorialValida();
 
         allow update: if false;
         // Solo al eliminar el reporte completo desde el panel de admin.

@@ -15,6 +15,9 @@ import {
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+
+import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
+import { VersionDemoComponent } from '../../components/version-demo/version-demo.component';
 import {
   addCircleOutline,
   albumsOutline,
@@ -39,8 +42,10 @@ import { UserProfile } from '../../models/user-profile.model';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   imports: [
+    AvisosCampanaComponent,
     RouterLink,
     ThemeToggleComponent,
+    VersionDemoComponent,
     IonButtons,
     IonHeader,
     IonToolbar,

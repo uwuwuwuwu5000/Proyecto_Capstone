@@ -129,6 +129,84 @@
   }
 }
 
+:host ::ng-deep .popup-ciudad-alerta__historial {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ca-velo-fuerte);
+}
+
+:host ::ng-deep .popup-ciudad-alerta__enlace {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ca-signal);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* El historial se desplaza dentro del popup en vez de agrandarlo. */
+:host ::ng-deep .popup-ciudad-alerta__linea {
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+:host ::ng-deep .linea-tiempo {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 2px solid var(--ca-line);
+}
+
+:host ::ng-deep .linea-tiempo__evento {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0 0 0.65rem 0.25rem;
+
+  /* Punto sobre la línea vertical. */
+  &::before {
+    content: '';
+    position: absolute;
+    left: -1.05rem;
+    top: 0.3rem;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ca-signal);
+  }
+}
+
+:host ::ng-deep .linea-tiempo__fecha {
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+:host ::ng-deep .linea-tiempo__estado {
+  color: var(--ca-ink);
+  font-size: 0.8rem;
+}
+
+:host ::ng-deep .linea-tiempo__autor {
+  font-size: 0.74rem;
+}
+
+:host ::ng-deep .linea-tiempo__comentario {
+  margin: 0.15rem 0 0;
+  padding: 0.3rem 0.45rem;
+  border-radius: 6px;
+  background: var(--ca-velo);
+  color: var(--ca-ink);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 :host ::ng-deep .popup-ciudad-alerta .leaflet-popup-close-button {
   color: var(--ca-muted);
 }

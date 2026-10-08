@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-title>Ciudad Alerta</ion-title>
     <ion-buttons slot="end">
+      <app-avisos-campana></app-avisos-campana>
       <app-theme-toggle></app-theme-toggle>
     </ion-buttons>
   </ion-toolbar>
@@ -127,7 +128,7 @@
         @if (esStaff()) {
           <ion-button class="accion-staff" expand="block" routerLink="/admin-reports">
             <ion-icon slot="start" name="albums-outline" aria-hidden="true"></ion-icon>
-            Todas las incidencias
+            {{ perfil()?.role === 'operador' ? 'Reportes asignados' : 'Todas las incidencias' }}
           </ion-button>
 
           <ion-button class="accion-staff" expand="block" routerLink="/admin-organismos">
@@ -152,5 +153,7 @@
         Cerrar sesión
       </ion-button>
     }
+
+    <app-version-demo />
   </div>
 </ion-content>

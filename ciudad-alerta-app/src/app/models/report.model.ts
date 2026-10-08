@@ -41,6 +41,23 @@ export interface GeoPoint {
 }
 
 /**
+ * Resultado de la protección de privacidad aplicada a una fotografía.
+ *
+ * Viaja dentro de la referencia de la foto del reporte. Las reglas exigen
+ * `aplicada: true` en todo reporte con fotografía, de modo que una versión
+ * antigua de la app —sin difuminado— no pueda publicar imágenes con rostros.
+ */
+export interface InfoPrivacidad {
+  aplicada: boolean;
+  /** Rostros detectados y difuminados. */
+  rostros: number;
+  /** Personas lejanas cuya cabeza se difuminó sin detectar el rostro. */
+  personas: number;
+  /** Modelos usados, para poder auditar o reprocesar si cambian. */
+  version: string;
+}
+
+/**
  * Referencia a la fotografía. `kind` indica qué implementación de
  * PhotoStorageService la guardó, para poder recuperarla o borrarla después.
  */
@@ -233,8 +250,31 @@ export interface StatusChange {
   hacia: ReportStatus;
   /** uid de quien realizó el cambio. */
   autorUid: string;
+  /**
+   * Nombre público de quien hizo el cambio: el organismo del operador, o
+   * "Administración Ciudad Alerta" si fue un administrador. Opcional porque
+   * los cambios anteriores a esta versión, y los que haga un cliente que no
+   * lo escriba, no lo traen; se muestran como "Autor no registrado".
+   */
+  autorNombre?: string;
+  /** Rol con el que se hizo el cambio. Lo validan las reglas. */
+  autorRol?: 'admin' | 'operador';
   comentario: string;
   createdAt: Timestamp | FieldValue;
+}
+
+/** Nombre público con el que se firman los cambios de un administrador. */
+export const NOMBRE_ADMINISTRACION = 'Administración Ciudad Alerta';
+
+/** Un hito de la línea de tiempo pública de un reporte. */
+export interface EventoHistorial {
+  fecha: Date | null;
+  /** Null en el primer evento, la creación. */
+  desde: ReportStatus | null;
+  hacia: ReportStatus;
+  /** Texto de quién lo hizo, ya resuelto para mostrar. */
+  autor: string;
+  comentario: string | null;
 }
 
 /** Reporte con la distancia calculada al punto de referencia del usuario. */

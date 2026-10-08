@@ -75,6 +75,76 @@
   }
 }
 
+.privacidad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+
+  ion-icon,
+  ion-spinner {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.privacidad--proceso {
+  border: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+  color: var(--ca-muted);
+
+  ion-spinner {
+    color: var(--ca-signal);
+  }
+}
+
+.privacidad--error {
+  border-left: 3px solid var(--ca-danger);
+  background: rgba(224, 101, 107, 0.1);
+  color: var(--ca-ink);
+
+  ion-icon {
+    color: var(--ca-danger);
+  }
+}
+
+.detalle-tecnico {
+  margin-top: -0.4rem;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+
+  summary {
+    cursor: pointer;
+    padding: 0.2rem 0;
+  }
+
+  code {
+    display: block;
+    margin-top: 0.35rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 6px;
+    background: var(--ca-velo);
+    color: var(--ca-ink);
+    font-size: 0.74rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.preview__privacidad {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.35rem;
+  color: var(--ca-signal);
+  font-weight: 600;
+}
+
 .acciones-foto {
   display: flex;
   flex-direction: column;

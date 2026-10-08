@@ -1,9 +1,12 @@
 <ion-header class="cabecera" [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
     </ion-buttons>
     <ion-title>Mapa de incidencias</ion-title>
+    <ion-buttons slot="end">
+      <app-avisos-campana></app-avisos-campana>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -48,6 +51,7 @@
         [longitude]="punto.lng"
         [zoom]="14"
         [markers]="marcadores()"
+        [cargarHistorial]="cargadorHistorial"
         (markerSelected)="abrirDetalle($event)"
       ></app-map-view>
     }
@@ -85,6 +89,11 @@
             Reintentar
           </ion-button>
         </div>
+      }
+      @default {
+        <p class="estado">
+          Estado no reconocido. Vuelve a entrar a la pantalla o reintenta la búsqueda.
+        </p>
       }
       @case ('listo') {
         @if (resultados().length === 0) {

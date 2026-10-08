@@ -1,15 +1,28 @@
 <ion-header class="cabecera" [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
     </ion-buttons>
     <ion-title>Mis reportes</ion-title>
+    <ion-buttons slot="end">
+      <app-avisos-campana></app-avisos-campana>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="historial-content" [fullscreen]="true">
   <div class="historial-shell">
-    @if (reportes().length === 0 && !cargando()) {
+    @if (estado() === 'cargando' && reportes().length === 0) {
+      <p class="estado">Cargando tus reportes…</p>
+    } @else if (estado() === 'error' && reportes().length === 0) {
+      <div class="bloque-estado">
+        <p class="estado">{{ mensajeError() }}</p>
+        <ion-button fill="outline" expand="block" (click)="reintentar()">
+          <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+          Reintentar
+        </ion-button>
+      </div>
+    } @else if (reportes().length === 0) {
       <div class="vacio">
         <ion-icon name="document-text-outline" aria-hidden="true"></ion-icon>
         <h2>Todavía no has reportado nada</h2>

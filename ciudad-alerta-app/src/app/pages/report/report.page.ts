@@ -16,6 +16,7 @@ import {
   IonNote,
   IonSelect,
   IonSelectOption,
+  IonSpinner,
   IonTextarea,
   IonTitle,
   IonToolbar,
@@ -27,6 +28,9 @@ import {
   cameraOutline,
   imagesOutline,
   locateOutline,
+  refreshOutline,
+  shieldCheckmarkOutline,
+  shieldOutline,
   trashOutline,
 } from 'ionicons/icons';
 
@@ -36,6 +40,7 @@ import { ComunaDetectada, ComunaService } from '../../services/comuna.service';
 import { DuplicateDetectionService } from '../../services/duplicate-detection.service';
 import { ImageSimilarityService } from '../../services/image-similarity.service';
 import { CameraService, CapturedPhoto, PhotoError } from '../../services/camera.service';
+import { PrivacidadError, PrivacidadService } from '../../services/privacidad.service';
 import { GeolocationService, LocationError } from '../../services/geolocation.service';
 import { ReportService } from '../../services/report.service';
 import {
@@ -65,6 +70,7 @@ import {
     IonTextarea,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     IonButton,
     IonIcon,
     IonNote,
@@ -77,6 +83,10 @@ export class ReportPage {
   private readonly duplicateDetection = inject(DuplicateDetectionService);
   private readonly similarityService = inject(ImageSimilarityService);
   private readonly comunaService = inject(ComunaService);
+  private readonly privacidadService = inject(PrivacidadService);
+
+  /** Causa técnica de un fallo de la protección, visible en pantalla. */
+  readonly errorTecnico = this.privacidadService.ultimoErrorTecnico;
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
@@ -118,10 +128,30 @@ export class ReportPage {
   });
 
   /** El reporte solo se envía con ubicación confirmada y formulario válido. */
-  readonly puedeEnviar = computed(() => this.ubicacion() !== null);
+  /** Mientras se difuminan rostros y personas de la foto recién tomada. */
+  readonly protegiendo = signal(false);
+
+  /**
+   * Foto que no pudo protegerse. Se muestra con un aviso y bloquea el envío:
+   * sin la protección no hay garantía de que no aparezcan rostros. El usuario
+   * puede reintentar o quitarla y enviar el reporte sin foto.
+   */
+  readonly fotoSinProteger = signal<CapturedPhoto | null>(null);
+
+  readonly puedeEnviar = computed(
+    () => this.ubicacion() !== null && !this.protegiendo() && this.fotoSinProteger() === null,
+  );
 
   constructor() {
-    addIcons({ cameraOutline, imagesOutline, locateOutline, trashOutline });
+    addIcons({
+      cameraOutline,
+      imagesOutline,
+      locateOutline,
+      refreshOutline,
+      shieldCheckmarkOutline,
+      shieldOutline,
+      trashOutline,
+    });
   }
 
   get descripcionControl() {
@@ -292,31 +322,98 @@ export class ReportPage {
   }
 
   private async capturar(origen: () => Promise<CapturedPhoto>): Promise<void> {
-    try {
-      const foto = await origen();
-      this.foto.set(foto);
-      // El vector anterior deja de ser válido apenas cambia la imagen.
-      this.embedding = null;
+    let original: CapturedPhoto;
 
-      // El vector se calcula una vez y se reutiliza en la detección y al guardar.
-      this.embedding = await this.similarityService.computeEmbedding(foto.dataUrl);
-      await this.detectarCoincidencias();
+    try {
+      original = await origen();
     } catch (error) {
       if (error instanceof PhotoError && error.code === 'cancelado') {
         return;
       }
 
-      this.embedding = null;
-
       const mensaje =
         error instanceof Error ? error.message : 'No se pudo obtener la fotografía.';
       await this.toast(mensaje, 'danger');
+      return;
+    }
+
+    // El vector anterior deja de ser válido apenas cambia la imagen.
+    this.embedding = null;
+    this.foto.set(null);
+    this.fotoSinProteger.set(null);
+
+    await this.proteger(original);
+  }
+
+  /** Reintenta la protección de una foto que no pudo procesarse. */
+  async reintentarProteccion(): Promise<void> {
+    const pendiente = this.fotoSinProteger();
+
+    if (pendiente) {
+      await this.proteger(pendiente);
+    }
+  }
+
+  /** Descarta la foto que no pudo protegerse, para enviar el reporte sin ella. */
+  descartarFotoSinProteger(): void {
+    this.fotoSinProteger.set(null);
+  }
+
+  /**
+   * Difumina rostros y personas antes de mostrar la vista previa.
+   *
+   * Ocurre antes de la vista previa, no al enviar, para que el usuario vea
+   * exactamente la imagen que se publicará. El vector para la detección de
+   * duplicados se calcula también sobre la imagen protegida.
+   */
+  private async proteger(original: CapturedPhoto): Promise<void> {
+    this.protegiendo.set(true);
+
+    try {
+      const protegida = await this.privacidadService.anonimizar(original);
+      this.foto.set(protegida);
+      this.fotoSinProteger.set(null);
+
+      const { rostros, personas } = protegida.privacidad!;
+      const total = rostros + personas;
+
+      if (total > 0) {
+        await this.toast(
+          total === 1
+            ? 'Difuminamos a 1 persona para proteger su privacidad.'
+            : `Difuminamos a ${total} personas para proteger su privacidad.`,
+          'success',
+        );
+      }
+    } catch (error) {
+      this.foto.set(null);
+      this.fotoSinProteger.set(original);
+
+      const mensaje =
+        error instanceof PrivacidadError
+          ? error.message
+          : 'No pudimos proteger la privacidad de la foto.';
+      await this.toast(mensaje, 'warning');
+      return;
+    } finally {
+      this.protegiendo.set(false);
+    }
+
+    try {
+      // El vector se calcula una vez y se reutiliza en la detección y al guardar.
+      this.embedding = await this.similarityService.computeEmbedding(this.foto()!.dataUrl);
+      await this.detectarCoincidencias();
+    } catch {
+      // El vector es una señal auxiliar: sin él, la detección de duplicados
+      // sigue funcionando con ubicación, categoría y tiempo.
+      this.embedding = null;
     }
   }
 
   private limpiar(): void {
     this.formulario.reset({ categoria: 'microbasural', descripcion: '' });
     this.foto.set(null);
+    this.fotoSinProteger.set(null);
     this.ubicacion.set(null);
     this.coincidencias.set([]);
     this.embedding = null;

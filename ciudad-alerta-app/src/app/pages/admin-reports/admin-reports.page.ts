@@ -17,6 +17,7 @@ import {
 import { addIcons } from 'ionicons';
 import { imageOutline, refreshOutline } from 'ionicons/icons';
 
+import { AuthService } from '../../services/auth.service';
 import {
   FiltrosBandejaReportes,
   ReportQueryService,
@@ -59,6 +60,13 @@ import {
 })
 export class AdminReportsPage {
   private readonly queryService = inject(ReportQueryService);
+  private readonly authService = inject(AuthService);
+
+  /**
+   * Un operador ve solo los reportes que tiene asignados, que son los únicos
+   * cuyo estado puede cambiar. Un admin ve todos.
+   */
+  readonly operadorId = signal<string | null>(null);
   private readonly router = inject(Router);
 
   readonly categorias = REPORT_CATEGORIES;
@@ -89,6 +97,15 @@ export class AdminReportsPage {
   }
 
   async ionViewWillEnter(): Promise<void> {
+    const usuario = this.authService.user;
+    const perfil = usuario
+      ? await this.authService.getUserProfile(usuario.uid).catch(() => null)
+      : null;
+
+    this.operadorId.set(
+      perfil?.role === 'operador' && perfil.operadorId ? perfil.operadorId : null,
+    );
+
     await this.recargar();
   }
 
@@ -136,6 +153,33 @@ export class AdminReportsPage {
   }
 
   private async cargarPagina(): Promise<void> {
+    const operador = this.operadorId();
+
+    if (operador) {
+      try {
+        const asignados = await this.queryService.reportesDeOperador(operador);
+        const { categoria, estado, comuna } = this.filtros();
+
+        this.reportes.set(
+          asignados.filter(
+            (reporte) =>
+              (categoria === 'todas' || reporte.categoria === categoria) &&
+              (estado === 'todos' || reporte.estado === estado) &&
+              (comuna === 'todas' || reporte.comuna === comuna),
+          ),
+        );
+        this.comunasConocidas.set(
+          [...new Set(asignados.map((r) => r.comuna).filter((c): c is string => !!c))].sort(),
+        );
+        this.hayMas.set(false);
+        this.estado.set('listo');
+      } catch {
+        this.estado.set('error');
+      }
+
+      return;
+    }
+
     try {
       const pagina = await this.queryService.todosLosReportes(
         this.filtros(),

@@ -75,6 +75,14 @@ export class ReportService {
       throw new ReportError('Tu sesión expiró. Vuelve a iniciar sesión para reportar.');
     }
 
+    // Segunda barrera: ninguna foto se publica sin haber pasado por el
+    // difuminado de rostros y personas. Las reglas lo exigen también.
+    if (datos.foto && datos.foto.privacidad?.aplicada !== true) {
+      throw new ReportError(
+        'La foto no pasó por la protección de privacidad. Vuelve a adjuntarla.',
+      );
+    }
+
     const descripcion = datos.descripcion.trim();
     this.validarDescripcion(descripcion);
     this.validarUbicacion(datos.ubicacion);

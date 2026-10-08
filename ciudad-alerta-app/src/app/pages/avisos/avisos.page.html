@@ -1,0 +1,76 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Avisos</ion-title>
+    @if (avisosService.noVistos() > 0) {
+      <ion-buttons slot="end">
+        <ion-button
+          (click)="marcarTodos()"
+          aria-label="Marcar todos los avisos como vistos"
+          title="Marcar todos como vistos"
+        >
+          <ion-icon slot="icon-only" name="checkmark-done-outline" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="avisos-content" [fullscreen]="true">
+  <div class="avisos-shell">
+    @if (avisosService.error(); as error) {
+      <p class="estado estado--error" role="alert">{{ error }}</p>
+    }
+
+    @if (avisosService.cargando() && avisosService.avisos().length === 0) {
+      <p class="estado">Buscando novedades en tus reportes…</p>
+    } @else if (avisosService.avisos().length === 0) {
+      <div class="vacio">
+        <ion-icon name="notifications-off-outline" aria-hidden="true"></ion-icon>
+        <h2>Sin avisos por ahora</h2>
+        <p>
+          Cuando un organismo cambie el estado de uno de tus reportes o te deje una respuesta,
+          lo verás aquí.
+        </p>
+      </div>
+    } @else {
+      @if (avisosService.noVistos() > 0) {
+        <p class="resumen">
+          {{ avisosService.noVistos() }}
+          {{ avisosService.noVistos() === 1 ? 'aviso sin ver' : 'avisos sin ver' }}
+        </p>
+      }
+
+      <ul class="listado">
+        @for (aviso of avisosService.avisos(); track aviso.id) {
+          <li>
+            <button
+              type="button"
+              class="aviso"
+              [class.aviso--nuevo]="!aviso.visto"
+              (click)="abrir(aviso)"
+            >
+              @if (!aviso.visto) {
+                <span class="aviso__punto" aria-label="Sin ver"></span>
+              }
+
+              <span class="aviso__cuerpo">
+                <span class="aviso__reporte">{{ aviso.reporte }}</span>
+                <span class="aviso__cambio">
+                  {{ etiquetas[aviso.desde] }} → <strong>{{ etiquetas[aviso.hacia] }}</strong>
+                </span>
+                <span class="aviso__autor">{{ aviso.autor }}</span>
+                @if (aviso.comentario) {
+                  <span class="aviso__comentario">{{ aviso.comentario }}</span>
+                }
+                <span class="aviso__fecha">{{ fecha(aviso) }}</span>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</ion-content>

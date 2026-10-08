@@ -1,9 +1,12 @@
 <ion-header class="cabecera" [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/home" text=""></ion-back-button>
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
     </ion-buttons>
     <ion-title>Cerca de mí</ion-title>
+    <ion-buttons slot="end">
+      <app-avisos-campana></app-avisos-campana>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -11,6 +14,7 @@
   <div class="cercanos-shell">
     <ion-segment
       class="selector-radio"
+      aria-label="Radio de búsqueda"
       [value]="radio()"
       (ionChange)="cambiarRadio($event.detail.value)"
     >
@@ -40,6 +44,7 @@
         [latitude]="punto.lat"
         [longitude]="punto.lng"
         [markers]="marcadores()"
+        [cargarHistorial]="cargadorHistorial"
         [radiusMeters]="radio()"
         (markerSelected)="abrirDetalle($event)"
       ></app-map-view>
@@ -75,6 +80,11 @@
             Reintentar
           </ion-button>
         </div>
+      }
+      @default {
+        <p class="estado">
+          Estado no reconocido. Vuelve a entrar a la pantalla o reintenta la búsqueda.
+        </p>
       }
       @case ('listo') {
         @if (resultados().length === 0) {

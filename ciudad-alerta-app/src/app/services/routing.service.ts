@@ -18,6 +18,7 @@ import { FIRESTORE } from '../core/firebase.providers';
 import { AuthService } from './auth.service';
 import { ComunaDetectada } from './comuna.service';
 import {
+  NOMBRE_ADMINISTRACION,
   ORGANISMOS,
   OperadorDoc,
   Organismo,
@@ -200,6 +201,11 @@ export class RoutingService {
       );
     }
 
+    // Quién firma el cambio en el historial público. Se resuelve antes de la
+    // transacción: dentro de ella solo deben ir las lecturas que necesitan
+    // consistencia con la escritura.
+    const firma = await this.resolverFirma(usuario.uid);
+
     const referenciaReporte = doc(this.firestore, 'reports', report.id);
     const referenciaHistorial = doc(
       collection(this.firestore, 'reports', report.id, 'statusHistory'),
@@ -235,6 +241,7 @@ export class RoutingService {
           desde: estadoActual,
           hacia: nuevoEstado,
           autorUid: usuario.uid,
+          ...(firma ? { autorNombre: firma.nombre, autorRol: firma.rol } : {}),
           comentario: comentario.trim().slice(0, 300),
           createdAt: serverTimestamp(),
         };
@@ -250,7 +257,49 @@ export class RoutingService {
         throw error;
       }
 
+      console.error('Cambio de estado rechazado:', error);
       throw this.traducir(error);
+    }
+  }
+
+  /**
+   * Nombre público con que se firma un cambio de estado.
+   *
+   * - Administrador → "Administración Ciudad Alerta".
+   * - Operador → el nombre del organismo al que pertenece, por ejemplo
+   *   "Municipalidad de Pudahuel". Se muestra el organismo y no la persona:
+   *   al ciudadano le importa qué institución atiende su reporte.
+   *
+   * Las reglas comprueban que el nombre de un operador coincida con su
+   * organismo, así que no puede firmar como otra institución.
+   */
+  private async resolverFirma(
+    uid: string,
+  ): Promise<{ nombre: string; rol: 'admin' | 'operador' } | null> {
+    const perfil = await this.authService.getUserProfile(uid).catch(() => null);
+
+    if (perfil?.role === 'admin') {
+      return { nombre: NOMBRE_ADMINISTRACION, rol: 'admin' };
+    }
+
+    if (perfil?.role !== 'operador' || !perfil.operadorId) {
+      return null;
+    }
+
+    try {
+      const operador = await getDoc(doc(this.firestore, 'operadores', perfil.operadorId));
+      const organismoId = (operador.data() as OperadorDoc | undefined)?.organismoId;
+
+      if (!organismoId) {
+        return null;
+      }
+
+      const organismo = await getDoc(doc(this.firestore, 'organismos', organismoId));
+      const nombre = (organismo.data() as OrganismoDoc | undefined)?.nombre;
+
+      return nombre ? { nombre, rol: 'operador' } : null;
+    } catch {
+      return null;
     }
   }
 

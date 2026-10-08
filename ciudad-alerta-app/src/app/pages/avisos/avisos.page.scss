@@ -1,0 +1,140 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.avisos-content {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
+  --color: var(--ca-ink);
+}
+
+.avisos-shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.estado,
+.resumen {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--ca-muted);
+}
+
+.estado--error {
+  color: var(--ca-danger);
+}
+
+.vacio {
+  padding: 3rem 0.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  ion-icon {
+    font-size: 2.6rem;
+    color: var(--ca-muted);
+  }
+
+  h2 {
+    margin: 0.4rem 0 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    max-width: 36ch;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--ca-muted);
+  }
+}
+
+.listado {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.aviso {
+  width: 100%;
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.85rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  text-align: left;
+  cursor: pointer;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+/* Los no vistos se distinguen por borde y fondo, no solo por el color del punto. */
+.aviso--nuevo {
+  border-color: var(--ca-signal);
+  background: var(--ca-velo);
+}
+
+.aviso__punto {
+  width: 9px;
+  height: 9px;
+  margin-top: 0.35rem;
+  border-radius: 50%;
+  background: var(--ca-signal);
+  flex-shrink: 0;
+}
+
+.aviso__cuerpo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.aviso__reporte {
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.aviso__cambio {
+  font-size: 0.86rem;
+}
+
+.aviso__autor {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.aviso__comentario {
+  margin-top: 0.15rem;
+  padding: 0.4rem 0.55rem;
+  border-left: 3px solid var(--ca-signal);
+  border-radius: 4px;
+  background: var(--ca-velo);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.aviso__fecha {
+  font-size: 0.74rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}

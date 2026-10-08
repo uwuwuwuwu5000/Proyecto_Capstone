@@ -98,6 +98,12 @@ export const routes: Routes = [
       import('./pages/support-chat/support-chat.page').then((m) => m.SupportChatPage),
   },
   {
+    // Avisos de cambios de estado en los reportes propios.
+    path: 'avisos',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/avisos/avisos.page').then((m) => m.AvisosPage),
+  },
+  {
     path: '**',
     redirectTo: 'home',
   },

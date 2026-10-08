@@ -26,6 +26,7 @@ import { alertCircleOutline, mailOutline, shieldCheckmarkOutline } from 'ionicon
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
 import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
+import { VersionDemoComponent } from '../../components/version-demo/version-demo.component';
 
 type Modo = 'login' | 'registro';
 
@@ -44,6 +45,7 @@ function passwordsIguales(group: AbstractControl): ValidationErrors | null {
   imports: [
     ReactiveFormsModule,
     ThemeToggleComponent,
+    VersionDemoComponent,
     IonContent,
     IonSegment,
     IonSegmentButton,

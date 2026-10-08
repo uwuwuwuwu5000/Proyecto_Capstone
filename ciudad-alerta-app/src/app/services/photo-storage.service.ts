@@ -90,6 +90,7 @@ export class FirestorePhotoService implements PhotoStorage {
       url: null,
       mimeType: photo.mimeType,
       sizeBytes: photo.sizeBytes,
+      ...(photo.privacidad ? { privacidad: photo.privacidad } : {}),
     };
   }
 
@@ -127,6 +128,7 @@ export class FirestorePhotoService implements PhotoStorage {
       url: null,
       mimeType: photo.mimeType,
       sizeBytes: photo.sizeBytes,
+      ...(photo.privacidad ? { privacidad: photo.privacidad } : {}),
     };
   }
 
@@ -169,6 +171,7 @@ export class CloudStoragePhotoService implements PhotoStorage {
       url: await getDownloadURL(objectRef),
       mimeType: photo.mimeType,
       sizeBytes: photo.sizeBytes,
+      ...(photo.privacidad ? { privacidad: photo.privacidad } : {}),
     };
   }
 

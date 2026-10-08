@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
+import { InfoPrivacidad } from '../models/report.model';
+
 /** Imagen ya validada y comprimida, lista para subir. */
 export interface CapturedPhoto {
   /** Data URL para la vista previa y para la variante Firestore. */
@@ -11,6 +13,8 @@ export interface CapturedPhoto {
   sizeBytes: number;
   width: number;
   height: number;
+  /** Presente cuando la imagen ya pasó por el difuminado de personas. */
+  privacidad?: InfoPrivacidad;
 }
 
 export class PhotoError extends Error {
