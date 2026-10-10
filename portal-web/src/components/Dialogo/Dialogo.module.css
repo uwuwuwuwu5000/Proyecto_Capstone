@@ -1,0 +1,111 @@
+.dialogo {
+  width: min(460px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid var(--ca-line);
+  border-radius: 14px;
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.dialogo::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 22px 20px;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.mensaje {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.mensaje p {
+  margin: 0 0 8px;
+}
+
+.mensaje p:last-child {
+  margin-bottom: 0;
+}
+
+.mensaje strong {
+  color: var(--ca-ink);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.cancelar,
+.confirmar,
+.confirmarPeligro {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelar {
+  border: 1px solid var(--ca-line);
+  background: transparent;
+  color: var(--ca-ink);
+}
+
+.cancelar:hover {
+  border-color: var(--ca-signal);
+}
+
+.confirmar {
+  border: none;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+}
+
+.confirmar:hover {
+  background: var(--ca-signal-dark);
+}
+
+.confirmarPeligro {
+  border: none;
+  background: var(--ca-danger);
+  color: var(--ca-base);
+}
+
+.confirmarPeligro:hover {
+  background: #c9545a;
+}
+
+.cancelar:focus-visible,
+.confirmar:focus-visible,
+.confirmarPeligro:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+/* Teléfono: botones a todo el ancho, el de confirmar abajo (más a mano). */
+@media (max-width: 480px) {
+  .acciones {
+    flex-direction: column-reverse;
+  }
+
+  .acciones button {
+    width: 100%;
+  }
+}

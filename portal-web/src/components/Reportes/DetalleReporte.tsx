@@ -20,6 +20,17 @@ interface DetalleReporteProps {
   onCerrar: () => void
   /** Muestra el cambio rápido de estado (las reglas deciden si se permite). */
   gestionable?: boolean
+  /**
+   * Nombre del organismo de la cuenta operador que gestiona, con el que firma
+   * los cambios de estado (ver useRequiereOperador). No aplica a un admin.
+   */
+  organismoNombre?: string | null
+  /**
+   * 'gestion' (paneles de admin y operador) muestra los datos internos del
+   * reporte; 'ciudadano' (historial del usuario) los oculta y muestra en su
+   * lugar el organismo responsable con su nombre.
+   */
+  vista?: 'gestion' | 'ciudadano'
 }
 
 export default function DetalleReporte({
@@ -27,6 +38,8 @@ export default function DetalleReporte({
   operadorNombre,
   onCerrar,
   gestionable = false,
+  organismoNombre = null,
+  vista = 'gestion',
 }: DetalleReporteProps) {
   const { user, perfil } = useAuth()
   const { etiqueta } = useCategorias()
@@ -59,7 +72,11 @@ export default function DetalleReporte({
       const hacia = estadoNuevo
       await cambiarEstadoReporte(reporte, hacia, comentario, {
         uid: user.uid,
-        nombre: perfil?.displayName ?? null,
+        // Un operador firma con el nombre de su organismo, nunca con su
+        // displayName (que la propia cuenta puede editar): así lo exige
+        // firmaHistorialValida. Si aún no cargó, se omite la firma.
+        nombre:
+          perfil?.role === 'operador' ? organismoNombre : (perfil?.displayName ?? null),
         rol: perfil?.role ?? null,
       })
       setComentario('')
@@ -142,7 +159,10 @@ export default function DetalleReporte({
 
             <dl className={styles.datos}>
               <dt>Autor</dt>
-              <dd>{reporte.autorNombre ?? 'Sin nombre registrado'}</dd>
+              <dd>
+                {reporte.autorNombre ?? 'Sin nombre registrado'}
+                {reporte.origen === 'portal_admin' && ' · creado desde el portal'}
+              </dd>
               <dt>Fecha y hora</dt>
               <dd>{formatearFecha(reporte.fecha, true)}</dd>
               <dt>Estado actual</dt>
@@ -167,12 +187,21 @@ export default function DetalleReporte({
                   '—'
                 )}
               </dd>
-              <dt>Operador</dt>
-              <dd>{operadorNombre ?? reporte.operadorId ?? 'Sin asignar'}</dd>
-              <dt>Organismo ID</dt>
-              <dd>{reporte.organismoId ?? '—'}</dd>
-              <dt>Id</dt>
-              <dd>{reporte.id}</dd>
+              {vista === 'ciudadano' ? (
+                <>
+                  <dt>Organismo responsable</dt>
+                  <dd>{reporte.organismoNombre ?? 'Por asignar'}</dd>
+                </>
+              ) : (
+                <>
+                  <dt>Operador</dt>
+                  <dd>{operadorNombre ?? reporte.operadorId ?? 'Sin asignar'}</dd>
+                  <dt>Organismo ID</dt>
+                  <dd>{reporte.organismoId ?? '—'}</dd>
+                  <dt>Id</dt>
+                  <dd>{reporte.id}</dd>
+                </>
+              )}
             </dl>
 
             {gestionable && (

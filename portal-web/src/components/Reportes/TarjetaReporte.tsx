@@ -12,13 +12,32 @@ interface TarjetaReporteProps {
   operadorNombre: string | null
   /** Botones o formulario que van al pie de la tarjeta. */
   children: ReactNode
+  /** Selección múltiple: si se entrega, la tarjeta muestra una casilla. */
+  seleccionado?: boolean
+  onAlternarSeleccion?: () => void
 }
 
-export default function TarjetaReporte({ reporte, operadorNombre, children }: TarjetaReporteProps) {
+export default function TarjetaReporte({
+  reporte,
+  operadorNombre,
+  children,
+  seleccionado = false,
+  onAlternarSeleccion,
+}: TarjetaReporteProps) {
   const { etiqueta } = useCategorias()
 
   return (
-    <article className={styles.tarjeta}>
+    <article className={`${styles.tarjeta} ${seleccionado ? styles.tarjetaSeleccionada : ''}`}>
+      {onAlternarSeleccion && (
+        <label className={styles.seleccionCasilla}>
+          <input
+            type="checkbox"
+            checked={seleccionado}
+            onChange={onAlternarSeleccion}
+            aria-label={`Seleccionar reporte de ${etiqueta(reporte.categoria)} del ${formatearFecha(reporte.fecha)}`}
+          />
+        </label>
+      )}
       <FotoReporte foto={reporte.foto} />
 
       <div className={styles.cuerpoTarjeta}>

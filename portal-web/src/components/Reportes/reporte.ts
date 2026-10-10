@@ -18,8 +18,12 @@ export interface Reporte {
   foto: FotoInfo | null
   operadorId: string | null
   organismoId: string | null
+  /** Nombre del organismo responsable, tal como lo guardó la app al crear el reporte. */
+  organismoNombre: string | null
   lat: number | null
   lng: number | null
+  /** 'portal_admin' si lo creó un administrador desde el portal; null si vino de la app. */
+  origen: string | null
 }
 
 export interface OperadorResumen {
@@ -38,7 +42,7 @@ export function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte {
   } else if (fotoRaw?.kind === 'firestore' && typeof fotoRaw.path === 'string') {
     foto = { tipo: 'firestore', path: fotoRaw.path }
   }
-  const organismo = data.organismo as { id?: unknown } | undefined
+  const organismo = data.organismo as { id?: unknown; nombre?: unknown } | undefined
   const ubicacion = data.ubicacion as { lat?: unknown; lng?: unknown } | undefined
   return {
     id: docSnap.id,
@@ -57,8 +61,10 @@ export function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte {
     foto,
     operadorId: typeof data.operadorId === 'string' ? data.operadorId : null,
     organismoId: typeof organismo?.id === 'string' ? organismo.id : null,
+    organismoNombre: typeof organismo?.nombre === 'string' ? organismo.nombre : null,
     lat: typeof ubicacion?.lat === 'number' ? ubicacion.lat : null,
     lng: typeof ubicacion?.lng === 'number' ? ubicacion.lng : null,
+    origen: typeof data.origen === 'string' ? data.origen : null,
   }
 }
 

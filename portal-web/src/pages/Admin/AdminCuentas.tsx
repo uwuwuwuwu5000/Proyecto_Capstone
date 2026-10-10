@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
+  arrayUnion,
   collection,
   doc,
   onSnapshot,
   query,
   serverTimestamp,
   setDoc,
+  updateDoc,
   where,
 } from 'firebase/firestore'
 import { createUserWithEmailAndPassword, signOut } from 'firebase/auth'
@@ -41,7 +43,9 @@ export default function AdminCuentas() {
 
   const [operadores, setOperadores] = useState<OperadorConNombre[]>([])
 
-  const [cuentaOperadorId, setCuentaOperadorId] = useState('')
+  const [params] = useSearchParams()
+  // ?operador=<id>: se llega desde "Crear cuenta" en la lista de operadores.
+  const [cuentaOperadorId, setCuentaOperadorId] = useState(() => params.get('operador') ?? '')
   const [cuentaNombre, setCuentaNombre] = useState('')
   const [cuentaCorreo, setCuentaCorreo] = useState('')
   const [cuentaPassword, setCuentaPassword] = useState('')
@@ -120,7 +124,28 @@ export default function AdminCuentas() {
         updatedAt: serverTimestamp(),
       })
 
-      setCuentaAviso(`Cuenta creada para ${cuentaCorreo.trim()}.`)
+      // Se registra en el operador: /users no se puede listar, así que es la
+      // forma de que el panel sepa qué cuentas tiene cada operador. Si falla,
+      // la cuenta igual existe y funciona.
+      let registrada = true
+      try {
+        await updateDoc(doc(db, 'operadores', cuentaOperadorId), {
+          cuentas: arrayUnion({
+            uid: cred.user.uid,
+            correo: cuentaCorreo.trim(),
+            nombre: cuentaNombre.trim(),
+          }),
+        })
+      } catch (err) {
+        console.error('No se pudo registrar la cuenta en el operador:', err)
+        registrada = false
+      }
+
+      setCuentaAviso(
+        registrada
+          ? `Cuenta creada para ${cuentaCorreo.trim()}.`
+          : `Cuenta creada para ${cuentaCorreo.trim()}, pero no se pudo anotar en el operador: no aparecerá en su columna de cuentas.`,
+      )
       setCuentaOperadorId('')
       setCuentaNombre('')
       setCuentaCorreo('')

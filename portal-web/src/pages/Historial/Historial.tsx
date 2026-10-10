@@ -8,47 +8,25 @@ import {
   query,
   where,
 } from 'firebase/firestore'
-import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navbar/Navbar'
+import DetalleReporte from '../../components/Reportes/DetalleReporte'
+import { mapearReporte } from '../../components/Reportes/reporte'
+import type { Reporte } from '../../components/Reportes/reporte'
 import { COLOR_POR_ESTADO, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
 import styles from './Historial.module.css'
 
-interface ReporteHistorial {
-  id: string
-  categoria: string
-  descripcion: string
-  estado: string
-  organismo: string | null
-  fecha: Date | null
-  /** null mientras se está contando; ver carga de confirmaciones más abajo. */
-  confirmaciones: number | null
-}
-
-/** Convierte un doc de "reports" propio del usuario a una fila de la tabla. */
-function mapearReporte(docSnap: QueryDocumentSnapshot): ReporteHistorial {
-  const data = docSnap.data()
-  const organismo = data.organismo as { nombre?: unknown } | undefined
-
-  return {
-    id: docSnap.id,
-    categoria: typeof data.categoria === 'string' ? data.categoria : 'otro',
-    descripcion: typeof data.descripcion === 'string' ? data.descripcion : '',
-    estado: typeof data.estado === 'string' ? data.estado : 'desconocido',
-    organismo: typeof organismo?.nombre === 'string' ? organismo.nombre : null,
-    fecha: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : null,
-    confirmaciones: null,
-  }
-}
-
 export default function Historial() {
   const { user, loading: sesionCargando } = useAuth()
   const { etiqueta } = useCategorias()
-  const [reportes, setReportes] = useState<ReporteHistorial[]>([])
+  const [reportes, setReportes] = useState<Reporte[]>([])
+  // Conteo de confirmaciones por reporte; ausente mientras se está contando.
+  const [confirmaciones, setConfirmaciones] = useState<Record<string, number>>({})
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [detalleId, setDetalleId] = useState<string | null>(null)
 
   useEffect(() => {
     if (sesionCargando || !user) {
@@ -65,8 +43,8 @@ export default function Historial() {
     const unsubscribe = onSnapshot(
       misReportes,
       (snapshot) => {
-        const base = snapshot.docs.map(mapearReporte)
-        setReportes(base)
+        const lista = snapshot.docs.map(mapearReporte)
+        setReportes(lista)
         setCargando(false)
         setError('')
 
@@ -74,13 +52,11 @@ export default function Historial() {
         // congelado en 0 por las reglas), así que se cuenta aparte por cada
         // reporte — igual que en el mapa, pero acá se pide de una vez porque
         // la lista ya está acotada a "mis reportes".
-        base.forEach((reporte) => {
+        lista.forEach((reporte) => {
           getCountFromServer(collection(db, 'reports', reporte.id, 'confirmations'))
             .then((snap) => {
               const total = snap.data().count
-              setReportes((prev) =>
-                prev.map((r) => (r.id === reporte.id ? { ...r, confirmaciones: total } : r)),
-              )
+              setConfirmaciones((prev) => ({ ...prev, [reporte.id]: total }))
             })
             .catch((err) => {
               console.error('Error al contar confirmaciones:', err)
@@ -102,6 +78,10 @@ export default function Historial() {
     return <Navigate to="/login" replace />
   }
 
+  // Se busca en la lista viva: si el reporte cambia de estado con el detalle
+  // abierto, el detalle se actualiza solo.
+  const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
+
   return (
     <div className={styles.page}>
       <Navbar />
@@ -122,6 +102,8 @@ export default function Historial() {
 
         {!cargando && !error && reportes.length > 0 && (
           <div className={styles.tableWrapper}>
+            {/* En el teléfono cada fila se muestra como una tarjeta: las
+                celdas llevan data-label para rotular cada dato (ver CSS). */}
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -137,9 +119,13 @@ export default function Historial() {
               <tbody>
                 {reportes.map((reporte) => (
                   <tr key={reporte.id}>
-                    <td>{etiqueta(reporte.categoria)}</td>
-                    <td className={styles.descripcion}>{reporte.descripcion}</td>
-                    <td>
+                    <td data-label="Categoría" className={styles.categoria}>
+                      {etiqueta(reporte.categoria)}
+                    </td>
+                    <td data-label="Descripción" className={styles.descripcion}>
+                      {reporte.descripcion}
+                    </td>
+                    <td data-label="Estado">
                       <span
                         className={styles.badge}
                         style={{
@@ -151,9 +137,11 @@ export default function Historial() {
                         {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
                       </span>
                     </td>
-                    <td>{reporte.organismo ?? '—'}</td>
-                    <td>{reporte.confirmaciones === null ? '…' : reporte.confirmaciones}</td>
-                    <td>
+                    <td data-label="Organismo">{reporte.organismoNombre ?? '—'}</td>
+                    <td data-label="Confirmaciones">
+                      {confirmaciones[reporte.id] ?? '…'}
+                    </td>
+                    <td data-label="Fecha">
                       {reporte.fecha
                         ? reporte.fecha.toLocaleDateString('es-CL', {
                             day: 'numeric',
@@ -162,20 +150,11 @@ export default function Historial() {
                           })
                         : '—'}
                     </td>
-                    <td>
-                      {/*
-                        PENDIENTE: pantalla de detalle del reporte. Ahí iría,
-                        entre otras cosas, el historial de cambios de estado
-                        (subcolección reports/{id}/statusHistory: quién
-                        cambió el estado, cuándo, de qué a qué y con qué
-                        comentario). Por ahora el botón queda deshabilitado
-                        a propósito — no hay ruta ni componente todavía.
-                      */}
+                    <td className={styles.celdaDetalle}>
                       <button
                         type="button"
                         className={styles.detalleBoton}
-                        disabled
-                        title="Próximamente: detalle del reporte e historial de estados"
+                        onClick={() => setDetalleId(reporte.id)}
                       >
                         Ver detalle
                       </button>
@@ -187,6 +166,15 @@ export default function Historial() {
           </div>
         )}
       </main>
+
+      {reporteDetalle && (
+        <DetalleReporte
+          reporte={reporteDetalle}
+          operadorNombre={null}
+          onCerrar={() => setDetalleId(null)}
+          vista="ciudadano"
+        />
+      )}
     </div>
   )
 }

@@ -40,15 +40,36 @@
   color: var(--ca-danger);
 }
 
+/* Tamaño estándar para todas las fotos del popup (4:3), cualquiera sea el
+   tamaño u orientación original: la imagen se recorta para llenar el
+   recuadro. El recuadro existe desde antes de que llegue la foto, así el
+   popup no cambia de tamaño al cargarla. */
 .foto {
-  margin-top: 6px;
+  width: 240px;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-top: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ca-surface-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .foto img {
   display: block;
-  max-width: 100%;
-  border-radius: 8px;
-  margin-top: 4px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fotoAviso {
+  margin: 0;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+  text-align: center;
 }
 
 .confirmar {
@@ -81,11 +102,9 @@
 }
 
 .historial {
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 220px;
 }
 
 .historialBoton {
@@ -127,6 +146,207 @@
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
 }
 
+/* ---- Resumen al pasar el mouse sobre un pin ---- */
+
+.map :global(.leaflet-marker-icon),
+.mapCompleto :global(.leaflet-marker-icon) {
+  cursor: pointer;
+}
+
+.map :global(.leaflet-tooltip),
+.mapCompleto :global(.leaflet-tooltip) {
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  border: 1px solid var(--ca-line);
+  box-shadow: var(--shadow-card);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.map :global(.leaflet-tooltip-top::before),
+.mapCompleto :global(.leaflet-tooltip-top::before) {
+  border-top-color: var(--ca-line);
+}
+
+/* Tamaño fijo desde el primer momento: Leaflet ubica el recuadro al abrirse,
+   y si la foto lo agrandara al terminar de cargar, taparía el pin. */
+.tooltipFoto {
+  width: 180px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--ca-line);
+}
+
+.tooltipAccion {
+  color: var(--ca-signal);
+}
+
+.pinSeleccionado span {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin: 3px;
+  border-radius: 50%;
+  border: 3px solid var(--ca-ink);
+  box-shadow: 0 0 0 4px rgba(28, 169, 201, 0.55), 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+/* ---- Panel de detalle del reporte ----
+   Va fuera de Leaflet (encima del mapa, no dentro): así el zoom y el
+   arrastre del mapa no lo mueven ni lo agrandan, y la rueda o el gesto
+   dentro del panel desplazan su contenido sin mover el mapa.
+   Escritorio: tarjeta lateral. Teléfono: hoja que sube desde abajo. */
+
+.mapaMarco {
+  position: relative;
+}
+
+.mapaMarcoCompleto {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  position: absolute;
+  z-index: 1100;
+  top: 12px;
+  right: 12px;
+  width: min(340px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  display: flex;
+  flex-direction: column;
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  animation: panelLateral 0.18s ease-out;
+}
+
+.panelCabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--ca-line);
+}
+
+.panelTitulo {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.panelCerrar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.panelCerrar:hover {
+  border-color: var(--ca-signal);
+}
+
+.panelCerrar:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.panelCuerpo {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 12px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.panelCuerpo .foto {
+  width: 100%;
+  margin-top: 0;
+}
+
+.panelDescripcion {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.panelDatos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: 0.82rem;
+}
+
+.panelDatos dt {
+  color: var(--ca-muted);
+}
+
+.panelDatos dd {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .panel {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 65%;
+    border-radius: 14px 14px 0 0;
+    border-bottom: none;
+    animation-name: panelInferior;
+  }
+
+  /* Sin barrita de arrastre: la hoja no se desliza, se cierra con la ✕. Un
+     botón de cerrar más grande, cómodo para el dedo. */
+  .panelCerrar {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@keyframes panelLateral {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes panelInferior {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
 .leyenda {
   display: flex;
   flex-wrap: wrap;
@@ -151,40 +371,4 @@
   border-radius: 50%;
   border: 1px solid var(--ca-ink);
   flex: none;
-}
-
-/* ---- Chrome de Leaflet: estas clases son globales (las crea la librería,
-   no React), por eso van con :global() en vez de como módulos normales. ---- */
-
-:global(.leaflet-popup-content-wrapper) {
-  background: var(--ca-surface);
-  color: var(--ca-ink);
-  border: 1px solid var(--ca-line);
-}
-
-:global(.leaflet-popup-tip) {
-  background: var(--ca-surface);
-}
-
-:global(.leaflet-popup-content a) {
-  color: var(--ca-signal);
-}
-
-:global(.leaflet-control-zoom a) {
-  background: var(--ca-surface);
-  color: var(--ca-ink) !important;
-  border-color: var(--ca-line) !important;
-}
-
-:global(.leaflet-control-zoom a:hover) {
-  background: var(--ca-surface-alt);
-}
-
-:global(.leaflet-control-attribution) {
-  background: rgba(17, 24, 39, 0.75);
-  color: var(--ca-muted);
-}
-
-:global(.leaflet-control-attribution a) {
-  color: var(--ca-signal);
 }

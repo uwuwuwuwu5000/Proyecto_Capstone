@@ -67,11 +67,6 @@ export const RANGOS_RAPIDOS: RangoRapido[] = [
       hasta: fechaInput(hoy),
     }),
   },
-  {
-    clave: 'todo',
-    etiqueta: 'Todo',
-    calcular: () => ({ desde: '', hasta: '' }),
-  },
 ]
 
 export function rangoRapido(clave: string, hoy = new Date()): RangoFechas {

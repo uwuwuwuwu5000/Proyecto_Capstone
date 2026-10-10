@@ -17,7 +17,9 @@ const AdminOrganismos = lazy(() => import('./pages/Admin/AdminOrganismos'))
 const AdminOperadores = lazy(() => import('./pages/Admin/AdminOperadores'))
 const AdminCuentas = lazy(() => import('./pages/Admin/AdminCuentas'))
 const AdminReportes = lazy(() => import('./pages/Admin/AdminReportes'))
+const AdminCrearReporte = lazy(() => import('./pages/Admin/AdminCrearReporte'))
 const AdminCategorias = lazy(() => import('./pages/Admin/AdminCategorias'))
+const AdminEstadisticas = lazy(() => import('./pages/Admin/AdminEstadisticas'))
 const OperadorMapa = lazy(() => import('./pages/Operador/OperadorMapa'))
 const OperadorReportes = lazy(() => import('./pages/Operador/OperadorReportes'))
 const OperadorEstadisticas = lazy(() => import('./pages/Operador/OperadorEstadisticas'))
@@ -41,7 +43,9 @@ function Rutas() {
           <Route path="/admin/operadores" element={<AdminOperadores />} />
           <Route path="/admin/cuentas" element={<AdminCuentas />} />
           <Route path="/admin/reportes" element={<AdminReportes />} />
+          <Route path="/admin/reportes/nuevo" element={<AdminCrearReporte />} />
           <Route path="/admin/categorias" element={<AdminCategorias />} />
+          <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
           <Route path="/operador" element={<OperadorMapa />} />
           <Route path="/operador/reportes" element={<OperadorReportes />} />
           <Route path="/operador/estadisticas" element={<OperadorEstadisticas />} />

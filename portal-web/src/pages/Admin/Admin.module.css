@@ -295,3 +295,656 @@
 .table tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ---- Tabla del catálogo de categorías ---- */
+
+.table td {
+  vertical-align: middle;
+}
+
+.descripcionCategoria {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+  opacity: 0.85;
+}
+
+/* Botones de una fila de tabla. Van en un contenedor propio dentro del <td>:
+   si el flex se aplica a la celda misma, deja de comportarse como celda y la
+   línea que separa las filas queda desalineada. */
+.accionesFila {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Dato secundario bajo el principal de una celda (p. ej. el id del operador).
+   Los ids no tienen espacios: pueden partirse en cualquier punto para no
+   ensanchar la tabla. */
+.subtextoCelda {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--ca-muted);
+  opacity: 0.85;
+  overflow-wrap: anywhere;
+}
+
+/* Rótulo abreviado solo para el teléfono (p. ej. "Orden" → "N.º"). */
+.textoCorto {
+  display: none;
+}
+
+/* Teléfono: se conserva la tabla, pero sin la descripción (que la hacía
+   desbordar hacia los lados) y con los botones uno sobre otro, para que
+   quepa en el ancho de la pantalla sin desplazarse. */
+@media (max-width: 640px) {
+  .descripcionCategoria {
+    display: none;
+  }
+
+  .table.tablaCategorias {
+    min-width: 0;
+    font-size: 0.82rem;
+  }
+
+  .table.tablaCategorias .textoLargo {
+    display: none;
+  }
+
+  .table.tablaCategorias .textoCorto {
+    display: inline;
+  }
+
+  /* Nombres largos ("accesibilidad") se cortan con guion en vez de ensanchar
+     la columna. El portal declara lang="es", así que usa las reglas del español. */
+  .table.tablaCategorias td {
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
+
+  .table.tablaCategorias th,
+  .table.tablaCategorias td {
+    padding: 8px 4px;
+  }
+
+  .table.tablaCategorias th:first-child,
+  .table.tablaCategorias td:first-child {
+    padding-left: 8px;
+  }
+
+  .table.tablaCategorias th:last-child,
+  .table.tablaCategorias td:last-child {
+    padding-right: 8px;
+  }
+
+  /* Solo el id (sin espacios, p. ej. "calle_deteriorada") puede partirse en
+     cualquier punto; el resto se corta entre palabras, como siempre. */
+  .idCategoria {
+    min-width: 60px;
+    overflow-wrap: anywhere;
+    -webkit-hyphens: none;
+    hyphens: none;
+    font-size: 0.76rem;
+  }
+
+  .table.tablaCategorias th {
+    font-size: 0.66rem;
+    letter-spacing: 0.02em;
+  }
+
+  .accionesFila {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .accionesFila button {
+    min-height: 34px;
+    padding: 4px 6px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+}
+
+/* Teléfono: menos margen en página y tarjetas del panel, para que el
+   contenido (tablas incluidas) tenga más ancho útil. */
+@media (max-width: 560px) {
+  .main {
+    padding: 24px 16px 48px;
+  }
+
+  .card {
+    padding: 20px 14px;
+  }
+
+  /* Las tablas se ajustan al ancho en vez de exigir 420 px (que obligaba a
+     desplazarse de lado para llegar a los botones). Si una tabla igual no
+     cabe, su contenedor se desplaza, no la página. */
+  .table {
+    min-width: 0;
+    font-size: 0.82rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 8px 6px;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+  }
+
+  .table th {
+    font-size: 0.66rem;
+  }
+}
+
+/* ---- Crear reporte (admin) ---- */
+
+.hintCampo {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.mapaCrear {
+  height: 380px;
+  width: 100%;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  /* Bajo el navbar fijo y sus menús. */
+  z-index: 0;
+  background: var(--ca-base);
+}
+
+/* Se elige un punto, no se "toma" el mapa: cursor de precisión. */
+.mapaCrear:global(.leaflet-grab) {
+  cursor: crosshair;
+}
+
+.mapaCrear :global(.leaflet-marker-draggable) {
+  cursor: move;
+}
+
+@media (max-width: 560px) {
+  .mapaCrear {
+    height: 300px;
+  }
+}
+
+.asignacion {
+  padding: 12px 14px;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface-alt);
+}
+
+.asignacionVacia {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.asignacionDatos {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 0.88rem;
+  color: var(--ca-ink);
+}
+
+.asignacionDatos dt {
+  color: var(--ca-muted);
+}
+
+.asignacionDatos dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.contador {
+  align-self: flex-end;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.pendiente {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px dashed var(--ca-line);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+/* Título de página con una acción a la derecha (p. ej. "+ Crear reporte"). */
+.encabezadoAcciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.encabezadoAcciones .title {
+  margin: 0;
+}
+
+.botonCrear {
+  padding: 9px 14px;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.botonCrear:hover {
+  background: var(--ca-signal-dark);
+}
+
+.botonCrear:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+/* Campos de coordenadas: latitud y longitud lado a lado. */
+.coordenadas {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.labelChico {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.errorCampo {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--ca-danger);
+}
+
+.asignacionPendiente {
+  color: var(--ca-muted);
+}
+
+.asignacionError {
+  color: var(--ca-danger);
+}
+
+/* ---- Inicio del panel: tarjetas agrupadas por tema ---- */
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.grupoTitulo {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ca-signal);
+}
+
+.grupoDescripcion {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+/* Páginas con más contenido a lo ancho (crear reporte, organismos). */
+.mainAncho {
+  max-width: 1120px;
+}
+
+.crearGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.crearColumna {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Con espacio para dos columnas: el mapa más alto a la izquierda y el
+   formulario a la derecha, sin tener que desplazarse para completarlo. */
+@media (min-width: 1000px) {
+  .crearGrid {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  .crearGrid .mapaCrear {
+    height: 460px;
+  }
+}
+
+/* ---- Tablas con filtros (organismos, operadores) ---- */
+
+.filtrosTabla {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+
+@media (max-width: 760px) {
+  .filtrosTabla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filtroBuscar {
+    grid-column: 1 / -1;
+  }
+}
+
+.resumenTabla {
+  margin: 14px 0 0;
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.notaTabla {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.numero {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.soloLector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Solo en pantallas angostas (ver tablas responsivas abajo). */
+.soloAngosto {
+  display: none;
+}
+
+/* Estado como píldora de color: celeste activo, gris inactivo. */
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pildora::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pildoraActiva {
+  border-color: rgba(28, 169, 201, 0.6);
+  background: rgba(28, 169, 201, 0.14);
+  color: var(--ca-signal);
+}
+
+.pildoraInactiva {
+  background: rgba(92, 103, 125, 0.2);
+  color: var(--ca-muted);
+}
+
+/* Organismos: se quitan columnas a medida que falta ancho, de la menos a la
+   más relevante (región → operadores y cuentas → organismo y reportes). */
+.tablaOrganismos td,
+.tablaOrganismos th {
+  vertical-align: middle;
+}
+
+.tablaOrganismos .accionesFila button {
+  white-space: nowrap;
+}
+
+@media (max-width: 1000px) {
+  .colRegion {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .colSecundaria {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .colOrganismo,
+  .colReportes {
+    display: none;
+  }
+
+  .soloAngosto {
+    display: block;
+  }
+
+  .tablaOrganismos .accionesFila {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .tablaOrganismos .accionesFila button {
+    white-space: nowrap;
+  }
+}
+
+.sinMargen {
+  margin: 0;
+}
+
+/* Un enlace con aspecto de botón pequeño (p. ej. "Crear cuenta"). */
+a.editarBoton {
+  display: inline-block;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Nombres de organismo bajo otra celda: se cortan entre palabras. */
+.subtextoNormal {
+  overflow-wrap: normal;
+}
+
+.estadoBajo {
+  margin-top: 6px;
+}
+
+@media (max-width: 640px) {
+  .tablaOperadores .colOrganismo,
+  .tablaOperadores .colEstado {
+    display: none;
+  }
+
+  .tablaOperadores .soloAngosto {
+    display: block;
+  }
+
+  .tablaOperadores .accionesFila {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+}
+
+/* ---- Categorías: orden arrastrando ---- */
+
+.celdaOrden {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.asaArrastre {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ca-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: grab;
+  /* El gesto mueve la fila, no desplaza la página. */
+  touch-action: none;
+  user-select: none;
+}
+
+.asaArrastre:hover:not(:disabled) {
+  border-color: var(--ca-line);
+  color: var(--ca-ink);
+}
+
+.asaArrastre:active {
+  cursor: grabbing;
+}
+
+.asaArrastre:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.asaArrastre:disabled {
+  cursor: progress;
+  opacity: 0.5;
+}
+
+.filaArrastrada td {
+  background: rgba(28, 169, 201, 0.12);
+}
+
+.soloAngostoCategorias {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .colReportesCategoria,
+  .colEstadoCategoria {
+    display: none;
+  }
+
+  .soloAngostoCategorias {
+    display: block;
+  }
+}
+
+/* ---- Inicio del panel: indicadores de pendientes ---- */
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 560px) {
+  .indicadores {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+.indicador {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 18px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.indicador:hover {
+  border-color: var(--ca-signal);
+}
+
+.indicador:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.indicadorValor {
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ca-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.indicadorEtiqueta {
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.indicadorAccion {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ca-signal);
+}
+
+/* Teléfono: valor a la izquierda y textos a la derecha, en una fila. */
+@media (max-width: 560px) {
+  .indicador {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    padding: 12px 14px;
+  }
+
+  .indicadorValor {
+    grid-row: 1 / 3;
+    min-width: 2.2ch;
+    text-align: center;
+  }
+
+  .indicadorAccion {
+    margin-top: 0;
+  }
+}
+
+/* Lista con el estado al lado del nombre (abiertos más antiguos). */
+.rankingConEstado {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}

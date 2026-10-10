@@ -20,6 +20,10 @@
 
   --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
 
+  /* Alto de la barra de navegación (64 px + su borde inferior): lo usan los
+     elementos que quedan fijos justo debajo al desplazarse. */
+  --alto-navbar: 65px;
+
   color-scheme: dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
     sans-serif;

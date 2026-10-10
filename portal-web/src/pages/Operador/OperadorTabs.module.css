@@ -1,4 +1,9 @@
+/* Fijas justo debajo de la barra de navegación al desplazarse (Reportes y
+   Estadísticas son páginas largas). Por debajo del menú del navbar (1200). */
 .tabs {
+  position: sticky;
+  top: var(--alto-navbar);
+  z-index: 1150;
   display: flex;
   gap: 4px;
   padding: 0 24px;

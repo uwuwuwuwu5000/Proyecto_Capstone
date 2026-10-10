@@ -90,12 +90,26 @@
   border: 1px solid var(--ca-line);
   border-radius: 6px;
   background: transparent;
-  color: var(--ca-muted);
+  color: var(--ca-signal);
   font-size: 0.82rem;
   font-weight: 600;
-  cursor: not-allowed;
+  cursor: pointer;
 }
 
+.detalleBoton:hover {
+  border-color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.1);
+}
+
+.detalleBoton:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+/* ---- Teléfono: cada reporte es una tarjeta en vez de una fila ----
+   La tabla de 7 columnas no cabe en 393 px y el botón "Ver detalle" quedaba
+   fuera de la pantalla, a la derecha. Cada celda muestra su rótulo a partir
+   del atributo data-label. */
 @media (max-width: 640px) {
   .main {
     padding: 28px 16px 48px;
@@ -103,5 +117,102 @@
 
   .title {
     font-size: 1.5rem;
+  }
+
+  .tableWrapper {
+    overflow: visible;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .table {
+    min-width: 0;
+    background: transparent;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .table tr {
+    padding: 14px 16px;
+    background: var(--ca-surface);
+    border: 1px solid var(--ca-line);
+    border-radius: 12px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0;
+    border-bottom: none;
+    white-space: normal;
+    text-align: right;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ca-muted);
+    text-align: left;
+  }
+
+  /* La categoría hace de título de la tarjeta, sin rótulo. */
+  .table td.categoria {
+    padding-top: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .table td.categoria::before {
+    content: none;
+  }
+
+  /* La descripción va completa debajo, a lo ancho, sin rótulo. */
+  .table td.descripcion {
+    display: block;
+    max-width: none;
+    padding-bottom: 8px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .table td.descripcion::before {
+    content: none;
+  }
+
+  .table td.celdaDetalle {
+    padding-top: 10px;
+  }
+
+  .table td.celdaDetalle::before {
+    content: none;
+  }
+
+  .detalleBoton {
+    width: 100%;
+    min-height: 42px;
+    font-size: 0.92rem;
   }
 }

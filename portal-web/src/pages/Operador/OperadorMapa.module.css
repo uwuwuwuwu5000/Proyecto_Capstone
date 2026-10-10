@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* Ver Mapa.module.css: en Safari de iPhone 100vh cortaba la barra de
+     navegación; dvh descuenta la barra de direcciones. */
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -27,16 +30,140 @@
   gap: 12px;
 }
 
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Elementos que solo existen en el teléfono. */
+.barraMovil,
+.aplicarFiltros {
+  display: none;
+}
+
+/* ---- Teléfono: el mapa ocupa la pantalla y los filtros se despliegan
+   encima de él desde una barra compacta. ---- */
 @media (max-width: 780px) {
   .cuerpo {
     flex-direction: column;
   }
 
   .panel {
+    position: relative;
     width: 100%;
+    flex: none;
+    overflow: visible;
+    padding: 10px 16px;
     border-right: none;
     border-bottom: 1px solid var(--ca-line);
-    max-height: 45vh;
+    gap: 8px;
+  }
+
+  .encabezado {
+    display: none;
+  }
+
+  .barraMovil {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .botonFiltros {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid var(--ca-line);
+    border-radius: 8px;
+    background: var(--ca-surface-alt);
+    color: var(--ca-ink);
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .botonFiltros[aria-expanded='true'] {
+    border-color: var(--ca-signal);
+  }
+
+  .botonFiltros:focus-visible {
+    outline: 2px solid var(--ca-signal);
+    outline-offset: 2px;
+  }
+
+  .insignia {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--ca-signal);
+    color: var(--ca-base);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 20px;
+    text-align: center;
+  }
+
+  .resumenMovil {
+    font-size: 0.82rem;
+    color: var(--ca-muted);
+    text-align: right;
+  }
+
+  .filtros {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1100;
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 16px 16px;
+    background: var(--ca-surface);
+    border-bottom: 1px solid var(--ca-line);
+    box-shadow: var(--shadow-card);
+  }
+
+  .filtrosAbiertos {
+    display: flex;
+  }
+
+  /* El resumen ya está en la barra; dentro del desplegable sobra. */
+  .filtros .resumen {
+    display: none;
+  }
+
+  .aplicarFiltros {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 4px;
+  }
+
+  .encontrados {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--ca-muted);
+    text-align: center;
+  }
+
+  .verResultados {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ca-signal);
+    color: var(--ca-base);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
   }
 }
 
@@ -148,40 +275,6 @@
 .fechas legend {
   padding: 0;
   margin-bottom: 6px;
-}
-
-.rangos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.rango {
-  padding: 4px 9px;
-  border: 1px solid var(--ca-line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ca-muted);
-  font-size: 0.76rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.rango:hover {
-  color: var(--ca-ink);
-  background: rgba(165, 180, 195, 0.08);
-}
-
-.rango:focus-visible {
-  outline: 2px solid var(--ca-signal);
-  outline-offset: 2px;
-}
-
-.rangoActivo,
-.rangoActivo:hover {
-  border-color: var(--ca-signal);
-  background: rgba(28, 169, 201, 0.14);
-  color: var(--ca-ink);
 }
 
 .fechaFila {

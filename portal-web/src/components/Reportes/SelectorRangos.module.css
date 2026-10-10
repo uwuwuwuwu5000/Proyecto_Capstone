@@ -1,0 +1,40 @@
+.rangos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.rango {
+  padding: 4px 9px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ca-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rango:hover {
+  color: var(--ca-ink);
+  background: rgba(165, 180, 195, 0.08);
+}
+
+.rango:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.rangoActivo,
+.rangoActivo:hover {
+  border-color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.14);
+  color: var(--ca-ink);
+}
+
+@media (max-width: 640px) {
+  .rango {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+}

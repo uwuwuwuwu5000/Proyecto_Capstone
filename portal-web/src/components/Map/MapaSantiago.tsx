@@ -2,8 +2,9 @@ import L from 'leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import { useEffect, useState } from 'react'
-import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
+import { useCallback, useEffect, useState } from 'react'
+import { MapContainer, Marker, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
+import FotoReporte from '../Reportes/FotoReporte'
 import {
   collection,
   doc,
@@ -19,8 +20,14 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
-import { ICONOS_POR_ESTADO, ICONO_ESTADO_DESCONOCIDO } from './estadoIconos'
+import {
+  ICONOS_POR_ESTADO,
+  ICONOS_SELECCIONADOS_POR_ESTADO,
+  ICONO_ESTADO_DESCONOCIDO,
+} from './estadoIconos'
 import HistorialEstados from '../Reportes/HistorialEstados'
+import { EstadoPildora } from '../Reportes/TarjetaReporte'
+import { formatearFecha } from '../Reportes/reporte'
 import { cargarHistorial } from '../Reportes/historial'
 import type { CambioEstado } from '../Reportes/historial'
 import styles from './MapaSantiago.module.css'
@@ -118,6 +125,53 @@ function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte | null {
   }
 }
 
+// Ancho que ocupa el panel lateral en escritorio (340 px + márgenes).
+const ANCHO_PANEL = 352
+
+// El resumen al pasar el mouse solo tiene sentido con mouse: en una pantalla
+// táctil, Leaflet también lo abre al tocar el pin y quedaría encima de la
+// hoja de detalle. Ahí el toque abre el detalle directamente.
+const ADMITE_HOVER =
+  typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
+/**
+ * Dentro del mapa: cierra el detalle al tocar una zona vacía y, al abrir un
+ * reporte, mueve el mapa lo justo para que su pin no quede tapado por el
+ * panel (a la derecha en escritorio, la hoja inferior en el teléfono).
+ */
+function ControlSeleccion({
+  lat,
+  lng,
+  onTocarMapa,
+}: {
+  lat: number | null
+  lng: number | null
+  onTocarMapa: () => void
+}) {
+  const map = useMapEvents({ click: onTocarMapa })
+
+  useEffect(() => {
+    if (lat === null || lng === null) {
+      return
+    }
+    const tamano = map.getSize()
+    const punto = map.latLngToContainerPoint([lat, lng])
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      // La hoja tapa hasta el 65% inferior: el pin debe quedar arriba.
+      if (punto.y > tamano.y * 0.3) {
+        map.panBy([0, punto.y - tamano.y * 0.2])
+      }
+    } else {
+      const anchoLibre = tamano.x - ANCHO_PANEL
+      if (punto.x > anchoLibre - 24) {
+        map.panBy([punto.x - anchoLibre / 2, 0])
+      }
+    }
+  }, [map, lat, lng])
+
+  return null
+}
+
 interface EstadoHistorial {
   cargando: boolean
   /** Estado del reporte cuando se leyó el historial. */
@@ -160,6 +214,21 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
   // con el estado que tenía el reporte al leerlo: si cambió, se vuelve a leer.
   const [historiales, setHistoriales] = useState<Record<string, EstadoHistorial>>({})
   const [historialAbierto, setHistorialAbierto] = useState<Record<string, boolean>>({})
+  // Reporte abierto en el panel de detalle (null = ninguno).
+  const [seleccionadoId, setSeleccionadoId] = useState<string | null>(null)
+
+  const cerrarDetalle = useCallback(() => setSeleccionadoId(null), [])
+
+  useEffect(() => {
+    if (!seleccionadoId) {
+      return
+    }
+    const alPresionar = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSeleccionadoId(null)
+    }
+    window.addEventListener('keydown', alPresionar)
+    return () => window.removeEventListener('keydown', alPresionar)
+  }, [seleccionadoId])
 
   async function alternarHistorial(reporte: Reporte) {
     const abrir = !historialAbierto[reporte.id]
@@ -333,136 +402,189 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
     return unsubscribe
   }, [user, sesionCargando])
 
+  function abrirDetalle(reporte: Reporte) {
+    setSeleccionadoId(reporte.id)
+    cargarConfirmaciones(reporte)
+    if (reporte.foto) {
+      cargarFoto(reporte)
+    }
+  }
+
+  // Se busca en la lista viva: si el reporte cambia de estado mientras está
+  // abierto, el panel lo refleja; si desaparece, el panel se cierra solo.
+  const seleccionado = seleccionadoId
+    ? reportes.find((r) => r.id === seleccionadoId) ?? null
+    : null
+
+  function renderDetalle(reporte: Reporte) {
+    const estadoFoto = fotos[reporte.id]
+    const estadoConteo = confirmaciones[reporte.id]
+    const esAutor = !!user && reporte.uid === user.uid
+    const yaConfirmado = !!confirmados[reporte.id]
+    const confirmandoAhora = !!confirmando[reporte.id]
+    const historial = historiales[reporte.id]
+    const verHistorial = !!historialAbierto[reporte.id]
+
+    return (
+      <aside className={styles.panel} aria-labelledby="detalle-mapa-titulo">
+        <div className={styles.panelCabecera}>
+          <div>
+            <h2 id="detalle-mapa-titulo" className={styles.panelTitulo}>
+              {etiqueta(reporte.categoria)}
+            </h2>
+            <EstadoPildora estado={reporte.estado} />
+          </div>
+          <button
+            type="button"
+            className={styles.panelCerrar}
+            onClick={cerrarDetalle}
+            aria-label="Cerrar detalle del reporte"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className={styles.panelCuerpo}>
+          {reporte.foto && (
+            <div className={styles.foto}>
+              {estadoFoto?.cargando && <p className={styles.fotoAviso}>Cargando foto…</p>}
+              {estadoFoto?.error && <p className={styles.fotoAviso}>{estadoFoto.error}</p>}
+              {estadoFoto?.src && <img src={estadoFoto.src} alt="Foto del reporte" />}
+            </div>
+          )}
+
+          <p className={styles.panelDescripcion}>{reporte.descripcion}</p>
+
+          <dl className={styles.panelDatos}>
+            <dt>Fecha</dt>
+            <dd>{formatearFecha(reporte.fecha, true)}</dd>
+            <dt>Confirmaciones</dt>
+            <dd>
+              {estadoConteo?.cargando && 'cargando…'}
+              {estadoConteo?.error && estadoConteo.error}
+              {estadoConteo?.total !== undefined && estadoConteo.total}
+              {!estadoConteo && '—'}
+            </dd>
+          </dl>
+
+          {!esAutor && !esOperador && (
+            <div className={styles.confirmar}>
+              {yaConfirmado ? (
+                <span className={styles.confirmarHecho}>✓ Ya confirmaste este reporte</span>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.confirmarBoton}
+                  disabled={confirmandoAhora}
+                  onClick={() => confirmarReporte(reporte)}
+                >
+                  {confirmandoAhora ? 'Confirmando…' : 'Confirmar que existe'}
+                </button>
+              )}
+              {mensajeConfirmacion[reporte.id] && (
+                <p className={styles.confirmarMensaje}>{mensajeConfirmacion[reporte.id]}</p>
+              )}
+            </div>
+          )}
+
+          <div className={styles.historial}>
+            <button
+              type="button"
+              className={styles.historialBoton}
+              onClick={() => alternarHistorial(reporte)}
+              aria-expanded={verHistorial}
+            >
+              {verHistorial ? 'Ocultar historial de estados' : 'Ver historial de estados'}
+            </button>
+            {verHistorial && (
+              <>
+                {historial?.cargando && <p className={styles.historialAviso}>Cargando…</p>}
+                {historial?.error && <p className={styles.historialAviso}>{historial.error}</p>}
+                {historial?.cambios && (
+                  <HistorialEstados
+                    cambios={historial.cambios}
+                    fechaCreacion={reporte.fecha}
+                    compacto
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </aside>
+    )
+  }
+
   return (
     <div className={completo ? styles.raizCompleta : undefined}>
-      <MapContainer
-        center={CENTRO_SANTIAGO}
-        zoom={12}
-        // A pantalla completa el mapa es lo único de la página: conviene
-        // que el scroll del mouse haga zoom. Incrustado en la Landing se
-        // desactiva para no secuestrar el scroll de la página.
-        scrollWheelZoom={completo}
-        className={completo ? styles.mapCompleto : styles.map}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {reportes.map((reporte) => {
-          const estadoFoto = fotos[reporte.id]
-          const estadoConteo = confirmaciones[reporte.id]
-          const esAutor = !!user && reporte.uid === user.uid
-          const yaConfirmado = !!confirmados[reporte.id]
-          const confirmandoAhora = !!confirmando[reporte.id]
-          const historial = historiales[reporte.id]
-          const verHistorial = !!historialAbierto[reporte.id]
-
-          return (
-            <Marker
-              key={reporte.id}
-              position={[reporte.lat, reporte.lng]}
-              icon={ICONOS_POR_ESTADO[reporte.estado] ?? ICONO_ESTADO_DESCONOCIDO}
-              eventHandlers={{
-                click: () => {
-                  cargarConfirmaciones(reporte)
-                  if (reporte.foto) {
-                    cargarFoto(reporte)
-                  }
-                },
-              }}
-            >
-              <Popup>
-                <strong>
-                  {etiqueta(reporte.categoria)}
-                </strong>
-                <br />
-                {reporte.descripcion}
-                <br />
-                Estado: {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
-                <br />
-                Confirmaciones:{' '}
-                {estadoConteo?.cargando && 'cargando…'}
-                {estadoConteo?.error && estadoConteo.error}
-                {estadoConteo?.total !== undefined && estadoConteo.total}
-                {!estadoConteo && '—'}
-
-                {!esAutor && !esOperador && (
-                  <div className={styles.confirmar}>
-                    {yaConfirmado ? (
-                      <span className={styles.confirmarHecho}>
-                        ✓ Ya confirmaste este reporte
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        className={styles.confirmarBoton}
-                        disabled={confirmandoAhora}
-                        onClick={() => confirmarReporte(reporte)}
-                      >
-                        {confirmandoAhora
-                          ? 'Confirmando…'
-                          : 'Confirmar que existe'}
-                      </button>
+      <div className={completo ? styles.mapaMarcoCompleto : styles.mapaMarco}>
+        <MapContainer
+          center={CENTRO_SANTIAGO}
+          zoom={12}
+          // A pantalla completa el mapa es lo único de la página: conviene
+          // que el scroll del mouse haga zoom. Incrustado en la Landing se
+          // desactiva para no secuestrar el scroll de la página.
+          scrollWheelZoom={completo}
+          className={completo ? styles.mapCompleto : styles.map}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <ControlSeleccion
+            lat={seleccionado?.lat ?? null}
+            lng={seleccionado?.lng ?? null}
+            onTocarMapa={cerrarDetalle}
+          />
+          {reportes.map((reporte) => {
+            const esSeleccionado = reporte.id === seleccionadoId
+            const conteo = confirmaciones[reporte.id]
+            return (
+              <Marker
+                key={reporte.id}
+                position={[reporte.lat, reporte.lng]}
+                icon={
+                  esSeleccionado
+                    ? ICONOS_SELECCIONADOS_POR_ESTADO[reporte.estado] ??
+                      ICONOS_SELECCIONADOS_POR_ESTADO.reportado
+                    : ICONOS_POR_ESTADO[reporte.estado] ?? ICONO_ESTADO_DESCONOCIDO
+                }
+                zIndexOffset={esSeleccionado ? 1000 : 0}
+                eventHandlers={{
+                  click: () => abrirDetalle(reporte),
+                  // Las confirmaciones del resumen se piden la primera vez que
+                  // se pasa el mouse (y quedan guardadas para el detalle).
+                  mouseover: () => cargarConfirmaciones(reporte),
+                }}
+              >
+                {ADMITE_HOVER && !esSeleccionado && (
+                  <Tooltip direction="top" offset={[0, -10]}>
+                    {reporte.foto && (
+                      <div className={styles.tooltipFoto}>
+                        <FotoReporte foto={reporte.foto} inmediata />
+                      </div>
                     )}
-                    {mensajeConfirmacion[reporte.id] && (
-                      <p className={styles.confirmarMensaje}>
-                        {mensajeConfirmacion[reporte.id]}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {reporte.fecha && (
-                  <>
+                    <strong>{etiqueta(reporte.categoria)}</strong>
+                    {' · '}
+                    {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
                     <br />
-                    {reporte.fecha.toLocaleDateString('es-CL', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </>
+                    {formatearFecha(reporte.fecha, true)}
+                    <br />
+                    Confirmaciones:{' '}
+                    {conteo?.total !== undefined ? conteo.total : conteo?.error ? '—' : '…'}
+                    <br />
+                    <em className={styles.tooltipAccion}>Clic para ver el detalle</em>
+                  </Tooltip>
                 )}
+              </Marker>
+            )
+          })}
+        </MapContainer>
 
-                {reporte.foto && (
-                  <div className={styles.foto}>
-                    {estadoFoto?.cargando && <p>Cargando foto…</p>}
-                    {estadoFoto?.error && <p>{estadoFoto.error}</p>}
-                    {estadoFoto?.src && (
-                      <img src={estadoFoto.src} alt="Foto del reporte" />
-                    )}
-                  </div>
-                )}
-
-                <div className={styles.historial}>
-                  <button
-                    type="button"
-                    className={styles.historialBoton}
-                    onClick={() => alternarHistorial(reporte)}
-                    aria-expanded={verHistorial}
-                  >
-                    {verHistorial ? 'Ocultar historial de estados' : 'Ver historial de estados'}
-                  </button>
-                  {verHistorial && (
-                    <>
-                      {historial?.cargando && <p className={styles.historialAviso}>Cargando…</p>}
-                      {historial?.error && (
-                        <p className={styles.historialAviso}>{historial.error}</p>
-                      )}
-                      {historial?.cambios && (
-                        <HistorialEstados
-                          cambios={historial.cambios}
-                          fechaCreacion={reporte.fecha}
-                          compacto
-                        />
-                      )}
-                    </>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          )
-        })}
-      </MapContainer>
+        {/* Fuera del MapContainer a propósito: así el zoom y el arrastre del
+            mapa no lo afectan (ver .panel en el CSS). */}
+        {seleccionado && renderDetalle(seleccionado)}
+      </div>
 
       {!sesionCargando && !user && (
         <p className={styles.status}>

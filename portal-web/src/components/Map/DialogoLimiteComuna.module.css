@@ -1,0 +1,59 @@
+.dialogoMapa {
+  width: min(760px, calc(100vw - 32px));
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cerrar {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  cursor: pointer;
+}
+
+.cerrar:hover {
+  border-color: var(--ca-signal);
+}
+
+.cerrar:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-danger);
+}
+
+.mapa {
+  height: min(460px, 60vh);
+  width: 100%;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-base);
+}
+
+@media (max-width: 560px) {
+  .dialogoMapa {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    border-radius: 14px 14px 0 0;
+  }
+}

@@ -45,7 +45,8 @@ function porcentaje(parte: number, total: number): string {
 }
 
 export default function OperadorEstadisticas() {
-  const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
+  const { cargando, autorizado, operadorId, operadorNombre, organismoNombre } =
+    useRequiereOperador()
   const { etiqueta } = useCategorias()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
@@ -595,6 +596,7 @@ export default function OperadorEstadisticas() {
           operadorNombre={operadorNombre}
           onCerrar={() => setDetalleId(null)}
           gestionable
+          organismoNombre={organismoNombre}
         />
       )}
     </div>

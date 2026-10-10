@@ -1,65 +1,65 @@
-import { Fragment, useEffect, useState } from 'react'
-import type { FormEvent } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { collection, doc, onSnapshot, setDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
 import Navbar from '../../components/Navbar/Navbar'
+import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
+import { ESTADOS_FINALIZADOS } from '../../components/Reportes/tiempos'
+import { useOperadores } from './operadores'
 import styles from './Admin.module.css'
 
-interface ZonaCobertura {
-  type: string
-  coordinates: unknown
-}
+// El mapa (Leaflet) se descarga solo al abrir un límite.
+const DialogoLimiteComuna = lazy(() => import('../../components/Map/DialogoLimiteComuna'))
 
 interface OrganismoFila {
   id: string
   nombre: string
   comuna: string
+  region: string
   activo: boolean
-  zonaCobertura: ZonaCobertura | null
 }
 
-function zonaComoTexto(zona: ZonaCobertura | null): string {
-  if (!zona) {
-    return ''
-  }
-  return JSON.stringify(zona, null, 2)
+interface ConteoReportes {
+  total: number
+  abiertos: number
 }
+
+type FiltroEstado = '' | 'activos' | 'inactivos'
 
 export default function AdminOrganismos() {
   const { cargando, autorizado } = useRequiereAdmin()
+  const { confirmar, dialogo } = useConfirmacion()
+  const { operadores } = useOperadores(autorizado)
 
   const [organismos, setOrganismos] = useState<OrganismoFila[]>([])
   const [cargandoLista, setCargandoLista] = useState(true)
   const [error, setError] = useState('')
-  const [filtro, setFiltro] = useState('')
-  const [actualizandoId, setActualizandoId] = useState<string | null>(null)
+  const [reportesPorOrganismo, setReportesPorOrganismo] = useState<Map<string, ConteoReportes> | null>(
+    null,
+  )
 
-  const [editandoZonaId, setEditandoZonaId] = useState<string | null>(null)
-  const [zonaTexto, setZonaTexto] = useState('')
-  const [zonaError, setZonaError] = useState('')
-  const [guardandoZona, setGuardandoZona] = useState(false)
+  const [filtro, setFiltro] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('')
+  const [filtroRegion, setFiltroRegion] = useState('')
+  const [actualizandoId, setActualizandoId] = useState<string | null>(null)
+  const [limiteDe, setLimiteDe] = useState<OrganismoFila | null>(null)
 
   useEffect(() => {
     if (!autorizado) {
       return
     }
-    const unsubscribe = onSnapshot(
+    return onSnapshot(
       collection(db, 'organismos'),
       (snapshot) => {
         const lista = snapshot.docs.map((docSnap) => {
           const data = docSnap.data()
-          const zona =
-            data.zonaCobertura && typeof data.zonaCobertura === 'object'
-              ? (data.zonaCobertura as ZonaCobertura)
-              : null
           return {
             id: docSnap.id,
             nombre: typeof data.nombre === 'string' ? data.nombre : docSnap.id,
             comuna: typeof data.comuna === 'string' ? data.comuna : '—',
+            region: typeof data.region === 'string' ? data.region : '',
             activo: data.activo !== false,
-            zonaCobertura: zona,
           }
         })
         lista.sort((a, b) => a.comuna.localeCompare(b.comuna, 'es'))
@@ -73,21 +73,97 @@ export default function AdminOrganismos() {
         setCargandoLista(false)
       },
     )
-    return unsubscribe
   }, [autorizado])
+
+  // Reportes por organismo: una sola lectura al entrar (no en vivo), para no
+  // releer todos los reportes con cada cambio. Cuando se pagine el listado de
+  // reportes, este conteo debe pasar a consultas de conteo por organismo.
+  useEffect(() => {
+    if (!autorizado) {
+      return
+    }
+    getDocs(collection(db, 'reports'))
+      .then((snapshot) => {
+        const conteo = new Map<string, ConteoReportes>()
+        for (const d of snapshot.docs) {
+          const data = d.data()
+          const organismoId = typeof data.organismo?.id === 'string' ? data.organismo.id : null
+          if (!organismoId) continue
+          const fila = conteo.get(organismoId) ?? { total: 0, abiertos: 0 }
+          fila.total += 1
+          if (!ESTADOS_FINALIZADOS.has(data.estado)) fila.abiertos += 1
+          conteo.set(organismoId, fila)
+        }
+        setReportesPorOrganismo(conteo)
+      })
+      .catch((err) => {
+        console.error('Error al contar reportes por organismo:', err)
+        setReportesPorOrganismo(new Map())
+      })
+  }, [autorizado])
+
+  const operadoresPorOrganismo = useMemo(() => {
+    const mapa = new Map<string, { activos: number; total: number; cuentas: number }>()
+    for (const op of operadores) {
+      const fila = mapa.get(op.organismoId) ?? { activos: 0, total: 0, cuentas: 0 }
+      fila.total += 1
+      if (op.activo) fila.activos += 1
+      fila.cuentas += op.cuentas.length
+      mapa.set(op.organismoId, fila)
+    }
+    return mapa
+  }, [operadores])
+
+  const regiones = useMemo(
+    () =>
+      Array.from(new Set(organismos.map((o) => o.region).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b, 'es'),
+      ),
+    [organismos],
+  )
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
   }
 
   const filtroNormalizado = filtro.trim().toLowerCase()
-  const organismosFiltrados = filtroNormalizado
-    ? organismos.filter((o) =>
-        `${o.nombre} ${o.comuna} ${o.id}`.toLowerCase().includes(filtroNormalizado),
-      )
-    : organismos
+  const organismosFiltrados = organismos.filter((o) => {
+    if (filtroEstado === 'activos' && !o.activo) return false
+    if (filtroEstado === 'inactivos' && o.activo) return false
+    if (filtroRegion && o.region !== filtroRegion) return false
+    return (
+      !filtroNormalizado ||
+      `${o.nombre} ${o.comuna} ${o.id}`.toLowerCase().includes(filtroNormalizado)
+    )
+  })
+  const totalActivos = organismos.filter((o) => o.activo).length
 
   async function alternarActivo(organismo: OrganismoFila) {
+    if (organismo.activo) {
+      const ops = operadoresPorOrganismo.get(organismo.id)
+      const reportes = reportesPorOrganismo?.get(organismo.id)
+      const aceptado = await confirmar({
+        titulo: `Desactivar ${organismo.nombre}`,
+        mensaje: (
+          <>
+            <p>
+              Los <strong>reportes nuevos</strong> hechos en {organismo.comuna} dejarán de llegar a
+              esta municipalidad: se asignarán al organismo genérico de su categoría, sin operador.
+            </p>
+            <p>
+              Lo existente no cambia
+              {ops?.activos
+                ? `: sus ${ops.activos} operador(es) activo(s) seguirán gestionando`
+                : ''}
+              {reportes?.abiertos ? ` los ${reportes.abiertos} reporte(s) abierto(s)` : ''}.
+            </p>
+          </>
+        ),
+        confirmar: 'Desactivar',
+        peligroso: true,
+      })
+      if (!aceptado) return
+    }
     setActualizandoId(organismo.id)
     setError('')
     try {
@@ -100,190 +176,183 @@ export default function AdminOrganismos() {
     }
   }
 
-  function iniciarEdicionZona(organismo: OrganismoFila) {
-    setEditandoZonaId(organismo.id)
-    setZonaTexto(zonaComoTexto(organismo.zonaCobertura))
-    setZonaError('')
-  }
-
-  function cancelarEdicionZona() {
-    setEditandoZonaId(null)
-    setZonaTexto('')
-    setZonaError('')
-  }
-
-  async function guardarZona(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (!editandoZonaId) {
-      return
-    }
-    setZonaError('')
-
-    let zonaParseada: ZonaCobertura | null = null
-    if (zonaTexto.trim()) {
-      let parsed: unknown
-      try {
-        parsed = JSON.parse(zonaTexto)
-      } catch {
-        setZonaError('Eso no es un JSON válido. Copia el GeoJSON tal cual.')
-        return
-      }
-      const candidato = parsed as { type?: unknown; coordinates?: unknown }
-      if (
-        !candidato ||
-        typeof candidato.type !== 'string' ||
-        !['Polygon', 'MultiPolygon'].includes(candidato.type) ||
-        !Array.isArray(candidato.coordinates)
-      ) {
-        setZonaError('El GeoJSON debe ser un Polygon o MultiPolygon con coordinates.')
-        return
-      }
-      zonaParseada = { type: candidato.type, coordinates: candidato.coordinates }
-    }
-
-    setGuardandoZona(true)
-    try {
-      await setDoc(doc(db, 'organismos', editandoZonaId), { zonaCobertura: zonaParseada }, { merge: true })
-      cancelarEdicionZona()
-    } catch (err) {
-      console.error('Error al guardar la zona de cobertura:', err)
-      setZonaError('No pudimos guardar la zona. Inténtalo nuevamente.')
-    } finally {
-      setGuardandoZona(false)
-    }
-  }
-
   return (
     <div className={styles.page}>
       <Navbar />
 
-      <main className={styles.main}>
+      <main className={`${styles.main} ${styles.mainAncho}`}>
         <div>
           <Link to="/admin" className={styles.volver}>
             ← Panel de administración
           </Link>
           <h1 className={styles.title}>Organismos activos</h1>
           <p className={styles.subtitle}>
-            Activa o desactiva municipalidades del catálogo y edita su zona de
-            cobertura. Para dar de alta operadores, usa{' '}
+            Activa o desactiva municipalidades del catálogo. Un reporte se asigna a la
+            municipalidad cuyo límite comunal oficial lo contiene, si está activa. Para dar de alta
+            operadores, usa{' '}
             <Link to="/admin/operadores" className={styles.footerLink}>
-              Crear operador
+              Operadores
             </Link>
             .
           </p>
         </div>
 
         <section className={styles.card}>
-          <label className={styles.field}>
-            <span className={styles.label}>Buscar</span>
-            <input
-              type="text"
-              className={styles.input}
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-              placeholder="Comuna, nombre o id…"
-            />
-          </label>
+          <div className={styles.filtrosTabla}>
+            <label className={`${styles.field} ${styles.filtroBuscar}`}>
+              <span className={styles.label}>Buscar</span>
+              <input
+                type="search"
+                className={styles.input}
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                placeholder="Comuna, nombre o id…"
+              />
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Estado</span>
+              <select
+                className={styles.input}
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value as FiltroEstado)}
+              >
+                <option value="">Todos</option>
+                <option value="activos">Activos</option>
+                <option value="inactivos">Inactivos</option>
+              </select>
+            </label>
+            <label className={styles.field}>
+              <span className={styles.label}>Región</span>
+              <select
+                className={styles.input}
+                value={filtroRegion}
+                onChange={(e) => setFiltroRegion(e.target.value)}
+              >
+                <option value="">Todas</option>
+                {regiones.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <p className={styles.resumenTabla}>
+            {organismosFiltrados.length.toLocaleString('es-CL')} de{' '}
+            {organismos.length.toLocaleString('es-CL')} organismos · {totalActivos} activos
+          </p>
 
           {error && <p className={styles.error}>{error}</p>}
           {cargandoLista && <p className={styles.hint}>Cargando…</p>}
           {!cargandoLista && organismosFiltrados.length === 0 && !error && (
-            <p className={styles.hint}>No hay organismos que coincidan con la búsqueda.</p>
+            <p className={styles.hint}>No hay organismos que coincidan con los filtros.</p>
           )}
 
           {organismosFiltrados.length > 0 && (
             <div className={styles.tableWrapper}>
-              <table className={styles.table}>
+              <table className={`${styles.table} ${styles.tablaOrganismos}`}>
                 <thead>
                   <tr>
                     <th>Comuna</th>
-                    <th>Organismo</th>
-                    <th>Id</th>
+                    <th className={styles.colOrganismo}>Organismo</th>
+                    <th className={styles.colRegion}>Región</th>
+                    <th className={`${styles.colSecundaria} ${styles.numero}`}>Operadores</th>
+                    <th className={`${styles.colSecundaria} ${styles.numero}`}>Cuentas</th>
+                    <th className={`${styles.colReportes} ${styles.numero}`}>
+                      Reportes
+                      <span className={styles.subtextoCelda}>abiertos / total</span>
+                    </th>
                     <th>Estado</th>
-                    <th></th>
+                    <th>
+                      <span className={styles.soloLector}>Acciones</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {organismosFiltrados.map((organismo) => (
-                    <Fragment key={organismo.id}>
-                      <tr>
-                        <td>{organismo.comuna}</td>
-                        <td>{organismo.nombre}</td>
-                        <td>{organismo.id}</td>
-                        <td>{organismo.activo ? 'Activo' : 'Inactivo'}</td>
-                        <td className={styles.accionesForm}>
-                          <button
-                            type="button"
-                            className={styles.editarBoton}
-                            onClick={() => alternarActivo(organismo)}
-                            disabled={actualizandoId === organismo.id}
+                  {organismosFiltrados.map((organismo) => {
+                    const ops = operadoresPorOrganismo.get(organismo.id)
+                    const reportes = reportesPorOrganismo?.get(organismo.id)
+                    return (
+                      <tr key={organismo.id}>
+                        <td>
+                          {organismo.comuna}
+                          {/* Teléfono: el organismo va bajo la comuna. */}
+                          <span
+                            className={`${styles.subtextoCelda} ${styles.subtextoNormal} ${styles.soloAngosto}`}
                           >
-                            {actualizandoId === organismo.id
-                              ? 'Guardando…'
-                              : organismo.activo
-                                ? 'Desactivar'
-                                : 'Activar'}
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.editarBoton}
-                            onClick={() =>
-                              editandoZonaId === organismo.id
-                                ? cancelarEdicionZona()
-                                : iniciarEdicionZona(organismo)
-                            }
+                            {organismo.nombre}
+                          </span>
+                        </td>
+                        <td className={styles.colOrganismo}>
+                          {organismo.nombre}
+                          <span className={styles.subtextoCelda}>{organismo.id}</span>
+                        </td>
+                        <td className={styles.colRegion}>{organismo.region || '—'}</td>
+                        <td className={`${styles.colSecundaria} ${styles.numero}`}>
+                          {ops ? `${ops.activos} / ${ops.total}` : '0'}
+                        </td>
+                        <td className={`${styles.colSecundaria} ${styles.numero}`}>
+                          {ops?.cuentas ?? 0}
+                        </td>
+                        <td className={`${styles.colReportes} ${styles.numero}`}>
+                          {reportesPorOrganismo === null
+                            ? '…'
+                            : `${reportes?.abiertos ?? 0} / ${reportes?.total ?? 0}`}
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.pildora} ${organismo.activo ? styles.pildoraActiva : styles.pildoraInactiva}`}
                           >
-                            {editandoZonaId === organismo.id ? 'Cerrar' : 'Zona de cobertura'}
-                          </button>
+                            {organismo.activo ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={styles.accionesFila}>
+                            <button
+                              type="button"
+                              className={styles.editarBoton}
+                              onClick={() => alternarActivo(organismo)}
+                              disabled={actualizandoId === organismo.id}
+                            >
+                              {actualizandoId === organismo.id
+                                ? 'Guardando…'
+                                : organismo.activo
+                                  ? 'Desactivar'
+                                  : 'Activar'}
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.editarBoton}
+                              onClick={() => setLimiteDe(organismo)}
+                            >
+                              Ver límite
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                      {editandoZonaId === organismo.id && (
-                        <tr>
-                          <td colSpan={5}>
-                            <form className={styles.form} onSubmit={guardarZona} noValidate>
-                              <label className={styles.field}>
-                                <span className={styles.label}>
-                                  GeoJSON de la zona (Polygon o MultiPolygon) — déjalo vacío para
-                                  quitarla
-                                </span>
-                                <textarea
-                                  className={styles.textarea}
-                                  rows={8}
-                                  value={zonaTexto}
-                                  onChange={(e) => setZonaTexto(e.target.value)}
-                                  placeholder='{"type": "Polygon", "coordinates": [...]}'
-                                />
-                              </label>
-                              {zonaError && <p className={styles.error}>{zonaError}</p>}
-                              <div className={styles.accionesForm}>
-                                <button
-                                  type="submit"
-                                  className={styles.submit}
-                                  disabled={guardandoZona}
-                                >
-                                  {guardandoZona ? 'Guardando…' : 'Guardar zona'}
-                                </button>
-                                <button
-                                  type="button"
-                                  className={styles.cancelar}
-                                  onClick={cancelarEdicionZona}
-                                  disabled={guardandoZona}
-                                >
-                                  Cancelar
-                                </button>
-                              </div>
-                            </form>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
           )}
+          <p className={styles.notaTabla}>
+            Operadores: activos / total. Cuentas: las creadas desde el portal para sus operadores.
+          </p>
         </section>
       </main>
+
+      {limiteDe && (
+        <Suspense fallback={null}>
+          <DialogoLimiteComuna
+            organismoId={limiteDe.id}
+            nombre={`${limiteDe.nombre} · ${limiteDe.comuna}`}
+            onCerrar={() => setLimiteDe(null)}
+          />
+        </Suspense>
+      )}
+      {dialogo}
     </div>
   )
 }

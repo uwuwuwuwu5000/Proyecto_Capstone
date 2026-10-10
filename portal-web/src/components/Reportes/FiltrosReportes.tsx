@@ -3,6 +3,7 @@ import { useCategorias } from '../../context/CategoriasContext'
 import { FILTROS_VACIOS, SIN_OPERADOR, hayFiltrosActivos } from './filtros'
 import type { Filtros } from './filtros'
 import type { OperadorResumen } from './reporte'
+import SelectorRangos from './SelectorRangos'
 import styles from './Reportes.module.css'
 
 interface FiltrosReportesProps {
@@ -107,9 +108,20 @@ export default function FiltrosReportes({
         </select>
       </label>
 
+      <div className={`${styles.campo} ${styles.filtroAncho}`}>
+        <span className={styles.etiqueta}>Fecha</span>
+        <SelectorRangos
+          desde={filtros.desde}
+          hasta={filtros.hasta}
+          onCambiar={(desde, hasta) => onChange({ ...filtros, desde, hasta })}
+          idCampoDesde="filtros-reportes-desde"
+        />
+      </div>
+
       <label className={styles.campo}>
         <span className={styles.etiqueta}>Desde</span>
         <input
+          id="filtros-reportes-desde"
           type="date"
           className={styles.entrada}
           value={filtros.desde}

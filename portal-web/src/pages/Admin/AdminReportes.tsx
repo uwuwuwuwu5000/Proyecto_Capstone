@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import {
   collection,
   doc,
-  getDocs,
   onSnapshot,
   serverTimestamp,
   updateDoc,
@@ -21,23 +20,46 @@ import type { Filtros } from '../../components/Reportes/filtros'
 import { cambiarEstadoReporte, mapearReporte } from '../../components/Reportes/reporte'
 import type { OperadorResumen, Reporte } from '../../components/Reportes/reporte'
 import { construirCsvReportes, descargarCsv } from '../../components/Reportes/exportar'
+import { eliminarReporte } from '../../components/Reportes/accionesLote'
+import BarraSeleccion from '../../components/Reportes/BarraSeleccion'
+import type { MensajeLote } from '../../components/Reportes/BarraSeleccion'
+import CasillaTodos from '../../components/Reportes/CasillaTodos'
+import { useSeleccion } from '../../components/Reportes/useSeleccion'
+import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { fechaInput } from '../../components/Reportes/rangosRapidos'
 import { useCategorias } from '../../context/CategoriasContext'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
 import styles from './Admin.module.css'
 import propios from '../../components/Reportes/Reportes.module.css'
 
+/**
+ * Filtros iniciales desde la URL (p. ej. los accesos del inicio del panel:
+ * ?operador=__sin_operador__, ?desde=2026-10-07&hasta=2026-10-07).
+ */
+function filtrosDesdeUrl(params: URLSearchParams): Filtros {
+  const filtros: Record<string, string> = { ...FILTROS_VACIOS }
+  for (const clave of Object.keys(FILTROS_VACIOS)) {
+    const valor = params.get(clave)
+    if (valor !== null) filtros[clave] = valor
+  }
+  return filtros as unknown as Filtros
+}
+
 export default function AdminReportes() {
   const { cargando, autorizado } = useRequiereAdmin()
   const { user, perfil } = useAuth()
+  const [params, setParams] = useSearchParams()
+  const { confirmar, dialogo } = useConfirmacion()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [cargandoReportes, setCargandoReportes] = useState(true)
   const [operadores, setOperadores] = useState<OperadorResumen[]>([])
   const [error, setError] = useState('')
-  const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS)
+  const [filtros, setFiltros] = useState<Filtros>(() => filtrosDesdeUrl(params))
 
-  const [detalleId, setDetalleId] = useState<string | null>(null)
+  // ?reporte=<id> abre su detalle (p. ej. "Ver el reporte" tras crearlo).
+  const [detalleId, setDetalleId] = useState<string | null>(() => params.get('reporte'))
+  const [mensajeLote, setMensajeLote] = useState<MensajeLote | null>(null)
 
   const [editandoId, setEditandoId] = useState<string | null>(null)
   const [estadoNuevo, setEstadoNuevo] = useState('')
@@ -115,6 +137,7 @@ export default function AdminReportes() {
   }, [operadores])
 
   const reportesFiltrados = useMemo(() => filtrarReportes(reportes, filtros), [reportes, filtros])
+  const seleccion = useSeleccion(reportesFiltrados)
 
   const pendientesDeVincular = useMemo(
     () =>
@@ -133,6 +156,15 @@ export default function AdminReportes() {
   }
 
   const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
+
+  function cerrarDetalle() {
+    setDetalleId(null)
+    if (params.has('reporte')) {
+      const siguientes = new URLSearchParams(params)
+      siguientes.delete('reporte')
+      setParams(siguientes, { replace: true })
+    }
+  }
 
   function iniciarEdicion(reporte: Reporte) {
     setEditandoId(reporte.id)
@@ -174,29 +206,25 @@ export default function AdminReportes() {
     }
   }
 
-  async function eliminarReporte(reporte: Reporte) {
-    const confirmado = window.confirm(
-      'Se eliminará el reporte junto con su foto, confirmaciones e historial de estados. Esta acción no se puede deshacer. ¿Continuar?',
-    )
-    if (!confirmado) {
+  async function eliminar(reporte: Reporte) {
+    const aceptado = await confirmar({
+      titulo: 'Eliminar reporte',
+      mensaje: (
+        <p>
+          Se eliminará junto con su <strong>foto, confirmaciones e historial de estados</strong>.
+          Desaparece del mapa y de la app del ciudadano. Esta acción no se puede deshacer.
+        </p>
+      ),
+      confirmar: 'Eliminar',
+      peligroso: true,
+    })
+    if (!aceptado) {
       return
     }
     setEliminandoId(reporte.id)
     setError('')
-    const reporteRef = doc(db, 'reports', reporte.id)
     try {
-      const [confirmaciones, historial] = await Promise.all([
-        getDocs(collection(reporteRef, 'confirmations')),
-        getDocs(collection(reporteRef, 'statusHistory')),
-      ])
-      const lote = writeBatch(db)
-      confirmaciones.forEach((d) => lote.delete(d.ref))
-      historial.forEach((d) => lote.delete(d.ref))
-      if (reporte.foto?.tipo === 'firestore') {
-        lote.delete(doc(db, reporte.foto.path))
-      }
-      lote.delete(reporteRef)
-      await lote.commit()
+      await eliminarReporte(reporte)
     } catch (err) {
       console.error('Error al eliminar el reporte:', err)
       setError('No pudimos eliminar el reporte. Inténtalo nuevamente.')
@@ -224,6 +252,10 @@ export default function AdminReportes() {
     }
   }
 
+  // PENDIENTE DE ELIMINAR: herramienta de migración para reportes creados
+  // antes de que la app asignara operador. Se quita cuando se implemente el
+  // nuevo flujo de acceso por organismo y categoría (ver notas de
+  // implementación futura).
   async function vincularReportesExistentes() {
     setVinculando(true)
     setVinculoError('')
@@ -271,7 +303,12 @@ export default function AdminReportes() {
           <Link to="/admin" className={styles.volver}>
             ← Panel de administración
           </Link>
-          <h1 className={styles.title}>Administrar reportes</h1>
+          <div className={styles.encabezadoAcciones}>
+            <h1 className={styles.title}>Administrar reportes</h1>
+            <Link to="/admin/reportes/nuevo" className={styles.botonCrear}>
+              + Crear reporte
+            </Link>
+          </div>
         </div>
 
         <FiltrosReportes
@@ -296,7 +333,22 @@ export default function AdminReportes() {
           <span className={propios.estadoCarga}>
             Incluye los reportes que cumplen los filtros actuales, sin imágenes.
           </span>
+          <span className={propios.barraEspacio} />
+          <CasillaTodos
+            total={reportesFiltrados.length}
+            todos={seleccion.todos}
+            algunos={seleccion.algunos}
+            onAlternar={seleccion.alternarTodos}
+          />
         </div>
+        {mensajeLote && (
+          <p
+            className={`${propios.mensajeLote} ${mensajeLote.tipo === 'error' ? propios.mensajeError : propios.mensajeAviso}`}
+            role="status"
+          >
+            {mensajeLote.texto}
+          </p>
+        )}
         {errorExportar && <p className={styles.error}>{errorExportar}</p>}
 
         {error && <p className={styles.error}>{error}</p>}
@@ -319,6 +371,8 @@ export default function AdminReportes() {
                 key={reporte.id}
                 reporte={reporte}
                 operadorNombre={nombreOperador(reporte)}
+                seleccionado={seleccion.estaSeleccionado(reporte.id)}
+                onAlternarSeleccion={() => seleccion.alternar(reporte.id)}
               >
                 {editando ? (
                   <div className={propios.edicion}>
@@ -411,7 +465,7 @@ export default function AdminReportes() {
                     <button
                       type="button"
                       className={propios.eliminarBoton}
-                      onClick={() => eliminarReporte(reporte)}
+                      onClick={() => eliminar(reporte)}
                       disabled={eliminandoId === reporte.id}
                     >
                       {eliminandoId === reporte.id ? 'Eliminando…' : 'Eliminar'}
@@ -422,6 +476,17 @@ export default function AdminReportes() {
             )
           })}
         </div>
+
+        <BarraSeleccion
+          seleccionados={seleccion.seleccionados}
+          autor={
+            user ? { uid: user.uid, nombre: perfil?.displayName ?? null, rol: perfil?.role ?? null } : null
+          }
+          onLimpiar={seleccion.limpiar}
+          onResultado={setMensajeLote}
+          operadores={operadores}
+          permitirEliminar
+        />
 
         <section className={styles.card}>
           <h2 className={styles.cardTitle}>Vincular reportes existentes a un operador</h2>
@@ -456,10 +521,11 @@ export default function AdminReportes() {
         <DetalleReporte
           reporte={reporteDetalle}
           operadorNombre={nombreOperador(reporteDetalle)}
-          onCerrar={() => setDetalleId(null)}
+          onCerrar={cerrarDetalle}
           gestionable
         />
       )}
+      {dialogo}
     </div>
   )
 }

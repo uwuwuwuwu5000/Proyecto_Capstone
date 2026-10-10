@@ -15,11 +15,16 @@ import type { Filtros } from '../../components/Reportes/filtros'
 import { cambiarEstadoReporte, mapearReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import BarraSeleccion from '../../components/Reportes/BarraSeleccion'
+import type { MensajeLote } from '../../components/Reportes/BarraSeleccion'
+import CasillaTodos from '../../components/Reportes/CasillaTodos'
+import { useSeleccion } from '../../components/Reportes/useSeleccion'
 import styles from '../../components/Reportes/Reportes.module.css'
 import pagina from './OperadorReportes.module.css'
 
 export default function OperadorReportes() {
-  const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
+  const { cargando, autorizado, operadorId, operadorNombre, organismoNombre } =
+    useRequiereOperador()
   const { user, perfil } = useAuth()
 
   const [reportes, setReportes] = useState<Reporte[]>([])
@@ -34,6 +39,7 @@ export default function OperadorReportes() {
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
   const [errorCambio, setErrorCambio] = useState('')
+  const [mensajeLote, setMensajeLote] = useState<MensajeLote | null>(null)
 
   useEffect(() => {
     if (!autorizado || !operadorId) {
@@ -58,6 +64,7 @@ export default function OperadorReportes() {
   }, [autorizado, operadorId])
 
   const reportesFiltrados = useMemo(() => filtrarReportes(reportes, filtros), [reportes, filtros])
+  const seleccion = useSeleccion(reportesFiltrados)
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
@@ -82,7 +89,8 @@ export default function OperadorReportes() {
     try {
       await cambiarEstadoReporte(reporte, estadoNuevo, comentario, {
         uid: user.uid,
-        nombre: perfil?.displayName ?? null,
+        // Firma con el nombre del organismo (lo exige firmaHistorialValida).
+        nombre: organismoNombre,
         rol: perfil?.role ?? null,
       })
       setCambiandoId(null)
@@ -120,6 +128,24 @@ export default function OperadorReportes() {
           total={reportes.length}
         />
 
+        <div className={styles.barraExportar}>
+          <span className={styles.barraEspacio} />
+          <CasillaTodos
+            total={reportesFiltrados.length}
+            todos={seleccion.todos}
+            algunos={seleccion.algunos}
+            onAlternar={seleccion.alternarTodos}
+          />
+        </div>
+        {mensajeLote && (
+          <p
+            className={`${styles.mensajeLote} ${mensajeLote.tipo === 'error' ? styles.mensajeError : styles.mensajeAviso}`}
+            role="status"
+          >
+            {mensajeLote.texto}
+          </p>
+        )}
+
         {error && <p className={styles.errorTexto}>{error}</p>}
         {(cargando || cargandoReportes) && !error && (
           <p className={styles.estadoCarga}>Cargando reportes…</p>
@@ -138,7 +164,13 @@ export default function OperadorReportes() {
             const cambiando = cambiandoId === reporte.id
 
             return (
-              <TarjetaReporte key={reporte.id} reporte={reporte} operadorNombre={operadorNombre}>
+              <TarjetaReporte
+                key={reporte.id}
+                reporte={reporte}
+                operadorNombre={operadorNombre}
+                seleccionado={seleccion.estaSeleccionado(reporte.id)}
+                onAlternarSeleccion={() => seleccion.alternar(reporte.id)}
+              >
                 {cambiando ? (
                   <div className={styles.edicion}>
                     <label className={styles.campo}>
@@ -211,6 +243,23 @@ export default function OperadorReportes() {
             )
           })}
         </div>
+
+        {/* El operador solo cambia estados: eliminar y reasignar son del admin. */}
+        <BarraSeleccion
+          seleccionados={seleccion.seleccionados}
+          autor={
+            user
+              ? {
+                  uid: user.uid,
+                  // Firma con el nombre del organismo (lo exige firmaHistorialValida).
+                  nombre: organismoNombre,
+                  rol: perfil?.role ?? null,
+                }
+              : null
+          }
+          onLimpiar={seleccion.limpiar}
+          onResultado={setMensajeLote}
+        />
       </main>
 
       {reporteDetalle && (
@@ -219,6 +268,7 @@ export default function OperadorReportes() {
           operadorNombre={operadorNombre}
           onCerrar={() => setDetalleId(null)}
           gestionable
+          organismoNombre={organismoNombre}
         />
       )}
     </div>

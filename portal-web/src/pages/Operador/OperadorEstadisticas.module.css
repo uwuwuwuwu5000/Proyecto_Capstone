@@ -77,6 +77,37 @@
   font-size: 0.85rem;
 }
 
+/* Teléfono: los botones de exportar dejan de colgar a la derecha y pasan a
+   una fila propia, en dos mitades iguales y con alto cómodo para el dedo. */
+@media (max-width: 640px) {
+  .fechas {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fechas input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .exportar {
+    width: 100%;
+    margin-left: 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(165, 180, 195, 0.16);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .exportar button {
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+}
+
 /* ---- KPIs ---- */
 
 .kpis {

@@ -28,6 +28,7 @@ const ENCABEZADOS = [
   'Primera atención (horas)',
   'Hasta resolver o cerrar (horas)',
   'Tiene foto',
+  'Origen',
 ]
 
 /** Texto o número ya redondeado; null queda como celda vacía. */
@@ -103,6 +104,7 @@ function filaDeReporte(
     horas(primeraAtencionMs),
     horas(resolucionMs),
     reporte.foto ? 'Sí' : 'No',
+    reporte.origen === 'portal_admin' ? 'Portal (administración)' : 'App',
   ]
 }
 

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import Navbar from '../../components/Navbar/Navbar'
+import { useAuth } from '../../context/AuthContext'
 import CargandoPagina from '../../components/Carga/CargandoPagina'
 import ErrorDeCarga from '../../components/Carga/ErrorDeCarga'
 import styles from './Landing.module.css'
@@ -31,6 +32,8 @@ const pasos = [
 ]
 
 export default function Landing() {
+  const { user, loading } = useAuth()
+
   return (
     <div className={styles.page}>
       <Navbar />
@@ -42,9 +45,14 @@ export default function Landing() {
             Reporta, verifica y conecta con tu comunidad para resolver los
             problemas urbanos de tu barrio.
           </p>
-          <Link to="/login" className={styles.cta}>
-            Iniciar sesión
-          </Link>
+          {/* Con sesión iniciada (cualquier rol) sobra: la barra superior ya
+              muestra la sesión. Mientras se resuelve, no se muestra para no
+              parpadear. */}
+          {!loading && !user && (
+            <Link to="/login" className={styles.cta}>
+              Iniciar sesión
+            </Link>
+          )}
         </section>
 
         <section className={styles.steps}>

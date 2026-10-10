@@ -10,7 +10,8 @@ import DetalleReporte from '../../components/Reportes/DetalleReporte'
 import FotoReporte from '../../components/Reportes/FotoReporte'
 import { formatearFecha, mapearReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
-import { RANGOS_RAPIDOS, rangoRapido } from '../../components/Reportes/rangosRapidos'
+import { rangoRapido } from '../../components/Reportes/rangosRapidos'
+import SelectorRangos from '../../components/Reportes/SelectorRangos'
 import { ICONOS_POR_ESTADO, ICONO_ESTADO_DESCONOCIDO } from '../../components/Map/estadoIconos'
 import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
@@ -25,7 +26,8 @@ function tieneUbicacion(reporte: Reporte): reporte is ReporteUbicado {
 }
 
 export default function OperadorMapa() {
-  const { cargando, autorizado, operadorId, operadorNombre } = useRequiereOperador()
+  const { cargando, autorizado, operadorId, operadorNombre, organismoNombre } =
+    useRequiereOperador()
   const { etiqueta } = useCategorias()
 
   const [detalleId, setDetalleId] = useState<string | null>(null)
@@ -40,6 +42,8 @@ export default function OperadorMapa() {
   const [texto, setTexto] = useState('')
   const [desde, setDesde] = useState(() => rangoRapido('tresMeses').desde)
   const [hasta, setHasta] = useState(() => rangoRapido('tresMeses').hasta)
+  // Solo afecta al teléfono: en escritorio los filtros se ven siempre.
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
 
   // Conteo de confirmaciones para el resumen del pin, pedido la primera vez
   // que se pasa el mouse por él (no para todos los reportes de golpe).
@@ -132,19 +136,14 @@ export default function OperadorMapa() {
   // hace que el reporte salga del filtro, el detalle no se cierra solo.
   const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
 
-  // El acceso rápido activo se deduce de las fechas: si el usuario las edita
-  // a mano, ninguno queda marcado.
-  const hoy = new Date()
-  const rangoActivo = RANGOS_RAPIDOS.find((rango) => {
-    const calculado = rango.calcular(hoy)
-    return calculado.desde === desde && calculado.hasta === hasta
-  })?.clave
-
-  function aplicarRango(clave: string) {
-    const rango = rangoRapido(clave)
-    setDesde(rango.desde)
-    setHasta(rango.hasta)
-  }
+  // Cuántos filtros difieren de lo predeterminado (todos los estados, sin
+  // búsqueda ni categoría, últimos 3 meses): es el número del botón "Filtros".
+  const rangoPredeterminado = rangoRapido('tresMeses')
+  const filtrosActivos =
+    (estadosSeleccionados.size < ESTADOS_EN_ORDEN.length ? 1 : 0) +
+    (categoriaFiltro ? 1 : 0) +
+    (texto.trim() ? 1 : 0) +
+    (desde !== rangoPredeterminado.desde || hasta !== rangoPredeterminado.hasta ? 1 : 0)
 
   function alternarEstado(estado: string) {
     setEstadosSeleccionados((prev) => {
@@ -165,15 +164,44 @@ export default function OperadorMapa() {
 
       <div className={styles.cuerpo}>
         <aside className={styles.panel}>
-          <h1 className={styles.title}>Mis reportes</h1>
-          <p className={styles.subtitle}>
-            Reportes asignados a tu operador. Usa los filtros para acotar lo que ves en el mapa.
-          </p>
+          <div className={styles.encabezado}>
+            <h1 className={styles.title}>Mis reportes</h1>
+            <p className={styles.subtitle}>
+              Reportes asignados a tu operador. Usa los filtros para acotar lo que ves en el mapa.
+            </p>
+          </div>
+
+          {/* Solo en el teléfono: los filtros se pliegan para dejarle la
+              pantalla al mapa. */}
+          <div className={styles.barraMovil}>
+            <button
+              type="button"
+              className={styles.botonFiltros}
+              onClick={() => setFiltrosAbiertos((abiertos) => !abiertos)}
+              aria-expanded={filtrosAbiertos}
+              aria-controls="filtros-mapa-operador"
+            >
+              Filtros
+              {filtrosActivos > 0 && (
+                <span className={styles.insignia} aria-label={`${filtrosActivos} activos`}>
+                  {filtrosActivos}
+                </span>
+              )}
+              <span aria-hidden="true">{filtrosAbiertos ? '▴' : '▾'}</span>
+            </button>
+            <span className={styles.resumenMovil}>
+              {reportesFiltrados.length} de {reportes.length} reportes
+            </span>
+          </div>
 
           {error && <p className={styles.error}>{error}</p>}
           {cargando && <p className={styles.hint}>Cargando…</p>}
           {!cargando && cargandoReportes && <p className={styles.hint}>Cargando reportes…</p>}
 
+          <div
+            id="filtros-mapa-operador"
+            className={`${styles.filtros} ${filtrosAbiertos ? styles.filtrosAbiertos : ''}`}
+          >
           <div className={styles.stats}>
             {ESTADOS_EN_ORDEN.map((estado) => (
               <button
@@ -221,22 +249,19 @@ export default function OperadorMapa() {
 
           <fieldset className={styles.fechas}>
             <legend className={styles.label}>Fecha</legend>
-            <div className={styles.rangos}>
-              {RANGOS_RAPIDOS.map((rango) => (
-                <button
-                  key={rango.clave}
-                  type="button"
-                  className={`${styles.rango} ${rangoActivo === rango.clave ? styles.rangoActivo : ''}`}
-                  aria-pressed={rangoActivo === rango.clave}
-                  onClick={() => aplicarRango(rango.clave)}
-                >
-                  {rango.etiqueta}
-                </button>
-              ))}
-            </div>
+            <SelectorRangos
+              desde={desde}
+              hasta={hasta}
+              onCambiar={(nuevoDesde, nuevoHasta) => {
+                setDesde(nuevoDesde)
+                setHasta(nuevoHasta)
+              }}
+              idCampoDesde="mapa-operador-desde"
+            />
             <label className={styles.fechaFila}>
               <span className={styles.fechaEtiqueta}>Desde</span>
               <input
+                id="mapa-operador-desde"
                 type="date"
                 className={styles.input}
                 value={desde}
@@ -259,6 +284,22 @@ export default function OperadorMapa() {
           <p className={styles.resumen}>
             Mostrando {reportesFiltrados.length} de {reportes.length} reportes.
           </p>
+
+          <div className={styles.aplicarFiltros}>
+            <p className={styles.encontrados} aria-live="polite">
+              {reportesFiltrados.length === 1
+                ? 'Se ha encontrado 1 reporte'
+                : `Se han encontrado ${reportesFiltrados.length} reportes`}
+            </p>
+            <button
+              type="button"
+              className={styles.verResultados}
+              onClick={() => setFiltrosAbiertos(false)}
+            >
+              Aplicar filtros
+            </button>
+          </div>
+          </div>
         </aside>
 
         <main className={styles.mapaWrap}>
@@ -315,6 +356,7 @@ export default function OperadorMapa() {
           operadorNombre={operadorNombre}
           onCerrar={() => setDetalleId(null)}
           gestionable
+          organismoNombre={organismoNombre}
         />
       )}
     </div>

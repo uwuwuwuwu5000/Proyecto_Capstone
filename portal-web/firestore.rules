@@ -17,11 +17,6 @@ service cloud.firestore {
     }
 
     /**
-     * Rol de gestión, leído desde el perfil del usuario. El propio usuario no
-     * puede modificar su `role` (ver reglas de /users), así que esta lectura es
-     * confiable.
-     */
-    /**
      * Administradores por correo.
      *
      * Duplicada a propósito en src/app/core/admin-emails.ts. Esta es la que
@@ -160,23 +155,71 @@ service cloud.firestore {
 
       // El borrado de cuentas se maneja desde el backend, no desde el cliente.
       allow delete: if false;
+
+      /**
+       * Qué avisos ya vio el usuario. Un único documento, `estado`, que solo
+       * su dueño lee y escribe. La lista de vistos se acota para que no crezca
+       * sin límite; la app la compacta con `vistosHasta` al acercarse al tope.
+       */
+      match /avisos/{docId} {
+        allow read: if esPropietario(userId);
+
+        allow create, update: if esPropietario(userId)
+          && docId == 'estado'
+          && request.resource.data.keys().hasOnly(['vistos', 'vistosHasta', 'updatedAt'])
+          && request.resource.data.vistos is list
+          && request.resource.data.vistos.size() <= 300
+          && (
+               !('vistosHasta' in request.resource.data)
+               || request.resource.data.vistosHasta == null
+               || request.resource.data.vistosHasta is timestamp
+             );
+
+        allow delete: if false;
+      }
     }
 
     // --- Reportes ciudadanos (Sprint 2) ------------------------------------
 
-    /** S4-02 · La categoría debe existir en el catálogo /categorias y estar activa. */
+    /**
+     * S4-02 · Si la categoría está en el catálogo /categorias, manda el
+     * catálogo: solo se acepta si está activa. Si no está, se acepta solo si
+     * es una de las 7 históricas; así nada se rompe mientras el catálogo no
+     * las tenga cargadas. Cuando existan las 7 en el catálogo, esta lista
+     * fija se puede quitar.
+     *
+     * Se escribe con el operador ternario para leer el documento una sola vez:
+     * la creación de un reporte consulta varios documentos, y Firestore limita
+     * esas lecturas a 10 por operación. Superar el límite se informa como
+     * "permiso denegado", no como un error de cuota.
+     */
     function categoriaValida() {
       let categoria = request.resource.data.categoria;
       let ruta = /databases/$(database)/documents/categorias/$(categoria);
       return categoria is string
-        && exists(ruta)
-        && get(ruta).data.activa == true;
+        && (
+             exists(ruta)
+               ? get(ruta).data.activa == true
+               : categoria in [
+                   'microbasural', 'luminaria', 'fuga_agua', 'arbol_peligroso',
+                   'calle_deteriorada', 'accesibilidad', 'otro'
+                 ]
+           );
     }
 
     function descripcionValida() {
       return request.resource.data.descripcion is string
         && request.resource.data.descripcion.size() >= 10
         && request.resource.data.descripcion.size() <= 500;
+    }
+
+    /**
+     * Umbral del intervalo entre reportes, en milisegundos.
+     * Debe mantenerse igual a INTERVALO_MINIMO_REPORTE_MS en
+     * src/app/models/user-profile.model.ts (v2-E2).
+     */
+    function intervaloMinimoMs() {
+      return 30000;
     }
 
     /**
@@ -187,26 +230,53 @@ service cloud.firestore {
      * porque cada escritura de un lote se evalúa por separado contra el estado
      * previo. Frena el envío repetido desde la aplicación, no a un cliente
      * fabricado a medida; para eso está App Check.
+     *
+     * v2-E2 · Si el perfil no existe, se admite: las cuentas anteriores a la
+     * creación automática del perfil no deben quedar bloqueadas. El perfil se
+     * lee una sola vez y se evalúa en `intervaloCumplido`, en lugar de repetir
+     * el get() en cada condición.
      */
-    /**
-     * Umbral del intervalo entre reportes, en milisegundos.
-     * Debe mantenerse igual a INTERVALO_MINIMO_REPORTE_MS en
-     * src/app/models/user-profile.model.ts (v2-E2).
-     */
-    function intervaloMinimoMs() {
-      return 30000;
+    function respetaIntervaloDeReporte() {
+      let ruta = /databases/$(database)/documents/users/$(request.auth.uid);
+      return !exists(ruta) || intervaloCumplido(get(ruta).data);
     }
 
-    function respetaIntervaloDeReporte() {
-      // v2-E2 · Si el perfil no existe, el get() fallaría y la creación se
-      // denegaría con un permission-denied incomprensible. Las cuentas creadas
-      // antes del registro de perfil quedan cubiertas por esta comprobación.
-      return !exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        || !('ultimoReporteAt' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data)
-        || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt == null
-        || request.time.toMillis()
-             - get(/databases/$(database)/documents/users/$(request.auth.uid)).data.ultimoReporteAt.toMillis()
-           >= intervaloMinimoMs();
+    function intervaloCumplido(perfil) {
+      return !('ultimoReporteAt' in perfil)
+        || perfil.ultimoReporteAt == null
+        || request.time.toMillis() - perfil.ultimoReporteAt.toMillis() >= intervaloMinimoMs();
+    }
+
+    /**
+     * Firma pública de un cambio de estado.
+     *
+     * `autorRol` debe coincidir con el rol real de quien escribe, leído de su
+     * perfil. `autorNombre` es opcional para no romper clientes que aún no lo
+     * envían (se muestran como "Autor no registrado"), pero si viene:
+     *  - de un admin, es libre: la interfaz lo muestra siempre como
+     *    "Administración Ciudad Alerta" a partir del rol;
+     *  - de un operador, debe ser exactamente el nombre del organismo al que
+     *    pertenece. Así nadie firma un cambio a nombre de otra municipalidad.
+     */
+    function firmaHistorialValida() {
+      let datos = request.resource.data;
+      let perfil = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return (!('autorRol' in datos) || datos.autorRol == perfil.role)
+        && (
+             !('autorNombre' in datos)
+             || (
+                  datos.autorNombre is string
+                  && datos.autorNombre.size() > 0
+                  && datos.autorNombre.size() <= 120
+                  && (perfil.role != 'operador'
+                      || datos.autorNombre == nombreOrganismoDeOperador(perfil.operadorId))
+                )
+           );
+    }
+
+    function nombreOrganismoDeOperador(operadorId) {
+      let operador = get(/databases/$(database)/documents/operadores/$(operadorId)).data;
+      return get(/databases/$(database)/documents/organismos/$(operador.organismoId)).data.nombre;
     }
 
     function reporteExiste(reportId) {
@@ -291,6 +361,19 @@ service cloud.firestore {
             && (!exists(perfil) || get(perfil).data.displayName == datos.autorNombre));
     }
 
+    /**
+     * Toda foto de reporte debe haber pasado por el difuminado de rostros y
+     * personas, que la app hace en el teléfono antes de subirla. La regla no
+     * puede inspeccionar la imagen, pero sí impide que una versión antigua de
+     * la app —sin difuminado— publique fotos: esas versiones no envían este
+     * dato.
+     */
+    function fotoProtegida() {
+      let foto = request.resource.data.get('foto', null);
+      return foto == null
+        || foto.get('privacidad', {}).get('aplicada', false) == true;
+    }
+
     function ubicacionValida() {
       let ubicacion = request.resource.data.ubicacion;
       return ubicacion.lat is number && ubicacion.lat >= -90 && ubicacion.lat <= 90
@@ -298,15 +381,48 @@ service cloud.firestore {
     }
 
     /**
-     * `operadorId` lo calcula la app móvil: detecta la comuna y busca, entre
-     * los operadores activos, cuál tiene esa comuna cubierta a través de su
-     * organismo. Es opcional mientras convive con el campo `organismo`
-     * anterior; si viene, debe apuntar a un operador que exista de verdad.
+     * El organismo del reporte debe ser uno de los genéricos de respaldo o una
+     * municipalidad que exista realmente en `organismos`. La app móvil lo
+     * calcula a partir de la comuna donde se hizo el reporte, y solo usa un
+     * genérico cuando la comuna no pudo identificarse.
+     */
+    function organismoReporteValido() {
+      let organismoId = request.resource.data.organismo.id;
+      return organismoId is string
+        && (
+             organismoId in ['muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria']
+             || exists(/databases/$(database)/documents/organismos/$(organismoId))
+           );
+    }
+
+    /**
+     * Asignación automática del operador al crear el reporte.
+     *
+     * La app busca, entre los operadores activos, el que pertenece al
+     * organismo del reporte. Esta regla comprueba que la asignación sea
+     * coherente: el operador debe existir, estar activo y pertenecer
+     * exactamente a ese organismo. Sin la última condición, un cliente podría
+     * dirigir un reporte de Maipú al operador de otra municipalidad.
+     *
+     * `operadorId` es opcional: un organismo sin operadores todavía produce
+     * reportes sin asignar, que un admin puede asignar después.
+     *
+     * Si `operadorId` apunta a un documento inexistente, get() falla y la
+     * regla deniega, que es el resultado correcto.
      */
     function operadorReporteValido() {
       let datos = request.resource.data;
-      return !('operadorId' in datos) || datos.operadorId == null
-        || exists(/databases/$(database)/documents/operadores/$(datos.operadorId));
+      return !('operadorId' in datos)
+        || datos.operadorId == null
+        || operadorCoherente(
+             datos,
+             get(/databases/$(database)/documents/operadores/$(datos.operadorId)).data
+           );
+    }
+
+    function operadorCoherente(datos, operador) {
+      return operador.activo == true
+        && operador.organismoId == datos.organismo.id;
     }
 
     match /reports/{reportId} {
@@ -324,28 +440,36 @@ service cloud.firestore {
         && embeddingValido()
         && comunaValida()
         && autorNombreValido()
-        // El organismo debe ser uno de los genéricos, o una municipalidad que
-        // exista realmente en la colección `organismos`.
-        && (
-             request.resource.data.organismo.id in [
-               'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'
-             ]
-             || exists(/databases/$(database)/documents/organismos/$(request.resource.data.organismo.id))
-           )
+        && organismoReporteValido()
         && operadorReporteValido()
+        && fotoProtegida()
         && respetaIntervaloDeReporte();
 
       /**
-       * Migración: reportes creados antes de que existiera `operadorId` (o
-       * antes de que la app móvil lo calculara) no lo tienen. Esta rama deja
-       * que un admin lo asigne o corrija después, sin tocar nada más del
-       * reporte. Es la única vía para escribir `operadorId` fuera de la
-       * creación.
+       * Reasignación manual por un admin, desde el panel.
+       *
+       * Cubre dos casos: reportes creados antes de que existiera la
+       * asignación automática, y correcciones cuando la detección se
+       * equivocó. Permite cambiar el operador y, si hace falta, el organismo,
+       * sin tocar ningún otro campo del reporte.
+       *
+       * A diferencia de la creación, aquí no se exige que el operador
+       * pertenezca al organismo: es una decisión explícita de un admin y debe
+       * poder corregir lo que la detección automática hizo mal. Sí se exige
+       * que el operador exista y esté activo, y que el organismo exista.
        */
-      function reasignacionOperadorValida() {
-        return request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['operadorId', 'updatedAt'])
-          && operadorReporteValido();
+      function reasignacionValida() {
+        let datos = request.resource.data;
+        return datos.diff(resource.data).affectedKeys()
+            .hasOnly(['operadorId', 'organismo', 'updatedAt'])
+          && (
+               datos.get('operadorId', null) == null
+               || get(/databases/$(database)/documents/operadores/$(datos.operadorId)).data.activo == true
+             )
+          && (
+               datos.organismo == resource.data.organismo
+               || exists(/databases/$(database)/documents/organismos/$(datos.organismo.id))
+             );
       }
 
       // HU-28 · Solo un admin o el operador asignado al reporte cambia el
@@ -356,7 +480,7 @@ service cloud.firestore {
              && transicionValida(resource.data.estado, request.resource.data.estado)
              && soloCambiaEstado()
            )
-        || (esAdministrador() && reasignacionOperadorValida());
+        || (esAdministrador() && reasignacionValida());
 
       // Solo un admin elimina, desde el panel "Administrar reportes". El
       // panel borra en el mismo lote la foto y las subcolecciones, para no
@@ -394,23 +518,8 @@ service cloud.firestore {
          * Sin esta comprobación se podía inventar una bitácora que contradijera
          * el documento.
          * BUG 23 · El comentario se acota también en servidor.
-         *
-         * `autorNombre` y `autorRol` son opcionales (la app móvil todavía no
-         * los envía), pero si vienen deben coincidir con el perfil de quien
-         * escribe: así el historial público muestra quién hizo el cambio sin
-         * que nadie pueda firmar con el nombre de otra cuenta.
          */
         allow create: if request.resource.data.autorUid == request.auth.uid
-          && (
-               !('autorNombre' in request.resource.data)
-               || request.resource.data.autorNombre
-                    == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName
-             )
-          && (
-               !('autorRol' in request.resource.data)
-               || request.resource.data.autorRol
-                    == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
-             )
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
@@ -418,7 +527,8 @@ service cloud.firestore {
           && request.resource.data.desde == datosReporte(reportId).estado
           && transicionValida(request.resource.data.desde, request.resource.data.hacia)
           && request.resource.data.comentario is string
-          && request.resource.data.comentario.size() <= 512;
+          && request.resource.data.comentario.size() <= 512
+          && firmaHistorialValida();
 
         allow update: if false;
         // Solo al eliminar el reporte completo desde el panel de admin.
@@ -484,10 +594,19 @@ service cloud.firestore {
       // crear un reporte para asignar su municipalidad.
       allow read: if estaAutenticado();
 
-      // Solo el rol admin lo carga o corrige. Nadie lo borra desde la app:
-      // un organismo retirado se marca con `activo: false`, para no dejar
-      // reportes históricos apuntando a un documento inexistente.
-      allow create, update: if esAdministrador() && organismoValido(organismoId);
+      /**
+       * Solo un administrador lo carga o corrige. Nadie lo borra desde la app:
+       * un organismo retirado se marca con `activo: false`, para no dejar
+       * reportes históricos apuntando a un documento inexistente.
+       *
+       * `esCorreoAdministrador()` va primero porque lee el token de sesión,
+       * que no cuenta como lectura de documento. La carga del catálogo escribe
+       * cientos de documentos en lotes, y Firestore limita a 20 las lecturas
+       * por lote: si cada escritura leyera el perfil, el lote se rechazaría
+       * con "permiso denegado" aunque el rol fuera correcto.
+       */
+      allow create, update: if (esCorreoAdministrador() || esAdministrador())
+        && organismoValido(organismoId);
       allow delete: if false;
     }
 

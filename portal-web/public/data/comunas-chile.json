@@ -1,0 +1,2776 @@
+{
+ "fuente": "Biblioteca del Congreso Nacional de Chile, División Político-Administrativa, vía cortega26/chile-hub (licencia MIT)",
+ "totalComunas": 346,
+ "totalMunicipalidades": 345,
+ "nota": "La comuna Antártica (12202) no tiene municipio propio: la administra la Municipalidad de Cabo de Hornos (12201).",
+ "comunas": [
+  {
+   "codigo": "01101",
+   "nombre": "Iquique",
+   "clave": "iquique",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01101"
+  },
+  {
+   "codigo": "01107",
+   "nombre": "Alto Hospicio",
+   "clave": "alto hospicio",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01107"
+  },
+  {
+   "codigo": "01401",
+   "nombre": "Pozo Almonte",
+   "clave": "pozo almonte",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01401"
+  },
+  {
+   "codigo": "01402",
+   "nombre": "Camiña",
+   "clave": "camina",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01402"
+  },
+  {
+   "codigo": "01403",
+   "nombre": "Colchane",
+   "clave": "colchane",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01403"
+  },
+  {
+   "codigo": "01404",
+   "nombre": "Huara",
+   "clave": "huara",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01404"
+  },
+  {
+   "codigo": "01405",
+   "nombre": "Pica",
+   "clave": "pica",
+   "codigoRegion": "01",
+   "region": "Región de Tarapacá",
+   "organismoId": "muni_01405"
+  },
+  {
+   "codigo": "02101",
+   "nombre": "Antofagasta",
+   "clave": "antofagasta",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02101"
+  },
+  {
+   "codigo": "02102",
+   "nombre": "Mejillones",
+   "clave": "mejillones",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02102"
+  },
+  {
+   "codigo": "02103",
+   "nombre": "Sierra Gorda",
+   "clave": "sierra gorda",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02103"
+  },
+  {
+   "codigo": "02104",
+   "nombre": "Taltal",
+   "clave": "taltal",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02104"
+  },
+  {
+   "codigo": "02201",
+   "nombre": "Calama",
+   "clave": "calama",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02201"
+  },
+  {
+   "codigo": "02202",
+   "nombre": "Ollagüe",
+   "clave": "ollague",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02202"
+  },
+  {
+   "codigo": "02203",
+   "nombre": "San Pedro de Atacama",
+   "clave": "san pedro de atacama",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02203"
+  },
+  {
+   "codigo": "02301",
+   "nombre": "Tocopilla",
+   "clave": "tocopilla",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02301"
+  },
+  {
+   "codigo": "02302",
+   "nombre": "María Elena",
+   "clave": "maria elena",
+   "codigoRegion": "02",
+   "region": "Región de Antofagasta",
+   "organismoId": "muni_02302"
+  },
+  {
+   "codigo": "03101",
+   "nombre": "Copiapó",
+   "clave": "copiapo",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03101"
+  },
+  {
+   "codigo": "03102",
+   "nombre": "Caldera",
+   "clave": "caldera",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03102"
+  },
+  {
+   "codigo": "03103",
+   "nombre": "Tierra Amarilla",
+   "clave": "tierra amarilla",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03103"
+  },
+  {
+   "codigo": "03201",
+   "nombre": "Chañaral",
+   "clave": "chanaral",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03201"
+  },
+  {
+   "codigo": "03202",
+   "nombre": "Diego de Almagro",
+   "clave": "diego de almagro",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03202"
+  },
+  {
+   "codigo": "03301",
+   "nombre": "Vallenar",
+   "clave": "vallenar",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03301"
+  },
+  {
+   "codigo": "03302",
+   "nombre": "Alto del Carmen",
+   "clave": "alto del carmen",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03302"
+  },
+  {
+   "codigo": "03303",
+   "nombre": "Freirina",
+   "clave": "freirina",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03303"
+  },
+  {
+   "codigo": "03304",
+   "nombre": "Huasco",
+   "clave": "huasco",
+   "codigoRegion": "03",
+   "region": "Región de Atacama",
+   "organismoId": "muni_03304"
+  },
+  {
+   "codigo": "04101",
+   "nombre": "La Serena",
+   "clave": "la serena",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04101"
+  },
+  {
+   "codigo": "04102",
+   "nombre": "Coquimbo",
+   "clave": "coquimbo",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04102"
+  },
+  {
+   "codigo": "04103",
+   "nombre": "Andacollo",
+   "clave": "andacollo",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04103"
+  },
+  {
+   "codigo": "04104",
+   "nombre": "La Higuera",
+   "clave": "la higuera",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04104"
+  },
+  {
+   "codigo": "04105",
+   "nombre": "Paihuano",
+   "clave": "paihuano",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04105"
+  },
+  {
+   "codigo": "04106",
+   "nombre": "Vicuña",
+   "clave": "vicuna",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04106"
+  },
+  {
+   "codigo": "04201",
+   "nombre": "Illapel",
+   "clave": "illapel",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04201"
+  },
+  {
+   "codigo": "04202",
+   "nombre": "Canela",
+   "clave": "canela",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04202"
+  },
+  {
+   "codigo": "04203",
+   "nombre": "Los Vilos",
+   "clave": "los vilos",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04203"
+  },
+  {
+   "codigo": "04204",
+   "nombre": "Salamanca",
+   "clave": "salamanca",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04204"
+  },
+  {
+   "codigo": "04301",
+   "nombre": "Ovalle",
+   "clave": "ovalle",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04301"
+  },
+  {
+   "codigo": "04302",
+   "nombre": "Combarbalá",
+   "clave": "combarbala",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04302"
+  },
+  {
+   "codigo": "04303",
+   "nombre": "Monte Patria",
+   "clave": "monte patria",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04303"
+  },
+  {
+   "codigo": "04304",
+   "nombre": "Punitaqui",
+   "clave": "punitaqui",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04304"
+  },
+  {
+   "codigo": "04305",
+   "nombre": "Río Hurtado",
+   "clave": "rio hurtado",
+   "codigoRegion": "04",
+   "region": "Región de Coquimbo",
+   "organismoId": "muni_04305"
+  },
+  {
+   "codigo": "05101",
+   "nombre": "Valparaíso",
+   "clave": "valparaiso",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05101"
+  },
+  {
+   "codigo": "05102",
+   "nombre": "Casablanca",
+   "clave": "casablanca",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05102"
+  },
+  {
+   "codigo": "05103",
+   "nombre": "Concón",
+   "clave": "concon",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05103"
+  },
+  {
+   "codigo": "05104",
+   "nombre": "Juan Fernández",
+   "clave": "juan fernandez",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05104"
+  },
+  {
+   "codigo": "05105",
+   "nombre": "Puchuncaví",
+   "clave": "puchuncavi",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05105"
+  },
+  {
+   "codigo": "05107",
+   "nombre": "Quintero",
+   "clave": "quintero",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05107"
+  },
+  {
+   "codigo": "05109",
+   "nombre": "Viña del Mar",
+   "clave": "vina del mar",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05109"
+  },
+  {
+   "codigo": "05201",
+   "nombre": "Isla de Pascua",
+   "clave": "isla de pascua",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05201"
+  },
+  {
+   "codigo": "05301",
+   "nombre": "Los Andes",
+   "clave": "los andes",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05301"
+  },
+  {
+   "codigo": "05302",
+   "nombre": "Calle Larga",
+   "clave": "calle larga",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05302"
+  },
+  {
+   "codigo": "05303",
+   "nombre": "Rinconada",
+   "clave": "rinconada",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05303"
+  },
+  {
+   "codigo": "05304",
+   "nombre": "San Esteban",
+   "clave": "san esteban",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05304"
+  },
+  {
+   "codigo": "05401",
+   "nombre": "La Ligua",
+   "clave": "la ligua",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05401"
+  },
+  {
+   "codigo": "05402",
+   "nombre": "Cabildo",
+   "clave": "cabildo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05402"
+  },
+  {
+   "codigo": "05403",
+   "nombre": "Papudo",
+   "clave": "papudo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05403"
+  },
+  {
+   "codigo": "05404",
+   "nombre": "Petorca",
+   "clave": "petorca",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05404"
+  },
+  {
+   "codigo": "05405",
+   "nombre": "Zapallar",
+   "clave": "zapallar",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05405"
+  },
+  {
+   "codigo": "05501",
+   "nombre": "Quillota",
+   "clave": "quillota",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05501"
+  },
+  {
+   "codigo": "05502",
+   "nombre": "Calera",
+   "clave": "calera",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05502"
+  },
+  {
+   "codigo": "05503",
+   "nombre": "Hijuelas",
+   "clave": "hijuelas",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05503"
+  },
+  {
+   "codigo": "05504",
+   "nombre": "La Cruz",
+   "clave": "la cruz",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05504"
+  },
+  {
+   "codigo": "05506",
+   "nombre": "Nogales",
+   "clave": "nogales",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05506"
+  },
+  {
+   "codigo": "05601",
+   "nombre": "San Antonio",
+   "clave": "san antonio",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05601"
+  },
+  {
+   "codigo": "05602",
+   "nombre": "Algarrobo",
+   "clave": "algarrobo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05602"
+  },
+  {
+   "codigo": "05603",
+   "nombre": "Cartagena",
+   "clave": "cartagena",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05603"
+  },
+  {
+   "codigo": "05604",
+   "nombre": "El Quisco",
+   "clave": "el quisco",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05604"
+  },
+  {
+   "codigo": "05605",
+   "nombre": "El Tabo",
+   "clave": "el tabo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05605"
+  },
+  {
+   "codigo": "05606",
+   "nombre": "Santo Domingo",
+   "clave": "santo domingo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05606"
+  },
+  {
+   "codigo": "05701",
+   "nombre": "San Felipe",
+   "clave": "san felipe",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05701"
+  },
+  {
+   "codigo": "05702",
+   "nombre": "Catemu",
+   "clave": "catemu",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05702"
+  },
+  {
+   "codigo": "05703",
+   "nombre": "Llaillay",
+   "clave": "llaillay",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05703"
+  },
+  {
+   "codigo": "05704",
+   "nombre": "Panquehue",
+   "clave": "panquehue",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05704"
+  },
+  {
+   "codigo": "05705",
+   "nombre": "Putaendo",
+   "clave": "putaendo",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05705"
+  },
+  {
+   "codigo": "05706",
+   "nombre": "Santa María",
+   "clave": "santa maria",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05706"
+  },
+  {
+   "codigo": "05801",
+   "nombre": "Quilpué",
+   "clave": "quilpue",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05801"
+  },
+  {
+   "codigo": "05802",
+   "nombre": "Limache",
+   "clave": "limache",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05802"
+  },
+  {
+   "codigo": "05803",
+   "nombre": "Olmué",
+   "clave": "olmue",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05803"
+  },
+  {
+   "codigo": "05804",
+   "nombre": "Villa Alemana",
+   "clave": "villa alemana",
+   "codigoRegion": "05",
+   "region": "Región de Valparaíso",
+   "organismoId": "muni_05804"
+  },
+  {
+   "codigo": "06101",
+   "nombre": "Rancagua",
+   "clave": "rancagua",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06101"
+  },
+  {
+   "codigo": "06102",
+   "nombre": "Codegua",
+   "clave": "codegua",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06102"
+  },
+  {
+   "codigo": "06103",
+   "nombre": "Coinco",
+   "clave": "coinco",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06103"
+  },
+  {
+   "codigo": "06104",
+   "nombre": "Coltauco",
+   "clave": "coltauco",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06104"
+  },
+  {
+   "codigo": "06105",
+   "nombre": "Doñihue",
+   "clave": "donihue",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06105"
+  },
+  {
+   "codigo": "06106",
+   "nombre": "Graneros",
+   "clave": "graneros",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06106"
+  },
+  {
+   "codigo": "06107",
+   "nombre": "Las Cabras",
+   "clave": "las cabras",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06107"
+  },
+  {
+   "codigo": "06108",
+   "nombre": "Machalí",
+   "clave": "machali",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06108"
+  },
+  {
+   "codigo": "06109",
+   "nombre": "Malloa",
+   "clave": "malloa",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06109"
+  },
+  {
+   "codigo": "06110",
+   "nombre": "Mostazal",
+   "clave": "mostazal",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06110"
+  },
+  {
+   "codigo": "06111",
+   "nombre": "Olivar",
+   "clave": "olivar",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06111"
+  },
+  {
+   "codigo": "06112",
+   "nombre": "Peumo",
+   "clave": "peumo",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06112"
+  },
+  {
+   "codigo": "06113",
+   "nombre": "Pichidegua",
+   "clave": "pichidegua",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06113"
+  },
+  {
+   "codigo": "06114",
+   "nombre": "Quinta de Tilcoco",
+   "clave": "quinta de tilcoco",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06114"
+  },
+  {
+   "codigo": "06115",
+   "nombre": "Rengo",
+   "clave": "rengo",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06115"
+  },
+  {
+   "codigo": "06116",
+   "nombre": "Requínoa",
+   "clave": "requinoa",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06116"
+  },
+  {
+   "codigo": "06117",
+   "nombre": "San Vicente",
+   "clave": "san vicente",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06117"
+  },
+  {
+   "codigo": "06201",
+   "nombre": "Pichilemu",
+   "clave": "pichilemu",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06201"
+  },
+  {
+   "codigo": "06202",
+   "nombre": "La Estrella",
+   "clave": "la estrella",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06202"
+  },
+  {
+   "codigo": "06203",
+   "nombre": "Litueche",
+   "clave": "litueche",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06203"
+  },
+  {
+   "codigo": "06204",
+   "nombre": "Marchigüe",
+   "clave": "marchigue",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06204"
+  },
+  {
+   "codigo": "06205",
+   "nombre": "Navidad",
+   "clave": "navidad",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06205"
+  },
+  {
+   "codigo": "06206",
+   "nombre": "Paredones",
+   "clave": "paredones",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06206"
+  },
+  {
+   "codigo": "06301",
+   "nombre": "San Fernando",
+   "clave": "san fernando",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06301"
+  },
+  {
+   "codigo": "06302",
+   "nombre": "Chépica",
+   "clave": "chepica",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06302"
+  },
+  {
+   "codigo": "06303",
+   "nombre": "Chimbarongo",
+   "clave": "chimbarongo",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06303"
+  },
+  {
+   "codigo": "06304",
+   "nombre": "Lolol",
+   "clave": "lolol",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06304"
+  },
+  {
+   "codigo": "06305",
+   "nombre": "Nancagua",
+   "clave": "nancagua",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06305"
+  },
+  {
+   "codigo": "06306",
+   "nombre": "Palmilla",
+   "clave": "palmilla",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06306"
+  },
+  {
+   "codigo": "06307",
+   "nombre": "Peralillo",
+   "clave": "peralillo",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06307"
+  },
+  {
+   "codigo": "06308",
+   "nombre": "Placilla",
+   "clave": "placilla",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06308"
+  },
+  {
+   "codigo": "06309",
+   "nombre": "Pumanque",
+   "clave": "pumanque",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06309"
+  },
+  {
+   "codigo": "06310",
+   "nombre": "Santa Cruz",
+   "clave": "santa cruz",
+   "codigoRegion": "06",
+   "region": "Región del Libertador Bernardo O'Higgins",
+   "organismoId": "muni_06310"
+  },
+  {
+   "codigo": "07101",
+   "nombre": "Talca",
+   "clave": "talca",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07101"
+  },
+  {
+   "codigo": "07102",
+   "nombre": "Constitución",
+   "clave": "constitucion",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07102"
+  },
+  {
+   "codigo": "07103",
+   "nombre": "Curepto",
+   "clave": "curepto",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07103"
+  },
+  {
+   "codigo": "07104",
+   "nombre": "Empedrado",
+   "clave": "empedrado",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07104"
+  },
+  {
+   "codigo": "07105",
+   "nombre": "Maule",
+   "clave": "maule",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07105"
+  },
+  {
+   "codigo": "07106",
+   "nombre": "Pelarco",
+   "clave": "pelarco",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07106"
+  },
+  {
+   "codigo": "07107",
+   "nombre": "Pencahue",
+   "clave": "pencahue",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07107"
+  },
+  {
+   "codigo": "07108",
+   "nombre": "Río Claro",
+   "clave": "rio claro",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07108"
+  },
+  {
+   "codigo": "07109",
+   "nombre": "San Clemente",
+   "clave": "san clemente",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07109"
+  },
+  {
+   "codigo": "07110",
+   "nombre": "San Rafael",
+   "clave": "san rafael",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07110"
+  },
+  {
+   "codigo": "07201",
+   "nombre": "Cauquenes",
+   "clave": "cauquenes",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07201"
+  },
+  {
+   "codigo": "07202",
+   "nombre": "Chanco",
+   "clave": "chanco",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07202"
+  },
+  {
+   "codigo": "07203",
+   "nombre": "Pelluhue",
+   "clave": "pelluhue",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07203"
+  },
+  {
+   "codigo": "07301",
+   "nombre": "Curicó",
+   "clave": "curico",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07301"
+  },
+  {
+   "codigo": "07302",
+   "nombre": "Hualañé",
+   "clave": "hualane",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07302"
+  },
+  {
+   "codigo": "07303",
+   "nombre": "Licantén",
+   "clave": "licanten",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07303"
+  },
+  {
+   "codigo": "07304",
+   "nombre": "Molina",
+   "clave": "molina",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07304"
+  },
+  {
+   "codigo": "07305",
+   "nombre": "Rauco",
+   "clave": "rauco",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07305"
+  },
+  {
+   "codigo": "07306",
+   "nombre": "Romeral",
+   "clave": "romeral",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07306"
+  },
+  {
+   "codigo": "07307",
+   "nombre": "Sagrada Familia",
+   "clave": "sagrada familia",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07307"
+  },
+  {
+   "codigo": "07308",
+   "nombre": "Teno",
+   "clave": "teno",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07308"
+  },
+  {
+   "codigo": "07309",
+   "nombre": "Vichuquén",
+   "clave": "vichuquen",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07309"
+  },
+  {
+   "codigo": "07401",
+   "nombre": "Linares",
+   "clave": "linares",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07401"
+  },
+  {
+   "codigo": "07402",
+   "nombre": "Colbún",
+   "clave": "colbun",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07402"
+  },
+  {
+   "codigo": "07403",
+   "nombre": "Longaví",
+   "clave": "longavi",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07403"
+  },
+  {
+   "codigo": "07404",
+   "nombre": "Parral",
+   "clave": "parral",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07404"
+  },
+  {
+   "codigo": "07405",
+   "nombre": "Retiro",
+   "clave": "retiro",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07405"
+  },
+  {
+   "codigo": "07406",
+   "nombre": "San Javier",
+   "clave": "san javier",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07406"
+  },
+  {
+   "codigo": "07407",
+   "nombre": "Villa Alegre",
+   "clave": "villa alegre",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07407"
+  },
+  {
+   "codigo": "07408",
+   "nombre": "Yerbas Buenas",
+   "clave": "yerbas buenas",
+   "codigoRegion": "07",
+   "region": "Región del Maule",
+   "organismoId": "muni_07408"
+  },
+  {
+   "codigo": "08101",
+   "nombre": "Concepción",
+   "clave": "concepcion",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08101"
+  },
+  {
+   "codigo": "08102",
+   "nombre": "Coronel",
+   "clave": "coronel",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08102"
+  },
+  {
+   "codigo": "08103",
+   "nombre": "Chiguayante",
+   "clave": "chiguayante",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08103"
+  },
+  {
+   "codigo": "08104",
+   "nombre": "Florida",
+   "clave": "florida",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08104"
+  },
+  {
+   "codigo": "08105",
+   "nombre": "Hualqui",
+   "clave": "hualqui",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08105"
+  },
+  {
+   "codigo": "08106",
+   "nombre": "Lota",
+   "clave": "lota",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08106"
+  },
+  {
+   "codigo": "08107",
+   "nombre": "Penco",
+   "clave": "penco",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08107"
+  },
+  {
+   "codigo": "08108",
+   "nombre": "San Pedro de la Paz",
+   "clave": "san pedro de la paz",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08108"
+  },
+  {
+   "codigo": "08109",
+   "nombre": "Santa Juana",
+   "clave": "santa juana",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08109"
+  },
+  {
+   "codigo": "08110",
+   "nombre": "Talcahuano",
+   "clave": "talcahuano",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08110"
+  },
+  {
+   "codigo": "08111",
+   "nombre": "Tomé",
+   "clave": "tome",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08111"
+  },
+  {
+   "codigo": "08112",
+   "nombre": "Hualpén",
+   "clave": "hualpen",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08112"
+  },
+  {
+   "codigo": "08201",
+   "nombre": "Lebu",
+   "clave": "lebu",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08201"
+  },
+  {
+   "codigo": "08202",
+   "nombre": "Arauco",
+   "clave": "arauco",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08202"
+  },
+  {
+   "codigo": "08203",
+   "nombre": "Cañete",
+   "clave": "canete",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08203"
+  },
+  {
+   "codigo": "08204",
+   "nombre": "Contulmo",
+   "clave": "contulmo",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08204"
+  },
+  {
+   "codigo": "08205",
+   "nombre": "Curanilahue",
+   "clave": "curanilahue",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08205"
+  },
+  {
+   "codigo": "08206",
+   "nombre": "Los Alamos",
+   "clave": "los alamos",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08206"
+  },
+  {
+   "codigo": "08207",
+   "nombre": "Tirúa",
+   "clave": "tirua",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08207"
+  },
+  {
+   "codigo": "08301",
+   "nombre": "Los Ángeles",
+   "clave": "los angeles",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08301"
+  },
+  {
+   "codigo": "08302",
+   "nombre": "Antuco",
+   "clave": "antuco",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08302"
+  },
+  {
+   "codigo": "08303",
+   "nombre": "Cabrero",
+   "clave": "cabrero",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08303"
+  },
+  {
+   "codigo": "08304",
+   "nombre": "Laja",
+   "clave": "laja",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08304"
+  },
+  {
+   "codigo": "08305",
+   "nombre": "Mulchén",
+   "clave": "mulchen",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08305"
+  },
+  {
+   "codigo": "08306",
+   "nombre": "Nacimiento",
+   "clave": "nacimiento",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08306"
+  },
+  {
+   "codigo": "08307",
+   "nombre": "Negrete",
+   "clave": "negrete",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08307"
+  },
+  {
+   "codigo": "08308",
+   "nombre": "Quilaco",
+   "clave": "quilaco",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08308"
+  },
+  {
+   "codigo": "08309",
+   "nombre": "Quilleco",
+   "clave": "quilleco",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08309"
+  },
+  {
+   "codigo": "08310",
+   "nombre": "San Rosendo",
+   "clave": "san rosendo",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08310"
+  },
+  {
+   "codigo": "08311",
+   "nombre": "Santa Bárbara",
+   "clave": "santa barbara",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08311"
+  },
+  {
+   "codigo": "08312",
+   "nombre": "Tucapel",
+   "clave": "tucapel",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08312"
+  },
+  {
+   "codigo": "08313",
+   "nombre": "Yumbel",
+   "clave": "yumbel",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08313"
+  },
+  {
+   "codigo": "08314",
+   "nombre": "Alto Biobío",
+   "clave": "alto biobio",
+   "codigoRegion": "08",
+   "region": "Región del Bío-Bío",
+   "organismoId": "muni_08314"
+  },
+  {
+   "codigo": "09101",
+   "nombre": "Temuco",
+   "clave": "temuco",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09101"
+  },
+  {
+   "codigo": "09102",
+   "nombre": "Carahue",
+   "clave": "carahue",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09102"
+  },
+  {
+   "codigo": "09103",
+   "nombre": "Cunco",
+   "clave": "cunco",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09103"
+  },
+  {
+   "codigo": "09104",
+   "nombre": "Curarrehue",
+   "clave": "curarrehue",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09104"
+  },
+  {
+   "codigo": "09105",
+   "nombre": "Freire",
+   "clave": "freire",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09105"
+  },
+  {
+   "codigo": "09106",
+   "nombre": "Galvarino",
+   "clave": "galvarino",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09106"
+  },
+  {
+   "codigo": "09107",
+   "nombre": "Gorbea",
+   "clave": "gorbea",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09107"
+  },
+  {
+   "codigo": "09108",
+   "nombre": "Lautaro",
+   "clave": "lautaro",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09108"
+  },
+  {
+   "codigo": "09109",
+   "nombre": "Loncoche",
+   "clave": "loncoche",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09109"
+  },
+  {
+   "codigo": "09110",
+   "nombre": "Melipeuco",
+   "clave": "melipeuco",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09110"
+  },
+  {
+   "codigo": "09111",
+   "nombre": "Nueva Imperial",
+   "clave": "nueva imperial",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09111"
+  },
+  {
+   "codigo": "09112",
+   "nombre": "Padre Las Casas",
+   "clave": "padre las casas",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09112"
+  },
+  {
+   "codigo": "09113",
+   "nombre": "Perquenco",
+   "clave": "perquenco",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09113"
+  },
+  {
+   "codigo": "09114",
+   "nombre": "Pitrufquén",
+   "clave": "pitrufquen",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09114"
+  },
+  {
+   "codigo": "09115",
+   "nombre": "Pucón",
+   "clave": "pucon",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09115"
+  },
+  {
+   "codigo": "09116",
+   "nombre": "Saavedra",
+   "clave": "saavedra",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09116"
+  },
+  {
+   "codigo": "09117",
+   "nombre": "Teodoro Schmidt",
+   "clave": "teodoro schmidt",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09117"
+  },
+  {
+   "codigo": "09118",
+   "nombre": "Toltén",
+   "clave": "tolten",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09118"
+  },
+  {
+   "codigo": "09119",
+   "nombre": "Vilcún",
+   "clave": "vilcun",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09119"
+  },
+  {
+   "codigo": "09120",
+   "nombre": "Villarrica",
+   "clave": "villarrica",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09120"
+  },
+  {
+   "codigo": "09121",
+   "nombre": "Cholchol",
+   "clave": "cholchol",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09121"
+  },
+  {
+   "codigo": "09201",
+   "nombre": "Angol",
+   "clave": "angol",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09201"
+  },
+  {
+   "codigo": "09202",
+   "nombre": "Collipulli",
+   "clave": "collipulli",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09202"
+  },
+  {
+   "codigo": "09203",
+   "nombre": "Curacautín",
+   "clave": "curacautin",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09203"
+  },
+  {
+   "codigo": "09204",
+   "nombre": "Ercilla",
+   "clave": "ercilla",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09204"
+  },
+  {
+   "codigo": "09205",
+   "nombre": "Lonquimay",
+   "clave": "lonquimay",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09205"
+  },
+  {
+   "codigo": "09206",
+   "nombre": "Los Sauces",
+   "clave": "los sauces",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09206"
+  },
+  {
+   "codigo": "09207",
+   "nombre": "Lumaco",
+   "clave": "lumaco",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09207"
+  },
+  {
+   "codigo": "09208",
+   "nombre": "Purén",
+   "clave": "puren",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09208"
+  },
+  {
+   "codigo": "09209",
+   "nombre": "Renaico",
+   "clave": "renaico",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09209"
+  },
+  {
+   "codigo": "09210",
+   "nombre": "Traiguén",
+   "clave": "traiguen",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09210"
+  },
+  {
+   "codigo": "09211",
+   "nombre": "Victoria",
+   "clave": "victoria",
+   "codigoRegion": "09",
+   "region": "Región de La Araucanía",
+   "organismoId": "muni_09211"
+  },
+  {
+   "codigo": "10101",
+   "nombre": "Puerto Montt",
+   "clave": "puerto montt",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10101"
+  },
+  {
+   "codigo": "10102",
+   "nombre": "Calbuco",
+   "clave": "calbuco",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10102"
+  },
+  {
+   "codigo": "10103",
+   "nombre": "Cochamó",
+   "clave": "cochamo",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10103"
+  },
+  {
+   "codigo": "10104",
+   "nombre": "Fresia",
+   "clave": "fresia",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10104"
+  },
+  {
+   "codigo": "10105",
+   "nombre": "Frutillar",
+   "clave": "frutillar",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10105"
+  },
+  {
+   "codigo": "10106",
+   "nombre": "Los Muermos",
+   "clave": "los muermos",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10106"
+  },
+  {
+   "codigo": "10107",
+   "nombre": "Llanquihue",
+   "clave": "llanquihue",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10107"
+  },
+  {
+   "codigo": "10108",
+   "nombre": "Maullín",
+   "clave": "maullin",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10108"
+  },
+  {
+   "codigo": "10109",
+   "nombre": "Puerto Varas",
+   "clave": "puerto varas",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10109"
+  },
+  {
+   "codigo": "10201",
+   "nombre": "Castro",
+   "clave": "castro",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10201"
+  },
+  {
+   "codigo": "10202",
+   "nombre": "Ancud",
+   "clave": "ancud",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10202"
+  },
+  {
+   "codigo": "10203",
+   "nombre": "Chonchi",
+   "clave": "chonchi",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10203"
+  },
+  {
+   "codigo": "10204",
+   "nombre": "Curaco de Vélez",
+   "clave": "curaco de velez",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10204"
+  },
+  {
+   "codigo": "10205",
+   "nombre": "Dalcahue",
+   "clave": "dalcahue",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10205"
+  },
+  {
+   "codigo": "10206",
+   "nombre": "Puqueldón",
+   "clave": "puqueldon",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10206"
+  },
+  {
+   "codigo": "10207",
+   "nombre": "Queilén",
+   "clave": "queilen",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10207"
+  },
+  {
+   "codigo": "10208",
+   "nombre": "Quellón",
+   "clave": "quellon",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10208"
+  },
+  {
+   "codigo": "10209",
+   "nombre": "Quemchi",
+   "clave": "quemchi",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10209"
+  },
+  {
+   "codigo": "10210",
+   "nombre": "Quinchao",
+   "clave": "quinchao",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10210"
+  },
+  {
+   "codigo": "10301",
+   "nombre": "Osorno",
+   "clave": "osorno",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10301"
+  },
+  {
+   "codigo": "10302",
+   "nombre": "Puerto Octay",
+   "clave": "puerto octay",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10302"
+  },
+  {
+   "codigo": "10303",
+   "nombre": "Purranque",
+   "clave": "purranque",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10303"
+  },
+  {
+   "codigo": "10304",
+   "nombre": "Puyehue",
+   "clave": "puyehue",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10304"
+  },
+  {
+   "codigo": "10305",
+   "nombre": "Río Negro",
+   "clave": "rio negro",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10305"
+  },
+  {
+   "codigo": "10306",
+   "nombre": "San Juan de la Costa",
+   "clave": "san juan de la costa",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10306"
+  },
+  {
+   "codigo": "10307",
+   "nombre": "San Pablo",
+   "clave": "san pablo",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10307"
+  },
+  {
+   "codigo": "10401",
+   "nombre": "Chaitén",
+   "clave": "chaiten",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10401"
+  },
+  {
+   "codigo": "10402",
+   "nombre": "Futaleufú",
+   "clave": "futaleufu",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10402"
+  },
+  {
+   "codigo": "10403",
+   "nombre": "Hualaihué",
+   "clave": "hualaihue",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10403"
+  },
+  {
+   "codigo": "10404",
+   "nombre": "Palena",
+   "clave": "palena",
+   "codigoRegion": "10",
+   "region": "Región de Los Lagos",
+   "organismoId": "muni_10404"
+  },
+  {
+   "codigo": "11101",
+   "nombre": "Coyhaique",
+   "clave": "coyhaique",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11101"
+  },
+  {
+   "codigo": "11102",
+   "nombre": "Lago Verde",
+   "clave": "lago verde",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11102"
+  },
+  {
+   "codigo": "11201",
+   "nombre": "Aysén",
+   "clave": "aysen",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11201"
+  },
+  {
+   "codigo": "11202",
+   "nombre": "Cisnes",
+   "clave": "cisnes",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11202"
+  },
+  {
+   "codigo": "11203",
+   "nombre": "Guaitecas",
+   "clave": "guaitecas",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11203"
+  },
+  {
+   "codigo": "11301",
+   "nombre": "Cochrane",
+   "clave": "cochrane",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11301"
+  },
+  {
+   "codigo": "11302",
+   "nombre": "O'Higgins",
+   "clave": "o higgins",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11302"
+  },
+  {
+   "codigo": "11303",
+   "nombre": "Tortel",
+   "clave": "tortel",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11303"
+  },
+  {
+   "codigo": "11401",
+   "nombre": "Chile Chico",
+   "clave": "chile chico",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11401"
+  },
+  {
+   "codigo": "11402",
+   "nombre": "Río Ibáñez",
+   "clave": "rio ibanez",
+   "codigoRegion": "11",
+   "region": "Región de Aysén del Gral.Ibañez del Campo",
+   "organismoId": "muni_11402"
+  },
+  {
+   "codigo": "12101",
+   "nombre": "Punta Arenas",
+   "clave": "punta arenas",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12101"
+  },
+  {
+   "codigo": "12102",
+   "nombre": "Laguna Blanca",
+   "clave": "laguna blanca",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12102"
+  },
+  {
+   "codigo": "12103",
+   "nombre": "Río Verde",
+   "clave": "rio verde",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12103"
+  },
+  {
+   "codigo": "12104",
+   "nombre": "San Gregorio",
+   "clave": "san gregorio",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12104"
+  },
+  {
+   "codigo": "12201",
+   "nombre": "Cabo de Hornos",
+   "clave": "cabo de hornos",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12201"
+  },
+  {
+   "codigo": "12202",
+   "nombre": "Antártica",
+   "clave": "antartica",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12201"
+  },
+  {
+   "codigo": "12301",
+   "nombre": "Porvenir",
+   "clave": "porvenir",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12301"
+  },
+  {
+   "codigo": "12302",
+   "nombre": "Primavera",
+   "clave": "primavera",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12302"
+  },
+  {
+   "codigo": "12303",
+   "nombre": "Timaukel",
+   "clave": "timaukel",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12303"
+  },
+  {
+   "codigo": "12401",
+   "nombre": "Natales",
+   "clave": "natales",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12401"
+  },
+  {
+   "codigo": "12402",
+   "nombre": "Torres del Paine",
+   "clave": "torres del paine",
+   "codigoRegion": "12",
+   "region": "Región de Magallanes y Antártica Chilena",
+   "organismoId": "muni_12402"
+  },
+  {
+   "codigo": "13101",
+   "nombre": "Santiago",
+   "clave": "santiago",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13101"
+  },
+  {
+   "codigo": "13102",
+   "nombre": "Cerrillos",
+   "clave": "cerrillos",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13102"
+  },
+  {
+   "codigo": "13103",
+   "nombre": "Cerro Navia",
+   "clave": "cerro navia",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13103"
+  },
+  {
+   "codigo": "13104",
+   "nombre": "Conchalí",
+   "clave": "conchali",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13104"
+  },
+  {
+   "codigo": "13105",
+   "nombre": "El Bosque",
+   "clave": "el bosque",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13105"
+  },
+  {
+   "codigo": "13106",
+   "nombre": "Estación Central",
+   "clave": "estacion central",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13106"
+  },
+  {
+   "codigo": "13107",
+   "nombre": "Huechuraba",
+   "clave": "huechuraba",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13107"
+  },
+  {
+   "codigo": "13108",
+   "nombre": "Independencia",
+   "clave": "independencia",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13108"
+  },
+  {
+   "codigo": "13109",
+   "nombre": "La Cisterna",
+   "clave": "la cisterna",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13109"
+  },
+  {
+   "codigo": "13110",
+   "nombre": "La Florida",
+   "clave": "la florida",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13110"
+  },
+  {
+   "codigo": "13111",
+   "nombre": "La Granja",
+   "clave": "la granja",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13111"
+  },
+  {
+   "codigo": "13112",
+   "nombre": "La Pintana",
+   "clave": "la pintana",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13112"
+  },
+  {
+   "codigo": "13113",
+   "nombre": "La Reina",
+   "clave": "la reina",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13113"
+  },
+  {
+   "codigo": "13114",
+   "nombre": "Las Condes",
+   "clave": "las condes",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13114"
+  },
+  {
+   "codigo": "13115",
+   "nombre": "Lo Barnechea",
+   "clave": "lo barnechea",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13115"
+  },
+  {
+   "codigo": "13116",
+   "nombre": "Lo Espejo",
+   "clave": "lo espejo",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13116"
+  },
+  {
+   "codigo": "13117",
+   "nombre": "Lo Prado",
+   "clave": "lo prado",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13117"
+  },
+  {
+   "codigo": "13118",
+   "nombre": "Macul",
+   "clave": "macul",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13118"
+  },
+  {
+   "codigo": "13119",
+   "nombre": "Maipú",
+   "clave": "maipu",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13119"
+  },
+  {
+   "codigo": "13120",
+   "nombre": "Ñuñoa",
+   "clave": "nunoa",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13120"
+  },
+  {
+   "codigo": "13121",
+   "nombre": "Pedro Aguirre Cerda",
+   "clave": "pedro aguirre cerda",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13121"
+  },
+  {
+   "codigo": "13122",
+   "nombre": "Peñalolén",
+   "clave": "penalolen",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13122"
+  },
+  {
+   "codigo": "13123",
+   "nombre": "Providencia",
+   "clave": "providencia",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13123"
+  },
+  {
+   "codigo": "13124",
+   "nombre": "Pudahuel",
+   "clave": "pudahuel",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13124"
+  },
+  {
+   "codigo": "13125",
+   "nombre": "Quilicura",
+   "clave": "quilicura",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13125"
+  },
+  {
+   "codigo": "13126",
+   "nombre": "Quinta Normal",
+   "clave": "quinta normal",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13126"
+  },
+  {
+   "codigo": "13127",
+   "nombre": "Recoleta",
+   "clave": "recoleta",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13127"
+  },
+  {
+   "codigo": "13128",
+   "nombre": "Renca",
+   "clave": "renca",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13128"
+  },
+  {
+   "codigo": "13129",
+   "nombre": "San Joaquín",
+   "clave": "san joaquin",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13129"
+  },
+  {
+   "codigo": "13130",
+   "nombre": "San Miguel",
+   "clave": "san miguel",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13130"
+  },
+  {
+   "codigo": "13131",
+   "nombre": "San Ramón",
+   "clave": "san ramon",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13131"
+  },
+  {
+   "codigo": "13132",
+   "nombre": "Vitacura",
+   "clave": "vitacura",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13132"
+  },
+  {
+   "codigo": "13201",
+   "nombre": "Puente Alto",
+   "clave": "puente alto",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13201"
+  },
+  {
+   "codigo": "13202",
+   "nombre": "Pirque",
+   "clave": "pirque",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13202"
+  },
+  {
+   "codigo": "13203",
+   "nombre": "San José de Maipo",
+   "clave": "san jose de maipo",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13203"
+  },
+  {
+   "codigo": "13301",
+   "nombre": "Colina",
+   "clave": "colina",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13301"
+  },
+  {
+   "codigo": "13302",
+   "nombre": "Lampa",
+   "clave": "lampa",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13302"
+  },
+  {
+   "codigo": "13303",
+   "nombre": "Tiltil",
+   "clave": "tiltil",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13303"
+  },
+  {
+   "codigo": "13401",
+   "nombre": "San Bernardo",
+   "clave": "san bernardo",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13401"
+  },
+  {
+   "codigo": "13402",
+   "nombre": "Buin",
+   "clave": "buin",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13402"
+  },
+  {
+   "codigo": "13403",
+   "nombre": "Calera de Tango",
+   "clave": "calera de tango",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13403"
+  },
+  {
+   "codigo": "13404",
+   "nombre": "Paine",
+   "clave": "paine",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13404"
+  },
+  {
+   "codigo": "13501",
+   "nombre": "Melipilla",
+   "clave": "melipilla",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13501"
+  },
+  {
+   "codigo": "13502",
+   "nombre": "Alhué",
+   "clave": "alhue",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13502"
+  },
+  {
+   "codigo": "13503",
+   "nombre": "Curacaví",
+   "clave": "curacavi",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13503"
+  },
+  {
+   "codigo": "13504",
+   "nombre": "María Pinto",
+   "clave": "maria pinto",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13504"
+  },
+  {
+   "codigo": "13505",
+   "nombre": "San Pedro",
+   "clave": "san pedro",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13505"
+  },
+  {
+   "codigo": "13601",
+   "nombre": "Talagante",
+   "clave": "talagante",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13601"
+  },
+  {
+   "codigo": "13602",
+   "nombre": "El Monte",
+   "clave": "el monte",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13602"
+  },
+  {
+   "codigo": "13603",
+   "nombre": "Isla de Maipo",
+   "clave": "isla de maipo",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13603"
+  },
+  {
+   "codigo": "13604",
+   "nombre": "Padre Hurtado",
+   "clave": "padre hurtado",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13604"
+  },
+  {
+   "codigo": "13605",
+   "nombre": "Peñaflor",
+   "clave": "penaflor",
+   "codigoRegion": "13",
+   "region": "Región Metropolitana de Santiago",
+   "organismoId": "muni_13605"
+  },
+  {
+   "codigo": "14101",
+   "nombre": "Valdivia",
+   "clave": "valdivia",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14101"
+  },
+  {
+   "codigo": "14102",
+   "nombre": "Corral",
+   "clave": "corral",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14102"
+  },
+  {
+   "codigo": "14103",
+   "nombre": "Lanco",
+   "clave": "lanco",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14103"
+  },
+  {
+   "codigo": "14104",
+   "nombre": "Los Lagos",
+   "clave": "los lagos",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14104"
+  },
+  {
+   "codigo": "14105",
+   "nombre": "Máfil",
+   "clave": "mafil",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14105"
+  },
+  {
+   "codigo": "14106",
+   "nombre": "Mariquina",
+   "clave": "mariquina",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14106"
+  },
+  {
+   "codigo": "14107",
+   "nombre": "Paillaco",
+   "clave": "paillaco",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14107"
+  },
+  {
+   "codigo": "14108",
+   "nombre": "Panguipulli",
+   "clave": "panguipulli",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14108"
+  },
+  {
+   "codigo": "14201",
+   "nombre": "La Unión",
+   "clave": "la union",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14201"
+  },
+  {
+   "codigo": "14202",
+   "nombre": "Futrono",
+   "clave": "futrono",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14202"
+  },
+  {
+   "codigo": "14203",
+   "nombre": "Lago Ranco",
+   "clave": "lago ranco",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14203"
+  },
+  {
+   "codigo": "14204",
+   "nombre": "Río Bueno",
+   "clave": "rio bueno",
+   "codigoRegion": "14",
+   "region": "Región de Los Ríos",
+   "organismoId": "muni_14204"
+  },
+  {
+   "codigo": "15101",
+   "nombre": "Arica",
+   "clave": "arica",
+   "codigoRegion": "15",
+   "region": "Región de Arica y Parinacota",
+   "organismoId": "muni_15101"
+  },
+  {
+   "codigo": "15102",
+   "nombre": "Camarones",
+   "clave": "camarones",
+   "codigoRegion": "15",
+   "region": "Región de Arica y Parinacota",
+   "organismoId": "muni_15102"
+  },
+  {
+   "codigo": "15201",
+   "nombre": "Putre",
+   "clave": "putre",
+   "codigoRegion": "15",
+   "region": "Región de Arica y Parinacota",
+   "organismoId": "muni_15201"
+  },
+  {
+   "codigo": "15202",
+   "nombre": "General Lagos",
+   "clave": "general lagos",
+   "codigoRegion": "15",
+   "region": "Región de Arica y Parinacota",
+   "organismoId": "muni_15202"
+  },
+  {
+   "codigo": "16101",
+   "nombre": "Chillán",
+   "clave": "chillan",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16101"
+  },
+  {
+   "codigo": "16102",
+   "nombre": "Bulnes",
+   "clave": "bulnes",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16102"
+  },
+  {
+   "codigo": "16103",
+   "nombre": "Chillán Viejo",
+   "clave": "chillan viejo",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16103"
+  },
+  {
+   "codigo": "16104",
+   "nombre": "El Carmen",
+   "clave": "el carmen",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16104"
+  },
+  {
+   "codigo": "16105",
+   "nombre": "Pemuco",
+   "clave": "pemuco",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16105"
+  },
+  {
+   "codigo": "16106",
+   "nombre": "Pinto",
+   "clave": "pinto",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16106"
+  },
+  {
+   "codigo": "16107",
+   "nombre": "Quillón",
+   "clave": "quillon",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16107"
+  },
+  {
+   "codigo": "16108",
+   "nombre": "San Ignacio",
+   "clave": "san ignacio",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16108"
+  },
+  {
+   "codigo": "16109",
+   "nombre": "Yungay",
+   "clave": "yungay",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16109"
+  },
+  {
+   "codigo": "16201",
+   "nombre": "Quirihue",
+   "clave": "quirihue",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16201"
+  },
+  {
+   "codigo": "16202",
+   "nombre": "Cobquecura",
+   "clave": "cobquecura",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16202"
+  },
+  {
+   "codigo": "16203",
+   "nombre": "Coelemu",
+   "clave": "coelemu",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16203"
+  },
+  {
+   "codigo": "16204",
+   "nombre": "Ninhue",
+   "clave": "ninhue",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16204"
+  },
+  {
+   "codigo": "16205",
+   "nombre": "Portezuelo",
+   "clave": "portezuelo",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16205"
+  },
+  {
+   "codigo": "16206",
+   "nombre": "Ranquil",
+   "clave": "ranquil",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16206"
+  },
+  {
+   "codigo": "16207",
+   "nombre": "Treguaco",
+   "clave": "treguaco",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16207"
+  },
+  {
+   "codigo": "16301",
+   "nombre": "San Carlos",
+   "clave": "san carlos",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16301"
+  },
+  {
+   "codigo": "16302",
+   "nombre": "Coihueco",
+   "clave": "coihueco",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16302"
+  },
+  {
+   "codigo": "16303",
+   "nombre": "Ñiquén",
+   "clave": "niquen",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16303"
+  },
+  {
+   "codigo": "16304",
+   "nombre": "San Fabián",
+   "clave": "san fabian",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16304"
+  },
+  {
+   "codigo": "16305",
+   "nombre": "San Nicolás",
+   "clave": "san nicolas",
+   "codigoRegion": "16",
+   "region": "Región de Ñuble",
+   "organismoId": "muni_16305"
+  }
+ ]
+}
