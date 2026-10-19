@@ -33,6 +33,7 @@ import {
   Report,
   ReportStatus,
   StatusChange,
+  etiquetaCategoria,
 } from '../../models/report.model';
 
 /** HU-26 · Detalle completo de una incidencia, con confirmación y trazabilidad. */
@@ -68,6 +69,7 @@ export class ReportDetailPage {
 
   readonly etiquetas = ETIQUETAS_ESTADO;
   readonly colores = COLORES_ESTADO;
+  readonly nombreCategoria = etiquetaCategoria;
 
   readonly reporte = signal<Report | null>(null);
   readonly cargando = signal(true);

@@ -10,6 +10,43 @@
  * nunca los colores directos: así un mismo componente se ve bien en ambos
  * temas sin condicionales.
  */
+/*
+ * Escala de pasos de Ionic: del fondo (0) al texto (1000).
+ *
+ * Ionic 9 lee dos nombres para la misma escala:
+ *   --ion-color-step-N            (nombre antiguo, lo prueba primero)
+ *   --ion-background-color-step-N = paso N
+ *   --ion-text-color-step-N       = paso 1000 - N
+ * Si un paso no está definido, Ionic cae a su valor del tema CLARO por
+ * defecto (#262626, #4d4d4d…). Eso dejaba texto casi negro sobre fondo
+ * oscuro en el selector de categoría, alertas y toasts: el tema definía los
+ * pasos 50–800, 900 y 950, pero no 450, 550, 650, 750 ni 850, que son
+ * justamente los que usan los botones del action sheet (850) y varios textos
+ * secundarios. Aquí se define la escala completa una sola vez por tema y el
+ * mixin emite los tres nombres.
+ */
+$pasos-oscuro: (
+  50: #1b2434, 100: #232c3c, 150: #2b3444, 200: #333c4c, 250: #3b4454,
+  300: #434c5c, 350: #4b5464, 400: #5c677d, 450: #646e82, 500: #6c7688,
+  550: #747e8e, 600: #7d8694, 650: #858e9a, 700: #8d95a0, 750: #99a4b2,
+  800: #a5b4c3, 850: #bac6d2, 900: #d0d9e2, 950: #f8fafc,
+);
+
+$pasos-claro: (
+  50: #eef2f6, 100: #e2e8ef, 150: #d6dee7, 200: #cad3de, 250: #bec9d6,
+  300: #b2bfcd, 350: #a5b4c3, 400: #8c99aa, 450: #8390a2, 500: #7a8699,
+  550: #6b768b, 600: #5c677d, 650: #525c70, 700: #475264, 750: #3d4758,
+  800: #333c4c, 850: #293240, 900: #1f2735, 950: #111827,
+);
+
+@mixin pasos-ionic($pasos) {
+  @each $paso, $color in $pasos {
+    --ion-color-step-#{$paso}: #{$color};
+    --ion-background-color-step-#{$paso}: #{$color};
+    --ion-text-color-step-#{1000 - $paso}: #{$color};
+  }
+}
+
 :root {
   /* Paleta de marca */
   --ca-black: #111827;
@@ -76,20 +113,7 @@
   --ion-text-color: #f8fafc;
   --ion-text-color-rgb: 248, 250, 252;
 
-  --ion-color-step-50: #1b2434;
-  --ion-color-step-100: #232c3c;
-  --ion-color-step-150: #2b3444;
-  --ion-color-step-200: #333c4c;
-  --ion-color-step-250: #3b4454;
-  --ion-color-step-300: #434c5c;
-  --ion-color-step-350: #4b5464;
-  --ion-color-step-400: #5c677d;
-  --ion-color-step-500: #6c7688;
-  --ion-color-step-600: #7d8694;
-  --ion-color-step-700: #8d95a0;
-  --ion-color-step-800: #a5b4c3;
-  --ion-color-step-900: #d0d9e2;
-  --ion-color-step-950: #f8fafc;
+  @include pasos-ionic($pasos-oscuro);
 
   color-scheme: dark;
 }
@@ -152,20 +176,7 @@ html.tema-claro {
   --ion-text-color: #111827;
   --ion-text-color-rgb: 17, 24, 39;
 
-  --ion-color-step-50: #eef2f6;
-  --ion-color-step-100: #e2e8ef;
-  --ion-color-step-150: #d6dee7;
-  --ion-color-step-200: #cad3de;
-  --ion-color-step-250: #bec9d6;
-  --ion-color-step-300: #b2bfcd;
-  --ion-color-step-350: #a5b4c3;
-  --ion-color-step-400: #8c99aa;
-  --ion-color-step-500: #7a8699;
-  --ion-color-step-600: #5c677d;
-  --ion-color-step-700: #475264;
-  --ion-color-step-800: #333c4c;
-  --ion-color-step-900: #1f2735;
-  --ion-color-step-950: #111827;
+  @include pasos-ionic($pasos-claro);
 
   color-scheme: light;
 }

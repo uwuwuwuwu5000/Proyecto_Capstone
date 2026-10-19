@@ -101,6 +101,9 @@
 
                   <span class="tarjeta__cuerpo">
                     <span class="tarjeta__descripcion">{{ item.report.descripcion }}</span>
+                    <span class="tarjeta__meta tarjeta__meta--texto">
+                      {{ nombreCategoria(item.report.categoria) }} · {{ item.report.comuna ?? 'Comuna sin identificar' }}
+                    </span>
                     <span class="tarjeta__meta">
                       <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
                       {{ formatearDistancia(item.distanciaMetros) }}

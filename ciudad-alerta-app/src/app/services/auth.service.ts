@@ -239,6 +239,9 @@ export class AuthService {
       // momento si esta escritura falla.
     }
 
+    // Una cuenta de la lista de administradores recibe su rol apenas verifica.
+    await this.asegurarPerfil();
+
     return true;
   }
 
@@ -298,7 +301,8 @@ export class AuthService {
         return;
       }
 
-      if (esCorreoAdministrador(usuario.email) && perfil.role !== 'admin') {
+      // DIAG-2 · Las reglas solo aceptan la promoción con el correo verificado.
+      if (esCorreoAdministrador(usuario.email) && usuario.emailVerified && perfil.role !== 'admin') {
         await updateDoc(doc(this.firestore, 'users', usuario.uid), {
           role: 'admin',
           updatedAt: serverTimestamp(),
@@ -349,8 +353,9 @@ export class AuthService {
       email: user.email ?? '',
       displayName,
       // La lista de administradores se valida también en las reglas, que son
-      // las que realmente autorizan este valor.
-      role: esCorreoAdministrador(user.email) ? 'admin' : 'ciudadano',
+      // las que realmente autorizan este valor. DIAG-2 · Solo con el correo
+      // verificado; si no, nace ciudadano y se promueve al verificarlo.
+      role: esCorreoAdministrador(user.email) && user.emailVerified ? 'admin' : 'ciudadano',
       trustLevel: 0,
       validatedReports: 0,
       emailVerified: user.emailVerified,

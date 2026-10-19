@@ -24,7 +24,12 @@ import {
 
 import { ConfirmationService } from '../../services/confirmation.service';
 import { ReportQueryService } from '../../services/report-query.service';
-import { COLORES_ESTADO, ETIQUETAS_ESTADO, Report } from '../../models/report.model';
+import {
+  COLORES_ESTADO,
+  ETIQUETAS_ESTADO,
+  Report,
+  etiquetaCategoria,
+} from '../../models/report.model';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
 @Component({
@@ -52,6 +57,7 @@ export class MyReportsPage {
   private readonly router = inject(Router);
 
   readonly etiquetas = ETIQUETAS_ESTADO;
+  readonly nombreCategoria = etiquetaCategoria;
   readonly colores = COLORES_ESTADO;
 
   readonly reportes = signal<Report[]>([]);

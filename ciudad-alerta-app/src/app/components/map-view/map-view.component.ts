@@ -10,6 +10,7 @@ import {
   viewChild,
 } from '@angular/core';
 import * as L from 'leaflet';
+import Supercluster from 'supercluster';
 
 import { ETIQUETAS_ESTADO, EventoHistorial } from '../../models/report.model';
 
@@ -22,6 +23,24 @@ export interface MapMarker {
   color: string;
   titulo: string;
 }
+
+/** Datos que guarda el índice de agrupación por cada reporte. */
+interface PropiedadesPunto {
+  id: string;
+}
+
+/** Acercamiento máximo del mapa (el de los tiles de OpenStreetMap). */
+const ZOOM_MAXIMO = 19;
+
+/**
+ * Radio de agrupación en píxeles de pantalla. Con 60 px dos pines se unen
+ * cuando sus centros quedan a menos de un dedo de distancia, que es justo
+ * cuando dejan de poder tocarse por separado.
+ */
+const RADIO_AGRUPACION = 60;
+
+/** Cuántos reportes muestra como máximo la lista de un grupo inseparable. */
+const MAXIMO_EN_LISTA = 50;
 
 /**
  * CA-51 · Componente de mapa basado en Leaflet + OpenStreetMap.
@@ -71,6 +90,11 @@ export class MapViewComponent implements OnDestroy {
   readonly markers = input<MapMarker[]>([]);
   /** Radio en metros a dibujar alrededor del punto central. 0 lo desactiva. */
   readonly radiusMeters = input(0);
+  /**
+   * Agrupa los reportes cercanos en un círculo con el total. Al tocarlo, el
+   * mapa se acerca hasta que el grupo se separa. Activado por defecto.
+   */
+  readonly agrupar = input(true);
 
   /** Emite el id del marcador seleccionado. */
   readonly markerSelected = output<string>();
@@ -91,6 +115,18 @@ export class MapViewComponent implements OnDestroy {
   private map: L.Map | null = null;
   private marker: L.Marker | null = null;
   private capaMarcadores: L.LayerGroup | null = null;
+  /** Índice espacial de los reportes; null si no hay reportes o no se agrupa. */
+  private indice: Supercluster<PropiedadesPunto> | null = null;
+  private readonly reportesPorId = new Map<string, MapMarker>();
+  /**
+   * Los pines individuales se crean una vez y se reutilizan al mover el mapa.
+   * Recrearlos en cada movimiento cerraría el popup abierto: Leaflet desplaza
+   * el mapa al abrir un popup y eso dispara un nuevo cálculo de grupos.
+   */
+  private readonly pines = new Map<string, L.Marker>();
+  /** Círculos de grupo visibles, por id de grupo. */
+  private readonly grupos = new Map<number, L.Marker>();
+  private readonly alMoverMapa = () => this.renderizarGrupos();
   private circulo: L.Circle | null = null;
   private tileErrores = 0;
   /** BUG 50 · Se guardan para poder cancelarlos si el componente se destruye. */
@@ -127,6 +163,7 @@ export class MapViewComponent implements OnDestroy {
     // Redibuja los marcadores de incidencias cuando cambian los filtros.
     effect(() => {
       const marcadores = this.markers();
+      this.agrupar();
 
       if (this.map) {
         this.dibujarMarcadores(marcadores);
@@ -185,6 +222,10 @@ export class MapViewComponent implements OnDestroy {
     this.marker = null;
     this.capaMarcadores = null;
     this.circulo = null;
+    this.indice = null;
+    this.pines.clear();
+    this.grupos.clear();
+    this.reportesPorId.clear();
   }
 
   reintentar(): void {
@@ -217,14 +258,19 @@ export class MapViewComponent implements OnDestroy {
       this.map = L.map(this.mapContainer().nativeElement, {
         center: [lat, lng],
         zoom: this.zoom(),
+        maxZoom: ZOOM_MAXIMO,
         zoomControl: this.interactive(),
         dragging: this.interactive(),
         scrollWheelZoom: this.interactive(),
         attributionControl: true,
       });
 
+      // Recalcula los grupos al terminar de mover o acercar, y cuando el
+      // contenedor cambia de tamaño (Ionic lo monta con altura 0 al principio).
+      this.map.on('moveend resize', this.alMoverMapa);
+
       const capa = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
+        maxZoom: ZOOM_MAXIMO,
         attribution: '&copy; colaboradores de OpenStreetMap',
       });
 
@@ -305,52 +351,280 @@ export class MapViewComponent implements OnDestroy {
     }
 
     this.capaMarcadores?.remove();
+    this.capaMarcadores = null;
+    this.indice = null;
+    this.pines.clear();
+    this.grupos.clear();
+    this.reportesPorId.clear();
 
     if (marcadores.length === 0) {
-      this.capaMarcadores = null;
       return;
     }
 
-    this.capaMarcadores = L.layerGroup(
-      marcadores.map((marcador) => {
-        /**
-         * BUG 54 · El pin se construye con la API del DOM en vez de
-         * interpolar el color dentro de una cadena HTML. Hoy el color viene de
-         * una constante interna, pero así la ruta queda cerrada aunque mañana
-         * llegue de otra parte.
-         */
-        const pin = document.createElement('span');
-        pin.className = 'marcador-incidencia__pin';
-        pin.style.background = marcador.color;
+    for (const marcador of marcadores) {
+      this.reportesPorId.set(marcador.id, marcador);
+    }
 
-        const icono = L.divIcon({
-          className: 'marcador-incidencia',
-          html: pin,
-          iconSize: [20, 20],
-          iconAnchor: [10, 20],
-        });
+    this.capaMarcadores = L.layerGroup().addTo(this.map);
 
-        const marcadorLeaflet = L.marker([marcador.lat, marcador.lng], {
-          icon: icono,
-          title: marcador.titulo,
-        });
+    if (!this.agrupar()) {
+      for (const marcador of marcadores) {
+        this.capaMarcadores.addLayer(this.pinDe(marcador));
+      }
+      return;
+    }
 
-        /**
-         * v2-D1 · Antes el detalle se abría con el segundo toque, comprobando
-         * `isPopupOpen()`. Leaflet abre el popup y dispara el click en el mismo
-         * gesto, así que la comprobación ya era verdadera al primer toque y el
-         * resumen nunca llegaba a verse. Ahora el popup se muestra al tocar y
-         * lleva un botón explícito para abrir el detalle.
-         */
-        marcadorLeaflet.bindPopup(() => this.construirPopup(marcador, marcadorLeaflet), {
-          closeButton: true,
-          autoPan: true,
-          className: 'popup-ciudad-alerta',
-        });
+    /**
+     * Supercluster agrupa por distancia en pantalla para cada nivel de zoom y
+     * responde en milisegundos aun con miles de puntos. `maxZoom` igual al del
+     * mapa hace que dos reportes en el mismo lugar sigan agrupados con el
+     * acercamiento máximo; en ese caso el grupo muestra una lista.
+     */
+    this.indice = new Supercluster<PropiedadesPunto>({
+      radius: RADIO_AGRUPACION,
+      maxZoom: ZOOM_MAXIMO,
+      minPoints: 2,
+    });
+    this.indice.load(
+      marcadores.map((marcador) => ({
+        type: 'Feature' as const,
+        properties: { id: marcador.id },
+        geometry: { type: 'Point' as const, coordinates: [marcador.lng, marcador.lat] },
+      })),
+    );
 
-        return marcadorLeaflet;
-      }),
-    ).addTo(this.map);
+    this.renderizarGrupos();
+  }
+
+  /**
+   * Muestra los grupos y pines que corresponden al zoom y al área actuales.
+   * Solo agrega o quita lo que cambió, para no parpadear ni cerrar popups.
+   */
+  private renderizarGrupos(): void {
+    const mapa = this.map;
+    const indice = this.indice;
+    const capa = this.capaMarcadores;
+
+    if (!mapa || !indice || !capa) {
+      return;
+    }
+
+    // Un margen alrededor de lo visible evita que los pines aparezcan de golpe
+    // en el borde al arrastrar.
+    const area = mapa.getBounds().pad(0.25);
+    const zoom = Math.round(mapa.getZoom());
+    const elementos = indice.getClusters(
+      [area.getWest(), area.getSouth(), area.getEast(), area.getNorth()],
+      zoom,
+    );
+
+    const gruposVisibles = new Set<number>();
+    const pinesVisibles = new Set<string>();
+
+    for (const elemento of elementos) {
+      const [lng, lat] = elemento.geometry.coordinates;
+      const propiedades = elemento.properties;
+
+      if ('cluster' in propiedades && propiedades.cluster) {
+        const idGrupo = propiedades.cluster_id;
+        gruposVisibles.add(idGrupo);
+
+        if (!this.grupos.has(idGrupo)) {
+          const grupo = this.grupoDe(idGrupo, propiedades.point_count, lat, lng);
+          this.grupos.set(idGrupo, grupo);
+          capa.addLayer(grupo);
+        }
+        continue;
+      }
+
+      const id = (propiedades as PropiedadesPunto).id;
+      const datos = this.reportesPorId.get(id);
+
+      if (!datos) {
+        continue;
+      }
+
+      pinesVisibles.add(id);
+      let pin = this.pines.get(id);
+
+      if (!pin) {
+        pin = this.pinDe(datos);
+        this.pines.set(id, pin);
+      }
+
+      if (!capa.hasLayer(pin)) {
+        capa.addLayer(pin);
+      }
+    }
+
+    for (const [idGrupo, grupo] of this.grupos) {
+      if (!gruposVisibles.has(idGrupo)) {
+        capa.removeLayer(grupo);
+        this.grupos.delete(idGrupo);
+      }
+    }
+
+    for (const [id, pin] of this.pines) {
+      if (!pinesVisibles.has(id) && capa.hasLayer(pin)) {
+        capa.removeLayer(pin);
+      }
+    }
+  }
+
+  /** Círculo con el total de reportes de un grupo. */
+  private grupoDe(idGrupo: number, cantidad: number, lat: number, lng: number): L.Marker {
+    // El tamaño crece con la cantidad, como en los mapas de comercios.
+    const diametro = cantidad < 10 ? 40 : cantidad < 50 ? 48 : 56;
+
+    const burbuja = document.createElement('span');
+    burbuja.className = 'grupo-incidencias__burbuja';
+    burbuja.textContent = cantidad > 999 ? '999+' : String(cantidad);
+    burbuja.style.width = `${diametro}px`;
+    burbuja.style.height = `${diametro}px`;
+
+    const icono = L.divIcon({
+      className: 'grupo-incidencias',
+      html: burbuja,
+      iconSize: [diametro, diametro],
+      iconAnchor: [diametro / 2, diametro / 2],
+    });
+
+    const grupo = L.marker([lat, lng], {
+      icon: icono,
+      title: `${cantidad} reportes en esta zona. Toca para acercar.`,
+      keyboard: true,
+      // Los grupos quedan sobre los pines sueltos que estén cerca.
+      zIndexOffset: 1000,
+    });
+
+    grupo.on('click', () => this.abrirGrupo(idGrupo, lat, lng));
+    return grupo;
+  }
+
+  /**
+   * Acerca el mapa hasta el nivel en que el grupo se separa. Si sus reportes
+   * están en el mismo punto y no se separan ni con el acercamiento máximo,
+   * muestra la lista para elegir uno.
+   */
+  private abrirGrupo(idGrupo: number, lat: number, lng: number): void {
+    const mapa = this.map;
+    const indice = this.indice;
+
+    if (!mapa || !indice) {
+      return;
+    }
+
+    let zoomDestino: number;
+
+    try {
+      zoomDestino = indice.getClusterExpansionZoom(idGrupo);
+    } catch {
+      // El grupo ya no existe (cambiaron los filtros mientras se tocaba).
+      return;
+    }
+
+    if (zoomDestino <= mapa.getMaxZoom()) {
+      const sinAnimacion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+      if (sinAnimacion) {
+        mapa.setView([lat, lng], zoomDestino);
+      } else {
+        mapa.flyTo([lat, lng], zoomDestino, { duration: 0.6 });
+      }
+      return;
+    }
+
+    L.popup({ className: 'popup-ciudad-alerta', maxWidth: 280, autoPan: true })
+      .setLatLng([lat, lng])
+      .setContent(this.construirListaDeGrupo(idGrupo))
+      .openOn(mapa);
+  }
+
+  /** Lista de los reportes de un grupo que no se separa con el zoom. */
+  private construirListaDeGrupo(idGrupo: number): HTMLElement {
+    const hojas = this.indice?.getLeaves(idGrupo, MAXIMO_EN_LISTA) ?? [];
+
+    const contenedor = document.createElement('div');
+    contenedor.className = 'popup-ciudad-alerta__cuerpo';
+    L.DomEvent.disableClickPropagation(contenedor);
+    L.DomEvent.disableScrollPropagation(contenedor);
+
+    const titulo = document.createElement('p');
+    titulo.className = 'popup-ciudad-alerta__titulo';
+    titulo.textContent = `${hojas.length} reportes en el mismo lugar`;
+
+    const lista = document.createElement('ul');
+    lista.className = 'popup-ciudad-alerta__lista';
+
+    for (const hoja of hojas) {
+      const datos = this.reportesPorId.get(hoja.properties.id);
+
+      if (!datos) {
+        continue;
+      }
+
+      const item = document.createElement('li');
+
+      const punto = document.createElement('span');
+      punto.className = 'popup-ciudad-alerta__punto';
+      punto.style.background = datos.color;
+
+      const texto = document.createElement('span');
+      texto.className = 'popup-ciudad-alerta__texto';
+      texto.textContent = datos.titulo;
+
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'popup-ciudad-alerta__accion';
+      boton.textContent = 'Ver detalle';
+      boton.addEventListener('click', () => this.markerSelected.emit(datos.id));
+
+      item.append(punto, texto, boton);
+      lista.append(item);
+    }
+
+    contenedor.append(titulo, lista);
+    return contenedor;
+  }
+
+  /** Pin de un reporte individual, con su popup. */
+  private pinDe(marcador: MapMarker): L.Marker {
+    /**
+     * BUG 54 · El pin se construye con la API del DOM en vez de
+     * interpolar el color dentro de una cadena HTML. Hoy el color viene de
+     * una constante interna, pero así la ruta queda cerrada aunque mañana
+     * llegue de otra parte.
+     */
+    const pin = document.createElement('span');
+    pin.className = 'marcador-incidencia__pin';
+    pin.style.background = marcador.color;
+
+    const icono = L.divIcon({
+      className: 'marcador-incidencia',
+      html: pin,
+      iconSize: [20, 20],
+      iconAnchor: [10, 20],
+    });
+
+    const marcadorLeaflet = L.marker([marcador.lat, marcador.lng], {
+      icon: icono,
+      title: marcador.titulo,
+    });
+
+    /**
+     * v2-D1 · Antes el detalle se abría con el segundo toque, comprobando
+     * `isPopupOpen()`. Leaflet abre el popup y dispara el click en el mismo
+     * gesto, así que la comprobación ya era verdadera al primer toque y el
+     * resumen nunca llegaba a verse. Ahora el popup se muestra al tocar y
+     * lleva un botón explícito para abrir el detalle.
+     */
+    marcadorLeaflet.bindPopup(() => this.construirPopup(marcador, marcadorLeaflet), {
+      closeButton: true,
+      autoPan: true,
+      className: 'popup-ciudad-alerta',
+    });
+
+    return marcadorLeaflet;
   }
 
   /** Dibuja el radio de búsqueda alrededor del usuario. */

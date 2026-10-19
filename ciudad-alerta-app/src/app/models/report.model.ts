@@ -29,6 +29,20 @@ export const REPORT_CATEGORIES: ReadonlyArray<{ id: ReportCategory; label: strin
   { id: 'otro', label: 'Otro' },
 ];
 
+const ETIQUETAS_CATEGORIA: Readonly<Record<string, string>> = Object.fromEntries(
+  REPORT_CATEGORIES.map((c) => [c.id, c.label]),
+);
+
+/**
+ * Nombre legible de una categoría ("luminaria" → "Luminaria dañada"). Si llega
+ * un id que no está en la lista (un reporte antiguo o una categoría retirada),
+ * devuelve el id tal cual para no mostrar un hueco.
+ */
+export function etiquetaCategoria(id: string | null | undefined): string {
+  if (!id) return 'Sin categoría';
+  return ETIQUETAS_CATEGORIA[id] ?? id;
+}
+
 /** Límites de la descripción, validados en el formulario y en las reglas de Firestore. */
 export const DESCRIPCION_MIN = 10;
 export const DESCRIPCION_MAX = 500;

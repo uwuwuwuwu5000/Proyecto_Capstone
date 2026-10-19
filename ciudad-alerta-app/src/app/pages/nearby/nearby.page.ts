@@ -32,6 +32,7 @@ import {
   NearbyReport,
   RADIOS_BUSQUEDA,
   REPORT_CATEGORIES,
+  etiquetaCategoria,
   ReportCategory,
 } from '../../models/report.model';
 
@@ -81,6 +82,7 @@ export class NearbyPage {
 
   readonly radios = RADIOS_BUSQUEDA;
   readonly categorias = REPORT_CATEGORIES;
+  readonly nombreCategoria = etiquetaCategoria;
   readonly etiquetas = ETIQUETAS_ESTADO;
   readonly colores = COLORES_ESTADO;
 

@@ -26,6 +26,7 @@ import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
   REPORT_CATEGORIES,
+  etiquetaCategoria,
   Report,
   ReportCategory,
   ReportStatus,
@@ -70,6 +71,7 @@ export class AdminReportsPage {
   private readonly router = inject(Router);
 
   readonly categorias = REPORT_CATEGORIES;
+  readonly nombreCategoria = etiquetaCategoria;
   readonly estados = Object.entries(ETIQUETAS_ESTADO) as [ReportStatus, string][];
   readonly etiquetas = ETIQUETAS_ESTADO;
   readonly colores = COLORES_ESTADO;

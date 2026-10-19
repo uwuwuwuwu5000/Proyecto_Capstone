@@ -136,6 +136,11 @@ ion-select {
   font-variant-numeric: tabular-nums;
 }
 
+/* Categoría y comuna: texto que puede ocupar dos líneas. */
+.tarjeta__meta--texto {
+  display: block;
+}
+
 ion-badge {
   --background: var(--ca-velo-fuerte);
   --color: var(--ca-muted);

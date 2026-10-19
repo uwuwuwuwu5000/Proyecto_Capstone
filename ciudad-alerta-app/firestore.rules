@@ -24,8 +24,15 @@ service cloud.firestore {
      * Firebase y el cliente no puede falsificar. Al modificar la lista hay que
      * actualizar ambos archivos y volver a desplegar.
      */
+    /*
+     * DIAG-2 · Se exige correo verificado. Sin esto, quien registrara primero
+     * un correo de la lista (sin poder verificarlo) nacía con rol admin. Las
+     * cuentas que ya tienen role 'admin' en su perfil no se ven afectadas:
+     * esAdministrador() lee el perfil, no esta lista.
+     */
     function esCorreoAdministrador() {
       return estaAutenticado()
+        && request.auth.token.email_verified == true
         && request.auth.token.email in [
              'es.ibarra@duocuc.cl',
              'cla.torres@duocuc.cl',
@@ -78,6 +85,10 @@ service cloud.firestore {
     function camposProtegidosIntactos() {
       return request.resource.data.trustLevel == resource.data.trustLevel
         && request.resource.data.validatedReports == resource.data.validatedReports
+        // DIAG-1 · Sin esto, una cuenta operador podía cambiarse su propio
+        // operadorId y gestionar reportes de otra municipalidad. Lo asigna un
+        // admin al crear la cuenta del organismo.
+        && request.resource.data.get('operadorId', null) == resource.data.get('operadorId', null)
         && (
              request.resource.data.role == resource.data.role
              // Única promoción de rol admitida: una cuenta de la lista de
@@ -100,7 +111,12 @@ service cloud.firestore {
     }
 
     function creacionConValoresIniciales(userId) {
-      return request.resource.data.uid == userId
+      // DIAG-3 · Lista blanca: los campos exactos que escribe createUserDocument.
+      return request.resource.data.keys().hasOnly([
+               'uid', 'email', 'displayName', 'role', 'trustLevel',
+               'validatedReports', 'emailVerified', 'createdAt', 'updatedAt'
+             ])
+        && request.resource.data.uid == userId
         && request.resource.data.trustLevel == 0
         && request.resource.data.validatedReports == 0
         // Un correo de la lista puede nacer con rol admin; cualquier otro, no.
@@ -429,7 +445,21 @@ service cloud.firestore {
       // El mapa público del MVP es visible para cualquier usuario autenticado.
       allow read: if estaAutenticado();
 
+      /*
+       * DIAG-3 · Lista blanca de campos: impide que un cliente modificado
+       * agregue, por ejemplo, `validadoComunidad: true` o infle el documento.
+       * DIAG-4 · Las fechas las pone el servidor: no se puede crear un reporte
+       * con fecha falsa para que aparezca antiguo o arriba de los listados.
+       * Si la app agrega un campo nuevo al crear reportes, hay que sumarlo aquí.
+       */
       allow create: if estaAutenticado()
+        && request.resource.data.keys().hasOnly([
+             'uid', 'descripcion', 'categoria', 'ubicacion', 'comuna', 'region',
+             'comunaFuente', 'autorNombre', 'foto', 'estado', 'confirmaciones',
+             'organismo', 'operadorId', 'geohash', 'embedding', 'createdAt', 'updatedAt'
+           ])
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.estado == 'reportado'
         && request.resource.data.confirmaciones == 0
@@ -495,6 +525,7 @@ service cloud.firestore {
 
         // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
         allow create: if esPropietario(userId)
+          && request.resource.data.keys().hasOnly(['uid', 'reportId', 'createdAt'])
           && request.resource.data.uid == userId
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
@@ -549,9 +580,18 @@ service cloud.firestore {
     match /reportPhotos/{reportId} {
       allow read: if estaAutenticado();
 
+      /*
+       * DIAG-5 · existsAfter/getAfter ven el estado que deja el lote completo,
+       * así que sí se puede exigir el reporte aunque se escriba en el mismo
+       * lote que la foto. Sin esto se podían subir fotos huérfanas de hasta
+       * 950 KB cada una, sin reporte asociado.
+       */
       allow create: if estaAutenticado()
+        && request.resource.data.keys().hasOnly(['reportId', 'ownerUid', 'dataUrl', 'mimeType', 'sizeBytes', 'createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.reportId == reportId
+        && existsAfter(/databases/$(database)/documents/reports/$(reportId))
+        && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.uid == request.auth.uid
         && request.resource.data.mimeType in ['image/jpeg', 'image/png', 'image/webp']
         && request.resource.data.dataUrl is string
         && request.resource.data.dataUrl.size() < 950000;
@@ -689,7 +729,12 @@ service cloud.firestore {
     }
 
     function ticketValido() {
-      return request.resource.data.uid == request.auth.uid
+      // DIAG-3 · Lista blanca: los campos que escribe SupportService al abrir un ticket.
+      return request.resource.data.keys().hasOnly([
+               'uid', 'autorNombre', 'autorEmail', 'tipo', 'asunto', 'estado', 'asignadoA',
+               'lastMessageAt', 'lastMessagePreview', 'createdAt', 'updatedAt'
+             ])
+        && request.resource.data.uid == request.auth.uid
         && request.resource.data.tipo in ['queja', 'sugerencia']
         && request.resource.data.estado == 'abierto'
         && request.resource.data.asignadoA == null
@@ -768,8 +813,13 @@ service cloud.firestore {
              esGestor()
              || esAutorDelTicket(ticketId)
              || (
+                  // DIAG-6 · Antes bastaba con que el ticket NO existiera, lo
+                  // que permitía escribir mensajes huérfanos en cualquier id.
+                  // Ahora el ticket debe existir al terminar el lote y ser de
+                  // quien escribe.
                   estaAutenticado()
-                  && !exists(/databases/$(database)/documents/supportTickets/$(ticketId))
+                  && existsAfter(/databases/$(database)/documents/supportTickets/$(ticketId))
+                  && getAfter(/databases/$(database)/documents/supportTickets/$(ticketId)).data.uid == request.auth.uid
                   && request.resource.data.autorRol == 'ciudadano'
                 )
            )

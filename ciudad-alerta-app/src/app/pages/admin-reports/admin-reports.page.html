@@ -101,7 +101,7 @@
                       {{ reporte.autorNombre ?? 'Autor no registrado' }}
                     </span>
                     <span class="tarjeta__meta">
-                      {{ reporte.categoria }} · {{ fecha(reporte) }}
+                      {{ nombreCategoria(reporte.categoria) }} · {{ fecha(reporte) }}
                       @if (reporte.organismo) {
                         · {{ reporte.organismo.nombre }}
                       }
