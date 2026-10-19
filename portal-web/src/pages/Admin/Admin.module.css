@@ -5,7 +5,7 @@
 }
 
 .main {
-  max-width: 720px;
+  max-width: 960px;
   width: 100%;
   margin: 0 auto;
   padding: 40px 24px 64px;
@@ -267,6 +267,7 @@
   margin-top: 22px;
   border: 1px solid var(--ca-line);
   border-radius: 10px;
+  scroll-margin-top: calc(var(--alto-navbar) + 12px);
 }
 
 .table {
@@ -605,7 +606,7 @@
 
 /* Páginas con más contenido a lo ancho (crear reporte, organismos). */
 .mainAncho {
-  max-width: 1120px;
+  max-width: 1240px;
 }
 
 .crearGrid {
@@ -947,4 +948,16 @@ a.editarBoton {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
+}
+
+/* Contador de la tarjeta de Soporte ("3 sin atender"). */
+.insigniaTarjeta {
+  margin-left: 10px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.72rem;
+  font-weight: 700;
+  vertical-align: middle;
 }

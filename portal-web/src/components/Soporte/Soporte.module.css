@@ -1,0 +1,704 @@
+/* Soporte: bandeja + conversación + detalles. Escritorio ancho en tres columnas;
+   notebook en dos; teléfono, una vista a la vez. */
+
+/* Doble clase: gana a `.main` (720px) de Admin.module.css sin depender del orden del CSS. */
+.principal.principal {
+  max-width: 2200px;
+  width: 100%;
+  padding-inline: clamp(12px, 2vw, 32px);
+}
+
+.diseno {
+  display: grid;
+  grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
+  gap: 16px;
+  /* Alto fijo: cada panel desplaza lo suyo y la página no crece con la conversación. */
+  height: calc(100dvh - var(--alto-navbar) - 200px);
+  min-height: 560px;
+}
+
+.bandeja,
+.panelChat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* ---- Avatares ---- */
+
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ca-surface-alt);
+  border: 1px solid var(--ca-line);
+  color: var(--ca-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.avatarEquipo {
+  background: rgba(28, 169, 201, 0.18);
+  border-color: rgba(28, 169, 201, 0.6);
+  color: var(--ca-signal);
+}
+
+.avatarGrande {
+  width: 44px;
+  height: 44px;
+  font-size: 0.92rem;
+}
+
+.avatarEspacio {
+  flex: none;
+  width: 36px;
+}
+
+/* ---- Bandeja ---- */
+
+.filtros {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid var(--ca-line);
+}
+
+.filtros .campoFiltro:first-child {
+  grid-column: 1 / -1;
+}
+
+.campoFiltro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.etiquetaFiltro {
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+}
+
+.entrada {
+  padding: 9px 11px;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  min-width: 0;
+}
+
+.entrada:focus {
+  outline: none;
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.lista {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ticket {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(165, 180, 195, 0.18);
+  border-left: 3px solid transparent;
+  color: var(--ca-ink);
+  text-decoration: none;
+}
+
+.ticket:hover {
+  background: rgba(28, 169, 201, 0.07);
+}
+
+.ticket:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: -2px;
+}
+
+.ticketActivo,
+.ticketActivo:hover {
+  background: rgba(28, 169, 201, 0.12);
+}
+
+/* Sin atender: barra celeste para que se note en la lista. */
+.ticketAbierto {
+  border-left-color: var(--ca-signal);
+}
+
+.ticketCuerpo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+
+.ticketFila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.ticketAsunto {
+  font-weight: 700;
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticketHora {
+  flex: none;
+  font-size: 0.74rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ticketAutor {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.ticketVista {
+  width: 100%;
+  margin-bottom: 3px;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.estado,
+.nota {
+  margin: 0;
+  padding: 14px;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.nota {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  border-top: 1px solid var(--ca-line);
+}
+
+.pildora {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  white-space: nowrap;
+}
+
+.pildoraPunto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+/* ---- Conversación ---- */
+
+.conversacion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+}
+
+.columnaChat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+}
+
+.cabeceraFila {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cabeceraTexto {
+  flex: 1;
+  min-width: 0;
+}
+
+.cabeceraAcciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.asunto {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 2px 0 0;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+  overflow-wrap: anywhere;
+}
+
+.chipTipo {
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: rgba(165, 180, 195, 0.14);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.metaAsignacion::before {
+  content: '·';
+  margin-right: 10px;
+}
+
+.volverLista {
+  display: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-signal);
+  text-decoration: none;
+}
+
+.botonSecundario {
+  min-height: 36px;
+  padding: 5px 14px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 10px;
+  background: rgba(28, 169, 201, 0.1);
+  color: var(--ca-signal);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botonSecundario:hover:not(:disabled) {
+  background: rgba(28, 169, 201, 0.2);
+}
+
+/* Cerrar es la acción de salida: contorno neutro, no compite con "Tomar el caso". */
+.botonCerrar {
+  border-color: var(--ca-line);
+  background: transparent;
+  color: var(--ca-ink);
+}
+
+.botonCerrar:hover:not(:disabled) {
+  border-color: var(--ca-muted);
+  background: rgba(165, 180, 195, 0.12);
+}
+
+.botonSecundario:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.areaMensajes {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background: var(--ca-base);
+}
+
+.mensajes {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px 24px;
+}
+
+.mensajes:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: -2px;
+}
+
+.sinMensajes {
+  margin: 0;
+  color: var(--ca-muted);
+  font-size: 0.9rem;
+}
+
+.irAlFinal {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  padding: 7px 14px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 999px;
+  background: var(--ca-surface);
+  color: var(--ca-signal);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.separadorDia {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 8px 0 14px;
+  color: var(--ca-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.separadorDia::before,
+.separadorDia::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(165, 180, 195, 0.22);
+}
+
+.fila {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.filaAgrupada {
+  margin-top: 3px;
+}
+
+/* El equipo a la derecha, con el avatar al borde. */
+.filaEquipo {
+  flex-direction: row-reverse;
+}
+
+.columnaMensaje {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: min(86%, 760px);
+  min-width: 0;
+}
+
+.filaEquipo .columnaMensaje {
+  align-items: flex-end;
+}
+
+.autorMensaje {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.autorMensaje strong {
+  color: var(--ca-ink);
+}
+
+.autorMensaje time {
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.etiquetaEquipo {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: rgba(28, 169, 201, 0.2);
+  color: var(--ca-signal);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.burbuja {
+  padding: 10px 14px;
+  border: 1px solid var(--ca-line);
+  border-radius: 4px 16px 16px 16px;
+  background: var(--ca-surface);
+}
+
+.burbujaEquipo {
+  border-color: rgba(28, 169, 201, 0.55);
+  border-radius: 16px 4px 16px 16px;
+  background: rgba(28, 169, 201, 0.16);
+}
+
+.burbujaAgrupada {
+  border-radius: 16px;
+}
+
+.textoMensaje {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Redacción ---- */
+
+.redaccion {
+  padding: 12px 20px 14px;
+  border-top: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+}
+
+.caja {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--ca-line);
+  border-radius: 14px;
+  background: var(--ca-surface-alt);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.caja:focus-within {
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.campoTexto {
+  min-height: 48px;
+  max-height: 160px;
+  padding: 12px 14px 4px;
+  border: none;
+  background: transparent;
+  color: var(--ca-ink);
+  font: inherit;
+  /* 1rem: en iPhone, menos que eso hace zoom al enfocar. */
+  font-size: 1rem;
+  line-height: 1.45;
+  resize: none;
+}
+
+.campoTexto:focus {
+  outline: none;
+}
+
+.cajaPie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px 8px 14px;
+}
+
+.contador {
+  font-size: 0.74rem;
+  color: var(--ca-muted);
+}
+
+.botonEnviar {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  min-height: 38px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botonEnviar:hover:not(:disabled) {
+  background: var(--ca-signal-dark);
+}
+
+.botonEnviar:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.firma {
+  margin: 6px 2px 0;
+  font-size: 0.74rem;
+  color: var(--ca-muted);
+}
+
+.aviso {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 10px;
+  background: rgba(28, 169, 201, 0.12);
+  color: var(--ca-signal);
+  font-size: 0.82rem;
+}
+
+.error,
+.errorEnvio {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--ca-danger);
+  border-radius: 10px;
+  background: rgba(224, 101, 107, 0.14);
+  color: var(--ca-danger);
+  font-size: 0.84rem;
+}
+
+.etiquetaOculta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- Vacío ---- */
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  color: var(--ca-muted);
+}
+
+.vacio p {
+  margin: 0;
+}
+
+.enlace {
+  color: var(--ca-signal);
+  font-weight: 600;
+}
+
+/* ---- Teléfono y tablet angosta: la lista o el chat, no los dos ---- */
+@media (max-width: 899px) {
+  .diseno {
+    grid-template-columns: minmax(0, 1fr);
+    height: calc(100dvh - var(--alto-navbar) - 190px);
+  }
+
+  /* Con una conversación abierta se oculta la lista; sin ella, el panel vacío. */
+  .conChat .bandeja {
+    display: none;
+  }
+
+  .diseno:not(.conChat) .panelChat {
+    display: none;
+  }
+
+  .volverLista {
+    display: inline-block;
+  }
+
+  .columnaMensaje {
+    max-width: 88%;
+  }
+}
+
+@media (max-width: 560px) {
+  .cabecera {
+    padding: 12px 14px;
+  }
+
+  .cabeceraFila {
+    flex-wrap: wrap;
+  }
+
+  .cabeceraTexto {
+    flex-basis: calc(100% - 70px);
+  }
+
+  .cabeceraAcciones {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .mensajes {
+    padding: 14px 12px;
+  }
+
+  .redaccion {
+    padding: 10px 12px 12px;
+  }
+
+  .contador {
+    display: none;
+  }
+
+  .cajaPie {
+    justify-content: flex-end;
+  }
+
+  .avatar:not(.avatarGrande),
+  .avatarEspacio {
+    width: 30px;
+    height: 30px;
+  }
+
+  .avatarEspacio {
+    height: 0;
+  }
+}

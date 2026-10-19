@@ -29,7 +29,7 @@ export default function CasillaTodos({
         onChange={onAlternar}
         disabled={total === 0}
       />
-      Seleccionar todos ({total.toLocaleString('es-CL')})
+      Seleccionar esta página ({total.toLocaleString('es-CL')})
     </label>
   )
 }

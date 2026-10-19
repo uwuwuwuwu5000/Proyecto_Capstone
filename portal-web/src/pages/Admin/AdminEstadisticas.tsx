@@ -3,7 +3,6 @@ import { Link, Navigate } from 'react-router-dom'
 import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import GraficoColumnas from '../../components/Graficos/GraficoColumnas'
 import GraficoBarras from '../../components/Graficos/GraficoBarras'
 import type { FilaBarra } from '../../components/Graficos/GraficoBarras'
@@ -264,14 +263,9 @@ export default function AdminEstadisticas() {
   const duracion = (ms: number | null) => (ms !== null ? formatearDuracion(ms) : '—')
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
+    <>
       <main className={comun.main}>
         <div>
-          <Link to="/admin" className={admin.volver} data-no-imprimir>
-            ← Panel de administración
-          </Link>
           <h1 className={styles.titulo}>Estadísticas globales</h1>
           <p className={styles.subtitulo}>Todos los reportes del sistema · {describirRango(rango)}</p>
           <p className={`solo-impresion ${styles.subtitulo}`}>
@@ -544,6 +538,6 @@ export default function AdminEstadisticas() {
           gestionable
         />
       )}
-    </div>
+    </>
   )
 }

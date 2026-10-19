@@ -4,7 +4,6 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { COMUNAS_CHILE } from '../../constants/comunas'
 import { useOperadores } from './operadores'
@@ -236,14 +235,9 @@ export default function AdminOperadores() {
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
+    <>
       <main className={styles.main}>
         <div>
-          <Link to="/admin" className={styles.volver}>
-            ← Panel de administración
-          </Link>
           <div className={styles.encabezadoAcciones}>
             <h1 className={styles.title}>Operadores</h1>
             {!formularioAbierto && (
@@ -525,6 +519,6 @@ export default function AdminOperadores() {
         </section>
       </main>
       {dialogo}
-    </div>
+    </>
   )
 }

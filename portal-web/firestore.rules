@@ -296,10 +296,58 @@ service cloud.firestore {
         || (desde == 'resuelto' && hacia == 'cerrado');
     }
 
-    /** Impide que una actualización de estado altere el contenido del reporte. */
-    function soloCambiaEstado() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['estado', 'updatedAt']);
+    /**
+     * Impide que una actualización de estado altere el contenido del reporte.
+     *
+     * Además de `estado` y `updatedAt`, acepta los campos de resolución
+     * (ETAPA BLANDA: se aceptan, pero NO se exigen, para que ninguna versión
+     * de la app que no los escriba deje de funcionar):
+     *
+     *  - `resueltoAt` y `tiempoResolucionMs`, juntos, solo al pasar a
+     *    «resuelto». `resueltoAt` debe ser la hora del servidor. El cliente no
+     *    conoce la hora exacta del servidor, así que `tiempoResolucionMs` (los
+     *    milisegundos desde `createdAt` hasta ahora, nunca negativo) se acepta
+     *    con una tolerancia de 15 minutos respecto de la hora del servidor:
+     *    sobra para tiempos de horas o días y no se puede falsear de forma útil.
+     *    Si el reloj del dispositivo se desvía más que eso, la escritura se
+     *    rechaza; el portal reintenta sin los campos (etapa blanda).
+     *  - `cerradoSinResolverAt`, solo al cerrar un reporte que NO pasó por
+     *    «resuelto». Debe ser la hora del servidor.
+     *
+     * Son de escritura única: «resuelto» solo se alcanza desde «en_proceso» y
+     * nunca se vuelve atrás, así que cada campo se puede escribir una vez.
+     * Los reportes ya cerrados antes de este cambio no se tocan.
+     *
+     * Etapa estricta (más adelante, cuando todas las versiones de la app
+     * escriban estos campos): exigirlos en los casos de arriba.
+     */
+    function cambioDeEstadoValido() {
+      let nuevo = request.resource.data;
+      let antes = resource.data;
+      let extras = nuevo.diff(antes).affectedKeys()
+        .difference(['estado', 'updatedAt'].toSet());
+      let alResolver = nuevo.estado == 'resuelto';
+      let alCerrarSinResolver = nuevo.estado == 'cerrado' && antes.estado != 'resuelto';
+      return extras.size() == 0
+        || (
+             extras.hasOnly(['resueltoAt', 'tiempoResolucionMs'])
+             && extras.hasAll(['resueltoAt', 'tiempoResolucionMs'])
+             && alResolver
+             && antes.get('resueltoAt', null) == null
+             && nuevo.resueltoAt == request.time
+             && nuevo.tiempoResolucionMs is int
+             && nuevo.tiempoResolucionMs >= 0
+             && math.abs(
+                  nuevo.tiempoResolucionMs
+                  - (request.time.toMillis() - antes.createdAt.toMillis())
+                ) <= 900000
+           )
+        || (
+             extras.hasOnly(['cerradoSinResolverAt'])
+             && alCerrarSinResolver
+             && antes.get('cerradoSinResolverAt', null) == null
+             && nuevo.cerradoSinResolverAt == request.time
+           );
     }
 
     /**
@@ -474,11 +522,11 @@ service cloud.firestore {
 
       // HU-28 · Solo un admin o el operador asignado al reporte cambia el
       // estado, y solo por transiciones válidas. El resto de campos debe
-      // quedar intacto.
+      // quedar intacto, salvo los campos de resolución (ver cambioDeEstadoValido).
       allow update: if (
              puedeGestionarReporte(resource.data)
              && transicionValida(resource.data.estado, request.resource.data.estado)
-             && soloCambiaEstado()
+             && cambioDeEstadoValido()
            )
         || (esAdministrador() && reasignacionValida());
 

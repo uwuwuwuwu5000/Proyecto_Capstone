@@ -16,7 +16,6 @@ import { createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { FirebaseError } from 'firebase/app'
 import { db, getAuthAprovisionamiento } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import styles from './Admin.module.css'
 
 interface OperadorConNombre {
@@ -160,14 +159,8 @@ export default function AdminCuentas() {
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
       <main className={styles.main}>
         <div>
-          <Link to="/admin" className={styles.volver}>
-            ← Panel de administración
-          </Link>
           <h1 className={styles.title}>Crear cuenta de organismo</h1>
           <p className={styles.subtitle}>
             Da de alta el acceso de un operador ya activado.
@@ -248,6 +241,5 @@ export default function AdminCuentas() {
           </form>
         </section>
       </main>
-    </div>
   )
 }

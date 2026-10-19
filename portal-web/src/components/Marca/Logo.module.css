@@ -1,0 +1,75 @@
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 42px;
+  height: 42px;
+  border: 1.5px solid var(--ca-signal);
+  border-radius: 12px;
+  background: rgba(28, 169, 201, 0.1);
+  color: var(--ca-signal);
+}
+
+.icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.textos {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nombre {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.2px;
+  color: var(--ca-ink);
+}
+
+.acento {
+  color: var(--ca-signal);
+}
+
+.lema {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ca-signal);
+}
+
+@media (max-width: 780px) {
+  .marca {
+    gap: 9px;
+  }
+
+  .icono {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+
+  .icono svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  .nombre {
+    font-size: 1.1rem;
+  }
+
+  .lema {
+    font-size: 0.55rem;
+  }
+}

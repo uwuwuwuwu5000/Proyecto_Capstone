@@ -1,0 +1,439 @@
+/* Mapa de calor por comuna: mapa a la izquierda; detalle y ranking a la derecha. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 36px 28px 64px;
+}
+
+.encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+}
+
+.subtitulo {
+  margin: 0;
+  max-width: 640px;
+  font-size: 0.98rem;
+  color: var(--ca-muted);
+}
+
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 260px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+}
+
+.selector select {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(165, 180, 195, 0.35);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 1rem;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.selector select:focus {
+  outline: none;
+  border-color: var(--ca-signal);
+  box-shadow: 0 0 0 3px rgba(28, 169, 201, 0.25);
+}
+
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-size: 0.92rem;
+  color: var(--ca-muted);
+}
+
+.resumen strong {
+  color: var(--ca-ink);
+  font-size: 1.05rem;
+}
+
+.resumenNota {
+  font-size: 0.82rem;
+}
+
+.error,
+.aviso {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.error {
+  border: 1px solid var(--ca-danger);
+  background: rgba(224, 101, 107, 0.14);
+  color: var(--ca-danger);
+}
+
+.aviso {
+  border: 1px solid var(--ca-signal);
+  background: rgba(28, 169, 201, 0.1);
+  color: var(--ca-signal);
+}
+
+/* ---- Cuerpo ---- */
+
+.cuerpo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+
+.mapaBloque {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid rgba(165, 180, 195, 0.25);
+  border-radius: 12px;
+  background: var(--ca-surface);
+  overflow: hidden;
+}
+
+.mapa {
+  position: relative;
+  height: clamp(420px, calc(100dvh - 330px), 760px);
+}
+
+.leaflet {
+  width: 100%;
+  height: 100%;
+}
+
+/* Mapa base en grises: así los colores de las comunas son lo que se ve. */
+.leaflet :global(.leaflet-tile-pane) {
+  filter: grayscale(1) brightness(0.92) contrast(0.95);
+}
+
+.cargando {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  margin: 0;
+  color: var(--ca-muted);
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(165, 180, 195, 0.2);
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.leyendaTitulo {
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.leyendaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.leyendaItem i {
+  width: 18px;
+  height: 14px;
+  border: 1px solid;
+  border-radius: 3px;
+}
+
+/* ---- Lateral ---- */
+
+.lateral {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.panel,
+.ranking {
+  padding: 18px;
+  border: 1px solid rgba(165, 180, 195, 0.25);
+  border-radius: 12px;
+  background: var(--ca-surface);
+  scroll-margin-top: calc(var(--alto-navbar) + 12px);
+}
+
+.panelVacio {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ca-muted);
+}
+
+.panelCabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.panelCabecera h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.cerrar {
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(165, 180, 195, 0.35);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cerrar:hover {
+  color: var(--ca-ink);
+  border-color: var(--ca-muted);
+}
+
+.cerrar:focus-visible,
+.filaRanking:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.numeros > div {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border: 1px solid rgba(165, 180, 195, 0.2);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+}
+
+.numeros strong {
+  font-size: 1.7rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.numeros span {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.numeroAlerta {
+  color: var(--ca-danger);
+}
+
+.verReportes {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ca-signal);
+  text-decoration: none;
+}
+
+.verReportes:hover {
+  text-decoration: underline;
+}
+
+.verReportes:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 3px;
+}
+
+.subtituloPanel {
+  margin: 18px 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+}
+
+.panel .subtituloPanel:first-of-type {
+  margin-top: 0;
+}
+
+.nota {
+  margin: 0 0 6px;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.tiempo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.tiempoTitulo {
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.tiempoValor {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.tiempoNota {
+  font-size: 0.76rem;
+  color: var(--ca-muted);
+}
+
+.categorias {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categorias li {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+}
+
+.categoriaNombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoriaBarra {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(165, 180, 195, 0.15);
+  overflow: hidden;
+}
+
+.categoriaBarra span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ca-signal);
+}
+
+.categoriaValor {
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Ranking ---- */
+
+.ranking .subtituloPanel {
+  margin-top: 0;
+}
+
+.listaRanking {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.filaRanking {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.filaRanking:hover,
+.filaActiva {
+  background: rgba(28, 169, 201, 0.12);
+}
+
+.filaRanking strong {
+  color: var(--ca-danger);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Pantallas medianas y teléfono: el detalle va bajo el mapa ---- */
+
+@media (max-width: 1100px) {
+  .cuerpo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: 20px 16px 48px;
+  }
+
+  .titulo {
+    font-size: 1.5rem;
+  }
+
+  .selector {
+    width: 100%;
+  }
+
+  .mapa {
+    height: 380px;
+  }
+
+  .numeros strong {
+    font-size: 1.4rem;
+  }
+
+  .categorias li {
+    grid-template-columns: minmax(80px, 110px) minmax(0, 1fr) 28px;
+  }
+}

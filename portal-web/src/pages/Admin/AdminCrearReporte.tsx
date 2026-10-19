@@ -5,7 +5,6 @@ import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-lea
 import { useAuth } from '../../context/AuthContext'
 import { useCategorias } from '../../context/CategoriasContext'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import { ICONOS_SELECCIONADOS_POR_ESTADO } from '../../components/Map/estadoIconos'
 import { calcularAsignacion } from '../../components/Reportes/asignacion'
 import type { Asignacion, Punto } from '../../components/Reportes/asignacion'
@@ -235,9 +234,6 @@ export default function AdminCrearReporte() {
   const largoDescripcion = descripcion.trim().length
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
       <main className={`${styles.main} ${styles.mainAncho}`}>
         <div>
           <Link to="/admin/reportes" className={styles.volver}>
@@ -445,6 +441,5 @@ export default function AdminCrearReporte() {
           </form>
         </section>
       </main>
-    </div>
   )
 }

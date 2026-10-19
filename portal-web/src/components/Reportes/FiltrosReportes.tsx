@@ -11,16 +11,18 @@ interface FiltrosReportesProps {
   onChange: (filtros: Filtros) => void
   /** Si se entrega, se muestra el filtro por operador (solo tiene sentido para el admin). */
   operadores?: OperadorResumen[]
-  visibles: number
-  total: number
+  /** Si se entrega, se muestra el filtro por comuna con estos nombres (solo para el admin). */
+  comunas?: string[]
+  /** Texto bajo los filtros ("312 reportes · …"); lo arma cada pantalla. */
+  resumen: string
 }
 
 export default function FiltrosReportes({
   filtros,
   onChange,
   operadores,
-  visibles,
-  total,
+  comunas,
+  resumen,
 }: FiltrosReportesProps) {
   // Incluye las inactivas: hay reportes antiguos con categorías desactivadas.
   const { categorias } = useCategorias()
@@ -38,7 +40,7 @@ export default function FiltrosReportes({
           className={styles.entrada}
           value={filtros.texto}
           onChange={(e) => cambiar('texto', e.target.value)}
-          placeholder="Descripción, autor, comuna, organismo o id…"
+          placeholder="En esta página: descripción, autor, comuna, organismo o id…"
         />
       </label>
 
@@ -75,6 +77,28 @@ export default function FiltrosReportes({
         </select>
       </label>
 
+      {comunas && (
+        <label className={styles.campo}>
+          <span className={styles.etiqueta}>Comuna</span>
+          <select
+            className={styles.entrada}
+            value={filtros.comuna}
+            onChange={(e) => cambiar('comuna', e.target.value)}
+          >
+            <option value="">Todas</option>
+            {/* Si viene de un enlace con una comuna que no está en la lista, igual se muestra. */}
+            {filtros.comuna && !comunas.includes(filtros.comuna) && (
+              <option value={filtros.comuna}>{filtros.comuna}</option>
+            )}
+            {comunas.map((nombre) => (
+              <option key={nombre} value={nombre}>
+                {nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
       {operadores && (
         <label className={styles.campo}>
           <span className={styles.etiqueta}>Operador</span>
@@ -96,7 +120,7 @@ export default function FiltrosReportes({
       )}
 
       <label className={styles.campo}>
-        <span className={styles.etiqueta}>Foto</span>
+        <span className={styles.etiqueta}>Foto (esta página)</span>
         <select
           className={styles.entrada}
           value={filtros.foto}
@@ -143,7 +167,7 @@ export default function FiltrosReportes({
 
       <div className={styles.filtrosPie}>
         <span className={styles.estadoCarga}>
-          Mostrando {visibles} de {total} reportes
+          {resumen}
         </span>
         {hayFiltrosActivos(filtros) && (
           <button type="button" className={styles.enlaceBoton} onClick={() => onChange(FILTROS_VACIOS)}>

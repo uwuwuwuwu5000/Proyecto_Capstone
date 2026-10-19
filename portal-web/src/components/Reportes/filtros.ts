@@ -6,6 +6,8 @@ export interface Filtros {
   texto: string
   categoria: string
   estado: string
+  /** Nombre de la comuna tal como lo guarda el reporte; '' = todas (solo el admin la usa). */
+  comuna: string
   // '' = todos, SIN_OPERADOR = solo sin asignar, o el id de un operador.
   operador: string
   foto: '' | 'con' | 'sin'
@@ -17,10 +19,21 @@ export const FILTROS_VACIOS: Filtros = {
   texto: '',
   categoria: '',
   estado: '',
+  comuna: '',
   operador: '',
   foto: '',
   desde: '',
   hasta: '',
+}
+
+/** Texto y foto no se pueden filtrar en Firestore: actúan sobre la página cargada. */
+export function filtrosLocalesActivos(filtros: Filtros): boolean {
+  return filtros.texto.trim() !== '' || filtros.foto !== ''
+}
+
+/** Deja solo texto y foto; el resto ya lo filtró el servidor. */
+export function soloFiltrosLocales(filtros: Filtros): Filtros {
+  return { ...FILTROS_VACIOS, texto: filtros.texto, foto: filtros.foto }
 }
 
 export function hayFiltrosActivos(filtros: Filtros): boolean {
@@ -37,6 +50,7 @@ export function filtrarReportes(reportes: Reporte[], filtros: Filtros): Reporte[
   return reportes.filter((r) => {
     if (filtros.categoria && r.categoria !== filtros.categoria) return false
     if (filtros.estado && r.estado !== filtros.estado) return false
+    if (filtros.comuna && r.comuna !== filtros.comuna) return false
     if (filtros.operador === SIN_OPERADOR && r.operadorId) return false
     if (filtros.operador && filtros.operador !== SIN_OPERADOR && r.operadorId !== filtros.operador) {
       return false
@@ -55,4 +69,22 @@ export function filtrarReportes(reportes: Reporte[], filtros: Filtros): Reporte[
     }
     return true
   })
+}
+
+/**
+ * Texto bajo los filtros: cuántos reportes cumplen los filtros del servidor y,
+ * si hay texto o foto, cuántos de la página los cumplen.
+ */
+export function resumenListado(
+  total: number | null,
+  enPagina: number,
+  visibles: number,
+  filtros: Filtros,
+): string {
+  const base =
+    total === null
+      ? 'Contando reportes…'
+      : `${total.toLocaleString('es-CL')} ${total === 1 ? 'reporte' : 'reportes'}`
+  if (!filtrosLocalesActivos(filtros)) return base
+  return `${base} · la búsqueda de texto y foto filtra solo los ${enPagina} de esta página (${visibles} coinciden)`
 }

@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
-import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { useRequiereOperador } from '../../hooks/useRequiereOperador'
 import Navbar from '../../components/Navbar/Navbar'
@@ -10,15 +8,23 @@ import OperadorTabs from './OperadorTabs'
 import TarjetaReporte from '../../components/Reportes/TarjetaReporte'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
 import FiltrosReportes from '../../components/Reportes/FiltrosReportes'
-import { FILTROS_VACIOS, filtrarReportes, hayFiltrosActivos } from '../../components/Reportes/filtros'
+import {
+  FILTROS_VACIOS,
+  filtrarReportes,
+  hayFiltrosActivos,
+  resumenListado,
+  soloFiltrosLocales,
+} from '../../components/Reportes/filtros'
 import type { Filtros } from '../../components/Reportes/filtros'
-import { cambiarEstadoReporte, mapearReporte } from '../../components/Reportes/reporte'
+import { cambiarEstadoReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
 import BarraSeleccion from '../../components/Reportes/BarraSeleccion'
 import type { MensajeLote } from '../../components/Reportes/BarraSeleccion'
 import CasillaTodos from '../../components/Reportes/CasillaTodos'
 import { useSeleccion } from '../../components/Reportes/useSeleccion'
+import Paginador from '../../components/Reportes/Paginador'
+import { useReportesPaginados } from '../../components/Reportes/useReportesPaginados'
 import styles from '../../components/Reportes/Reportes.module.css'
 import pagina from './OperadorReportes.module.css'
 
@@ -27,10 +33,17 @@ export default function OperadorReportes() {
     useRequiereOperador()
   const { user, perfil } = useAuth()
 
-  const [reportes, setReportes] = useState<Reporte[]>([])
-  const [cargandoReportes, setCargandoReportes] = useState(true)
-  const [error, setError] = useState('')
   const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS)
+  const [tamano, setTamano] = useState(24)
+
+  // Solo los reportes de este operador, una página a la vez (índice operadorId + createdAt).
+  const lista = useReportesPaginados({
+    activo: autorizado && !!operadorId,
+    filtros,
+    operadorFijo: operadorId ?? undefined,
+    tamano,
+  })
+  const reportes = lista.reportes
 
   const [detalleId, setDetalleId] = useState<string | null>(null)
 
@@ -41,30 +54,18 @@ export default function OperadorReportes() {
   const [errorCambio, setErrorCambio] = useState('')
   const [mensajeLote, setMensajeLote] = useState<MensajeLote | null>(null)
 
-  useEffect(() => {
-    if (!autorizado || !operadorId) {
-      return
-    }
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'reports'), where('operadorId', '==', operadorId)),
-      (snapshot) => {
-        const lista = snapshot.docs.map(mapearReporte)
-        lista.sort((a, b) => (b.fecha?.getTime() ?? 0) - (a.fecha?.getTime() ?? 0))
-        setReportes(lista)
-        setCargandoReportes(false)
-        setError('')
-      },
-      (err) => {
-        console.error('Error al leer los reportes del operador:', err)
-        setError('No pudimos cargar tus reportes. Intenta más tarde.')
-        setCargandoReportes(false)
-      },
-    )
-    return unsubscribe
-  }, [autorizado, operadorId])
-
-  const reportesFiltrados = useMemo(() => filtrarReportes(reportes, filtros), [reportes, filtros])
+  // Texto y foto filtran la página cargada; el resto ya lo filtró Firestore.
+  const reportesFiltrados = useMemo(
+    () => filtrarReportes(reportes, soloFiltrosLocales(filtros)),
+    [reportes, filtros],
+  )
   const seleccion = useSeleccion(reportesFiltrados)
+
+  // La selección vale para la página que se ve: al cambiar de página o de filtros, se limpia.
+  const { limpiar: limpiarSeleccion } = seleccion
+  useEffect(() => {
+    limpiarSeleccion()
+  }, [lista.claveConsulta, lista.pagina, limpiarSeleccion])
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
@@ -94,6 +95,7 @@ export default function OperadorReportes() {
         rol: perfil?.role ?? null,
       })
       setCambiandoId(null)
+      lista.recargar()
     } catch (err) {
       console.error('Error al cambiar el estado del reporte:', err)
       const code = err instanceof FirebaseError ? err.code : ''
@@ -106,6 +108,28 @@ export default function OperadorReportes() {
       setGuardando(false)
     }
   }
+
+  const renderPaginador = (conAviso: boolean) => (
+    <Paginador
+      pagina={lista.pagina}
+      totalPaginas={lista.totalPaginas}
+      total={lista.total}
+      tamano={lista.tamano}
+      enPagina={reportes.length}
+      hayAnterior={lista.hayAnterior}
+      haySiguiente={lista.haySiguiente}
+      cargando={lista.cargando}
+      nuevos={lista.nuevos}
+      onTamano={setTamano}
+      onPrimera={lista.irPrimera}
+      onAnterior={lista.irAnterior}
+      onSiguiente={lista.irSiguiente}
+      onRecargar={lista.recargar}
+      onVerNuevos={lista.verNuevos}
+      mostrarAviso={conAviso}
+      idSelector={conAviso ? 'tamano-pagina-arriba' : 'tamano-pagina-abajo'}
+    />
+  )
 
   return (
     <div className={pagina.page}>
@@ -124,8 +148,7 @@ export default function OperadorReportes() {
         <FiltrosReportes
           filtros={filtros}
           onChange={setFiltros}
-          visibles={reportesFiltrados.length}
-          total={reportes.length}
+          resumen={resumenListado(lista.total, reportes.length, reportesFiltrados.length, filtros)}
         />
 
         <div className={styles.barraExportar}>
@@ -146,19 +169,30 @@ export default function OperadorReportes() {
           </p>
         )}
 
-        {error && <p className={styles.errorTexto}>{error}</p>}
-        {(cargando || cargandoReportes) && !error && (
+        {lista.error && (
+          <p className={styles.errorTexto}>
+            {lista.error.mensaje}{' '}
+            {lista.error.enlaceIndice && (
+              <a href={lista.error.enlaceIndice} target="_blank" rel="noreferrer">
+                Crear el índice
+              </a>
+            )}
+          </p>
+        )}
+
+        {renderPaginador(true)}
+        {(cargando || lista.cargando) && reportes.length === 0 && !lista.error && (
           <p className={styles.estadoCarga}>Cargando reportes…</p>
         )}
-        {!cargando && !cargandoReportes && reportesFiltrados.length === 0 && !error && (
+        {!cargando && !lista.cargando && reportesFiltrados.length === 0 && !lista.error && (
           <p className={styles.estadoCarga}>
             {hayFiltrosActivos(filtros)
-              ? 'Ningún reporte coincide con los filtros.'
+              ? 'Ningún reporte de esta página coincide con los filtros.'
               : 'Todavía no tienes reportes asignados.'}
           </p>
         )}
 
-        <div className={styles.grid}>
+        <div className={styles.grid} style={{ opacity: lista.cargando && reportes.length > 0 ? 0.6 : 1 }}>
           {reportesFiltrados.map((reporte) => {
             const siguientes = TRANSICIONES[reporte.estado] ?? []
             const cambiando = cambiandoId === reporte.id
@@ -244,6 +278,8 @@ export default function OperadorReportes() {
           })}
         </div>
 
+        {reportes.length > 0 && renderPaginador(false)}
+
         {/* El operador solo cambia estados: eliminar y reasignar son del admin. */}
         <BarraSeleccion
           seleccionados={seleccion.seleccionados}
@@ -258,7 +294,10 @@ export default function OperadorReportes() {
               : null
           }
           onLimpiar={seleccion.limpiar}
-          onResultado={setMensajeLote}
+          onResultado={(mensaje) => {
+            setMensajeLote(mensaje)
+            lista.recargar()
+          }}
         />
       </main>
 
@@ -266,7 +305,11 @@ export default function OperadorReportes() {
         <DetalleReporte
           reporte={reporteDetalle}
           operadorNombre={operadorNombre}
-          onCerrar={() => setDetalleId(null)}
+          onCerrar={() => {
+            setDetalleId(null)
+            // Desde el detalle se pueden cambiar estados: la página se vuelve a leer.
+            lista.recargar()
+          }}
           gestionable
           organismoNombre={organismoNombre}
         />

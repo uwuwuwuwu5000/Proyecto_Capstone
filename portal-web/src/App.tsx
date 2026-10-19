@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
+import { SoporteProvider } from './context/SoporteContext'
+import AdminLayout from './components/AdminLayout/AdminLayout'
 import CargandoPagina from './components/Carga/CargandoPagina'
 import ErrorDeCarga from './components/Carga/ErrorDeCarga'
 
@@ -20,6 +22,8 @@ const AdminReportes = lazy(() => import('./pages/Admin/AdminReportes'))
 const AdminCrearReporte = lazy(() => import('./pages/Admin/AdminCrearReporte'))
 const AdminCategorias = lazy(() => import('./pages/Admin/AdminCategorias'))
 const AdminEstadisticas = lazy(() => import('./pages/Admin/AdminEstadisticas'))
+const AdminMapaCalor = lazy(() => import('./pages/Admin/AdminMapaCalor'))
+const AdminSoporte = lazy(() => import('./pages/Admin/AdminSoporte'))
 const OperadorMapa = lazy(() => import('./pages/Operador/OperadorMapa'))
 const OperadorReportes = lazy(() => import('./pages/Operador/OperadorReportes'))
 const OperadorEstadisticas = lazy(() => import('./pages/Operador/OperadorEstadisticas'))
@@ -38,14 +42,20 @@ function Rutas() {
           <Route path="/registro" element={<Registro />} />
           <Route path="/historial" element={<Historial />} />
           <Route path="/mapa" element={<Mapa />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/organismos" element={<AdminOrganismos />} />
-          <Route path="/admin/operadores" element={<AdminOperadores />} />
-          <Route path="/admin/cuentas" element={<AdminCuentas />} />
-          <Route path="/admin/reportes" element={<AdminReportes />} />
-          <Route path="/admin/reportes/nuevo" element={<AdminCrearReporte />} />
-          <Route path="/admin/categorias" element={<AdminCategorias />} />
-          <Route path="/admin/estadisticas" element={<AdminEstadisticas />} />
+          {/* Panel de administración: navbar + barra lateral + la pantalla. */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Admin />} />
+            <Route path="organismos" element={<AdminOrganismos />} />
+            <Route path="operadores" element={<AdminOperadores />} />
+            <Route path="cuentas" element={<AdminCuentas />} />
+            <Route path="reportes" element={<AdminReportes />} />
+            <Route path="reportes/nuevo" element={<AdminCrearReporte />} />
+            <Route path="categorias" element={<AdminCategorias />} />
+            <Route path="mapa-calor" element={<AdminMapaCalor />} />
+            <Route path="estadisticas" element={<AdminEstadisticas />} />
+            <Route path="soporte" element={<AdminSoporte />} />
+            <Route path="soporte/:ticketId" element={<AdminSoporte />} />
+          </Route>
           <Route path="/operador" element={<OperadorMapa />} />
           <Route path="/operador/reportes" element={<OperadorReportes />} />
           <Route path="/operador/estadisticas" element={<OperadorEstadisticas />} />
@@ -60,9 +70,11 @@ export default function App() {
   return (
     <AuthProvider>
       <CategoriasProvider>
-        <BrowserRouter>
-          <Rutas />
-        </BrowserRouter>
+        <SoporteProvider>
+          <BrowserRouter>
+            <Rutas />
+          </BrowserRouter>
+        </SoporteProvider>
       </CategoriasProvider>
     </AuthProvider>
   )

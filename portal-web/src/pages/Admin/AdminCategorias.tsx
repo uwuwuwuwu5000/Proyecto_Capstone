@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent, PointerEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import {
   collection,
   doc,
@@ -17,7 +17,6 @@ import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
 import { useCategorias } from '../../context/CategoriasContext'
 import type { Categoria } from '../../context/CategoriasContext'
-import Navbar from '../../components/Navbar/Navbar'
 import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { contarReportes } from '../../components/Reportes/accionesLote'
 import styles from './Admin.module.css'
@@ -313,14 +312,9 @@ export default function AdminCategorias() {
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
+    <>
       <main className={styles.main}>
         <div>
-          <Link to="/admin" className={styles.volver}>
-            ← Panel de administración
-          </Link>
           <h1 className={styles.title}>Categorías</h1>
           <p className={styles.subtitle}>
             Crea y edita las categorías que se ofrecen al reportar. Las categorías no se borran: se
@@ -547,6 +541,6 @@ export default function AdminCategorias() {
         </section>
       </main>
       {dialogo}
-    </div>
+    </>
   )
 }

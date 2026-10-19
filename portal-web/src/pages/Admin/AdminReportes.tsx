@@ -11,13 +11,19 @@ import {
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import TarjetaReporte from '../../components/Reportes/TarjetaReporte'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
 import FiltrosReportes from '../../components/Reportes/FiltrosReportes'
-import { FILTROS_VACIOS, filtrarReportes, hayFiltrosActivos } from '../../components/Reportes/filtros'
+import { useNombresComunas } from '../../hooks/useNombresComunas'
+import {
+  FILTROS_VACIOS,
+  filtrarReportes,
+  hayFiltrosActivos,
+  resumenListado,
+  soloFiltrosLocales,
+} from '../../components/Reportes/filtros'
 import type { Filtros } from '../../components/Reportes/filtros'
-import { cambiarEstadoReporte, mapearReporte } from '../../components/Reportes/reporte'
+import { cambiarEstadoReporte } from '../../components/Reportes/reporte'
 import type { OperadorResumen, Reporte } from '../../components/Reportes/reporte'
 import { construirCsvReportes, descargarCsv } from '../../components/Reportes/exportar'
 import { eliminarReporte } from '../../components/Reportes/accionesLote'
@@ -25,6 +31,13 @@ import BarraSeleccion from '../../components/Reportes/BarraSeleccion'
 import type { MensajeLote } from '../../components/Reportes/BarraSeleccion'
 import CasillaTodos from '../../components/Reportes/CasillaTodos'
 import { useSeleccion } from '../../components/Reportes/useSeleccion'
+import Paginador from '../../components/Reportes/Paginador'
+import {
+  cargarReporte,
+  cargarReportesSinOperador,
+  descargarTodosLosReportes,
+  useReportesPaginados,
+} from '../../components/Reportes/useReportesPaginados'
 import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { fechaInput } from '../../components/Reportes/rangosRapidos'
 import { useCategorias } from '../../context/CategoriasContext'
@@ -50,12 +63,16 @@ export default function AdminReportes() {
   const { user, perfil } = useAuth()
   const [params, setParams] = useSearchParams()
   const { confirmar, dialogo } = useConfirmacion()
+  const comunas = useNombresComunas(autorizado)
 
-  const [reportes, setReportes] = useState<Reporte[]>([])
-  const [cargandoReportes, setCargandoReportes] = useState(true)
   const [operadores, setOperadores] = useState<OperadorResumen[]>([])
   const [error, setError] = useState('')
   const [filtros, setFiltros] = useState<Filtros>(() => filtrosDesdeUrl(params))
+  const [tamano, setTamano] = useState(24)
+
+  // Una página de reportes a la vez, leída en Firestore (ver useReportesPaginados).
+  const lista = useReportesPaginados({ activo: autorizado, filtros, tamano })
+  const pagina = lista.reportes
 
   // ?reporte=<id> abre su detalle (p. ej. "Ver el reporte" tras crearlo).
   const [detalleId, setDetalleId] = useState<string | null>(() => params.get('reporte'))
@@ -71,34 +88,15 @@ export default function AdminReportes() {
   const [eliminandoId, setEliminandoId] = useState<string | null>(null)
 
   const { etiqueta } = useCategorias()
-  const [progresoCsv, setProgresoCsv] = useState<{ hechos: number; total: number } | null>(null)
+  const [estadoCsv, setEstadoCsv] = useState<string | null>(null)
   const [errorExportar, setErrorExportar] = useState('')
 
+  // Reportes sin operador encontrados por la herramienta de vinculación.
+  const [pendientes, setPendientes] = useState<Reporte[] | null>(null)
+  const [buscandoPendientes, setBuscandoPendientes] = useState(false)
   const [vinculando, setVinculando] = useState(false)
   const [vinculoError, setVinculoError] = useState('')
   const [vinculoAviso, setVinculoAviso] = useState('')
-
-  useEffect(() => {
-    if (!autorizado) {
-      return
-    }
-    const unsubscribe = onSnapshot(
-      collection(db, 'reports'),
-      (snapshot) => {
-        const lista = snapshot.docs.map(mapearReporte)
-        lista.sort((a, b) => (b.fecha?.getTime() ?? 0) - (a.fecha?.getTime() ?? 0))
-        setReportes(lista)
-        setCargandoReportes(false)
-        setError('')
-      },
-      (err) => {
-        console.error('Error al leer reportes:', err)
-        setError('No pudimos cargar los reportes. Inténtalo nuevamente.')
-        setCargandoReportes(false)
-      },
-    )
-    return unsubscribe
-  }, [autorizado])
 
   useEffect(() => {
     if (!autorizado) {
@@ -136,16 +134,37 @@ export default function AdminReportes() {
     return mapa
   }, [operadores])
 
-  const reportesFiltrados = useMemo(() => filtrarReportes(reportes, filtros), [reportes, filtros])
+  // Texto y foto filtran la página cargada; el resto ya lo filtró Firestore.
+  const reportesFiltrados = useMemo(
+    () => filtrarReportes(pagina, soloFiltrosLocales(filtros)),
+    [pagina, filtros],
+  )
   const seleccion = useSeleccion(reportesFiltrados)
 
-  const pendientesDeVincular = useMemo(
-    () =>
-      reportes.filter(
-        (r) => !r.operadorId && r.organismoId && operadorPorOrganismo.has(r.organismoId),
-      ),
-    [reportes, operadorPorOrganismo],
-  )
+  // La selección vale para la página que se ve: al cambiar de página o de filtros, se limpia.
+  const { limpiar: limpiarSeleccion } = seleccion
+  useEffect(() => {
+    limpiarSeleccion()
+  }, [lista.claveConsulta, lista.pagina, limpiarSeleccion])
+
+  // ?reporte=<id> puede no estar en la página cargada: se pide aparte.
+  const [reporteAparte, setReporteAparte] = useState<Reporte | null>(null)
+  useEffect(() => {
+    if (!autorizado || !detalleId || lista.cargando) {
+      return
+    }
+    if (pagina.some((r) => r.id === detalleId)) {
+      setReporteAparte(null)
+      return
+    }
+    let vigente = true
+    cargarReporte(detalleId)
+      .then((r) => vigente && setReporteAparte(r))
+      .catch((err) => console.error('Error al leer el reporte:', err))
+    return () => {
+      vigente = false
+    }
+  }, [autorizado, detalleId, pagina, lista.cargando])
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
@@ -155,10 +174,14 @@ export default function AdminReportes() {
     return reporte.operadorId ? operadorPorId.get(reporte.operadorId)?.nombre ?? null : null
   }
 
-  const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
+  const reporteDetalle = detalleId
+    ? pagina.find((r) => r.id === detalleId) ?? (reporteAparte?.id === detalleId ? reporteAparte : null)
+    : null
 
   function cerrarDetalle() {
     setDetalleId(null)
+    // Desde el detalle se pueden cambiar estados: la página se vuelve a leer.
+    lista.recargar()
     if (params.has('reporte')) {
       const siguientes = new URLSearchParams(params)
       siguientes.delete('reporte')
@@ -198,6 +221,7 @@ export default function AdminReportes() {
         })
       }
       setEditandoId(null)
+      lista.recargar()
     } catch (err) {
       console.error('Error al guardar el reporte:', err)
       setErrorEdicion('No pudimos guardar los cambios. Inténtalo nuevamente.')
@@ -225,6 +249,7 @@ export default function AdminReportes() {
     setError('')
     try {
       await eliminarReporte(reporte)
+      lista.recargar()
     } catch (err) {
       console.error('Error al eliminar el reporte:', err)
       setError('No pudimos eliminar el reporte. Inténtalo nuevamente.')
@@ -236,19 +261,32 @@ export default function AdminReportes() {
   async function exportarCsv() {
     setErrorExportar('')
     try {
-      const csv = await construirCsvReportes(reportesFiltrados, {
+      // Todos los que cumplen los filtros (no solo la página), por tandas de 500.
+      setEstadoCsv('Descargando reportes…')
+      const { reportes: todos, truncado } = await descargarTodosLosReportes(
+        filtros,
+        undefined,
+        (descargados) => setEstadoCsv(`Descargando reportes… ${descargados.toLocaleString('es-CL')}`),
+      )
+      const aExportar = filtrarReportes(todos, soloFiltrosLocales(filtros))
+      const csv = await construirCsvReportes(aExportar, {
         etiquetaCategoria: etiqueta,
         nombreOperador: (operadorId) =>
           operadorId ? operadorPorId.get(operadorId)?.nombre ?? operadorId : 'Sin asignar',
-        onProgreso: (hechos, total) => setProgresoCsv({ hechos, total }),
+        onProgreso: (hechos, total) => setEstadoCsv(`Preparando CSV… ${hechos}/${total}`),
       })
       const sufijo = hayFiltrosActivos(filtros) ? '_filtrados' : ''
       descargarCsv(csv, `reportes_${fechaInput(new Date())}${sufijo}.csv`)
+      if (truncado) {
+        setErrorExportar(
+          'El archivo incluye solo los 20.000 reportes más recientes. Acota con filtros para exportar el resto.',
+        )
+      }
     } catch (err) {
       console.error('Error al exportar el CSV:', err)
       setErrorExportar('No pudimos generar el CSV. Inténtalo nuevamente.')
     } finally {
-      setProgresoCsv(null)
+      setEstadoCsv(null)
     }
   }
 
@@ -256,6 +294,23 @@ export default function AdminReportes() {
   // antes de que la app asignara operador. Se quita cuando se implemente el
   // nuevo flujo de acceso por organismo y categoría (ver notas de
   // implementación futura).
+  async function buscarPendientes() {
+    setBuscandoPendientes(true)
+    setVinculoError('')
+    setVinculoAviso('')
+    try {
+      const sinOperador = await cargarReportesSinOperador()
+      setPendientes(
+        sinOperador.filter((r) => r.organismoId && operadorPorOrganismo.has(r.organismoId)),
+      )
+    } catch (err) {
+      console.error('Error al buscar reportes sin operador:', err)
+      setVinculoError('No pudimos buscar los reportes. Inténtalo nuevamente.')
+    } finally {
+      setBuscandoPendientes(false)
+    }
+  }
+
   async function vincularReportesExistentes() {
     setVinculando(true)
     setVinculoError('')
@@ -264,7 +319,7 @@ export default function AdminReportes() {
       let lote = writeBatch(db)
       let enLote = 0
       let vinculados = 0
-      for (const reporte of pendientesDeVincular) {
+      for (const reporte of pendientes ?? []) {
         const operador = reporte.organismoId ? operadorPorOrganismo.get(reporte.organismoId) : null
         if (!operador) {
           continue
@@ -286,6 +341,8 @@ export default function AdminReportes() {
         await lote.commit()
       }
       setVinculoAviso(`Se vincularon ${vinculados} reporte(s) con su operador.`)
+      setPendientes(null)
+      lista.recargar()
     } catch (err) {
       console.error('Error al vincular reportes con operadores:', err)
       setVinculoError('No pudimos vincular los reportes. Inténtalo nuevamente.')
@@ -294,15 +351,32 @@ export default function AdminReportes() {
     }
   }
 
-  return (
-    <div className={styles.page}>
-      <Navbar />
+  const renderPaginador = (conAviso: boolean) => (
+    <Paginador
+      pagina={lista.pagina}
+      totalPaginas={lista.totalPaginas}
+      total={lista.total}
+      tamano={lista.tamano}
+      enPagina={pagina.length}
+      hayAnterior={lista.hayAnterior}
+      haySiguiente={lista.haySiguiente}
+      cargando={lista.cargando}
+      nuevos={lista.nuevos}
+      onTamano={setTamano}
+      onPrimera={lista.irPrimera}
+      onAnterior={lista.irAnterior}
+      onSiguiente={lista.irSiguiente}
+      onRecargar={lista.recargar}
+      onVerNuevos={lista.verNuevos}
+      mostrarAviso={conAviso}
+      idSelector={conAviso ? 'tamano-pagina-arriba' : 'tamano-pagina-abajo'}
+    />
+  )
 
+  return (
+    <>
       <main className={propios.main}>
         <div>
-          <Link to="/admin" className={styles.volver}>
-            ← Panel de administración
-          </Link>
           <div className={styles.encabezadoAcciones}>
             <h1 className={styles.title}>Administrar reportes</h1>
             <Link to="/admin/reportes/nuevo" className={styles.botonCrear}>
@@ -315,8 +389,8 @@ export default function AdminReportes() {
           filtros={filtros}
           onChange={setFiltros}
           operadores={operadores}
-          visibles={reportesFiltrados.length}
-          total={reportes.length}
+          comunas={comunas}
+          resumen={resumenListado(lista.total, pagina.length, reportesFiltrados.length, filtros)}
         />
 
         <div className={propios.barraExportar}>
@@ -324,14 +398,12 @@ export default function AdminReportes() {
             type="button"
             className={styles.editarBoton}
             onClick={exportarCsv}
-            disabled={cargandoReportes || reportesFiltrados.length === 0 || progresoCsv !== null}
+            disabled={lista.cargando || lista.total === 0 || estadoCsv !== null}
           >
-            {progresoCsv
-              ? `Preparando CSV… ${progresoCsv.hechos}/${progresoCsv.total}`
-              : `Exportar CSV (${reportesFiltrados.length} reportes)`}
+            {estadoCsv ?? `Exportar CSV (${lista.total === null ? '…' : lista.total.toLocaleString('es-CL')} reportes)`}
           </button>
           <span className={propios.estadoCarga}>
-            Incluye los reportes que cumplen los filtros actuales, sin imágenes.
+            Incluye todos los reportes que cumplen los filtros, no solo esta página; sin imágenes.
           </span>
           <span className={propios.barraEspacio} />
           <CasillaTodos
@@ -352,16 +424,30 @@ export default function AdminReportes() {
         {errorExportar && <p className={styles.error}>{errorExportar}</p>}
 
         {error && <p className={styles.error}>{error}</p>}
-        {cargandoReportes && <p className={propios.estadoCarga}>Cargando reportes…</p>}
-        {!cargandoReportes && reportesFiltrados.length === 0 && !error && (
+        {lista.error && (
+          <p className={styles.error}>
+            {lista.error.mensaje}{' '}
+            {lista.error.enlaceIndice && (
+              <a href={lista.error.enlaceIndice} target="_blank" rel="noreferrer" className={styles.footerLink}>
+                Crear el índice
+              </a>
+            )}
+          </p>
+        )}
+
+        {renderPaginador(true)}
+        {lista.cargando && pagina.length === 0 && !lista.error && (
+          <p className={propios.estadoCarga}>Cargando reportes…</p>
+        )}
+        {!lista.cargando && reportesFiltrados.length === 0 && !lista.error && (
           <p className={propios.estadoCarga}>
             {hayFiltrosActivos(filtros)
-              ? 'Ningún reporte coincide con los filtros.'
+              ? 'Ningún reporte de esta página coincide con los filtros.'
               : 'No hay reportes para mostrar.'}
           </p>
         )}
 
-        <div className={propios.grid}>
+        <div className={propios.grid} style={{ opacity: lista.cargando && pagina.length > 0 ? 0.6 : 1 }}>
           {reportesFiltrados.map((reporte) => {
             const editando = editandoId === reporte.id
             const siguientes = TRANSICIONES[reporte.estado] ?? []
@@ -477,13 +563,18 @@ export default function AdminReportes() {
           })}
         </div>
 
+        {pagina.length > 0 && renderPaginador(false)}
+
         <BarraSeleccion
           seleccionados={seleccion.seleccionados}
           autor={
             user ? { uid: user.uid, nombre: perfil?.displayName ?? null, rol: perfil?.role ?? null } : null
           }
           onLimpiar={seleccion.limpiar}
-          onResultado={setMensajeLote}
+          onResultado={(mensaje) => {
+            setMensajeLote(mensaje)
+            lista.recargar()
+          }}
           operadores={operadores}
           permitirEliminar
         />
@@ -497,22 +588,29 @@ export default function AdminReportes() {
           </p>
           {vinculoError && <p className={styles.error}>{vinculoError}</p>}
           {vinculoAviso && <p className={styles.aviso}>{vinculoAviso}</p>}
-          {pendientesDeVincular.length > 0 ? (
+          {pendientes === null ? (
+            <button
+              type="button"
+              className={`${styles.submit} ${propios.vincularBoton}`}
+              onClick={buscarPendientes}
+              disabled={buscandoPendientes}
+            >
+              {buscandoPendientes ? 'Buscando…' : 'Buscar reportes sin operador'}
+            </button>
+          ) : pendientes.length > 0 ? (
             <button
               type="button"
               className={`${styles.submit} ${propios.vincularBoton}`}
               onClick={vincularReportesExistentes}
               disabled={vinculando}
             >
-              {vinculando ? 'Vinculando…' : `Vincular ${pendientesDeVincular.length} reporte(s)`}
+              {vinculando ? 'Vinculando…' : `Vincular ${pendientes.length} reporte(s)`}
             </button>
           ) : (
-            !cargandoReportes && (
-              <p className={propios.estadoCarga}>
-                No hay reportes pendientes: ninguno sin operador tiene un Organismo ID que
-                corresponda a un operador activo.
-              </p>
-            )
+            <p className={propios.estadoCarga}>
+              No hay reportes pendientes: ninguno de los sin operador tiene un Organismo ID que
+              corresponda a un operador activo.
+            </p>
           )}
         </section>
       </main>
@@ -526,6 +624,6 @@ export default function AdminReportes() {
         />
       )}
       {dialogo}
-    </div>
+    </>
   )
 }

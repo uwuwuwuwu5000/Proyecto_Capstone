@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { GRUPOS_ADMIN } from '../../constants/adminSecciones'
+import { useSoporte } from '../../context/SoporteContext'
+import Logo from '../Marca/Logo'
 import styles from './Navbar.module.css'
 
 const ETIQUETA_ROL: Record<string, string> = {
@@ -56,31 +57,28 @@ export default function Navbar() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { user, perfil, logout } = useAuth()
+  const { abiertos: soporteAbiertos } = useSoporte()
   // Menú desplegable del teléfono; en escritorio las opciones se ven siempre.
   const [menuAbierto, setMenuAbierto] = useState(false)
   // Menú de usuario de escritorio (nombre, correo y cerrar sesión).
   const [usuarioAbierto, setUsuarioAbierto] = useState(false)
-  // Lista de secciones del panel de administración.
-  const [panelAbierto, setPanelAbierto] = useState(false)
   const raizRef = useRef<HTMLElement>(null)
 
   // Al navegar a otra pantalla, los menús se cierran solos.
   useEffect(() => {
     setMenuAbierto(false)
     setUsuarioAbierto(false)
-    setPanelAbierto(false)
   }, [pathname])
 
   // Con un menú abierto: Escape o un toque fuera de la barra lo cierran.
   useEffect(() => {
-    if (!menuAbierto && !usuarioAbierto && !panelAbierto) {
+    if (!menuAbierto && !usuarioAbierto) {
       return
     }
     const cerrar = () => {
       setMenuAbierto(false)
       setUsuarioAbierto(false)
-      setPanelAbierto(false)
-    }
+      }
     const alPresionar = (e: KeyboardEvent) => {
       if (e.key === 'Escape') cerrar()
     }
@@ -93,7 +91,7 @@ export default function Navbar() {
       window.removeEventListener('keydown', alPresionar)
       window.removeEventListener('pointerdown', alTocarFuera)
     }
-  }, [menuAbierto, usuarioAbierto, panelAbierto])
+  }, [menuAbierto, usuarioAbierto])
 
   async function handleLogout() {
     await logout()
@@ -110,11 +108,8 @@ export default function Navbar() {
 
   return (
     <header ref={raizRef} className={styles.navbar} data-no-imprimir>
-      <Link to="/" className={styles.brand}>
-        <span className={styles.brandMark} aria-hidden="true">
-          ◆
-        </span>
-        Ciudad Alerta
+      <Link to="/" className={styles.brand} aria-label="Ciudad Alerta, plataforma comunitaria">
+        <Logo />
       </Link>
 
       {user ? (
@@ -151,62 +146,27 @@ export default function Navbar() {
             {/* Los paneles quedan activos en cualquiera de sus subpáginas
                 (/admin/reportes, /operador/estadisticas…). */}
             {perfil?.role === 'admin' && (
-              <div className={styles.desplegable}>
-                <button
-                  type="button"
-                  className={[
-                    styles.navLink,
-                    styles.navEspecial,
-                    styles.desplegableBoton,
-                    pathname.startsWith('/admin') ? styles.activo : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  onClick={() => {
-                    setPanelAbierto((abierto) => !abierto)
-                    setUsuarioAbierto(false)
-                  }}
-                  aria-expanded={panelAbierto}
-                  aria-controls="menu-panel-admin"
-                >
-                  <IconoAdmin />
-                  Panel de administración
-                  <span className={styles.flecha} aria-hidden="true">
-                    ▾
+              <Link
+                to="/admin"
+                className={[
+                  styles.navLink,
+                  styles.navEspecial,
+                  pathname.startsWith('/admin') ? styles.activo : '',
+                ].join(' ')}
+                aria-current={pathname === '/admin' ? 'page' : undefined}
+              >
+                <IconoAdmin />
+                Panel de administración
+                {!!soporteAbiertos && (
+                  <span
+                    className={styles.insignia}
+                    role="img"
+                    aria-label={`${soporteAbiertos} conversaciones de soporte sin atender`}
+                  >
+                    {soporteAbiertos > 9 ? '9+' : soporteAbiertos}
                   </span>
-                </button>
-
-                {panelAbierto && (
-                  <div id="menu-panel-admin" className={styles.panelMenu}>
-                    <NavLink
-                      to="/admin"
-                      end
-                      className={({ isActive }) =>
-                        `${styles.panelEnlace} ${isActive ? styles.panelEnlaceActivo : ''}`
-                      }
-                    >
-                      Inicio del panel
-                    </NavLink>
-                    {GRUPOS_ADMIN.map((grupo) => (
-                      <div key={grupo.titulo} className={styles.panelGrupo}>
-                        <span className={styles.panelGrupoTitulo}>{grupo.titulo}</span>
-                        {grupo.secciones.map((seccion) => (
-                          <NavLink
-                            key={seccion.ruta}
-                            to={seccion.ruta}
-                            end
-                            className={({ isActive }) =>
-                              `${styles.panelEnlace} ${isActive ? styles.panelEnlaceActivo : ''}`
-                            }
-                          >
-                            {seccion.titulo}
-                          </NavLink>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
                 )}
-              </div>
+              </Link>
             )}
 
             {perfil?.role === 'operador' && (
@@ -240,8 +200,7 @@ export default function Navbar() {
               className={styles.usuarioBoton}
               onClick={() => {
                 setUsuarioAbierto((abierto) => !abierto)
-                setPanelAbierto(false)
-              }}
+                          }}
               aria-expanded={usuarioAbierto}
               aria-haspopup="menu"
               aria-controls="menu-usuario"

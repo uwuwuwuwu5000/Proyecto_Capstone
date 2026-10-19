@@ -10,6 +10,8 @@ import { EstadoPildora } from './TarjetaReporte'
 import { cambiarEstadoReporte, formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
 import { cargarHistorial } from './historial'
+import { cargarReporte } from './useReportesPaginados'
+import { formatearDuracion } from './tiempos'
 import HistorialEstados from './HistorialEstados'
 import type { CambioEstado } from './historial'
 import styles from './Reportes.module.css'
@@ -34,7 +36,7 @@ interface DetalleReporteProps {
 }
 
 export default function DetalleReporte({
-  reporte,
+  reporte: reporteDelPadre,
   operadorNombre,
   onCerrar,
   gestionable = false,
@@ -47,6 +49,19 @@ export default function DetalleReporte({
   const [confirmaciones, setConfirmaciones] = useState<number | null>(null)
   const [historial, setHistorial] = useState<CambioEstado[] | null>(null)
   const [error, setError] = useState('')
+
+  // El estado que ve este detalle. Lo cambia el propio detalle al guardar: el
+  // listado de donde viene el reporte puede no recargarse hasta cerrarlo, y con
+  // un estado viejo el segundo cambio se rechazaría (`desde` no coincidiría con
+  // el estado real). Si el padre sí actualiza el reporte, se sigue al padre.
+  const [estadoActual, setEstadoActual] = useState(reporteDelPadre.estado)
+  useEffect(() => {
+    setEstadoActual(reporteDelPadre.estado)
+  }, [reporteDelPadre.estado])
+  // Tras guardar se vuelve a leer el reporte: así aparecen de inmediato los datos
+  // que pone el servidor (fecha de resolución, tiempo) sin depender del listado.
+  const [refrescado, setRefrescado] = useState<Reporte | null>(null)
+  const reporte: Reporte = { ...(refrescado ?? reporteDelPadre), estado: estadoActual }
 
   const siguientes = TRANSICIONES[reporte.estado] ?? []
   const [estadoNuevo, setEstadoNuevo] = useState('')
@@ -80,15 +95,29 @@ export default function DetalleReporte({
         rol: perfil?.role ?? null,
       })
       setComentario('')
+      setEstadoActual(hacia)
       setAvisoCambio(`Estado cambiado a "${ETIQUETA_POR_ESTADO[hacia] ?? hacia}".`)
+      void cargarReporte(reporte.id)
+        .then((fresco) => fresco && setRefrescado(fresco))
+        .catch((e) => console.error('No se pudo refrescar el reporte:', e))
     } catch (err) {
       console.error('Error al cambiar el estado del reporte:', err)
       const code = err instanceof FirebaseError ? err.code : ''
-      setErrorCambio(
-        code === 'permission-denied'
-          ? 'No tienes permiso para cambiar este reporte.'
-          : 'No pudimos cambiar el estado. Inténtalo nuevamente.',
-      )
+      if (code === 'permission-denied') {
+        // Antes de culpar a los permisos, se comprueba si el reporte ya cambió de
+        // estado (en otra pestaña o por otra persona): en ese caso se actualiza.
+        const actual = await cargarReporte(reporte.id).catch(() => null)
+        if (actual && actual.estado !== reporte.estado) {
+          setEstadoActual(actual.estado)
+          setErrorCambio(
+            `Este reporte ya cambió de estado (ahora está «${ETIQUETA_POR_ESTADO[actual.estado] ?? actual.estado}»). Revisa y vuelve a intentarlo.`,
+          )
+          return
+        }
+        setErrorCambio('No tienes permiso para cambiar este reporte.')
+      } else {
+        setErrorCambio('No pudimos cambiar el estado. Inténtalo nuevamente.')
+      }
     } finally {
       setGuardando(false)
     }
@@ -167,6 +196,22 @@ export default function DetalleReporte({
               <dd>{formatearFecha(reporte.fecha, true)}</dd>
               <dt>Estado actual</dt>
               <dd>{ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}</dd>
+              {reporte.resueltoAt && (
+                <>
+                  <dt>Resolución</dt>
+                  <dd>
+                    Resuelto el {formatearFecha(reporte.resueltoAt, true)}
+                    {typeof reporte.tiempoResolucionMs === 'number' &&
+                      ` · en ${formatearDuracion(reporte.tiempoResolucionMs)}`}
+                  </dd>
+                </>
+              )}
+              {!reporte.resueltoAt && reporte.cerradoSinResolverAt && (
+                <>
+                  <dt>Resolución</dt>
+                  <dd>Cerrado sin resolver el {formatearFecha(reporte.cerradoSinResolverAt, true)}</dd>
+                </>
+              )}
               <dt>Confirmaciones</dt>
               <dd>{confirmaciones ?? (error ? '—' : 'Cargando…')}</dd>
               <dt>Comuna</dt>

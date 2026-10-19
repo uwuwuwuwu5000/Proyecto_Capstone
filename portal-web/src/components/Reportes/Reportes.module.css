@@ -675,3 +675,103 @@
 .barraEspacio {
   flex: 1;
 }
+
+/* ---- Paginación ---- */
+
+.paginador {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 10px 14px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+}
+
+.paginadorRango {
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.paginadorControles,
+.paginadorOpciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.paginador .accionBoton {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+.paginadorPagina {
+  padding: 0 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  white-space: nowrap;
+}
+
+.paginadorTamano {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--ca-muted);
+}
+
+.paginadorTamano .entrada {
+  padding: 5px 8px;
+  font-size: 0.9rem;
+}
+
+.avisoNuevos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin-bottom: 10px;
+}
+
+.avisoNuevos .enlaceBoton {
+  color: var(--ca-signal);
+  font-weight: 600;
+}
+
+/* Teléfono: el rango arriba, los botones en una fila y las opciones debajo. */
+@media (max-width: 560px) {
+  .paginador {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Anterior · Página X de Y · Siguiente, en una sola fila ("Primera" no cabe). */
+  .paginadorControles {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .paginadorControles .accionBoton {
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  .paginadorPrimera {
+    display: none;
+  }
+
+  .paginadorPagina {
+    padding: 0 2px;
+    font-size: 0.82rem;
+  }
+
+  .paginadorOpciones {
+    justify-content: space-between;
+  }
+}

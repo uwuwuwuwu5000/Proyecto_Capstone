@@ -37,6 +37,14 @@ export const RANGOS_RAPIDOS: RangoRapido[] = [
     },
   },
   {
+    clave: 'esteMes',
+    etiqueta: 'Este mes',
+    calcular: (hoy) => ({
+      desde: fechaInput(new Date(hoy.getFullYear(), hoy.getMonth(), 1)),
+      hasta: fechaInput(hoy),
+    }),
+  },
+  {
     clave: 'ultimoMes',
     etiqueta: 'Último mes',
     calcular: (hoy) => ({ desde: fechaInput(haceMeses(hoy, 1)), hasta: fechaInput(hoy) }),

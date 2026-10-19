@@ -3,7 +3,6 @@
 
 export interface SeccionAdmin {
   ruta: string
-  icono: string
   titulo: string
   texto: string
 }
@@ -20,19 +19,21 @@ export const GRUPOS_ADMIN: GrupoAdmin[] = [
     secciones: [
       {
         ruta: '/admin/reportes',
-        icono: '🗂️',
         titulo: 'Administrar reportes',
         texto: 'Revisa, edita o elimina reportes y vincúlalos con su operador.',
       },
       {
         ruta: '/admin/reportes/nuevo',
-        icono: '📍',
         titulo: 'Crear reporte',
         texto: 'Registra una incidencia en cualquier punto del mapa, con su organismo asignado.',
       },
       {
+        ruta: '/admin/mapa-calor',
+        titulo: 'Mapa de calor',
+        texto: 'Reportes sin resolver por comuna, con detalle de tiempos y categorías.',
+      },
+      {
         ruta: '/admin/estadisticas',
-        icono: '📊',
         titulo: 'Estadísticas globales',
         texto: 'Volumen, tiempos de atención por operador y comunas con más reportes.',
       },
@@ -45,21 +46,28 @@ export const GRUPOS_ADMIN: GrupoAdmin[] = [
     secciones: [
       {
         ruta: '/admin/organismos',
-        icono: '🏛️',
         titulo: 'Organismos activos',
         texto: 'Activa o desactiva municipalidades y revisa su límite comunal y su actividad.',
       },
       {
         ruta: '/admin/operadores',
-        icono: '👥',
         titulo: 'Operadores',
         texto: 'Da de alta operadores, revisa sus cuentas y actívalos o desactívalos.',
       },
       {
         ruta: '/admin/cuentas',
-        icono: '🔑',
         titulo: 'Crear cuenta de organismo',
         texto: 'Da de alta el acceso de un operador ya activado.',
+      },
+    ],
+  },
+  {
+    titulo: 'Atención a vecinos',
+    secciones: [
+      {
+        ruta: '/admin/soporte',
+        titulo: 'Soporte',
+        texto: 'Quejas y sugerencias de los vecinos: responde, toma el caso y ciérralo.',
       },
     ],
   },
@@ -68,7 +76,6 @@ export const GRUPOS_ADMIN: GrupoAdmin[] = [
     secciones: [
       {
         ruta: '/admin/categorias',
-        icono: '🏷️',
         titulo: 'Categorías',
         texto: 'Crea, edita, ordena y activa o desactiva las categorías de los reportes.',
       },

@@ -1,11 +1,11 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { collection, doc, getDocs, onSnapshot, setDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
-import Navbar from '../../components/Navbar/Navbar'
 import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { ESTADOS_FINALIZADOS } from '../../components/Reportes/tiempos'
+import PaginadorPaginas from '../../components/Paginacion/PaginadorPaginas'
 import { useOperadores } from './operadores'
 import styles from './Admin.module.css'
 
@@ -27,6 +27,9 @@ interface ConteoReportes {
 
 type FiltroEstado = '' | 'activos' | 'inactivos'
 
+/** Tamaños de página disponibles; el primero es el valor por defecto. */
+const TAMANOS_PAGINA = [25, 50, 100]
+
 export default function AdminOrganismos() {
   const { cargando, autorizado } = useRequiereAdmin()
   const { confirmar, dialogo } = useConfirmacion()
@@ -44,6 +47,9 @@ export default function AdminOrganismos() {
   const [filtroRegion, setFiltroRegion] = useState('')
   const [actualizandoId, setActualizandoId] = useState<string | null>(null)
   const [limiteDe, setLimiteDe] = useState<OrganismoFila | null>(null)
+  const [pagina, setPagina] = useState(0)
+  const [filasPorPagina, setFilasPorPagina] = useState(TAMANOS_PAGINA[0])
+  const tablaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!autorizado) {
@@ -138,6 +144,21 @@ export default function AdminOrganismos() {
   })
   const totalActivos = organismos.filter((o) => o.activo).length
 
+  // La lista ya está en memoria: se corta por páginas. Si al activar o desactivar
+  // una fila la última página queda vacía, se vuelve a la última que tenga filas.
+  const totalPaginas = Math.max(1, Math.ceil(organismosFiltrados.length / filasPorPagina))
+  const paginaActual = Math.min(pagina, totalPaginas - 1)
+  const organismosPagina = organismosFiltrados.slice(
+    paginaActual * filasPorPagina,
+    (paginaActual + 1) * filasPorPagina,
+  )
+
+  function irAPagina(nueva: number) {
+    setPagina(nueva)
+    // Al cambiar de página se vuelve al inicio de la tabla.
+    tablaRef.current?.scrollIntoView({ block: 'start' })
+  }
+
   async function alternarActivo(organismo: OrganismoFila) {
     if (organismo.activo) {
       const ops = operadoresPorOrganismo.get(organismo.id)
@@ -177,14 +198,9 @@ export default function AdminOrganismos() {
   }
 
   return (
-    <div className={styles.page}>
-      <Navbar />
-
+    <>
       <main className={`${styles.main} ${styles.mainAncho}`}>
         <div>
-          <Link to="/admin" className={styles.volver}>
-            ← Panel de administración
-          </Link>
           <h1 className={styles.title}>Organismos activos</h1>
           <p className={styles.subtitle}>
             Activa o desactiva municipalidades del catálogo. Un reporte se asigna a la
@@ -205,7 +221,10 @@ export default function AdminOrganismos() {
                 type="search"
                 className={styles.input}
                 value={filtro}
-                onChange={(e) => setFiltro(e.target.value)}
+                onChange={(e) => {
+                  setFiltro(e.target.value)
+                  setPagina(0)
+                }}
                 placeholder="Comuna, nombre o id…"
               />
             </label>
@@ -214,7 +233,10 @@ export default function AdminOrganismos() {
               <select
                 className={styles.input}
                 value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value as FiltroEstado)}
+                onChange={(e) => {
+                  setFiltroEstado(e.target.value as FiltroEstado)
+                  setPagina(0)
+                }}
               >
                 <option value="">Todos</option>
                 <option value="activos">Activos</option>
@@ -226,7 +248,10 @@ export default function AdminOrganismos() {
               <select
                 className={styles.input}
                 value={filtroRegion}
-                onChange={(e) => setFiltroRegion(e.target.value)}
+                onChange={(e) => {
+                  setFiltroRegion(e.target.value)
+                  setPagina(0)
+                }}
               >
                 <option value="">Todas</option>
                 {regiones.map((region) => (
@@ -250,7 +275,7 @@ export default function AdminOrganismos() {
           )}
 
           {organismosFiltrados.length > 0 && (
-            <div className={styles.tableWrapper}>
+            <div className={styles.tableWrapper} ref={tablaRef}>
               <table className={`${styles.table} ${styles.tablaOrganismos}`}>
                 <thead>
                   <tr>
@@ -270,7 +295,7 @@ export default function AdminOrganismos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {organismosFiltrados.map((organismo) => {
+                  {organismosPagina.map((organismo) => {
                     const ops = operadoresPorOrganismo.get(organismo.id)
                     const reportes = reportesPorOrganismo?.get(organismo.id)
                     return (
@@ -337,6 +362,20 @@ export default function AdminOrganismos() {
               </table>
             </div>
           )}
+          <PaginadorPaginas
+            pagina={paginaActual}
+            totalPaginas={totalPaginas}
+            total={organismosFiltrados.length}
+            tamano={filasPorPagina}
+            tamanos={TAMANOS_PAGINA}
+            onTamano={(n) => {
+              setFilasPorPagina(n)
+              setPagina(0)
+            }}
+            idSelector="filas-organismos"
+            etiqueta="Paginación de organismos"
+            onCambiar={irAPagina}
+          />
           <p className={styles.notaTabla}>
             Operadores: activos / total. Cuentas: las creadas desde el portal para sus operadores.
           </p>
@@ -353,6 +392,6 @@ export default function AdminOrganismos() {
         </Suspense>
       )}
       {dialogo}
-    </div>
+    </>
   )
 }

@@ -25,8 +25,9 @@
   --alto-navbar: 65px;
 
   color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
-    sans-serif;
+  font-family:
+    'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI',
+    Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   color: var(--ca-ink);
   -webkit-font-smoothing: antialiased;

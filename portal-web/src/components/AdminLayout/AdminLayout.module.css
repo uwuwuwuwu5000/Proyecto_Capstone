@@ -1,0 +1,257 @@
+/* Marco del panel de administración: barra lateral + pantalla. */
+
+.marco {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.cuerpo {
+  --ancho-barra: 256px;
+  display: grid;
+  grid-template-columns: var(--ancho-barra) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.cuerpoColapsado {
+  --ancho-barra: 68px;
+}
+
+.barra {
+  position: sticky;
+  top: var(--alto-navbar);
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--alto-navbar));
+  padding: 16px 12px 12px;
+  border-right: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 16px;
+}
+
+.grupoTitulo {
+  margin: 0 0 4px;
+  padding: 0 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--ca-muted);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.item:hover {
+  background: rgba(28, 169, 201, 0.07);
+  color: var(--ca-ink);
+}
+
+.item:focus-visible,
+.colapsar:focus-visible,
+.botonCajon:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: -2px;
+}
+
+.itemActivo,
+.itemActivo:hover {
+  background: rgba(28, 169, 201, 0.13);
+  border-color: rgba(28, 169, 201, 0.4);
+  color: var(--ca-ink);
+}
+
+.icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+}
+
+.itemActivo .icono {
+  color: var(--ca-signal);
+}
+
+.titulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insignia {
+  flex: none;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.colapsar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  align-self: flex-end;
+  width: 40px;
+  height: 40px;
+  margin-top: 12px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(165, 180, 195, 0.14);
+  color: var(--ca-ink);
+  cursor: pointer;
+}
+
+.colapsar:hover {
+  background: rgba(165, 180, 195, 0.26);
+}
+
+.contenido {
+  min-width: 0;
+}
+
+.botonCajon,
+.telon {
+  display: none;
+}
+
+/* ---- Barra contraída: solo iconos ---- */
+.cuerpoColapsado .titulo,
+.cuerpoColapsado .grupoTitulo {
+  display: none;
+}
+
+.cuerpoColapsado .item {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.cuerpoColapsado .colapsar {
+  align-self: center;
+}
+
+.cuerpoColapsado .insignia {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 0.64rem;
+  line-height: 16px;
+}
+
+.cuerpoColapsado .grupo {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(165, 180, 195, 0.18);
+}
+
+/* ---- Teléfono y tablet angosta: la barra es un cajón ---- */
+@media (max-width: 899px) {
+  .cuerpo,
+  .cuerpoColapsado {
+    display: block;
+  }
+
+  .botonCajon {
+    display: inline-flex;
+    align-items: center;
+    margin: 12px 16px 0;
+    min-height: 40px;
+    padding: 6px 14px;
+    border: 1px solid var(--ca-line);
+    border-radius: 10px;
+    background: var(--ca-surface);
+    color: var(--ca-ink);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .telon {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .barra {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 41;
+    width: min(300px, 86vw);
+    height: 100dvh;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition:
+      transform 0.2s ease,
+      visibility 0.2s;
+  }
+
+  .barraAbierta {
+    transform: none;
+    visibility: visible;
+  }
+
+  /* En el cajón siempre se ven los títulos, aunque la barra esté contraída. */
+  .cuerpoColapsado .titulo,
+  .cuerpoColapsado .grupoTitulo {
+    display: block;
+  }
+
+  .cuerpoColapsado .item {
+    justify-content: flex-start;
+    padding-inline: 10px;
+  }
+
+  .colapsar {
+    display: none;
+  }
+}

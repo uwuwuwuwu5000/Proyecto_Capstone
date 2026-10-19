@@ -1,4 +1,5 @@
 import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore'
+import { FirebaseError } from 'firebase/app'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 
@@ -24,6 +25,15 @@ export interface Reporte {
   lng: number | null
   /** 'portal_admin' si lo creó un administrador desde el portal; null si vino de la app. */
   origen: string | null
+  /**
+   * Cuándo pasó por «Resuelto». Solo existe en reportes que pasaron por ese
+   * estado después de que se agregó el campo; los anteriores no lo tienen.
+   */
+  resueltoAt?: Date | null
+  /** Milisegundos entre la creación y la resolución (se guarda junto con `resueltoAt`). */
+  tiempoResolucionMs?: number | null
+  /** Cuándo se cerró sin haber pasado por «Resuelto» (solo reportes posteriores al campo). */
+  cerradoSinResolverAt?: Date | null
 }
 
 export interface OperadorResumen {
@@ -65,6 +75,10 @@ export function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte {
     lat: typeof ubicacion?.lat === 'number' ? ubicacion.lat : null,
     lng: typeof ubicacion?.lng === 'number' ? ubicacion.lng : null,
     origen: typeof data.origen === 'string' ? data.origen : null,
+    resueltoAt: typeof data.resueltoAt?.toDate === 'function' ? data.resueltoAt.toDate() : null,
+    tiempoResolucionMs: typeof data.tiempoResolucionMs === 'number' ? data.tiempoResolucionMs : null,
+    cerradoSinResolverAt:
+      typeof data.cerradoSinResolverAt?.toDate === 'function' ? data.cerradoSinResolverAt.toDate() : null,
   }
 }
 
@@ -89,20 +103,35 @@ export interface AutorCambio {
 }
 
 /**
- * Cambia el estado y deja la entrada en statusHistory en el mismo lote, igual
- * que la app móvil. Las reglas validan la transición y que quien escribe
- * pueda gestionar este reporte. El nombre y rol del autor quedan guardados
- * para que el historial público muestre quién hizo cada cambio.
+ * Campos de resolución que acompañan al cambio de estado (las reglas los aceptan
+ * pero no los exigen; ver cambioDeEstadoValido en firestore.rules):
+ *  - al pasar a «resuelto»: `resueltoAt` y `tiempoResolucionMs`;
+ *  - al cerrar sin haber pasado por «resuelto»: `cerradoSinResolverAt`.
  */
-export async function cambiarEstadoReporte(
+function camposDeResolucion(reporte: Reporte, hacia: string): Record<string, unknown> {
+  if (hacia === 'resuelto' && reporte.fecha) {
+    return {
+      resueltoAt: serverTimestamp(),
+      // Nunca negativo: el reloj de quien creó el reporte pudo ir adelantado.
+      tiempoResolucionMs: Math.max(0, Math.round(Date.now() - reporte.fecha.getTime())),
+    }
+  }
+  if (hacia === 'cerrado' && reporte.estado !== 'resuelto') {
+    return { cerradoSinResolverAt: serverTimestamp() }
+  }
+  return {}
+}
+
+async function escribirCambioDeEstado(
   reporte: Reporte,
   hacia: string,
   comentario: string,
   autor: AutorCambio,
+  extra: Record<string, unknown>,
 ): Promise<void> {
   const reporteRef = doc(db, 'reports', reporte.id)
   const lote = writeBatch(db)
-  lote.update(reporteRef, { estado: hacia, updatedAt: serverTimestamp() })
+  lote.update(reporteRef, { estado: hacia, updatedAt: serverTimestamp(), ...extra })
   lote.set(doc(collection(reporteRef, 'statusHistory')), {
     autorUid: autor.uid,
     ...(autor.nombre ? { autorNombre: autor.nombre } : {}),
@@ -114,4 +143,32 @@ export async function cambiarEstadoReporte(
     createdAt: serverTimestamp(),
   })
   await lote.commit()
+}
+
+/**
+ * Cambia el estado y deja la entrada en statusHistory en el mismo lote, igual
+ * que la app móvil. Las reglas validan la transición y que quien escribe
+ * pueda gestionar este reporte. El nombre y rol del autor quedan guardados
+ * para que el historial público muestre quién hizo cada cambio.
+ *
+ * Etapa blanda de los campos de resolución: si las reglas rechazan el cambio
+ * con esos campos (p. ej. un reloj del dispositivo muy desviado, o reglas aún
+ * sin actualizar), se reintenta sin ellos: el cambio de estado nunca debe
+ * quedar bloqueado por un dato de análisis.
+ */
+export async function cambiarEstadoReporte(
+  reporte: Reporte,
+  hacia: string,
+  comentario: string,
+  autor: AutorCambio,
+): Promise<void> {
+  const extra = camposDeResolucion(reporte, hacia)
+  try {
+    await escribirCambioDeEstado(reporte, hacia, comentario, autor, extra)
+  } catch (err) {
+    const rechazado = err instanceof FirebaseError && err.code === 'permission-denied'
+    if (!rechazado || Object.keys(extra).length === 0) throw err
+    console.warn('Las reglas rechazaron los campos de resolución; se reintenta sin ellos.')
+    await escribirCambioDeEstado(reporte, hacia, comentario, autor, {})
+  }
 }
