@@ -22,14 +22,14 @@ import {
   ToastController,
 } from '@ionic/angular';
 
-import { SupportError, SupportService } from '../../services/support.service';
+import { SupportError, SupportService } from '../../datos/support.service';
 import {
   ASUNTO_MAX,
   ASUNTO_MIN,
   MENSAJE_MAX,
   MENSAJE_MIN,
   TipoTicket,
-} from '../../models/support.model';
+} from '../../modelo/support.model';
 
 /**
  * Creación de una conversación con soporte.

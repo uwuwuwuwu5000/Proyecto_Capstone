@@ -7,7 +7,8 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
  * Quejas y sugerencias: el ciudadano abre tickets y conversa con el equipo;
  * el equipo los atiende desde su bandeja.
  *
- * Código: todavía en src/app/pages (support, support-new, support-chat, support-inbox).
+ * Contenido: paginas/ (support, support-new, support-chat y support-inbox),
+ * datos/support.service.ts y modelo/support.model.ts.
  */
 export const MODULO_SOPORTE: ModuloApp = {
   id: 'soporte',
@@ -17,23 +18,23 @@ export const MODULO_SOPORTE: ModuloApp = {
     {
       path: 'support',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/support/support.page').then((m) => m.SupportPage),
+      loadComponent: () => import('./paginas/support/support.page').then((m) => m.SupportPage),
     },
     {
       path: 'support-new',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/support-new/support-new.page').then((m) => m.SupportNewPage),
+      loadComponent: () => import('./paginas/support-new/support-new.page').then((m) => m.SupportNewPage),
     },
     {
       // Chat compartido: lo abren tanto el ciudadano como el equipo de soporte.
       path: 'support/:id',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/support-chat/support-chat.page').then((m) => m.SupportChatPage),
+      loadComponent: () => import('./paginas/support-chat/support-chat.page').then((m) => m.SupportChatPage),
     },
     {
       path: 'support-inbox',
       canActivate: [staffGuard],
-      loadComponent: () => import('../../pages/support-inbox/support-inbox.page').then((m) => m.SupportInboxPage),
+      loadComponent: () => import('./paginas/support-inbox/support-inbox.page').then((m) => m.SupportInboxPage),
     },
   ],
   accesos: [

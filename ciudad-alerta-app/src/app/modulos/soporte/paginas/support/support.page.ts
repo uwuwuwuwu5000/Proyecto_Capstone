@@ -14,14 +14,14 @@ import {
 import { addIcons } from 'ionicons';
 import { addCircleOutline, chatbubblesOutline, refreshOutline } from 'ionicons/icons';
 
-import { AuthService } from '../../services/auth.service';
-import { SupportService } from '../../services/support.service';
+import { AuthService } from '../../../../services/auth.service';
+import { SupportService } from '../../datos/support.service';
 import {
   COLORES_ESTADO_TICKET,
   ETIQUETAS_ESTADO_TICKET,
   ETIQUETAS_TIPO,
   SupportTicket,
-} from '../../models/support.model';
+} from '../../modelo/support.model';
 
 /** Listado de las conversaciones de soporte del ciudadano. */
 @Component({

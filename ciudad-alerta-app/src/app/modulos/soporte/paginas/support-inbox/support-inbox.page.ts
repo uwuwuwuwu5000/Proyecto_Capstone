@@ -16,7 +16,7 @@ import {
 import { addIcons } from 'ionicons';
 import { refreshOutline } from 'ionicons/icons';
 
-import { FiltrosBandeja, SupportService } from '../../services/support.service';
+import { FiltrosBandeja, SupportService } from '../../datos/support.service';
 import {
   COLORES_ESTADO_TICKET,
   ETIQUETAS_ESTADO_TICKET,
@@ -24,7 +24,7 @@ import {
   EstadoTicket,
   SupportTicket,
   TipoTicket,
-} from '../../models/support.model';
+} from '../../modelo/support.model';
 
 /**
  * Bandeja del equipo de soporte: todas las quejas y sugerencias recibidas.

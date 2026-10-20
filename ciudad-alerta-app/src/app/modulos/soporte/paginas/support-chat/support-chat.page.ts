@@ -29,8 +29,8 @@ import {
 import { addIcons } from 'ionicons';
 import { ellipsisVertical, sendOutline } from 'ionicons/icons';
 
-import { AuthService } from '../../services/auth.service';
-import { SupportError, SupportService } from '../../services/support.service';
+import { AuthService } from '../../../../services/auth.service';
+import { SupportError, SupportService } from '../../datos/support.service';
 import {
   COLORES_ESTADO_TICKET,
   ETIQUETAS_ESTADO_TICKET,
@@ -39,7 +39,7 @@ import {
   MENSAJE_MAX,
   SupportMessage,
   SupportTicket,
-} from '../../models/support.model';
+} from '../../modelo/support.model';
 
 /**
  * Conversación de soporte. La usan tanto el ciudadano como el equipo de

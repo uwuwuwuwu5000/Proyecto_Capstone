@@ -19,8 +19,8 @@ import { FirebaseError } from 'firebase/app';
 import { Observable } from 'rxjs';
 import { NgZone } from '@angular/core';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { AuthService } from './auth.service';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { AuthService } from '../../../services/auth.service';
 import {
   ASUNTO_MAX,
   ASUNTO_MIN,
@@ -32,7 +32,7 @@ import {
   SupportTicket,
   TRANSICIONES_TICKET,
   TipoTicket,
-} from '../models/support.model';
+} from '../modelo/support.model';
 
 export class SupportError extends Error {
   constructor(

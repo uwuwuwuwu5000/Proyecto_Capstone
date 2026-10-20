@@ -1,2 +1,2 @@
-/** API pública del módulo. Por ahora solo el manifiesto: su código sigue en src/app/pages. */
+/** API pública del módulo de soporte. */
 export { MODULO_SOPORTE } from './soporte.modulo';
