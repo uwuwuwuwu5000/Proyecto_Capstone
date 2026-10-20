@@ -11,7 +11,7 @@
  * Solo edita src/app/modulos.config.ts (activar/desactivar) o crea la carpeta
  * del módulo nuevo (nuevo). Después: `npm run diagnostico` y `ionic serve`.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -105,6 +105,18 @@ function cambiar(activar) {
   console.log('  Recarga la app (ionic serve) o vuelve a generar el APK para ver el cambio.\n');
 }
 
+/**
+ * Nombre del archivo de guards tal como está en el proyecto (hoy
+ * `guards/auth-guard.ts`). Se busca el que exporta authGuard para no
+ * escribir un import a un archivo que no existe.
+ */
+function archivoDeGuards() {
+  const carpeta = join(SRC, 'app', 'guards');
+  const archivos = existsSync(carpeta) ? readdirSync(carpeta).filter((f) => f.endsWith('.ts') && !f.endsWith('.spec.ts')) : [];
+  const conGuard = archivos.find((f) => /export\s+const\s+authGuard\b/.test(readFileSync(join(carpeta, f), 'utf8')));
+  return (conGuard ?? 'auth-guard.ts').replace(/\.ts$/, '');
+}
+
 function nuevo() {
   if (!id) salir('Falta el id. Ejemplo: npm run modulo -- nuevo mapa-calor');
   if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(id)) salir(`El id '${id}' debe ir en minúsculas, con guiones: mapa-calor, mi-perfil.`);
@@ -121,13 +133,14 @@ function nuevo() {
 
   const dir = join(inventario.carpeta, id);
   const dirPagina = join(dir, 'paginas', id);
+  const guard = archivoDeGuards();
   mkdirSync(dirPagina, { recursive: true });
 
   writeFileSync(
     join(dir, `${id}.modulo.ts`),
     `import { appsOutline } from 'ionicons/icons';
 
-import { ${staff ? 'staffGuard' : 'authGuard'} } from '../../guards/auth-guard';
+import { ${staff ? 'staffGuard' : 'authGuard'} } from '../../guards/${guard}';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 
 /**

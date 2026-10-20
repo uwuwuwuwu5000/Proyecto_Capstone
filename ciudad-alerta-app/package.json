@@ -15,7 +15,9 @@
     "diagnostico": "node scripts/diagnostico/codigo.mjs",
     "diagnostico:build": "node scripts/diagnostico/codigo.mjs --build",
     "diagnostico:datos": "node scripts/diagnostico/datos.mjs",
-    "diagnostico:reglas": "node scripts/diagnostico/reglas.mjs"
+    "diagnostico:reglas": "node scripts/diagnostico/reglas.mjs",
+    "modulo": "node scripts/modulo.mjs",
+    "modulos": "node scripts/modulo.mjs lista"
   },
   "private": true,
   "dependencies": {
