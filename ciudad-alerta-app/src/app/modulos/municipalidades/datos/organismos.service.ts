@@ -12,9 +12,9 @@ import {
   writeBatch,
 } from 'firebase/firestore';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { CatalogoComunasService } from './catalogo-comunas.service';
-import { OrganismoDoc } from '../models/report.model';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { CatalogoComunasService } from '../../../services/catalogo-comunas.service';
+import { OrganismoDoc } from '../../../models/report.model';
 
 /**
  * Escrituras por lote.

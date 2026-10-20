@@ -10,7 +10,9 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
  * cargado) y reemplazarlo por un mapa de calor. Para quitarlo basta con
  * `activo: false` en modulos.config.ts.
  *
- * Código: todavía en src/app/pages/admin-organismos.
+ * Contenido: paginas/admin-organismos y datos/organismos.service.ts (la carga
+ * del catálogo a Firestore). La asignación automática de reportes no depende
+ * de este módulo: usa el catálogo local de services/catalogo-comunas.service.ts.
  */
 export const MODULO_MUNICIPALIDADES: ModuloApp = {
   id: 'municipalidades',
@@ -21,7 +23,7 @@ export const MODULO_MUNICIPALIDADES: ModuloApp = {
       path: 'admin-organismos',
       canActivate: [staffGuard],
       loadComponent: () =>
-        import('../../pages/admin-organismos/admin-organismos.page').then((m) => m.AdminOrganismosPage),
+        import('./paginas/admin-organismos/admin-organismos.page').then((m) => m.AdminOrganismosPage),
     },
   ],
   accesos: [
