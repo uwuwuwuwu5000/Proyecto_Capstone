@@ -6,8 +6,15 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 /**
  * Crear reportes, ver los propios y el detalle de cualquier reporte.
  *
- * Código: todavía en src/app/pages (report, my-reports, report-detail). Se
- * muda a esta carpeta en la siguiente etapa; el manifiesto ya lo controla.
+ * Contenido:
+ *  - paginas/report          crear un reporte (foto, ubicación, duplicados)
+ *  - paginas/my-reports      historial propio
+ *  - paginas/report-detail   detalle, confirmación y gestión de estado
+ *  - componentes/similar-reports
+ *  - datos/confirmation.service.ts y datos/duplicate-detection.service.ts
+ *
+ * El detalle deja la ranura `detalle-reporte.verificacion` y las tarjetas
+ * `tarjeta-reporte.insignias`; el sistema de confianza las llena si está activo.
  */
 export const MODULO_REPORTES: ModuloApp = {
   id: 'reportes',
@@ -23,14 +30,14 @@ export const MODULO_REPORTES: ModuloApp = {
     {
       path: 'my-reports',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/my-reports/my-reports.page').then((m) => m.MyReportsPage),
+      loadComponent: () => import('./paginas/my-reports/my-reports.page').then((m) => m.MyReportsPage),
     },
     {
       // El parámetro llega al input `id` del componente (withComponentInputBinding).
       path: 'report/:id',
       canActivate: [authGuard],
       loadComponent: () =>
-        import('../../pages/report-detail/report-detail.page').then((m) => m.ReportDetailPage),
+        import('./paginas/report-detail/report-detail.page').then((m) => m.ReportDetailPage),
     },
   ],
   accesos: [

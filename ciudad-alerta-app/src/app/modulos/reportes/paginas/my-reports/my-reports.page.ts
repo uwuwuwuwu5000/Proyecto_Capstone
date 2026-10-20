@@ -21,15 +21,15 @@ import {
   refreshOutline,
 } from 'ionicons/icons';
 
-import { ConfirmationService } from '../../services/confirmation.service';
-import { ReportQueryService } from '../../services/report-query.service';
+import { ConfirmationService } from '../../datos/confirmation.service';
+import { ReportQueryService } from '../../../../services/report-query.service';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
   Report,
   etiquetaCategoria,
-} from '../../models/report.model';
-import { RanuraComponent } from '../../nucleo/modulos';
+} from '../../../../models/report.model';
+import { RanuraComponent } from '../../../../nucleo/modulos';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
 @Component({

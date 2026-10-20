@@ -3,7 +3,7 @@ import { IonBadge, IonButton, IonIcon, IonSpinner, ToastController } from '@ioni
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
 
-import { ConfirmationError, ConfirmationService } from '../../../../services/confirmation.service';
+import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { ETIQUETAS_ESTADO, MatchCandidate } from '../../../../models/report.model';
 
 /**

@@ -21,13 +21,13 @@ import {
   refreshOutline,
 } from 'ionicons/icons';
 
-import { MapViewComponent } from '../../compartido/mapa';
-import { ConfirmationError, ConfirmationService } from '../../services/confirmation.service';
-import { ReportQueryService } from '../../services/report-query.service';
-import { ReportService } from '../../services/report.service';
-import { RoutingError, RoutingService } from '../../services/routing.service';
-import { AuthService } from '../../services/auth.service';
-import { RanuraComponent } from '../../nucleo/modulos';
+import { MapViewComponent } from '../../../../compartido/mapa';
+import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
+import { ReportQueryService } from '../../../../services/report-query.service';
+import { ReportService } from '../../../../services/report.service';
+import { RoutingError, RoutingService } from '../../../../services/routing.service';
+import { AuthService } from '../../../../services/auth.service';
+import { RanuraComponent } from '../../../../nucleo/modulos';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
@@ -35,7 +35,7 @@ import {
   ReportStatus,
   StatusChange,
   etiquetaCategoria,
-} from '../../models/report.model';
+} from '../../../../models/report.model';
 
 /** HU-26 · Detalle completo de una incidencia, con confirmación y trazabilidad. */
 @Component({

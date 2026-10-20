@@ -10,9 +10,9 @@ import {
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { AuthService } from './auth.service';
-import { Confirmation } from '../models/report.model';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { AuthService } from '../../../services/auth.service';
+import { Confirmation } from '../../../models/report.model';
 
 export class ConfirmationError extends Error {
   constructor(
