@@ -10,6 +10,7 @@ Es **TypeScript puro**: no importa Angular, React, Ionic ni Firebase, y no tiene
 |---|---|---|
 | `reportes/` | Estados, transiciones, etiquetas, colores, categorías, largo de la descripción | app (y lo mismo que `constants/reportes.ts` del portal) |
 | `reportes/tiempos.ts` | Tiempo de primera atención y de resolución, mediana, promedio, «2 h 15 min» | **portal** (`components/Reportes/tiempos.ts`) |
+| `reportes/gestion.ts` | Quién puede cambiar el estado de un reporte y qué datos de resolución acompañan al cambio (`resueltoAt`, `tiempoResolucionMs`, `cerradoSinResolverAt`) | app y portal (`components/Reportes/reporte.ts`) |
 | `confianza/` | Niveles, pesos, límites diarios, día con desfase UTC−3, validación, veredictos, progreso | app (módulo confianza) |
 | `territorio/` | Normalizar nombres de comunas, códigos CUT, nombre corto de región | app y portal |
 | `territorio/mapa-calor.ts` | Agrupación de reportes por comuna y tramos de intensidad | **portal** (`pages/Admin/mapaCalor.ts`) |
