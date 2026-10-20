@@ -16,6 +16,7 @@ import {
   startAt,
   where,
 } from 'firebase/firestore';
+import { FirebaseError } from 'firebase/app';
 import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 
 import { FIRESTORE } from '../core/firebase.providers';
@@ -39,6 +40,24 @@ export interface FiltrosBandejaReportes {
   /** Comuna exacta, tal como quedó normalizada al detectarla. */
   comuna: string | 'todas';
 }
+
+export interface ReportesDeRegion {
+  /** Del más reciente al más antiguo, ya filtrados. */
+  reportes: Report[];
+  /** Había más que el máximo pedido: se entregan solo los más recientes. */
+  hayMas: boolean;
+}
+
+/** Lo mínimo que se necesita de una región para consultarla. */
+export interface RegionConsultable {
+  /** Igual a `reports.region`: "Región Metropolitana de Santiago". */
+  nombre: string;
+  /** Comunas de la región, para los reportes antiguos sin `region`. */
+  comunas: string[];
+}
+
+/** Firestore acepta hasta 30 valores en un filtro `in`. */
+const MAXIMO_EN_FILTRO_IN = 30;
 
 export interface PaginaReportes {
   reportes: Report[];
@@ -105,6 +124,85 @@ export class ReportQueryService {
       }))
       .filter((item) => item.distanciaMetros <= radioMetros)
       .sort((a, b) => a.distanciaMetros - b.distanciaMetros);
+  }
+
+  /**
+   * Mapa de incidencias · Todos los reportes de una región, del más reciente
+   * al más antiguo, hasta `maximo`.
+   *
+   * Se consulta por `region`, que la app escribe al crear el reporte con el
+   * nombre del catálogo oficial. Es una sola consulta con el índice
+   * `region + createdAt`; si el índice todavía no está desplegado, se repite
+   * sin ordenar para que el mapa funcione igual.
+   *
+   * Con `incluirSinRegion` también busca por comuna los reportes antiguos que
+   * no tienen `region` (de a 30 comunas por consulta). Cuesta lecturas extra:
+   * después de completar la región con scripts/ubicaciones-reportes.mjs
+   * conviene apagarlo en los parámetros del mapa.
+   *
+   * Categoría y estado se filtran sobre el resultado, para no necesitar un
+   * índice por cada combinación.
+   */
+  async porRegion(
+    region: RegionConsultable,
+    filtros: FiltrosMapa = { categoria: 'todas', estado: 'todos' },
+    opciones: { maximo: number; incluirSinRegion: boolean } = { maximo: 500, incluirSinRegion: true },
+  ): Promise<ReportesDeRegion> {
+    const referencia = collection(this.firestore, 'reports');
+    const { maximo } = opciones;
+
+    let principal;
+    try {
+      principal = await getDocs(
+        query(referencia, where('region', '==', region.nombre), orderBy('createdAt', 'desc'), limit(maximo + 1)),
+      );
+    } catch (error) {
+      if (!(error instanceof FirebaseError) || error.code !== 'failed-precondition') {
+        throw error;
+      }
+      console.warn(
+        'Falta el índice reports(region, createdAt). Despliégalo con: firebase deploy --only firestore:indexes',
+      );
+      principal = await getDocs(query(referencia, where('region', '==', region.nombre), limit(maximo + 1)));
+    }
+
+    const porId = new Map<string, Report>();
+    for (const documento of principal.docs) {
+      porId.set(documento.id, { id: documento.id, ...documento.data() } as Report);
+    }
+
+    if (opciones.incluirSinRegion && region.comunas.length) {
+      const grupos: string[][] = [];
+      for (let i = 0; i < region.comunas.length; i += MAXIMO_EN_FILTRO_IN) {
+        grupos.push(region.comunas.slice(i, i + MAXIMO_EN_FILTRO_IN));
+      }
+
+      const antiguos = await Promise.all(
+        grupos.map((comunas) => getDocs(query(referencia, where('comuna', 'in', comunas), limit(maximo)))),
+      );
+
+      for (const snapshot of antiguos) {
+        for (const documento of snapshot.docs) {
+          const datos = documento.data() as Partial<Report>;
+          if (!datos.region && !porId.has(documento.id)) {
+            porId.set(documento.id, { id: documento.id, ...datos } as Report);
+          }
+        }
+      }
+    }
+
+    const milisegundos = (r: Report) => (r.createdAt instanceof Timestamp ? r.createdAt.toMillis() : 0);
+    const todos = [...porId.values()].sort((a, b) => milisegundos(b) - milisegundos(a));
+    const filtrados = todos.filter(
+      (r) =>
+        (filtros.categoria === 'todas' || r.categoria === filtros.categoria) &&
+        (filtros.estado === 'todos' || r.estado === filtros.estado),
+    );
+
+    return {
+      reportes: filtrados.slice(0, maximo),
+      hayMas: principal.docs.length > maximo || filtrados.length > maximo,
+    };
   }
 
   /**
