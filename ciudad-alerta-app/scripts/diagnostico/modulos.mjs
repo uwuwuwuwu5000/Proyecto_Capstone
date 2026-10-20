@@ -331,6 +331,27 @@ export function revisarModulos({ informe, SRC, codigo, componentes, rel }) {
     }
   }
 
+  // 5 · Estructura: las pantallas viven en un módulo. En src/app/pages quedan
+  // solo las del esqueleto (acceso e inicio) y src/app/components ya no existe.
+  const ESQUELETO = new Set(['login', 'home']);
+  const carpetaPaginas = join(SRC, 'app', 'pages');
+  if (existsSync(carpetaPaginas)) {
+    for (const entrada of readdirSync(carpetaPaginas, { withFileTypes: true })) {
+      if (entrada.isDirectory() && !ESQUELETO.has(entrada.name)) {
+        avisar('advertencia', `La pantalla pages/${entrada.name} no está dentro de un módulo`, {
+          archivo: rel(join(carpetaPaginas, entrada.name)),
+          solucion: 'Muévela a modulos/<id>/paginas/ y declara su ruta en el manifiesto (GUIA_MODULOS.md, sección 4).',
+        });
+      }
+    }
+  }
+  const carpetaComponentes = join(SRC, 'app', 'components');
+  if (existsSync(carpetaComponentes) && readdirSync(carpetaComponentes).length) {
+    avisar('advertencia', 'Existe src/app/components: lo compartido va en compartido/ y lo propio de una funcionalidad en su módulo', {
+      archivo: rel(carpetaComponentes),
+    });
+  }
+
   // Resumen
   const inactivos = validos.filter((m) => !m.activo && m.enConfig);
   if (inactivos.length) informe.agregar('info', `Módulos desactivados: ${inactivos.map((m) => m.id).join(', ')}`);
