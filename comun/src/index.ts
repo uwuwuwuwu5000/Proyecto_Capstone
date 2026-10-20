@@ -23,3 +23,7 @@ export * from './territorio/codigos';
 export * from './territorio/mapa-calor';
 export * from './geo/cajas';
 export * from './geo/distancia';
+
+// Privacidad de las fotos
+export * from './privacidad/parametros';
+export * from './privacidad/geometria';
