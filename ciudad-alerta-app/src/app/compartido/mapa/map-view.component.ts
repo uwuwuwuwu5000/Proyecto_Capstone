@@ -29,6 +29,14 @@ export interface MapMarker {
   destacado?: boolean;
 }
 
+/** Rectángulo geográfico que el mapa debe mostrar completo. */
+export interface CajaMapa {
+  minLat: number;
+  minLng: number;
+  maxLat: number;
+  maxLng: number;
+}
+
 /** Zona visible del mapa, en el formato que usan las búsquedas por radio. */
 export interface AreaMapa {
   centro: { lat: number; lng: number };
@@ -113,6 +121,19 @@ export class MapViewComponent implements OnDestroy {
    */
   readonly agrupar = input(true);
 
+  /**
+   * Si se entrega, el mapa se ajusta para mostrar este rectángulo completo
+   * cada vez que cambia (por ejemplo, todos los reportes de una región).
+   */
+  readonly encuadre = input<CajaMapa | null>(null);
+
+  /**
+   * Con `false`, el punto de `latitude`/`longitude` se dibuja pero el mapa no
+   * se mueve hacia él: lo decide `encuadre`. Útil cuando el usuario mira otra
+   * región distinta de donde está.
+   */
+  readonly centrarEnUbicacion = input(true);
+
   /** Emite el id del marcador seleccionado. */
   readonly markerSelected = output<string>();
 
@@ -151,6 +172,11 @@ export class MapViewComponent implements OnDestroy {
   private readonly grupos = new Map<number, L.Marker>();
   private readonly alMoverMapa = () => this.renderizarGrupos();
   private readonly alTerminarMovimiento = () => this.emitirArea();
+  /** Encuadre pedido mientras el contenedor todavía no tenía tamaño. */
+  private encuadrePendiente: CajaMapa | null = null;
+  private readonly alCambiarTamano = () => {
+    if (this.encuadrePendiente) this.encuadrar(this.encuadrePendiente);
+  };
   private circulo: L.Circle | null = null;
   private tileErrores = 0;
   /** BUG 50 · Se guardan para poder cancelarlos si el componente se destruye. */
@@ -191,6 +217,14 @@ export class MapViewComponent implements OnDestroy {
 
       if (this.map) {
         this.dibujarMarcadores(marcadores);
+      }
+    });
+
+    effect(() => {
+      const caja = this.encuadre();
+
+      if (this.map && caja) {
+        this.encuadrar(caja);
       }
     });
 
@@ -244,6 +278,7 @@ export class MapViewComponent implements OnDestroy {
     this.map?.remove();
     this.map = null;
     this.marker = null;
+    this.encuadrePendiente = null;
     this.capaMarcadores = null;
     this.circulo = null;
     this.indice = null;
@@ -293,6 +328,7 @@ export class MapViewComponent implements OnDestroy {
       // contenedor cambia de tamaño (Ionic lo monta con altura 0 al principio).
       this.map.on('moveend resize', this.alMoverMapa);
       this.map.on('moveend', this.alTerminarMovimiento);
+      this.map.on('resize', this.alCambiarTamano);
 
       const capa = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: ZOOM_MAXIMO,
@@ -324,6 +360,11 @@ export class MapViewComponent implements OnDestroy {
       }
 
       this.dibujarMarcadores(this.markers());
+
+      const caja = this.encuadre();
+      if (caja) {
+        this.encuadrar(caja);
+      }
 
       // Ionic monta el contenedor con altura 0 en el primer ciclo, y en pantallas
       // que renderizan el mapa dentro de un @if la altura llega todavía más
@@ -363,6 +404,40 @@ export class MapViewComponent implements OnDestroy {
     });
   }
 
+  /**
+   * Muestra el rectángulo completo. Un rectángulo de un solo punto (un único
+   * reporte) se muestra con un acercamiento de calle, no con el máximo.
+   */
+  private encuadrar(caja: CajaMapa): void {
+    const mapa = this.map;
+
+    if (!mapa) {
+      return;
+    }
+
+    // Con el contenedor aún sin alto, Leaflet calcularía un zoom absurdo: se
+    // espera al primer cambio de tamaño.
+    if (mapa.getSize().y === 0) {
+      this.encuadrePendiente = caja;
+      return;
+    }
+
+    this.encuadrePendiente = null;
+
+    if (caja.minLat === caja.maxLat && caja.minLng === caja.maxLng) {
+      mapa.setView([caja.minLat, caja.minLng], 16);
+      return;
+    }
+
+    mapa.fitBounds(
+      [
+        [caja.minLat, caja.minLng],
+        [caja.maxLat, caja.maxLng],
+      ],
+      { padding: [24, 24], maxZoom: 16 },
+    );
+  }
+
   /** Centra el mapa y coloca el marcador en las coordenadas indicadas. */
   private mostrarUbicacion(lat: number, lng: number): void {
     if (!this.map) {
@@ -370,7 +445,10 @@ export class MapViewComponent implements OnDestroy {
     }
 
     const posicion: L.LatLngExpression = [lat, lng];
-    this.map.setView(posicion, this.zoom());
+
+    if (this.centrarEnUbicacion()) {
+      this.map.setView(posicion, this.zoom());
+    }
 
     if (this.marker) {
       this.marker.setLatLng(posicion);
