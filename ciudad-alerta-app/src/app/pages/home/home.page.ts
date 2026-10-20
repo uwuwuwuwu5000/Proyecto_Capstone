@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 
-import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
+import { ThemeToggleComponent } from '../../compartido/tema';
 import {
   AlertController,
   IonButton,
@@ -17,7 +17,7 @@ import {
 import { addIcons } from 'ionicons';
 
 import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
-import { VersionDemoComponent } from '../../components/version-demo/version-demo.component';
+import { VersionDemoComponent } from '../../compartido/version-demo';
 import { logOutOutline, mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';

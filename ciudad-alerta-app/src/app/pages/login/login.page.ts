@@ -25,8 +25,8 @@ import { addIcons } from 'ionicons';
 import { alertCircleOutline, mailOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
-import { ThemeToggleComponent } from '../../components/theme-toggle/theme-toggle.component';
-import { VersionDemoComponent } from '../../components/version-demo/version-demo.component';
+import { ThemeToggleComponent } from '../../compartido/tema';
+import { VersionDemoComponent } from '../../compartido/version-demo';
 
 type Modo = 'login' | 'registro';
 
