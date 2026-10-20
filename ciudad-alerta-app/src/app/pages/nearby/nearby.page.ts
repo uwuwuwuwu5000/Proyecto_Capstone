@@ -17,7 +17,6 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 
-import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
 import { MapMarker, MapViewComponent } from '../../compartido/mapa';
@@ -58,7 +57,6 @@ type EstadoVista =
   styleUrls: ['./nearby.page.scss'],
   imports: [
     RanuraComponent,
-    AvisosCampanaComponent,
     MapViewComponent,
     IonHeader,
     IonToolbar,

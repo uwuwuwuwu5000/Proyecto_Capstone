@@ -15,7 +15,6 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 
-import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import {
   addCircleOutline,
   documentTextOutline,
@@ -40,7 +39,6 @@ import { RanuraComponent } from '../../nucleo/modulos';
   styleUrls: ['./my-reports.page.scss'],
   imports: [
     RanuraComponent,
-    AvisosCampanaComponent,
     IonHeader,
     IonToolbar,
     IonTitle,

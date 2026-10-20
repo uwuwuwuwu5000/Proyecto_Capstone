@@ -29,6 +29,12 @@ export const RANURAS = {
    * Entradas: `perfil: UserProfile | null`.
    */
   inicioResumen: 'inicio.resumen',
+
+  /**
+   * Botones de la barra superior, a la derecha del título (la campana de
+   * avisos, por ejemplo). Sin entradas. Debe ser un `ion-button` pequeño.
+   */
+  cabeceraAcciones: 'cabecera.acciones',
 } as const;
 
 export type NombreRanura = (typeof RANURAS)[keyof typeof RANURAS];

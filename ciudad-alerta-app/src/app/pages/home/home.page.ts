@@ -16,7 +16,6 @@ import {
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 
-import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import { VersionDemoComponent } from '../../compartido/version-demo';
 import { logOutOutline, mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
 
@@ -30,7 +29,6 @@ import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   imports: [
-    AvisosCampanaComponent,
     RanuraComponent,
     RouterLink,
     ThemeToggleComponent,

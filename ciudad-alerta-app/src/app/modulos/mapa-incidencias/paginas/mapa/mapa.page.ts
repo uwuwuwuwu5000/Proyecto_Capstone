@@ -16,7 +16,6 @@ import { addIcons } from 'ionicons';
 import { locateOutline, refreshOutline, searchOutline } from 'ionicons/icons';
 import { distanceBetween } from 'geofire-common';
 
-import { AvisosCampanaComponent } from '../../../../components/avisos-campana/avisos-campana.component';
 import { AreaMapa, MapMarker, MapViewComponent } from '../../../../compartido/mapa';
 import {
   COLORES_ESTADO,
@@ -33,6 +32,7 @@ import { GeolocationService, LocationError } from '../../../../services/geolocat
 import { HistorialService } from '../../../../services/historial.service';
 import { FiltrosMapa, ReportQueryService } from '../../../../services/report-query.service';
 import { PARAMETROS_MAPA } from '../../parametros';
+import { RanuraComponent } from '../../../../nucleo/modulos';
 
 /**
  * Estados posibles de la pantalla. Distinguirlos evita el mensaje engañoso de
@@ -69,7 +69,7 @@ interface Busqueda {
   templateUrl: './mapa.page.html',
   styleUrls: ['./mapa.page.scss'],
   imports: [
-    AvisosCampanaComponent,
+    RanuraComponent,
     MapViewComponent,
     IonHeader,
     IonToolbar,
