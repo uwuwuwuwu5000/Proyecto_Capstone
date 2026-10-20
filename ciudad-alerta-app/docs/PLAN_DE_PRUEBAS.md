@@ -315,10 +315,19 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-INC-12 | Cerca de mí | Revisar las distancias | En metros bajo 1 km y en km sobre ese valor | B | UX |
 | CP-INC-13 | Cerca de mí, radio 500 m sin datos | Observar | Sugiere ampliar el radio | B | UX |
 | CP-INC-14 | Cerca de mí | Tocar una tarjeta | Abre el detalle correcto | A | F |
-| CP-INC-15 | Reporte antiguo sin `geohash` | Abrir el mapa | No aparece (comportamiento esperado y documentado) | B | I |
+| CP-INC-15 | Reporte antiguo sin `geohash` | Abrir Cerca de mí | No aparece ahí (busca por geohash); en el mapa por región sí. `scripts/ubicaciones-reportes.mjs` lo marca y `--aplicar` le pone geohash | B | I |
 | CP-INC-16 | Cincuenta reportes en el sector | Abrir el mapa | Carga sin bloquear la interfaz | B | NF |
 | CP-INC-17 | Mapa abierto | Revisar el tráfico de red | No se descargan fotografías | A | NF |
 | CP-INC-18 | Permiso de ubicación denegado | Abrir el mapa | Mensaje controlado, sin caída | A | F |
+| CP-INC-19 (MS8) | Reportes creados en Maipú, Cerrillos y Estación Central | Abrir el mapa → Categoría: Todas → Estado: Todos | Cada incidencia aparece en sus coordenadas registradas; ninguna se concentra en Maipú ni en un punto predeterminado | A | F |
+| CP-INC-20 (MS9) | Varias incidencias con coordenadas iguales o a menos de 30 m | Abrir el mapa | Se ve un círculo con el total; al tocarlo el mapa se acerca y se separan; si siguen juntas con el acercamiento máximo, se abre la lista con «Ver detalle» de cada una | A | F |
+| CP-INC-21 | Usuario con ubicación en la Región Metropolitana | Abrir el mapa | El selector dice «Mi región · Metropolitana de Santiago» y aparecen todas las incidencias de la región, no solo las cercanas | A | F |
+| CP-INC-22 | Mapa abierto | Elegir Valparaíso en «Región» | Aparecen solo las incidencias de Valparaíso y el mapa se ajusta a ellas | A | F |
+| CP-INC-23 | Región sin reportes | Elegirla | Mensaje «No hay incidencias en …» y el mapa muestra la región completa | B | UX |
+| CP-INC-24 | Permiso de ubicación denegado | Abrir el mapa y elegir una región | Las incidencias de esa región se ven igual | A | F |
+| CP-INC-25 | Reporte antiguo con comuna y sin campo `region` | Abrir el mapa de su región | Aparece (se busca también por comuna) | B | I |
+| CP-INC-26 | Clave de cuenta de servicio configurada | `node scripts/ubicaciones-reportes.mjs` | Lista reportId, comuna, latitud y longitud de todos los reportes; agrupa los que están en el mismo punto y marca coordenadas faltantes, invertidas o por defecto | B | I |
+| CP-INC-27 | Cualquier lista de selección o diálogo | Abrirla | El botón «Cancelar» se ve en rojo | B | UX |
 
 ---
 
@@ -456,12 +465,12 @@ Ejecutar en este orden; si alguno falla, la entrega se detiene.
 | Validación inicial | CP-SEC-11 a CP-SEC-18, CP-DES-09, CP-DES-10 |
 | HU-20 Coincidencias | CP-DUP-01 a CP-DUP-18 |
 | HU-21/22 Confirmación | CP-CON-01 a CP-CON-12 |
-| HU-25 Mapa de incidencias | CP-INC-01 a CP-INC-18 |
+| HU-25 Mapa de incidencias | CP-INC-01 a CP-INC-27 (MS8 = CP-INC-19, MS9 = CP-INC-20) |
 | HU-26 Detalle | CP-DET-01 a CP-DET-12 |
 | HU-27 Historial | CP-HIS-01 a CP-HIS-11 |
 | HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13 |
 
-**Total: 253 casos** — 164 de prioridad A, 73 de prioridad B y 16 de prioridad C.
+**Total: 262 casos** — 169 de prioridad A, 77 de prioridad B y 16 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
