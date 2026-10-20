@@ -1,0 +1,16 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.contenido {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+}
+
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}

@@ -8,6 +8,7 @@ import { MODULO_MAPA_INCIDENCIAS } from './modulos/mapa-incidencias/mapa-inciden
 import { MODULO_MUNICIPALIDADES } from './modulos/municipalidades/municipalidades.modulo';
 import { MODULO_REPORTES } from './modulos/reportes/reportes.modulo';
 import { MODULO_SOPORTE } from './modulos/soporte/soporte.modulo';
+import { MODULO_PERFIL } from './modulos/perfil/perfil.modulo';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
@@ -38,4 +39,5 @@ export const CONFIG_MODULOS: readonly EntradaModulo[] = [
   { modulo: MODULO_SOPORTE, activo: true },
   { modulo: MODULO_GESTION_REPORTES, activo: true },
   { modulo: MODULO_MUNICIPALIDADES, activo: true },
+  { modulo: MODULO_PERFIL, activo: true },
 ];
