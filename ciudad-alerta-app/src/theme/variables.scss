@@ -196,3 +196,14 @@ html.tema-transicion * {
     transition: none !important;
   }
 }
+
+/*
+ * Feedback Sprint 5 · «Cancelar» en rojo en todas las listas de selección
+ * (categoría, estado, región) y en los diálogos, para distinguirlo de la
+ * acción principal. Ionic dibuja alertas y hojas de acciones sin shadow DOM,
+ * así que una regla global las alcanza; la especificidad supera a la de Ionic.
+ */
+ion-action-sheet .action-sheet-button.action-sheet-cancel,
+ion-alert .alert-button.alert-button-role-cancel {
+  color: var(--ion-color-danger);
+}
