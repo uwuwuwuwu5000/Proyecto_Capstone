@@ -12,9 +12,9 @@ import {
 } from 'firebase/firestore';
 import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { AuthService } from './auth.service';
-import { ImageSimilarityService } from './image-similarity.service';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { AuthService } from '../../../services/auth.service';
+import { ImageSimilarityService } from '../../../services/image-similarity.service';
 import {
   ESTADOS_INACTIVOS,
   GeoPoint,
@@ -23,7 +23,7 @@ import {
   Report,
   ReportCategory,
   VENTANA_COINCIDENCIA_HORAS,
-} from '../models/report.model';
+} from '../../../models/report.model';
 
 export interface ConsultaCoincidencias {
   ubicacion: GeoPoint;

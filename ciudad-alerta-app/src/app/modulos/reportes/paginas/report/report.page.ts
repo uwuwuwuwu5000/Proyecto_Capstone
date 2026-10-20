@@ -34,15 +34,15 @@ import {
   trashOutline,
 } from 'ionicons/icons';
 
-import { MapViewComponent } from '../../compartido/mapa';
-import { SimilarReportsComponent } from '../../components/similar-reports/similar-reports.component';
-import { ComunaDetectada, ComunaService } from '../../services/comuna.service';
-import { DuplicateDetectionService } from '../../services/duplicate-detection.service';
-import { ImageSimilarityService } from '../../services/image-similarity.service';
-import { CameraService, CapturedPhoto, PhotoError } from '../../services/camera.service';
-import { PrivacidadError, PrivacidadService } from '../../services/privacidad.service';
-import { GeolocationService, LocationError } from '../../services/geolocation.service';
-import { ReportService } from '../../services/report.service';
+import { MapViewComponent } from '../../../../compartido/mapa';
+import { SimilarReportsComponent } from '../../componentes/similar-reports/similar-reports.component';
+import { ComunaDetectada, ComunaService } from '../../../../services/comuna.service';
+import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
+import { ImageSimilarityService } from '../../../../services/image-similarity.service';
+import { CameraService, CapturedPhoto, PhotoError } from '../../../../services/camera.service';
+import { PrivacidadError, PrivacidadService } from '../../../../services/privacidad.service';
+import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
+import { ReportService } from '../../../../services/report.service';
 import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
@@ -50,7 +50,7 @@ import {
   MatchCandidate,
   REPORT_CATEGORIES,
   ReportCategory,
-} from '../../models/report.model';
+} from '../../../../models/report.model';
 
 @Component({
   selector: 'app-report',

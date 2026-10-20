@@ -18,7 +18,7 @@ export const MODULO_REPORTES: ModuloApp = {
     {
       path: 'report-new',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/report/report.page').then((m) => m.ReportPage),
+      loadComponent: () => import('./paginas/report/report.page').then((m) => m.ReportPage),
     },
     {
       path: 'my-reports',
