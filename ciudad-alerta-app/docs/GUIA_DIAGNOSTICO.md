@@ -49,7 +49,7 @@ Ejecútalo antes de cada APK y después de pegar código nuevo. Revisa:
 - **Fugas.** `onSnapshot`, `subscribe`, `setInterval` y `addEventListener` sin cancelar en componentes; `getDocs` sobre colecciones completas.
 - **Seguridad del cliente.** `innerHTML`, `bypassSecurityTrust`, `eval`, `console.log` con datos personales, llaves privadas en `src/`, claves de cuenta de servicio o keystores que git subiría.
 - **Android y build.** `appId` distinto entre Capacitor y Gradle, `google-services.json` de otro paquete, `allowBackup` y tráfico sin cifrar, `targetSdkVersion`, estilos de componentes cerca del límite de 4 kB, modelos de privacidad y límites comunales incompletos.
-- **Módulos** (`scripts/diagnostico/modulos.mjs`). Manifiestos, `modulos.config.ts`, dependencias entre módulos, rutas y botones repetidos, íconos sin registrar, ranuras inexistentes, imports que cruzan la frontera de un módulo y los **parámetros del sistema de confianza comparados con `firestore.rules`**. El detalle está en `GUIA_MODULOS.md`, sección 5.
+- **Módulos** (`scripts/diagnostico/modulos.mjs`). Manifiestos, `modulos.config.ts`, dependencias entre módulos, rutas y botones repetidos, íconos sin registrar, ranuras inexistentes, imports que cruzan la frontera de un módulo, pantallas que quedaron fuera de un módulo y los **parámetros del sistema de confianza comparados con `firestore.rules`**. El detalle está en `GUIA_MODULOS.md`, sección 5.
 
 Con `npm run diagnostico:build` además compila en producción y agrega los errores de `ng build` al informe.
 
