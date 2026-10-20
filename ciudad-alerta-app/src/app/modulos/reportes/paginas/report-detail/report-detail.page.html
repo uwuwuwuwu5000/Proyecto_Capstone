@@ -36,12 +36,6 @@
           <dt>Comuna</dt>
           <dd>{{ item.comuna ?? 'Sin identificar' }}</dd>
         </div>
-        @if (puedeGestionar()) {
-          <div class="datos__fila">
-            <dt>Reportado por</dt>
-            <dd>{{ item.autorNombre ?? 'No registrado' }}</dd>
-          </div>
-        }
         <div class="datos__fila">
           <dt><ion-icon name="business-outline" aria-hidden="true"></ion-icon> Responsable</dt>
           <dd>{{ item.organismo?.nombre ?? 'Sin asignar' }}</dd>
@@ -165,32 +159,14 @@
         </section>
       }
 
-      @if (esGestor() && motivoSinGestion(); as motivo) {
-        <section class="bloque gestion">
-          <h2>Gestión</h2>
-          <p class="estado">{{ motivo }}</p>
-        </section>
-      }
-
-      @if (puedeGestionar() && transiciones().length === 0) {
-        <section class="bloque gestion">
-          <h2>Gestión</h2>
-          <p class="estado">Este reporte está cerrado y ya no admite cambios de estado.</p>
-        </section>
-      }
-
-      @if (puedeGestionar() && transiciones().length > 0) {
-        <section class="bloque gestion">
-          <h2>Gestión</h2>
-          <div class="gestion__acciones">
-            @for (estado of transiciones(); track estado) {
-              <ion-button fill="outline" size="small" (click)="cambiarEstado(estado)">
-                {{ etiquetas[estado] }}
-              </ion-button>
-            }
-          </div>
-        </section>
-      }
+      <!--
+        Ranura: con el módulo de gestión activo, quien gestiona este reporte ve
+        aquí el cambio de estado (y otro operador, por qué no puede).
+      -->
+      <app-ranura
+        nombre="detalle-reporte.gestion"
+        [entradas]="{ reporte: item, alCambiar: alCambiarEstado }"
+      />
     }
   </div>
 </ion-content>

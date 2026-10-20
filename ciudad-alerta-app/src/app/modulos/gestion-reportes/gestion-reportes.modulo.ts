@@ -2,13 +2,19 @@ import { albumsOutline } from 'ionicons/icons';
 
 import { staffGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
+import { RANURAS } from '../../nucleo/modulos/ranuras';
 
 /**
- * Bandeja de gestión: el admin ve todas las incidencias; el operador, las
- * asignadas a su organismo. Desde aquí se cambian estados.
+ * Gestión de reportes para operadores y administradores.
  *
- * Contenido: paginas/admin-reports. Las tarjetas dejan la ranura
- * `tarjeta-reporte.insignias` (el sistema de confianza pone ahí su estado).
+ * - paginas/admin-reports: bandeja; el admin ve todas las incidencias y el
+ *   operador las asignadas a su organismo. Sus tarjetas dejan la ranura
+ *   `tarjeta-reporte.insignias` (el sistema de confianza pone ahí su estado).
+ * - componentes/gestion-reporte: bloque «Gestión» del detalle de un reporte
+ *   (ranura `detalle-reporte.gestion`), con el cambio de estado.
+ * - datos/cambio-estado.service: el cambio de estado con su historial.
+ *
+ * Al desactivarlo, nadie puede cambiar estados desde la app.
  */
 export const MODULO_GESTION_REPORTES: ModuloApp = {
   id: 'gestion-reportes',
@@ -35,4 +41,11 @@ export const MODULO_GESTION_REPORTES: ModuloApp = {
     },
   ],
   iconos: { 'albums-outline': albumsOutline },
+  ranuras: [
+    {
+      ranura: RANURAS.detalleReporteGestion,
+      cargar: () =>
+        import('./componentes/gestion-reporte/gestion-reporte.component').then((m) => m.GestionReporteComponent),
+    },
+  ],
 };

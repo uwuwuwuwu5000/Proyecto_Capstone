@@ -1,0 +1,36 @@
+@if (permiso(); as p) {
+  @if (p.esGestor) {
+    <section class="gestion" aria-label="Gestión del reporte">
+      <h2>Gestión</h2>
+
+      @if (!p.puede) {
+        <p class="gestion__nota">{{ p.motivo }}</p>
+      } @else {
+        <dl class="gestion__datos">
+          <dt>Reportado por</dt>
+          <dd>{{ reporte().autorNombre ?? 'No registrado' }}</dd>
+        </dl>
+
+        @if (transiciones().length === 0) {
+          <p class="gestion__nota">Este reporte está cerrado y ya no admite cambios de estado.</p>
+        } @else {
+          <div class="gestion__acciones">
+            @for (estado of transiciones(); track estado) {
+              <ion-button
+                fill="outline"
+                size="small"
+                [disabled]="guardando() !== null"
+                (click)="pedirCambio(estado)"
+              >
+                @if (guardando() === estado) {
+                  <ion-spinner name="crescent" slot="start"></ion-spinner>
+                }
+                {{ etiquetas[estado] }}
+              </ion-button>
+            }
+          </div>
+        }
+      }
+    </section>
+  }
+}

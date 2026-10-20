@@ -1,6 +1,5 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import {
-  AlertController,
   IonBackButton,
   IonBadge,
   IonButton,
@@ -25,14 +24,13 @@ import { MapViewComponent } from '../../../../compartido/mapa';
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { ReportQueryService } from '../../../../services/report-query.service';
 import { ReportService } from '../../../../services/report.service';
-import { RoutingError, RoutingService } from '../../../../services/routing.service';
+import { RoutingService } from '../../../../services/routing.service';
 import { AuthService } from '../../../../services/auth.service';
 import { RanuraComponent } from '../../../../nucleo/modulos';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
   Report,
-  ReportStatus,
   StatusChange,
   etiquetaCategoria,
 } from '../../../../models/report.model';
@@ -64,7 +62,6 @@ export class ReportDetailPage {
   private readonly routingService = inject(RoutingService);
   private readonly authService = inject(AuthService);
   private readonly toastCtrl = inject(ToastController);
-  private readonly alertCtrl = inject(AlertController);
 
   /** Id recibido desde la ruta `/report/:id` con withComponentInputBinding. */
   readonly id = input<string>('');
@@ -97,20 +94,6 @@ export class ReportDetailPage {
   /** null = el historial no se pudo leer, distinto de no tener movimientos. */
   readonly historial = signal<StatusChange[] | null>([]);
 
-  /** Rol de gestión del usuario, sea o no el responsable de este reporte. */
-  readonly esGestor = signal(false);
-
-  /**
-   * Si puede cambiar el estado de este reporte en particular.
-   *
-   * Replica la regla `puedeGestionarReporte`: un admin gestiona cualquier
-   * reporte; un operador, solo los que tienen asignado su `operadorId`. Antes
-   * se mostraban los botones a cualquier operador en cualquier reporte, y el
-   * cambio fallaba con "sin permisos".
-   */
-  readonly puedeGestionar = signal(false);
-  readonly motivoSinGestion = signal<string | null>(null);
-
   readonly esAutor = computed(
     () => this.reporte()?.uid === this.authService.user?.uid,
   );
@@ -125,10 +108,15 @@ export class ReportDetailPage {
     this.confirmaciones.update((total) => (total === null ? null : total + 1));
   };
 
-  readonly transiciones = computed<ReadonlyArray<ReportStatus>>(() => {
-    const reporte = this.reporte();
-    return reporte ? this.routingService.transicionesDisponibles(reporte.estado) : [];
-  });
+  /**
+   * Ranura `detalle-reporte.gestion`: el módulo de gestión cambia el estado y
+   * avisa aquí con el reporte actualizado. El seguimiento se vuelve a leer
+   * para mostrar el movimiento nuevo.
+   */
+  readonly alCambiarEstado = (actualizado: Report): void => {
+    this.reporte.set(actualizado);
+    void this.cargarHistorial(actualizado.id);
+  };
 
   constructor() {
     addIcons({
@@ -226,63 +214,6 @@ export class ReportDetailPage {
     }
   }
 
-  /** HU-28 · Cambio de estado, disponible solo para roles de gestión. */
-  async cambiarEstado(nuevoEstado: ReportStatus): Promise<void> {
-    const reporte = this.reporte();
-
-    if (!reporte) {
-      return;
-    }
-
-    const alert = await this.alertCtrl.create({
-      header: `Marcar como "${ETIQUETAS_ESTADO[nuevoEstado]}"`,
-      inputs: [
-        {
-          name: 'comentario',
-          type: 'textarea',
-          placeholder: 'Comentario para el historial (opcional)',
-        },
-      ],
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Confirmar',
-          role: 'confirm',
-          handler: (datos: { comentario: string }) => {
-            void this.aplicarCambio(nuevoEstado, datos.comentario ?? '');
-            return true;
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  private async aplicarCambio(nuevoEstado: ReportStatus, comentario: string): Promise<void> {
-    const reporte = this.reporte();
-
-    if (!reporte) {
-      return;
-    }
-
-    try {
-      await this.routingService.changeStatus(reporte, nuevoEstado, comentario);
-      this.reporte.set({ ...reporte, estado: nuevoEstado });
-
-      const historial = await this.routingService.getStatusHistory(reporte.id);
-      this.historial.set(historial === null ? null : [...historial].reverse());
-      this.historial.set(await this.routingService.getStatusHistory(reporte.id));
-      await this.toast('Estado actualizado.', 'success');
-    } catch (error) {
-      const mensaje =
-        error instanceof RoutingError
-          ? error.message
-          : 'No se pudo actualizar el estado.';
-      await this.toast(mensaje, 'danger');
-    }
-  }
-
   /**
    * BUG 13 · La carga del reporte y la de los datos complementarios están
    * separadas a propósito. Antes viajaban en un mismo `Promise.all`, y un fallo
@@ -331,52 +262,18 @@ export class ReportDetailPage {
       })
       .catch(() => this.estadoConfirmacion.set('error'));
 
-    void this.routingService
-      .getStatusHistory(reporte.id)
-      .then((historial) =>
-        // v2-D8 · Se invierte para mostrar el movimiento más reciente arriba.
-        this.historial.set(historial === null ? null : [...historial].reverse()),
-      )
-      .catch(() => this.historial.set(null));
-
-    const usuario = this.authService.user;
-
-    if (usuario) {
-      void this.authService
-        .getUserProfile(usuario.uid)
-        .then((perfil) => this.evaluarGestion(reporte, perfil))
-        .catch(() => this.puedeGestionar.set(false));
-    }
+    void this.cargarHistorial(reporte.id);
   }
 
-  private evaluarGestion(
-    reporte: Report,
-    perfil: { role?: string; operadorId?: string | null } | null,
-  ): void {
-    const rol = perfil?.role;
-    this.esGestor.set(rol === 'admin' || rol === 'operador');
-
-    if (rol === 'admin') {
-      this.puedeGestionar.set(true);
-      this.motivoSinGestion.set(null);
-      return;
+  /**
+   * v2-D8 · Más reciente arriba. Antes, tras un cambio de estado se leía dos
+   * veces y la segunda lectura dejaba el orden antiguo.
+   */
+  private async cargarHistorial(reportId: string): Promise<void> {
+    const historial = await this.routingService.getStatusHistory(reportId).catch(() => null);
+    if (this.reporte()?.id === reportId) {
+      this.historial.set(historial === null ? null : [...historial].reverse());
     }
-
-    if (rol === 'operador') {
-      const esSuyo = !!perfil?.operadorId && reporte.operadorId === perfil.operadorId;
-      this.puedeGestionar.set(esSuyo);
-      this.motivoSinGestion.set(
-        esSuyo
-          ? null
-          : reporte.operadorId
-            ? 'Este reporte está asignado a otro operador. Solo él o un administrador pueden cambiar su estado.'
-            : 'Este reporte no tiene operador asignado. Un administrador puede asignarlo o cambiar su estado.',
-      );
-      return;
-    }
-
-    this.puedeGestionar.set(false);
-    this.motivoSinGestion.set(null);
   }
 
   private reiniciarEstado(): void {
@@ -389,14 +286,11 @@ export class ReportDetailPage {
     this.confirmaciones.set(null);
     this.estadoConfirmacion.set('cargando');
     this.historial.set([]);
-    this.puedeGestionar.set(false);
-    this.esGestor.set(false);
-    this.motivoSinGestion.set(null);
   }
 
   private async toast(
     message: string,
-    color: 'success' | 'warning' | 'danger',
+    color: 'success' | 'warning',
   ): Promise<void> {
     const toast = await this.toastCtrl.create({
       message,
