@@ -9,6 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "test:una-vez": "ng test --watch=false",
+    "test:comun": "npm --prefix ../comun test",
     "lint": "ng lint",
     "apk:verificar": "node scripts/apk-demo.mjs --solo-verificar",
     "apk:demo": "node scripts/apk-demo.mjs",

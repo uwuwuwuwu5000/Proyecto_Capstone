@@ -9,6 +9,8 @@ describe('SimilarReportsComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(SimilarReportsComponent);
     component = fixture.componentInstance;
+    // `candidatos` es un input requerido: sin valor, Angular lanza NG0950.
+    fixture.componentRef.setInput('candidatos', []);
     fixture.detectChanges();
   });
 
