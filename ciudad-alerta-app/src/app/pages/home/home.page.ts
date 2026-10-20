@@ -1,9 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 
+import { CerrarSesionComponent } from '../../compartido/sesion';
 import { ThemeToggleComponent } from '../../compartido/tema';
 import {
-  AlertController,
   IonButton,
   IonButtons,
   IonContent,
@@ -11,13 +11,12 @@ import {
   IonIcon,
   IonTitle,
   IonToolbar,
-  LoadingController,
   ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 
 import { VersionDemoComponent } from '../../compartido/version-demo';
-import { logOutOutline, mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
+import { mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
 import { UserProfile } from '../../models/user-profile.model';
@@ -29,6 +28,7 @@ import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
   imports: [
+    CerrarSesionComponent,
     RanuraComponent,
     RouterLink,
     ThemeToggleComponent,
@@ -44,10 +44,7 @@ import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 })
 export class HomePage {
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly loadingCtrl = inject(LoadingController);
   private readonly toastCtrl = inject(ToastController);
-  private readonly alertCtrl = inject(AlertController);
   protected readonly modulos = inject(ModulosService);
 
   /** Usuario autenticado expuesto como señal por el servicio. */
@@ -73,7 +70,7 @@ export class HomePage {
 
   constructor() {
     // Los íconos de los botones de cada módulo los registra provideModulos().
-    addIcons({ logOutOutline, mailUnreadOutline, personCircleOutline });
+    addIcons({ mailUnreadOutline, personCircleOutline });
   }
 
   /**
@@ -186,53 +183,5 @@ export class HomePage {
       buttons: [{ text: 'Cerrar', role: 'cancel' }],
     });
     await toast.present();
-  }
-
-  /** CA-77 · Cierre de sesión con confirmación previa. */
-  async confirmarCierreSesion(): Promise<void> {
-    const alert = await this.alertCtrl.create({
-      header: 'Cerrar sesión',
-      message: 'Tendrás que ingresar tus credenciales la próxima vez.',
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        {
-          text: 'Cerrar sesión',
-          role: 'destructive',
-          handler: () => {
-            void this.cerrarSesion();
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  private async cerrarSesion(): Promise<void> {
-    const loading = await this.loadingCtrl.create({
-      message: 'Cerrando sesión',
-      spinner: 'crescent',
-    });
-    await loading.present();
-
-    try {
-      await this.authService.logout();
-      await loading.dismiss();
-      await this.router.navigateByUrl('/login', { replaceUrl: true });
-    } catch (error) {
-      await loading.dismiss();
-      const mensaje =
-        error instanceof AuthFailure
-          ? error.message
-          : 'No pudimos cerrar la sesión. Intenta nuevamente.';
-
-      const toast = await this.toastCtrl.create({
-        message: mensaje,
-        duration: 3000,
-        color: 'danger',
-        position: 'bottom',
-      });
-      await toast.present();
-    }
   }
 }

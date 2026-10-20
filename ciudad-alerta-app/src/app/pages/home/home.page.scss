@@ -194,16 +194,6 @@
   margin: 0;
 }
 
-/* Feedback Sprint 5 · Cerrar sesión en rojo, para que no se confunda con
-   las acciones de la app. */
-.accion-salir {
-  --color: var(--ion-color-danger);
-  --border-color: var(--ion-color-danger);
-  --border-radius: 10px;
-  text-transform: none;
-  font-weight: 600;
-}
-
 *:focus-visible {
   outline: 2px solid var(--ca-signal);
   outline-offset: 2px;
