@@ -79,3 +79,61 @@ export function formatearDuracion(ms: number): string {
   const redondeado = Math.round(dias * 10) / 10;
   return redondeado === 1 ? '1 día' : `${redondeado.toLocaleString('es-CL')} días`;
 }
+
+/** Cómo terminó (o no) un reporte, para mostrarlo. */
+export type EstadoResolucion =
+  /**
+   * `ms` null si no hay cómo calcularlo. `segun`: 'registro' si viene de
+   * `tiempoResolucionMs` (el dato oficial), 'historial' si se dedujo del
+   * seguimiento (reportes resueltos antes de guardar ese campo).
+   */
+  | { tipo: 'resuelto'; ms: number | null; segun: 'registro' | 'historial' | null }
+  | { tipo: 'cerrado_sin_resolver' }
+  /** Cerrado, pero sin datos para saber si antes se resolvió. */
+  | { tipo: 'cerrado' }
+  | { tipo: 'abierto' };
+
+/**
+ * Resolución de un reporte a partir de lo que se tenga: los campos que
+ * guardan la app y el portal al cambiar de estado (`tiempoResolucionMs`,
+ * `cerradoSinResolverAt`) y, si no están, el historial de estados.
+ */
+export function resolucionDeReporte(datos: {
+  estado: EstadoReporte | string;
+  creado: Date | null;
+  cambios?: readonly CambioConFecha[];
+  tiempoResolucionMs?: number | null;
+  /** true si el reporte tiene `cerradoSinResolverAt`. */
+  cerradoSinResolver?: boolean;
+}): EstadoResolucion {
+  const cambios = datos.cambios ?? [];
+
+  if (typeof datos.tiempoResolucionMs === 'number') {
+    return { tipo: 'resuelto', ms: Math.max(0, datos.tiempoResolucionMs), segun: 'registro' };
+  }
+
+  const resolucion = cambios
+    .filter((c) => c.hacia === 'resuelto')
+    .sort((a, b) => (a.fecha?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.fecha?.getTime() ?? Number.MAX_SAFE_INTEGER))[0];
+
+  if (datos.estado === 'resuelto' || resolucion) {
+    if (resolucion?.fecha && datos.creado) {
+      return {
+        tipo: 'resuelto',
+        ms: Math.max(0, resolucion.fecha.getTime() - datos.creado.getTime()),
+        segun: 'historial',
+      };
+    }
+    return { tipo: 'resuelto', ms: null, segun: null };
+  }
+
+  if (datos.cerradoSinResolver) return { tipo: 'cerrado_sin_resolver' };
+
+  if (datos.estado === 'cerrado') {
+    // Con historial y sin «resuelto» en él, se cerró sin resolver; sin
+    // historial no se sabe.
+    return cambios.length > 0 ? { tipo: 'cerrado_sin_resolver' } : { tipo: 'cerrado' };
+  }
+
+  return { tipo: 'abierto' };
+}

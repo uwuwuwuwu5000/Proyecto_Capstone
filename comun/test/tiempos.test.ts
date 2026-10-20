@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { calcularTiempos, formatearDuracion, mediana, promedio } from '../src';
+import { calcularTiempos, formatearDuracion, mediana, promedio, resolucionDeReporte } from '../src';
 
 const creado = new Date('2026-10-01T12:00:00Z');
 const horas = (h: number) => new Date(creado.getTime() + h * 3_600_000);
@@ -60,5 +60,55 @@ describe('estadísticas y formato', () => {
     expect(formatearDuracion(24 * 3_600_000)).toBe('1 día');
     expect(formatearDuracion(3.5 * 24 * 3_600_000)).toBe('3,5 días');
     expect(formatearDuracion(18 * 24 * 3_600_000)).toBe('18 días');
+  });
+});
+
+describe('resolucionDeReporte (F12)', () => {
+  it('usa tiempoResolucionMs cuando el reporte lo trae: es el dato oficial', () => {
+    expect(
+      resolucionDeReporte({
+        estado: 'cerrado',
+        creado,
+        cambios: [{ fecha: horas(99), hacia: 'resuelto' }],
+        tiempoResolucionMs: 5 * 3_600_000,
+      }),
+    ).toEqual({ tipo: 'resuelto', ms: 5 * 3_600_000, segun: 'registro' });
+  });
+
+  it('sin el campo, lo deduce del historial (reportes antiguos)', () => {
+    expect(
+      resolucionDeReporte({
+        estado: 'cerrado',
+        creado,
+        cambios: [
+          { fecha: horas(60), hacia: 'cerrado' },
+          { fecha: horas(50), hacia: 'resuelto' },
+          { fecha: horas(2), hacia: 'en_revision' },
+        ],
+      }),
+    ).toEqual({ tipo: 'resuelto', ms: 50 * 3_600_000, segun: 'historial' });
+  });
+
+  it('resuelto sin historial ni campo: se sabe que se resolvió, no cuánto tardó', () => {
+    expect(resolucionDeReporte({ estado: 'resuelto', creado })).toEqual({ tipo: 'resuelto', ms: null, segun: null });
+  });
+
+  it('cerrado sin pasar por resuelto', () => {
+    expect(resolucionDeReporte({ estado: 'cerrado', creado, cerradoSinResolver: true })).toEqual({
+      tipo: 'cerrado_sin_resolver',
+    });
+    expect(
+      resolucionDeReporte({ estado: 'cerrado', creado, cambios: [{ fecha: horas(3), hacia: 'cerrado' }] }),
+    ).toEqual({ tipo: 'cerrado_sin_resolver' });
+  });
+
+  it('cerrado sin historial: no se puede saber si se resolvió', () => {
+    expect(resolucionDeReporte({ estado: 'cerrado', creado })).toEqual({ tipo: 'cerrado' });
+  });
+
+  it('un reporte en curso está abierto', () => {
+    expect(
+      resolucionDeReporte({ estado: 'en_proceso', creado, cambios: [{ fecha: horas(2), hacia: 'en_proceso' }] }),
+    ).toEqual({ tipo: 'abierto' });
   });
 });
