@@ -16,9 +16,13 @@
     @for (candidato of candidatos(); track candidato.report.id) {
       <article class="candidato">
         <div class="candidato__cabecera">
-          <span class="candidato__estado">{{ candidato.report.estado }}</span>
+          <span class="candidato__estado">{{ etiquetaEstado(candidato.report.estado) }}</span>
           <ion-badge>{{ (candidato.puntaje * 100).toFixed(0) }}% de coincidencia</ion-badge>
         </div>
+
+        <p class="candidato__distancia">
+          {{ formatearDistancia(candidato.distanciaMetros) }} de tu ubicación
+        </p>
 
         <p class="candidato__descripcion">{{ candidato.report.descripcion }}</p>
 
@@ -38,10 +42,15 @@
             fill="outline"
             size="small"
             expand="block"
-            [disabled]="confirmando() === candidato.report.id"
+            [disabled]="confirmando() !== null"
             (click)="confirmar(candidato)"
           >
-            {{ confirmando() === candidato.report.id ? 'Registrando…' : 'Es el mismo problema' }}
+            @if (confirmando() === candidato.report.id) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+              Registrando…
+            } @else {
+              Es el mismo problema
+            }
           </ion-button>
         }
       </article>

@@ -25,7 +25,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -181,21 +181,52 @@ function versionJava(home) {
   return v[1] === '1' ? Number(v[2]) : Number(v[1]); // "1.8" → 8
 }
 
+/** Subcarpetas de `padre` cuyo nombre parece un JDK (jdk-21, temurin-21, …). */
+function jdksEn(padre, origen) {
+  if (!padre || !existsSync(padre)) return [];
+  try {
+    return readdirSync(padre, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => [origen, join(padre, d.name)]);
+  } catch {
+    return [];
+  }
+}
+
+/** El JDK que Android Studio configuró para Gradle en este proyecto, si lo hay. */
+function javaDeAndroidStudioParaElProyecto() {
+  const archivo = ruta('android', '.gradle', 'config.properties');
+  if (!existsSync(archivo)) return [];
+  const home = leer(archivo).match(/^java\.home=(.+)$/m)?.[1]?.trim().replace(/\\\\/g, '\\').replace(/\\:/g, ':');
+  return home ? [['Gradle JDK del proyecto (Android Studio)', home]] : [];
+}
+
+const usuario = process.env.USERPROFILE ?? process.env.HOME ?? '';
 const candidatosJava = [
+  ...javaDeAndroidStudioParaElProyecto(),
   ['Android Studio', 'C:\\Program Files\\Android\\Android Studio\\jbr'],
   ['Android Studio (Toolbox)', join(process.env.LOCALAPPDATA ?? '', 'Programs', 'Android Studio', 'jbr')],
   ['Android Studio (macOS)', '/Applications/Android Studio.app/Contents/jbr/Contents/Home'],
   ['Android Studio (Linux)', '/opt/android-studio/jbr'],
   ['JAVA_HOME', process.env.JAVA_HOME ?? ''],
-].filter(([, home]) => home && existsSync(home));
+  ...jdksEn(join(usuario, '.jdks'), 'JDK descargado por Android Studio'),
+  ...jdksEn('C:\\Program Files\\Eclipse Adoptium', 'Temurin'),
+  ...jdksEn('C:\\Program Files\\Java', 'Java'),
+  ...jdksEn('C:\\Program Files\\Microsoft', 'Microsoft JDK'),
+  ...jdksEn('C:\\Program Files\\Zulu', 'Zulu'),
+].filter(([, home], i, todos) => home && existsSync(home) && todos.findIndex(([, h]) => h === home) === i);
 
+// Entre los compatibles, el más nuevo (21 antes que 17).
 const descartados = [];
-const elegido = candidatosJava.find(([origen, home]) => {
+const compatibles = [];
+for (const [origen, home] of candidatosJava) {
   const v = versionJava(home);
-  if (v !== null && v >= JAVA_MIN && v <= JAVA_MAX) return true;
-  descartados.push(`${origen} (${home}) = Java ${v ?? '?'}`);
-  return false;
-});
+  if (v === null) continue;
+  if (v >= JAVA_MIN && v <= JAVA_MAX) compatibles.push([origen, home, v]);
+  else descartados.push(`${origen} (${home}) = Java ${v}`);
+}
+compatibles.sort((a, b) => b[2] - a[2]);
+const elegido = compatibles[0];
 
 if (elegido) {
   entorno.JAVA_HOME = elegido[1];
@@ -207,7 +238,8 @@ if (elegido) {
   mal(
     `No se encontró Java ${JAVA_MIN}–${JAVA_MAX} para Gradle.` +
       (descartados.length ? ` Revisados: ${descartados.join('; ')}.` : '') +
-      ' Instala Android Studio o define JAVA_HOME con un JDK 21.',
+      ' Instala un JDK 21: `winget install EclipseAdoptium.Temurin.21.JDK`, o en Android Studio ' +
+      'Settings → Build Tools → Gradle → Gradle JDK → Download JDK → versión 21.',
   );
 }
 

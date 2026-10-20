@@ -16,8 +16,20 @@ import { FIRESTORE } from '../core/firebase.providers';
 import { CatalogoComunasService } from './catalogo-comunas.service';
 import { OrganismoDoc } from '../models/report.model';
 
-/** Firestore admite hasta 500 escrituras por lote; se deja margen. */
-const TAMANO_LOTE = 400;
+/**
+ * Escrituras por lote.
+ *
+ * Firestore admite hasta 500 escrituras por lote, pero las reglas limitan a
+ * 20 las lecturas de documentos (get, exists) en todo el lote. Si la regla
+ * tuviera que leer el perfil del usuario en cada escritura, un lote mayor a 20
+ * se rechazaría con "permiso denegado" aunque el rol fuera correcto.
+ *
+ * Con 10 por lote queda holgura aun en el peor caso: una cuenta administradora
+ * asignada a mano en la consola, cuyo correo no está en la lista y obliga a
+ * leer su perfil en cada escritura. Son 35 lotes en lugar de uno; tarda unos
+ * segundos más y es seguro.
+ */
+const TAMANO_LOTE = 10;
 
 export interface ResultadoSincronizacion {
   escritos: number;

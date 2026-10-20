@@ -1,10 +1,10 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { IonBadge, IonButton, IonIcon, ToastController } from '@ionic/angular';
+import { IonBadge, IonButton, IonIcon, IonSpinner, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
 
 import { ConfirmationError, ConfirmationService } from '../../services/confirmation.service';
-import { MatchCandidate } from '../../models/report.model';
+import { ETIQUETAS_ESTADO, MatchCandidate } from '../../models/report.model';
 
 /**
  * Muestra los reportes cercanos detectados y permite confirmarlos.
@@ -15,7 +15,7 @@ import { MatchCandidate } from '../../models/report.model';
 @Component({
   selector: 'app-similar-reports',
   standalone: true,
-  imports: [IonButton, IonIcon, IonBadge],
+  imports: [IonButton, IonIcon, IonBadge, IonSpinner],
   templateUrl: './similar-reports.component.html',
   styleUrls: ['./similar-reports.component.scss'],
 })
@@ -29,6 +29,8 @@ export class SimilarReportsComponent {
   /** Avisa a la página cuando el usuario confirmó un reporte existente. */
   readonly confirmado = output<string>();
 
+  readonly etiquetas = ETIQUETAS_ESTADO;
+
   readonly confirmando = signal<string | null>(null);
   readonly yaConfirmados = signal<string[]>([]);
 
@@ -36,14 +38,21 @@ export class SimilarReportsComponent {
     addIcons({ checkmarkCircleOutline, warningOutline });
 
     /**
-     * BUG 38 · El componente se reutiliza entre reportes. Sin este reinicio, un
-     * reporte confirmado en una sesión anterior seguía apareciendo como
-     * confirmado frente a candidatos completamente distintos.
+     * BUG 38 · El componente se reutiliza entre reportes, así que el estado se
+     * reinicia con cada conjunto de candidatos.
+     *
+     * v2-D4 · Además se consulta al servidor qué candidatos ya confirmó este
+     * usuario en sesiones anteriores. Antes, el estado vivía solo en memoria y
+     * el primer toque de una sesión nueva terminaba en un rechazo por duplicado.
      */
     effect(() => {
-      this.candidatos();
+      const actuales = this.candidatos();
       this.yaConfirmados.set([]);
       this.confirmando.set(null);
+
+      if (actuales.length > 0) {
+        void this.precargarConfirmaciones(actuales);
+      }
     });
   }
 
@@ -51,7 +60,25 @@ export class SimilarReportsComponent {
     return this.yaConfirmados().includes(reportId);
   }
 
+  /** Etiqueta legible del estado; antes se mostraba el valor crudo (v2-D2). */
+  etiquetaEstado(estado: MatchCandidate['report']['estado']): string {
+    return this.etiquetas[estado] ?? estado;
+  }
+
+  /** v2-D3 · La distancia es la señal más útil para decidir si es duplicado. */
+  formatearDistancia(metros: number): string {
+    return metros < 1000
+      ? `a ${Math.max(10, Math.round(metros / 10) * 10)} m`
+      : `a ${(metros / 1000).toFixed(1)} km`;
+  }
+
   async confirmar(candidato: MatchCandidate): Promise<void> {
+    // v2-D5 · Mientras hay una confirmación en curso no se admite otra: antes
+    // era posible confirmar dos candidatos a la vez con toques rápidos.
+    if (this.confirmando() !== null) {
+      return;
+    }
+
     const reportId = candidato.report.id;
     this.confirmando.set(reportId);
 
@@ -73,6 +100,23 @@ export class SimilarReportsComponent {
       await this.toast(mensaje, 'warning');
     } finally {
       this.confirmando.set(null);
+    }
+  }
+
+  private async precargarConfirmaciones(candidatos: MatchCandidate[]): Promise<void> {
+    const resultados = await Promise.all(
+      candidatos.map(async (candidato) => ({
+        id: candidato.report.id,
+        confirmado: await this.confirmationService.hasConfirmed(candidato.report.id),
+      })),
+    );
+
+    const confirmados = resultados
+      .filter((resultado) => resultado.confirmado === true)
+      .map((resultado) => resultado.id);
+
+    if (confirmados.length > 0) {
+      this.yaConfirmados.update((actuales) => [...actuales, ...confirmados]);
     }
   }
 

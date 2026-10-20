@@ -3,6 +3,13 @@ import { Geolocation } from '@capacitor/geolocation';
 
 import { GeoPoint } from '../models/report.model';
 
+/**
+ * v2-E4 · Antes `requestPermission` devolvía `true` en el catch, así que un
+ * fallo del sistema era indistinguible de un permiso concedido y el flujo
+ * seguía hasta fallar más adelante con un mensaje confuso.
+ */
+export type EstadoPermiso = 'concedido' | 'denegado' | 'error';
+
 export class LocationError extends Error {
   constructor(
     override readonly message: string,
@@ -19,40 +26,43 @@ export class GeolocationService {
    * Solicita el permiso de ubicación solo cuando el usuario va a usar la
    * funcionalidad, nunca al arrancar la app.
    */
-  async requestPermission(): Promise<boolean> {
+  async requestPermission(): Promise<EstadoPermiso> {
     try {
       const estado = await Geolocation.checkPermissions();
 
       if (estado.location === 'granted') {
-        return true;
+        return 'concedido';
       }
 
       if (estado.location === 'denied') {
-        return false;
+        return 'denegado';
       }
 
       const solicitado = await Geolocation.requestPermissions({
         permissions: ['location'],
       });
 
-      return solicitado.location === 'granted';
+      return solicitado.location === 'granted' ? 'concedido' : 'denegado';
     } catch {
-      // En navegador `checkPermissions` puede no estar disponible; en ese caso
-      // el propio getCurrentPosition dispara el diálogo del navegador.
-      return true;
+      // En navegador `checkPermissions` no siempre está implementado. No es un
+      // rechazo: se deja que getCurrentPosition dispare el diálogo nativo.
+      return 'error';
     }
   }
 
   /** Obtiene las coordenadas actuales. Lanza LocationError si no es posible. */
   async getCurrentPosition(): Promise<GeoPoint> {
-    const autorizado = await this.requestPermission();
+    const permiso = await this.requestPermission();
 
-    if (!autorizado) {
+    if (permiso === 'denegado') {
       throw new LocationError(
         'Sin permiso de ubicación no podemos situar el reporte en el mapa. Puedes activarlo en los ajustes del teléfono.',
         'denegado',
       );
     }
+
+    // Con 'error' se continúa: el navegador pedirá el permiso por su cuenta y,
+    // si algo falla de verdad, getCurrentPosition lo reportará con detalle.
 
     try {
       const posicion = await Geolocation.getCurrentPosition({
