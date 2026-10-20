@@ -13,10 +13,10 @@ import {
 import { addIcons } from 'ionicons';
 import { checkmarkDoneOutline, notificationsOffOutline } from 'ionicons/icons';
 
-import { AvisosService } from '../../services/avisos.service';
-import { HistorialService } from '../../services/historial.service';
-import { Aviso } from '../../models/aviso.model';
-import { ETIQUETAS_ESTADO } from '../../models/report.model';
+import { AvisosService } from '../../datos/avisos.service';
+import { HistorialService } from '../../../../services/historial.service';
+import { Aviso } from '../../modelo/aviso.model';
+import { ETIQUETAS_ESTADO } from '../../../../models/report.model';
 
 /** Lista de avisos de cambios de estado en los reportes del ciudadano. */
 @Component({

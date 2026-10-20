@@ -3,7 +3,7 @@ import { inject, provideEnvironmentInitializer } from '@angular/core';
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 import { RANURAS } from '../../nucleo/modulos/ranuras';
-import { AvisosService } from '../../services/avisos.service';
+import { AvisosService } from './datos/avisos.service';
 
 /**
  * Campana y lista de avisos de cambios en los reportes propios.
@@ -13,8 +13,8 @@ import { AvisosService } from '../../services/avisos.service';
  * a cada pantalla por la ranura `cabecera.acciones`: si el módulo se
  * desactiva, simplemente no aparece.
  *
- * Código: todavía en src/app/pages/avisos, components/avisos-campana y
- * services/avisos.service.ts.
+ * Contenido: paginas/avisos (la lista), componentes/avisos-campana,
+ * datos/avisos.service.ts (escucha los reportes propios) y modelo/.
  */
 export const MODULO_AVISOS: ModuloApp = {
   id: 'avisos',
@@ -24,7 +24,7 @@ export const MODULO_AVISOS: ModuloApp = {
     {
       path: 'avisos',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/avisos/avisos.page').then((m) => m.AvisosPage),
+      loadComponent: () => import('./paginas/avisos/avisos.page').then((m) => m.AvisosPage),
     },
   ],
   ranuras: [
@@ -32,7 +32,7 @@ export const MODULO_AVISOS: ModuloApp = {
       // La campana va en la barra superior de las pantallas que dejan la ranura.
       ranura: RANURAS.cabeceraAcciones,
       cargar: () =>
-        import('../../components/avisos-campana/avisos-campana.component').then((m) => m.AvisosCampanaComponent),
+        import('./componentes/avisos-campana.component').then((m) => m.AvisosCampanaComponent),
     },
   ],
   proveedores: [provideEnvironmentInitializer(() => void inject(AvisosService))],

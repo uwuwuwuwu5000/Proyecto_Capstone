@@ -17,11 +17,11 @@ import {
   where,
 } from 'firebase/firestore';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { AuthService } from './auth.service';
-import { HistorialService } from './historial.service';
-import { Aviso, EstadoAvisos } from '../models/aviso.model';
-import { Report, StatusChange } from '../models/report.model';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { AuthService } from '../../../services/auth.service';
+import { HistorialService } from '../../../services/historial.service';
+import { Aviso, EstadoAvisos } from '../modelo/aviso.model';
+import { Report, StatusChange } from '../../../models/report.model';
 
 /**
  * Reportes propios que se vigilan.

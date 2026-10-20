@@ -1,6 +1,6 @@
 import { FieldValue, Timestamp } from 'firebase/firestore';
 
-import { ReportStatus } from './report.model';
+import { ReportStatus } from '../../../models/report.model';
 
 /**
  * Aviso para el ciudadano: un cambio de estado en uno de sus reportes.

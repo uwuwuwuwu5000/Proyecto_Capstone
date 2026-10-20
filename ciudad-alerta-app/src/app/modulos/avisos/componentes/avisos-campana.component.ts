@@ -4,7 +4,7 @@ import { IonBadge, IonButton, IonIcon } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { notificationsOutline } from 'ionicons/icons';
 
-import { AvisosService } from '../../services/avisos.service';
+import { AvisosService } from '../datos/avisos.service';
 
 /**
  * Campana con el número de avisos sin ver. Abre la lista de avisos.
