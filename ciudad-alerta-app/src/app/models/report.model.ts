@@ -200,6 +200,30 @@ export const COLORES_ESTADO: Readonly<Record<ReportStatus, string>> = {
 /** Radios disponibles en la página de reportes cercanos, en metros. */
 export const RADIOS_BUSQUEDA: ReadonlyArray<number> = [500, 1000, 2000, 5000];
 
+/**
+ * Mapa `validacion` de un reporte (sistema de confianza). Lo escriben la app
+ * al confirmar y el gestor al dar un veredicto; las reglas comprueban cada
+ * número. Un campo que falta vale 0, falso o null: los reportes anteriores al
+ * sistema no lo tienen.
+ */
+export interface ValidacionReporte {
+  /** Suma de los pesos de las confirmaciones, de 0 en adelante (100 = validado). */
+  puntos?: number;
+  /** Personas que confirmaron con peso mayor que 0. */
+  votos?: number;
+  /** Puntos ≥ 100 y votos ≥ 3. Una vez verdadero, no vuelve a falso. */
+  validado?: boolean;
+  validadoAt?: Timestamp | FieldValue | null;
+  /** Decisión del operador o administrador. */
+  veredicto?: 'real' | 'falso' | null;
+  veredictoPor?: string;
+  veredictoAt?: Timestamp | FieldValue;
+  /** Obligatorio cuando el veredicto es falso. */
+  veredictoComentario?: string | null;
+  /** Puntos de confianza que el veredicto sumó o restó al autor. */
+  veredictoPuntos?: number;
+}
+
 export interface Report {
   id: string;
   uid: string;
@@ -253,6 +277,8 @@ export interface Report {
    * reporte no trae foto o si el modelo no pudo cargarse.
    */
   embedding: number[] | null;
+  /** Sistema de confianza. Ausente en los reportes anteriores. */
+  validacion?: ValidacionReporte;
   createdAt: Timestamp | FieldValue;
   updatedAt: Timestamp | FieldValue;
 }
@@ -302,6 +328,9 @@ export interface Confirmation {
   uid: string;
   reportId: string;
   createdAt: Timestamp | FieldValue;
+  /** Formato con peso (sistema de confianza): nivel y peso de quien confirmó, congelados. */
+  nivel?: number;
+  peso?: number;
 }
 
 /** Reporte cercano detectado, con el detalle de por qué se considera coincidente. */

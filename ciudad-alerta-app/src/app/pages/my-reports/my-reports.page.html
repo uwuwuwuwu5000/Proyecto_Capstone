@@ -45,11 +45,15 @@
               <span class="tarjeta__cuerpo">
                 <span class="tarjeta__descripcion">{{ reporte.descripcion }}</span>
                 <span class="tarjeta__meta">
-                  {{ reporte.categoria }} · {{ fechaLegible(reporte) }}
+                  {{ nombreCategoria(reporte.categoria) }} · {{ reporte.comuna ?? 'Comuna sin identificar' }}
+                </span>
+                <span class="tarjeta__meta">
+                  {{ fechaLegible(reporte) }}
                   @if (confirmacionesDe(reporte.id); as total) {
                     · {{ total }} {{ total === 1 ? 'confirmación' : 'confirmaciones' }}
                   }
                 </span>
+                <app-ranura nombre="tarjeta-reporte.insignias" [entradas]="{ reporte: reporte }" />
               </span>
 
               <ion-badge>{{ etiquetas[reporte.estado] }}</ion-badge>

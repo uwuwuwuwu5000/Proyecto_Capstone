@@ -19,6 +19,9 @@
         </div>
       </section>
 
+      <!-- Lo llenan los módulos (por ejemplo, el nivel de confianza). -->
+      <app-ranura nombre="inicio.resumen" [entradas]="{ perfil: perfil() }" />
+
       @if (!correoVerificado()) {
         <section class="verificacion" role="region" aria-label="Verificación de correo">
           <div class="verificacion__encabezado">
@@ -84,61 +87,21 @@
               <dt>Nombre</dt>
               <dd>{{ datos.displayName }}</dd>
             </div>
-            <div class="datos__fila">
-              <dt>Nivel de confianza</dt>
-              <dd>
-                <ion-icon name="ribbon-outline" aria-hidden="true"></ion-icon>
-                {{ datos.trustLevel }}
-              </dd>
-            </div>
-            <div class="datos__fila">
-              <dt>Reportes validados</dt>
-              <dd>{{ datos.validatedReports }}</dd>
-            </div>
           }
         </dl>
       </section>
 
       <nav class="accesos">
-        <ion-button class="accion-reportar" expand="block" routerLink="/report-new">
-          <ion-icon slot="start" name="add-circle-outline" aria-hidden="true"></ion-icon>
-          Crear un reporte
-        </ion-button>
-
-        <ion-button fill="outline" expand="block" routerLink="/map">
-          <ion-icon slot="start" name="map-outline" aria-hidden="true"></ion-icon>
-          Mapa de incidencias
-        </ion-button>
-
-        <ion-button fill="outline" expand="block" routerLink="/nearby">
-          <ion-icon slot="start" name="navigate-outline" aria-hidden="true"></ion-icon>
-          Cerca de mí
-        </ion-button>
-
-        <ion-button fill="outline" expand="block" routerLink="/my-reports">
-          <ion-icon slot="start" name="document-text-outline" aria-hidden="true"></ion-icon>
-          Mis reportes
-        </ion-button>
-
-        <ion-button fill="outline" expand="block" routerLink="/support">
-          <ion-icon slot="start" name="chatbubbles-outline" aria-hidden="true"></ion-icon>
-          Quejas y sugerencias
-        </ion-button>
-
-        @if (esStaff()) {
-          <ion-button class="accion-staff" expand="block" routerLink="/admin-reports">
-            <ion-icon slot="start" name="albums-outline" aria-hidden="true"></ion-icon>
-            {{ perfil()?.role === 'operador' ? 'Reportes asignados' : 'Todas las incidencias' }}
-          </ion-button>
-
-          <ion-button class="accion-staff" expand="block" routerLink="/admin-organismos">
-            <ion-icon slot="start" name="business-outline" aria-hidden="true"></ion-icon>
-            Municipalidades
-          </ion-button>
-
-          <ion-button class="accion-staff" expand="block" routerLink="/support-inbox">
-            <ion-icon slot="start" name="file-tray-full-outline" aria-hidden="true"></ion-icon>
-            Bandeja de soporte
+        @for (acceso of accesos(); track acceso.id) {
+          <ion-button
+            expand="block"
+            [routerLink]="acceso.ruta"
+            [fill]="acceso.estilo === 'principal' || acceso.estilo === 'gestion' ? 'solid' : 'outline'"
+            [class.accion-reportar]="acceso.estilo === 'principal'"
+            [class.accion-staff]="acceso.estilo === 'gestion'"
+          >
+            <ion-icon slot="start" [name]="acceso.icono" aria-hidden="true"></ion-icon>
+            {{ modulos.texto(acceso, perfil()?.role ?? null) }}
           </ion-button>
         }
       </nav>

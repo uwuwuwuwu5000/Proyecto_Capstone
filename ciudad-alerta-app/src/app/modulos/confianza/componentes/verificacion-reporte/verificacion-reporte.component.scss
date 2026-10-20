@@ -1,0 +1,83 @@
+:host {
+  display: block;
+}
+
+.verificacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.verificacion__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.sello {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--ca-signal);
+  border-radius: 999px;
+  color: var(--ca-signal);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+ion-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  --background: var(--ca-velo-fuerte);
+  --progress-background: var(--ca-signal);
+}
+
+.cifras,
+.nota,
+.veredicto,
+.hecho {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--ca-muted);
+}
+
+.veredicto,
+.hecho {
+  color: var(--ca-ink);
+}
+
+.hecho ion-icon {
+  vertical-align: -2px;
+  color: var(--ca-signal);
+}
+
+.veredicto--falso,
+.nota--aviso {
+  color: var(--ca-ink);
+}
+
+.confirmar {
+  --background: var(--ca-signal);
+  --color: var(--ca-base);
+  --border-radius: 10px;
+  --box-shadow: none;
+  margin: 0;
+  text-transform: none;
+  font-weight: 600;
+}
+
+.enlace {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  color: var(--ca-signal);
+}

@@ -1,0 +1,118 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mi nivel de confianza</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="contenido" [fullscreen]="true">
+  <div class="shell">
+    @if (cargando() && !estado()) {
+      <p class="texto">Cargando tu nivel…</p>
+    } @else if (error()) {
+      <p class="texto">No pudimos cargar tu nivel. Revisa tu conexión.</p>
+      <ion-button fill="outline" (click)="cargar()">Reintentar</ion-button>
+    } @else if (progreso(); as p) {
+      @if (estado()?.desactualizado) {
+        <p class="aviso">Sin conexión: este es el último dato guardado y puede estar desactualizado.</p>
+      }
+      @if (subio()) {
+        <p class="aviso aviso--logro">¡Subiste al nivel {{ p.nivel }}: {{ p.nombre }}!</p>
+      }
+
+      <section class="tarjeta">
+        <p class="tarjeta__nivel">Nivel {{ p.nivel }}</p>
+        <h2>{{ p.nombre }}</h2>
+        <ion-progress-bar [value]="p.fraccion" aria-hidden="true"></ion-progress-bar>
+        <p class="texto">
+          {{ p.puntos }} de {{ parametros.puntosMaximos }} puntos de confianza (PC).
+          @if (p.hasta !== null) {
+            Te faltan {{ p.faltan }} PC para el nivel {{ p.nivel + 1 }}: unos
+            {{ p.reportesQueFaltan }} {{ p.reportesQueFaltan === 1 ? 'reporte real' : 'reportes reales' }}.
+          } @else {
+            Llegaste al nivel máximo.
+          }
+        </p>
+      </section>
+
+      @if (estado()?.suspendido) {
+        <p class="aviso">
+          Tus confirmaciones están suspendidas por un administrador. Si crees que es un error,
+          escríbenos en Quejas y sugerencias.
+        </p>
+      }
+
+      <dl class="datos">
+        <div><dt>Reportes reales</dt><dd>{{ estado()?.validados }}</dd></div>
+        <div><dt>Reportes falsos</dt><dd>{{ estado()?.falsos }}</dd></div>
+        <div>
+          <dt>Tu voto vale</dt>
+          <dd>{{ correoVerificado() ? pesoDeNivel(p.nivel) + ' puntos' : '0 (verifica tu correo)' }}</dd>
+        </div>
+        @if (cupo(); as c) {
+          <div>
+            <dt>Confirmaciones hoy</dt>
+            <dd>{{ c.usadas }} de {{ c.limite }} · se reinician a las {{ horaReinicio() }}</dd>
+          </div>
+        }
+      </dl>
+
+      <section>
+        <h2 class="titulo">Historial de puntos</h2>
+        @if (historial() === null) {
+          <p class="texto">No pudimos cargar el historial.</p>
+        } @else if (historial()!.length === 0) {
+          <p class="texto">
+            Todavía no hay veredictos sobre tus reportes. Cuando un operador revise uno, aparecerá
+            aquí.
+          </p>
+        } @else {
+          <ul class="historial">
+            @for (e of historial()!; track e.reportId) {
+              <li>
+                <a [routerLink]="['/report', e.reportId]">
+                  <strong [class.negativo]="e.puntos < 0">
+                    {{ e.puntos > 0 ? '+' : '' }}{{ e.puntos }} PC ·
+                    {{ e.veredicto === 'real' ? 'Reporte real' : 'Reporte falso' }}
+                  </strong>
+                  <span>{{ fecha(e.fecha) }} · {{ e.descripcion }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section id="como-funciona">
+        <h2 class="titulo">¿Cómo funciona?</h2>
+        <p class="texto">
+          Cuando confirmas un reporte de otra persona, sumas puntos a su verificación según tu
+          nivel. Con 100 puntos y al menos 3 vecinos, el reporte queda «validado por la
+          comunidad». Tu nivel sube cuando un operador revisa tus propios reportes y confirma que
+          eran reales (+10 PC), y baja si eran falsos (−15 PC). Para que tu voto cuente, tu correo
+          debe estar verificado y tu cuenta debe tener más de 24 horas. Cada día puedes confirmar
+          un número limitado de reportes, que crece con tu nivel.
+        </p>
+
+        <table class="niveles">
+          <caption>Niveles, valor del voto y confirmaciones por día</caption>
+          <thead>
+            <tr><th>Nivel</th><th>PC</th><th>Voto</th><th>Por día</th></tr>
+          </thead>
+          <tbody>
+            @for (n of niveles; track n.nivel) {
+              <tr [class.actual]="n.nivel === p.nivel">
+                <td>{{ n.nivel }} · {{ n.nombre }}</td>
+                <td>{{ n.puntosMinimos }}</td>
+                <td>{{ pesoDeNivel(n.nivel) }}</td>
+                <td>{{ limiteDiario(n.nivel) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    }
+  </div>
+</ion-content>

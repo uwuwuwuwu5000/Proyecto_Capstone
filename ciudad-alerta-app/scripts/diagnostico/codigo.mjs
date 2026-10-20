@@ -23,6 +23,8 @@
  *   7. Seguridad del cliente: innerHTML, eval, registros con datos personales,
  *      claves y llaves dentro del proyecto.
  *   8. Android y build: paquete, manifiesto, presupuestos de estilos, assets.
+ *   9. Módulos: manifiestos, modulos.config.ts, dependencias, ranuras,
+ *      fronteras entre módulos y parámetros del sistema de confianza vs reglas.
  */
 import { spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -31,6 +33,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Informe, aCamel, aPascal, bloqueBalanceado, lineaDe, sinComentarios } from './comun.mjs';
+import { leerModulos, revisarModulos, revisarParametrosConfianza } from './modulos.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SRC = join(RAIZ, 'src');
@@ -299,7 +302,13 @@ informe.seccion('Rutas y navegación');
 
 const archivoRutas = join(SRC, 'app', 'app.routes.ts');
 const textoRutas = codigo.get(archivoRutas) ?? '';
-const rutas = [...textoRutas.matchAll(/path:\s*['"]([^'"]*)['"]/g)].map((m) => m[1]).filter((p) => p !== '**');
+// Las rutas de cada funcionalidad las declara su módulo (modulos/<id>/<id>.modulo.ts).
+const inventarioModulos = leerModulos(SRC);
+const rutasDeModulos = inventarioModulos.modulos.filter((m) => m.valido).flatMap((m) => m.rutas.map((r) => r.path));
+const rutas = [
+  ...[...textoRutas.matchAll(/path:\s*['"]([^'"]*)['"]/g)].map((m) => m[1]).filter((p) => p !== '**'),
+  ...rutasDeModulos,
+];
 
 for (const m of textoRutas.matchAll(/import\(\s*['"]([^'"]+)['"]\s*\)\s*\.then\(\s*\(?\s*(\w+)\s*\)?\s*=>\s*\2\.(\w+)/g)) {
   const destino = resolve(dirname(archivoRutas), m[1]);
@@ -327,10 +336,10 @@ function revisarEnlace(url, extra, archivo, texto, indice) {
   for (let i = 0; i < extra; i++) segmentos.push('*');
   if (segmentos.length === 0 || rutaExiste(segmentos)) return;
   enlacesMal++;
-  informe.agregar('error', `Navegación a '/${segmentos.join('/').replaceAll('*', ':param')}', que no está en app.routes.ts`, {
+  informe.agregar('error', `Navegación a '/${segmentos.join('/').replaceAll('*', ':param')}', que no es ninguna ruta`, {
     archivo: rel(archivo),
     linea: lineaDe(texto, indice),
-    solucion: `Rutas existentes: ${rutas.filter(Boolean).join(', ')}`,
+    solucion: `Rutas existentes (app.routes.ts y módulos): ${rutas.filter(Boolean).join(', ')}`,
   });
 }
 
@@ -742,7 +751,9 @@ for (const s of secretos) {
   const ignorado = hayGit
     ? spawnSync('git', ['check-ignore', '-q', s], { cwd: RAIZ }).status === 0
     : gitignore.split(/\r?\n/).some((p) => p.trim() && !p.startsWith('#') && new RegExp(`^${p.trim().replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*')}$`).test(s.split(sep).pop()));
-  informe.agregar(ignorado ? 'advertencia' : 'brecha', `${ignorado ? 'Archivo secreto dentro del proyecto (ignorado por git)' : 'Archivo secreto que git SUBIRÍA al repositorio'}: ${rel(s)}`, {
+  // keystore.properties ignorado es la práctica habitual de Android: solo se informa.
+  const nivelIgnorado = s.endsWith('keystore.properties') ? 'info' : 'advertencia';
+  informe.agregar(ignorado ? nivelIgnorado : 'brecha', `${ignorado ? 'Archivo secreto dentro del proyecto (ignorado por git)' : 'Archivo secreto que git SUBIRÍA al repositorio'}: ${rel(s)}`, {
     solucion: ignorado ? 'Mejor guárdalo fuera de la carpeta del proyecto, por ejemplo en C:\\claves.' : 'Agrégalo a .gitignore ya, y si ya se subió, revoca la clave y genera otra.',
   });
 }
@@ -887,6 +898,11 @@ faltan.length
 
 const pendientes = [...todoElCodigo.matchAll(/\b(TODO|FIXME|HACK)\b/g)].length;
 if (pendientes) informe.agregar('info', `${pendientes} marcas TODO/FIXME/HACK en src/`);
+
+// ═══ 9. Módulos ═════════════════════════════════════════════════════════════
+informe.seccion('Módulos (src/app/modulos)');
+revisarModulos({ informe, SRC, codigo, componentes, rel });
+revisarParametrosConfianza({ informe, SRC, reglas, rel });
 
 // ═══ Build opcional ═════════════════════════════════════════════════════════
 if (CON_BUILD) {

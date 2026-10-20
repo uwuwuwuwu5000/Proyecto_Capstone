@@ -20,7 +20,7 @@ import { addIcons } from 'ionicons';
 import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
-import { MapMarker, MapViewComponent } from '../../components/map-view/map-view.component';
+import { MapMarker, MapViewComponent } from '../../compartido/mapa';
 import { AuthService } from '../../services/auth.service';
 import { GeolocationService, LocationError } from '../../services/geolocation.service';
 import { HistorialService } from '../../services/historial.service';
@@ -35,6 +35,7 @@ import {
   etiquetaCategoria,
   ReportCategory,
 } from '../../models/report.model';
+import { RanuraComponent } from '../../nucleo/modulos';
 
 type EstadoVista =
   | 'sin_ubicacion'
@@ -56,6 +57,7 @@ type EstadoVista =
   templateUrl: './nearby.page.html',
   styleUrls: ['./nearby.page.scss'],
   imports: [
+    RanuraComponent,
     AvisosCampanaComponent,
     MapViewComponent,
     IonHeader,

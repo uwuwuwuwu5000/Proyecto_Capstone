@@ -95,36 +95,45 @@
       </section>
 
       <section class="bloque">
-        @if (esAutor()) {
-          <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
-        } @else {
-          @switch (estadoConfirmacion()) {
-            @case ('cargando') {
-              <p class="estado">Comprobando tu participación…</p>
-            }
-            @case ('error') {
-              <p class="estado">
-                No pudimos comprobar si ya confirmaste esta incidencia. Revisa tu conexión.
-              </p>
-            }
-            @case ('confirmado') {
-              <p class="confirmado">
-                <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
-                Ya confirmaste esta incidencia
-              </p>
-            }
-            @case ('disponible') {
-              <ion-button
-                class="accion-principal"
-                expand="block"
-                [disabled]="confirmando()"
-                (click)="confirmar()"
-              >
-                {{ confirmando() ? 'Registrando…' : 'Confirmar que existe' }}
-              </ion-button>
+        <!--
+          Ranura: con el módulo de confianza activo, aquí va la barra de
+          verificación y la confirmación con peso. Si no, este bloque simple.
+        -->
+        <app-ranura
+          nombre="detalle-reporte.verificacion"
+          [entradas]="{ reporte: item, esAutor: esAutor(), alConfirmar: alConfirmarConPeso }"
+        >
+          @if (esAutor()) {
+            <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
+          } @else {
+            @switch (estadoConfirmacion()) {
+              @case ('cargando') {
+                <p class="estado">Comprobando tu participación…</p>
+              }
+              @case ('error') {
+                <p class="estado">
+                  No pudimos comprobar si ya confirmaste esta incidencia. Revisa tu conexión.
+                </p>
+              }
+              @case ('confirmado') {
+                <p class="confirmado">
+                  <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                  Ya confirmaste esta incidencia
+                </p>
+              }
+              @case ('disponible') {
+                <ion-button
+                  class="accion-principal"
+                  expand="block"
+                  [disabled]="confirmando()"
+                  (click)="confirmar()"
+                >
+                  {{ confirmando() ? 'Registrando…' : 'Confirmar que existe' }}
+                </ion-button>
+              }
             }
           }
-        }
+        </app-ranura>
       </section>
 
       @if (historial() === null) {

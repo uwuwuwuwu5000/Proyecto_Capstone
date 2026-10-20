@@ -21,12 +21,13 @@ import {
   refreshOutline,
 } from 'ionicons/icons';
 
-import { MapViewComponent } from '../../components/map-view/map-view.component';
+import { MapViewComponent } from '../../compartido/mapa';
 import { ConfirmationError, ConfirmationService } from '../../services/confirmation.service';
 import { ReportQueryService } from '../../services/report-query.service';
 import { ReportService } from '../../services/report.service';
 import { RoutingError, RoutingService } from '../../services/routing.service';
 import { AuthService } from '../../services/auth.service';
+import { RanuraComponent } from '../../nucleo/modulos';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
@@ -44,6 +45,7 @@ import {
   styleUrls: ['./report-detail.page.scss'],
   imports: [
     MapViewComponent,
+    RanuraComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -112,6 +114,16 @@ export class ReportDetailPage {
   readonly esAutor = computed(
     () => this.reporte()?.uid === this.authService.user?.uid,
   );
+
+  /**
+   * Ranura `detalle-reporte.verificacion`: el módulo de confianza confirma
+   * con peso y avisa aquí con el reporte actualizado.
+   */
+  readonly alConfirmarConPeso = (actualizado: Report): void => {
+    this.reporte.set(actualizado);
+    this.estadoConfirmacion.set('confirmado');
+    this.confirmaciones.update((total) => (total === null ? null : total + 1));
+  };
 
   readonly transiciones = computed<ReadonlyArray<ReportStatus>>(() => {
     const reporte = this.reporte();
@@ -305,6 +317,8 @@ export class ReportDetailPage {
       .then((total) => this.confirmaciones.set(total))
       .catch(() => this.confirmaciones.set(null));
 
+    // Se consulta aunque el módulo de confianza llene la ranura: si su pieza no
+    // llega a descargarse (sin red), el bloque simple de respaldo ya sabe qué mostrar.
     void this.confirmationService
       .hasConfirmed(reporte.id)
       .then((confirmado) => {

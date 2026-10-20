@@ -108,6 +108,7 @@
                       <ion-icon name="navigate-outline" aria-hidden="true"></ion-icon>
                       {{ formatearDistancia(item.distanciaMetros) }}
                     </span>
+                    <app-ranura nombre="tarjeta-reporte.insignias" [entradas]="{ reporte: item.report }" />
                   </span>
 
                   <ion-badge>{{ etiquetas[item.report.estado] }}</ion-badge>

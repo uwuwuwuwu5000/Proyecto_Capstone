@@ -35,6 +35,33 @@ app-map-view .marcador-incidencia__pin {
   cursor: pointer;
 }
 
+/* Reporte destacado (validado por la comunidad): más grande, con anillo
+   blanco y una marca de verificación, para no depender solo del color. */
+app-map-view .marcador-incidencia__pin--destacado {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #ffffff;
+  outline: 2px solid #111827;
+}
+
+app-map-view .marcador-incidencia__pin--destacado::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #111827;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+
+app-map-view .popup-ciudad-alerta__punto--destacado {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
+}
+
 app-map-view .grupo-incidencias {
   background: none;
   border: none;

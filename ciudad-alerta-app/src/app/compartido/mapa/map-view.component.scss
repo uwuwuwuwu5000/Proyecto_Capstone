@@ -1,0 +1,65 @@
+:host {
+  display: block;
+}
+
+.mapa-wrapper {
+  position: relative;
+  width: 100%;
+  height: var(--mapa-alto, 220px);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--ca-line);
+  background: var(--ca-surface);
+}
+
+.mapa {
+  width: 100%;
+  height: 100%;
+}
+
+.mapa--oculto {
+  visibility: hidden;
+}
+
+.mapa-estado {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ca-muted);
+  background: var(--ca-surface);
+
+  p {
+    margin: 0;
+    max-width: 30ch;
+  }
+}
+
+.mapa-estado--error {
+  color: var(--ca-ink);
+}
+
+.mapa-estado__coords {
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-estado__accion {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-signal);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}

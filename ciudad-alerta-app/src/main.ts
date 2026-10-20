@@ -13,6 +13,7 @@ import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { provideFirebase } from './app/core/firebase.providers';
 import { providePhotoStorage } from './app/core/photo-storage.providers';
+import { provideModulos } from './app/nucleo/modulos';
 import { environment } from './environments/environment';
 
 if (environment.production) {
@@ -39,5 +40,8 @@ bootstrapApplication(AppComponent, {
 
     // Selecciona la implementación de almacenamiento de fotografías.
     providePhotoStorage(),
+
+    // Servicios de arranque e íconos de los módulos activos (modulos.config.ts).
+    provideModulos(),
   ],
 }).catch((err) => console.error(err));

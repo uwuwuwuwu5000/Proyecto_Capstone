@@ -13,6 +13,10 @@
  *   npm install -D @firebase/rules-unit-testing@<versión según firebase>
  *   Java 21 o superior (el emulador es un programa Java)
  *
+ * Incluye los casos del sistema de confianza (confirmación con peso, contador
+ * del día, veredictos): si un control de «Confianza:» falla, la app nueva
+ * recibirá «permiso denegado» al confirmar o al dar un veredicto.
+ *
  * Tres tipos de prueba:
  *   CONTROL  flujos reales de la app que DEBEN funcionar. Si alguno falla, una
  *            regla está bloqueando a usuarios legítimos.
@@ -147,11 +151,14 @@ async function sembrar() {
   await entorno.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
     const ahora = Timestamp.now();
+    // Cuentas de más de 24 h: el sistema de confianza solo da peso a esas.
+    const antigua = { createdAt: Timestamp.fromMillis(Date.now() - 2 * 86_400_000) };
     const escrituras = {
-      'users/ana': perfil('ana', 'Ana Pérez'),
-      'users/luis': perfil('luis', 'Luis Soto'),
-      'users/admin': perfil('admin', 'Admin', 'admin'),
-      'users/opmaipu': perfil('opmaipu', 'Operador Maipú', 'operador', { operadorId: 'op_maipu' }),
+      'users/ana': perfil('ana', 'Ana Pérez', 'ciudadano', antigua),
+      'users/luis': perfil('luis', 'Luis Soto', 'ciudadano', antigua),
+      'users/nueva': perfil('nueva', 'Cuenta Nueva', 'ciudadano', { createdAt: Timestamp.fromMillis(Date.now() - 3_600_000) }),
+      'users/admin': perfil('admin', 'Admin', 'admin', antigua),
+      'users/opmaipu': perfil('opmaipu', 'Operador Maipú', 'operador', { operadorId: 'op_maipu', ...antigua }),
       'organismos/muni_13119': { ...MAIPU, comunasAtendidas: ['13119'], codigoRegion: '13', region: 'Metropolitana', activo: true },
       'organismos/muni_13124': { ...PUDAHUEL, comunasAtendidas: ['13124'], codigoRegion: '13', region: 'Metropolitana', activo: true },
       'operadores/op_maipu': { id: 'op_maipu', nombre: 'Operador Maipú', organismoId: 'muni_13119', activo: true },
@@ -189,8 +196,9 @@ const cambioDeEstado = (db, quien, rol, nombre, reportId, desde, hacia) => {
 
 // ── Casos ────────────────────────────────────────────────────────────────────
 const casos = [];
-const control = (nombre, fn) => casos.push({ tipo: 'control', nombre, fn });
-const bloqueo = (nombre, fn) => casos.push({ tipo: 'bloqueo', nombre, fn });
+// `preparar` (opcional) escribe datos extra sin reglas antes del caso.
+const control = (nombre, fn, preparar) => casos.push({ tipo: 'control', nombre, fn, preparar });
+const bloqueo = (nombre, fn, preparar) => casos.push({ tipo: 'bloqueo', nombre, fn, preparar });
 const brecha = (nombre, fn, solucion) => casos.push({ tipo: 'brecha', nombre, fn, solucion });
 
 // CONTROL: lo que la app hace todos los días
@@ -291,6 +299,141 @@ bloqueo('Un ciudadano no crea operadores', () =>
   setDoc(doc(como('ana'), 'operadores/op_falso'), { id: 'op_falso', nombre: 'Falso', organismoId: 'muni_13119', activo: true }));
 bloqueo('Nadie escribe en colecciones no declaradas', () => setDoc(doc(como('ana'), 'cualquierCosa/x'), { a: 1 }));
 
+// ── Sistema de confianza (sistema_confianza.md, 5.3 a 5.6) ──────────────────
+/** Id del contador del día, igual que numeroDeDia() de las reglas. */
+const diaDeHoy = () => String(Math.floor((Date.now() - 10_800_000) / 86_400_000));
+
+/**
+ * Confirmación con peso tal como la escribe la app: voto + suma en el reporte
+ * + contador del día, en un lote. Cada opción permite romper una pieza.
+ */
+function confirmarConPeso(db, uid, reportId, o = {}) {
+  const { nivel = 0, peso = 10, antes = { puntos: 0, votos: 0 }, contadorPrevio = null, conContador = true, conSuma = true, dia = diaDeHoy(), extraReporte = {} } = o;
+  const puntos = o.puntos ?? antes.puntos + peso;
+  const votos = o.votos ?? antes.votos + (peso > 0 ? 1 : 0);
+  const validado = puntos >= 100 && votos >= 3;
+  const lote = writeBatch(db);
+  lote.set(doc(db, `reports/${reportId}/confirmations/${uid}`), { uid, reportId, createdAt: serverTimestamp(), nivel, peso });
+  if (conSuma) {
+    lote.update(doc(db, `reports/${reportId}`), {
+      'validacion.puntos': puntos,
+      'validacion.votos': votos,
+      'validacion.validado': validado,
+      ...(validado ? { 'validacion.validadoAt': serverTimestamp() } : {}),
+      ...extraReporte,
+    });
+  }
+  if (conContador) {
+    const ref = doc(db, `users/${uid}/limites/${dia}`);
+    if (contadorPrevio === null) lote.set(ref, { confirmaciones: 1, ultimaAt: serverTimestamp() });
+    else lote.update(ref, { confirmaciones: contadorPrevio + 1, ultimaAt: serverTimestamp() });
+  }
+  return lote.commit();
+}
+
+/** Veredicto de un gestor: reporte + confianza del autor + espejo, en un lote. */
+function darVeredicto(
+  db,
+  gestorUid,
+  reportId,
+  autorUid,
+  { veredicto = 'real', puntosAntes = 0, puntosDespues = 10, comentario = null, validadosAntes = 0, falsosAntes = 0 } = {},
+) {
+  const nivel = (pc) => [760, 640, 530, 430, 340, 260, 190, 130, 80, 40].findIndex((u) => pc >= u);
+  const nivelDe = (pc) => (nivel(pc) < 0 ? 0 : 10 - nivel(pc));
+  const real = veredicto === 'real';
+  const lote = writeBatch(db);
+  lote.update(doc(db, `reports/${reportId}`), {
+    'validacion.veredicto': veredicto,
+    'validacion.veredictoPor': gestorUid,
+    'validacion.veredictoAt': serverTimestamp(),
+    'validacion.veredictoPuntos': puntosDespues - puntosAntes,
+    ...(comentario ? { 'validacion.veredictoComentario': comentario } : {}),
+    updatedAt: serverTimestamp(),
+  });
+  lote.set(doc(db, `users/${autorUid}/confianza/actual`), {
+    puntosConfianza: puntosDespues,
+    trustLevel: nivelDe(puntosDespues),
+    validatedReports: validadosAntes + (real ? 1 : 0),
+    reportesFalsos: falsosAntes + (real ? 0 : 1),
+    confirmacionesSuspendidas: false,
+    ultimoReporteId: reportId,
+    updatedAt: serverTimestamp(),
+  });
+  // Espejo en el perfil, que es lo que leen las pantallas antiguas.
+  lote.update(doc(db, `users/${autorUid}`), {
+    trustLevel: nivelDe(puntosDespues),
+    validatedReports: validadosAntes + (real ? 1 : 0),
+    updatedAt: serverTimestamp(),
+  });
+  return lote.commit();
+}
+
+const contadorDeHoy = (uid, confirmaciones, haceMs) => (db) =>
+  setDoc(doc(db, `users/${uid}/limites/${diaDeHoy()}`), { confirmaciones, ultimaAt: Timestamp.fromMillis(Date.now() - haceMs) });
+
+control('Confianza: un vecino de nivel 0 confirma con peso 10 (voto + suma + contador)', () =>
+  confirmarConPeso(como('luis'), 'luis', 'r_ana'));
+control('Confianza: con el correo sin verificar el voto pesa 0 y no toca el reporte', () =>
+  confirmarConPeso(entorno.authenticatedContext('luis', { email: 'luis@correo.cl', email_verified: false }).firestore(), 'luis', 'r_ana', { peso: 0, conSuma: false }));
+control('Confianza: una cuenta de menos de 24 h confirma con peso 0', () =>
+  confirmarConPeso(como('nueva'), 'nueva', 'r_ana', { peso: 0, conSuma: false }));
+control(
+  'Confianza: la confirmación que llega a 100 puntos y 3 votos valida el reporte',
+  () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { antes: { puntos: 90, votos: 2 } }),
+  (db) => updateDoc(doc(db, 'reports/r_ana'), { validacion: { puntos: 90, votos: 2, validado: false } }),
+);
+control(
+  'Confianza: la segunda confirmación del día sube el contador en 1',
+  () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { contadorPrevio: 1 }),
+  contadorDeHoy('luis', 1, 60_000),
+);
+control('Confianza: el vecino lee su nivel y su contador de hoy', async () => {
+  const db = como('luis');
+  await getDoc(doc(db, 'users/luis/confianza/actual'));
+  return getDoc(doc(db, `users/luis/limites/${diaDeHoy()}`));
+});
+control('Confianza: un admin da veredicto real y suma 10 PC al autor en el mismo lote', () =>
+  darVeredicto(como('admin'), 'admin', 'r_ana', 'ana'));
+control('Confianza: el operador asignado da veredicto falso con comentario (−15 desde 40)', () =>
+  darVeredicto(como('opmaipu'), 'opmaipu', 'r_ana', 'ana', {
+    veredicto: 'falso', puntosAntes: 40, puntosDespues: 25, validadosAntes: 4, comentario: 'No había ningún bache',
+  }),
+  (db) => setDoc(doc(db, 'users/ana/confianza/actual'), {
+    puntosConfianza: 40, trustLevel: 1, validatedReports: 4, reportesFalsos: 0, confirmacionesSuspendidas: false, ultimoReporteId: 'r_viejo', updatedAt: Timestamp.now(),
+  }),
+);
+
+bloqueo('Confianza: no se inventa el peso (34 con nivel 0)', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { peso: 34 }));
+bloqueo('Confianza: no se falsea el nivel (nivel 5 sin puntos)', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { nivel: 5, peso: 22.5 }));
+bloqueo('Confianza: no se confirma sin escribir el contador del día', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { conContador: false }));
+bloqueo('Confianza: no se confirma con peso sin sumar en el reporte', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { conSuma: false }));
+bloqueo('Confianza: no se infla la suma del reporte', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { puntos: 60 }));
+bloqueo('Confianza: no se marca validado antes de tiempo', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { puntos: 100, votos: 3 }));
+bloqueo('Confianza: el contador no usa otro día', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { dia: String(Number(diaDeHoy()) - 1) }));
+bloqueo('Confianza: se respeta la pausa de 20 s', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { contadorPrevio: 1 }), contadorDeHoy('luis', 1, 5_000));
+bloqueo('Confianza: se respeta el límite diario del nivel 0 (5)', () => confirmarConPeso(como('luis'), 'luis', 'r_ana', { contadorPrevio: 5 }), contadorDeHoy('luis', 5, 60_000));
+bloqueo('Confianza: una cuenta de menos de 24 h no vota con peso', () => confirmarConPeso(como('nueva'), 'nueva', 'r_ana'));
+bloqueo(
+  'Confianza: un usuario suspendido no confirma',
+  () => confirmarConPeso(como('luis'), 'luis', 'r_ana'),
+  (db) => setDoc(doc(db, 'users/luis/confianza/actual'), {
+    puntosConfianza: 0, trustLevel: 0, validatedReports: 0, reportesFalsos: 0, confirmacionesSuspendidas: true, updatedAt: Timestamp.now(),
+  }),
+);
+bloqueo('Confianza: un vecino no cambia el estado junto con la suma', () =>
+  confirmarConPeso(como('luis'), 'luis', 'r_ana', { extraReporte: { estado: 'resuelto' } }));
+bloqueo('Confianza: un ciudadano no se escribe sus propios puntos', () =>
+  setDoc(doc(como('luis'), 'users/luis/confianza/actual'), {
+    puntosConfianza: 760, trustLevel: 10, validatedReports: 76, reportesFalsos: 0, confirmacionesSuspendidas: false, ultimoReporteId: 'r_luis', updatedAt: serverTimestamp(),
+  }));
+bloqueo('Confianza: un ciudadano no da veredictos', () => darVeredicto(como('luis'), 'luis', 'r_ana', 'ana'));
+bloqueo('Confianza: un veredicto no regala más puntos (+50)', () => darVeredicto(como('admin'), 'admin', 'r_ana', 'ana', { puntosDespues: 50 }));
+bloqueo('Confianza: un veredicto falso exige comentario', () =>
+  darVeredicto(como('admin'), 'admin', 'r_ana', 'ana', { veredicto: 'falso', puntosAntes: 0, puntosDespues: 0 }));
+bloqueo('Confianza: el operador de Maipú no da veredicto a un reporte de Pudahuel', () =>
+  darVeredicto(como('opmaipu'), 'opmaipu', 'r_luis', 'luis'));
+
 // BRECHA: huecos conocidos de las reglas actuales
 brecha(
   'Un operador no cambia su propio operadorId',
@@ -346,6 +489,7 @@ for (const tipo of ['control', 'bloqueo', 'brecha']) {
   informe.seccion(titulos[tipo]);
   for (const caso of casos.filter((c) => c.tipo === tipo)) {
     await sembrar();
+    if (caso.preparar) await entorno.withSecurityRulesDisabled((ctx) => caso.preparar(ctx.firestore()));
     try {
       if (tipo === 'control') await assertSucceeds(caso.fn());
       else await assertFails(caso.fn());

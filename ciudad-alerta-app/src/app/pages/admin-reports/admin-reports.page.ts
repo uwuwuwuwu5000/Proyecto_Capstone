@@ -31,6 +31,7 @@ import {
   ReportCategory,
   ReportStatus,
 } from '../../models/report.model';
+import { RanuraComponent } from '../../nucleo/modulos';
 
 /**
  * Bandeja de gestión: todas las incidencias del sistema.
@@ -46,6 +47,7 @@ import {
   templateUrl: './admin-reports.page.html',
   styleUrls: ['./admin-reports.page.scss'],
   imports: [
+    RanuraComponent,
     IonHeader,
     IonToolbar,
     IonTitle,

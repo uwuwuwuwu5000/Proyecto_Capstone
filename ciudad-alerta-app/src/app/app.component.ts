@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular';
 
-import { AvisosService } from './services/avisos.service';
 import { ThemeService } from './services/theme.service';
 
 @Component({
@@ -21,10 +20,6 @@ export class AppComponent {
    */
   private readonly themeService = inject(ThemeService);
 
-  /**
-   * Crea el servicio de avisos al arrancar, para que empiece a escuchar los
-   * reportes apenas haya sesión y la campana muestre el contador desde la
-   * primera pantalla, no recién cuando el usuario abra la lista.
-   */
-  private readonly avisosService = inject(AvisosService);
+  // El servicio de avisos ya no se crea aquí: lo arranca el módulo de avisos
+  // (modulos/avisos/avisos.modulo.ts) solo si está activo.
 }

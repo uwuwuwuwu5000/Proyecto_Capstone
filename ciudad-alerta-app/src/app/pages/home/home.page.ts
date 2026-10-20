@@ -18,23 +18,11 @@ import { addIcons } from 'ionicons';
 
 import { AvisosCampanaComponent } from '../../components/avisos-campana/avisos-campana.component';
 import { VersionDemoComponent } from '../../components/version-demo/version-demo.component';
-import {
-  addCircleOutline,
-  albumsOutline,
-  businessOutline,
-  chatbubblesOutline,
-  mailUnreadOutline,
-  documentTextOutline,
-  fileTrayFullOutline,
-  logOutOutline,
-  mapOutline,
-  navigateOutline,
-  personCircleOutline,
-  ribbonOutline,
-} from 'ionicons/icons';
+import { logOutOutline, mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
 import { UserProfile } from '../../models/user-profile.model';
+import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 
 @Component({
   selector: 'app-home',
@@ -43,6 +31,7 @@ import { UserProfile } from '../../models/user-profile.model';
   styleUrls: ['./home.page.scss'],
   imports: [
     AvisosCampanaComponent,
+    RanuraComponent,
     RouterLink,
     ThemeToggleComponent,
     VersionDemoComponent,
@@ -61,20 +50,18 @@ export class HomePage {
   private readonly loadingCtrl = inject(LoadingController);
   private readonly toastCtrl = inject(ToastController);
   private readonly alertCtrl = inject(AlertController);
+  protected readonly modulos = inject(ModulosService);
 
   /** Usuario autenticado expuesto como señal por el servicio. */
   readonly usuario = this.authService.currentUser;
   readonly perfil = signal<UserProfile | null>(null);
 
   /**
-   * La bandeja de soporte solo aparece para los roles de gestión. Es una ayuda
-   * de interfaz: el acceso real lo controlan `staffGuard` y las reglas de
-   * Firestore, que rechazan la lectura a cualquier otro rol.
+   * Botones del inicio: los declara cada módulo activo (modulos.config.ts) y
+   * se filtran por rol. Mostrar u ocultar un botón es una ayuda de interfaz:
+   * el acceso real lo controlan los guards y las reglas de Firestore.
    */
-  readonly esStaff = computed(() => {
-    const rol = this.perfil()?.role;
-    return rol === 'operador' || rol === 'admin';
-  });
+  readonly accesos = computed(() => this.modulos.accesos(this.perfil()?.role ?? null));
   readonly cargandoPerfil = signal(true);
 
   /** Estado del flujo de verificación de correo. */
@@ -87,20 +74,8 @@ export class HomePage {
   private uidCargado: string | null = null;
 
   constructor() {
-    addIcons({
-      addCircleOutline,
-      albumsOutline,
-      businessOutline,
-      chatbubblesOutline,
-      mailUnreadOutline,
-      documentTextOutline,
-      fileTrayFullOutline,
-      logOutOutline,
-      mapOutline,
-      navigateOutline,
-      personCircleOutline,
-      ribbonOutline,
-    });
+    // Los íconos de los botones de cada módulo los registra provideModulos().
+    addIcons({ logOutOutline, mailUnreadOutline, personCircleOutline });
   }
 
   /**

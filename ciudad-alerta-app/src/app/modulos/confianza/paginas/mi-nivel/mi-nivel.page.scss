@@ -1,0 +1,149 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.contenido {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+}
+
+.shell {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.texto,
+.aviso {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.aviso {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  color: var(--ca-ink);
+}
+
+.aviso--logro {
+  border-color: var(--ca-signal);
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 14px;
+  background: var(--ca-surface);
+
+  h2 {
+    margin: 0;
+    font-size: 1.3rem;
+  }
+}
+
+.tarjeta__nivel {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ca-signal);
+}
+
+ion-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  --background: var(--ca-velo-fuerte);
+  --progress-background: var(--ca-signal);
+}
+
+.datos {
+  margin: 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--ca-velo);
+    font-size: 0.86rem;
+  }
+
+  dt {
+    color: var(--ca-muted);
+  }
+
+  dd {
+    margin: 0;
+    text-align: right;
+  }
+}
+
+.titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.historial {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid var(--ca-velo);
+    color: var(--ca-ink);
+    font-size: 0.84rem;
+    text-decoration: none;
+  }
+
+  span {
+    color: var(--ca-muted);
+  }
+}
+
+.negativo {
+  color: var(--ion-color-danger);
+}
+
+.niveles {
+  width: 100%;
+  margin-top: 0.75rem;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+
+  caption {
+    text-align: left;
+    color: var(--ca-muted);
+    padding-bottom: 0.35rem;
+  }
+
+  th,
+  td {
+    padding: 0.35rem 0.25rem;
+    border-bottom: 1px solid var(--ca-velo);
+    text-align: right;
+  }
+
+  th:first-child,
+  td:first-child {
+    text-align: left;
+  }
+
+  .actual {
+    color: var(--ca-signal);
+    font-weight: 700;
+  }
+}

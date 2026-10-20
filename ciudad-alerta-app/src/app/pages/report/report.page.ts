@@ -34,7 +34,7 @@ import {
   trashOutline,
 } from 'ionicons/icons';
 
-import { MapViewComponent } from '../../components/map-view/map-view.component';
+import { MapViewComponent } from '../../compartido/mapa';
 import { SimilarReportsComponent } from '../../components/similar-reports/similar-reports.component';
 import { ComunaDetectada, ComunaService } from '../../services/comuna.service';
 import { DuplicateDetectionService } from '../../services/duplicate-detection.service';

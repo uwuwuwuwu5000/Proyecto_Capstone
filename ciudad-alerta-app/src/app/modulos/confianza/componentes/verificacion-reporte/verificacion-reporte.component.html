@@ -1,0 +1,119 @@
+<div class="verificacion">
+  <div class="verificacion__cabecera">
+    <h2>Verificación de la comunidad</h2>
+    @if (validacion().validado) {
+      <span class="sello">
+        <ion-icon name="shield-checkmark-outline" aria-hidden="true"></ion-icon>
+        Validado por la comunidad
+      </span>
+    }
+  </div>
+
+  <ion-progress-bar
+    [value]="porcentaje() / 100"
+    [attr.aria-label]="'Verificación de la comunidad: ' + porcentaje() + ' por ciento'"
+  ></ion-progress-bar>
+  <p class="cifras">
+    {{ porcentaje() }} % ·
+    {{ validacion().votos }} {{ validacion().votos === 1 ? 'persona confirmó' : 'personas confirmaron' }}
+  </p>
+
+  @if (validacion().veredicto === 'real') {
+    <p class="veredicto">Un operador revisó este reporte y confirmó que es real.</p>
+  } @else if (validacion().veredicto === 'falso') {
+    <p class="veredicto veredicto--falso">
+      Un operador revisó este reporte y lo marcó como falso.
+      @if (esAutor() && reporte().validacion?.veredictoComentario; as motivo) {
+        Motivo: {{ motivo }}
+      }
+    </p>
+  }
+
+  @if (esAutor()) {
+    <p class="nota">Este es tu reporte: lo confirman otros vecinos.</p>
+  } @else {
+    @switch (estado()) {
+      @case ('cargando') {
+        <p class="nota">Comprobando si puedes confirmar…</p>
+      }
+      @case ('error') {
+        <p class="nota">No pudimos comprobar si puedes confirmar. Revisa tu conexión.</p>
+        <ion-button fill="outline" size="small" (click)="cargar()">
+          <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+          Reintentar
+        </ion-button>
+      }
+      @default {
+        @if (disponibilidad(); as d) {
+          @switch (d.bloqueo) {
+            @case ('confirmado') {
+              <p class="hecho">
+                <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+                Ya confirmaste este reporte
+                @if (d.pesoAportado) {
+                  · aportaste {{ d.pesoAportado }} puntos
+                }
+              </p>
+            }
+            @case ('propio') {
+              <p class="nota">Este es tu reporte: lo confirman otros vecinos.</p>
+            }
+            @case ('operador') {
+              <p class="nota">Las cuentas de operador gestionan reportes; no los confirman.</p>
+            }
+            @case ('revisado') {
+              <p class="nota">Un operador ya revisó este reporte: no hace falta confirmarlo.</p>
+            }
+            @case ('suspendido') {
+              <p class="nota nota--aviso">
+                Tus confirmaciones están suspendidas por un administrador. Si crees que es un
+                error, escríbenos en Quejas y sugerencias.
+              </p>
+            }
+            @case ('limite') {
+              <p class="nota nota--aviso">
+                Llegaste a tus {{ d.cupo.limite }} confirmaciones de hoy. Se reinician a las
+                {{ horaReinicio() }}.
+              </p>
+            }
+            @default {
+              <ion-button
+                class="confirmar"
+                expand="block"
+                [disabled]="estado() === 'enviando' || d.bloqueo === 'pausa'"
+                (click)="confirmar()"
+              >
+                @if (estado() === 'enviando') {
+                  Registrando…
+                } @else if (d.bloqueo === 'pausa') {
+                  Espera {{ segundosPausa() }} s
+                } @else {
+                  Confirmar que existe
+                }
+              </ion-button>
+
+              @if (d.peso > 0) {
+                <p class="nota">
+                  Tu voto vale {{ d.peso }} puntos · te quedan {{ d.cupo.restantes }}
+                  {{ d.cupo.restantes === 1 ? 'confirmación' : 'confirmaciones' }} hoy.
+                </p>
+              } @else if (d.motivoSinPeso === 'correo') {
+                <p class="nota nota--aviso">
+                  Tu confirmación se registra, pero no suma puntos hasta que verifiques tu correo
+                  desde el inicio.
+                </p>
+              } @else {
+                <p class="nota nota--aviso">
+                  Tu confirmación se registra, pero las cuentas con menos de 24 horas todavía no
+                  suman puntos.
+                </p>
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  <a class="enlace" routerLink="/mi-nivel" fragment="como-funciona">¿Cómo funciona la verificación?</a>
+</div>

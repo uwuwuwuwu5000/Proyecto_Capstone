@@ -30,6 +30,7 @@ import {
   Report,
   etiquetaCategoria,
 } from '../../models/report.model';
+import { RanuraComponent } from '../../nucleo/modulos';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
 @Component({
@@ -38,6 +39,7 @@ import {
   templateUrl: './my-reports.page.html',
   styleUrls: ['./my-reports.page.scss'],
   imports: [
+    RanuraComponent,
     AvisosCampanaComponent,
     IonHeader,
     IonToolbar,
