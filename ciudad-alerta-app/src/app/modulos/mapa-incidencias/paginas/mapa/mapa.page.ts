@@ -13,55 +13,52 @@ import {
   IonToolbar,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
-import { locateOutline, refreshOutline, searchOutline } from 'ionicons/icons';
-import { distanceBetween } from 'geofire-common';
+import { locateOutline, refreshOutline } from 'ionicons/icons';
 
-import { AreaMapa, MapMarker, MapViewComponent } from '../../../../compartido/mapa';
+import { CajaMapa, MapMarker, MapViewComponent } from '../../../../compartido/mapa';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
   GeoPoint,
-  NearbyReport,
   REPORT_CATEGORIES,
+  Report,
   ReportCategory,
   ReportStatus,
 } from '../../../../models/report.model';
-import { ModulosService } from '../../../../nucleo/modulos';
+import { ModulosService, RanuraComponent } from '../../../../nucleo/modulos';
 import { AuthService } from '../../../../services/auth.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
 import { HistorialService } from '../../../../services/historial.service';
+import { Region, RegionesService } from '../../../../services/regiones.service';
 import { FiltrosMapa, ReportQueryService } from '../../../../services/report-query.service';
 import { PARAMETROS_MAPA } from '../../parametros';
-import { RanuraComponent } from '../../../../nucleo/modulos';
 
 /**
- * Estados posibles de la pantalla. Distinguirlos evita el mensaje engañoso de
- * "0 incidencias" cuando en realidad todavía no hay ubicación (BUG 35).
+ * Estados de la pantalla. Distinguirlos evita el mensaje engañoso de
+ * "0 incidencias" cuando en realidad todavía no se sabe qué región mostrar
+ * (BUG 35).
  */
 type EstadoVista =
-  | 'sin_ubicacion'
   | 'ubicando'
   | 'error_ubicacion'
+  | 'sin_region'
   | 'cargando'
   | 'listo'
   | 'error_datos';
 
-/** Zona consultada a Firestore: lo que está en pantalla salió de aquí. */
-interface Busqueda {
-  centro: { lat: number; lng: number };
-  radioMetros: number;
-  /** La zona visible era más grande que el radio máximo y se recortó. */
-  recortada: boolean;
-}
+/** 'actual' = la región donde está el usuario; si no, el código de una región. */
+type SeleccionRegion = 'actual' | string;
 
 /**
- * HU-25 · Mapa de incidencias con filtros por categoría y estado.
+ * HU-25 · Mapa de incidencias de una región completa.
  *
- * Feedback Sprint 5 · Antes solo mostraba 2 km alrededor del usuario y
- * terminaba siendo lo mismo que "Cerca de mí". Ahora parte en la ubicación del
- * usuario, pero al mover o alejar el mapa aparece «Buscar en esta zona», que
- * consulta lo que está a la vista. La búsqueda es a pedido, no automática,
- * para no gastar lecturas de Firestore con cada arrastre.
+ * Feedback Sprint 5 y casos MS8/MS9: antes mostraba solo 2-3 km alrededor del
+ * usuario, así que los reportes de Cerrillos o Estación Central no aparecían
+ * para alguien en Maipú y el mapa repetía lo de "Cerca de mí". Ahora muestra
+ * todas las incidencias de la región donde está el usuario, cada una en sus
+ * propias coordenadas, y permite elegir cualquier otra región. Los reportes
+ * en el mismo punto se agrupan en un círculo con el total (Supercluster, en el
+ * mapa compartido) y se separan al acercarse.
  */
 @Component({
   selector: 'app-mapa-incidencias',
@@ -85,6 +82,7 @@ interface Busqueda {
 })
 export class MapaPage {
   private readonly queryService = inject(ReportQueryService);
+  private readonly regionesService = inject(RegionesService);
   private readonly geolocationService = inject(GeolocationService);
   private readonly historialService = inject(HistorialService);
   private readonly authService = inject(AuthService);
@@ -93,49 +91,33 @@ export class MapaPage {
 
   readonly categorias = REPORT_CATEGORIES;
   readonly estados = Object.entries(ETIQUETAS_ESTADO) as [ReportStatus, string][];
-  readonly radioMaximoKm = PARAMETROS_MAPA.radioMaximoMetros / 1000;
+  readonly maximo = PARAMETROS_MAPA.maximoPorRegion;
 
-  /** Posición del usuario: marca su punto en el mapa y es la primera zona. */
+  readonly regiones = signal<Region[]>([]);
+  /** Región donde está el usuario, según su ubicación. */
+  readonly regionActual = signal<Region | null>(null);
+  readonly seleccion = signal<SeleccionRegion>('actual');
   readonly ubicacion = signal<GeoPoint | null>(null);
-  readonly resultados = signal<NearbyReport[]>([]);
-  readonly estado = signal<EstadoVista>('sin_ubicacion');
+
+  readonly resultados = signal<Report[]>([]);
+  readonly hayMas = signal(false);
+  readonly estado = signal<EstadoVista>('ubicando');
   readonly mensajeError = signal<string | null>(null);
   readonly filtros = signal<FiltrosMapa>({ categoria: 'todas', estado: 'todos' });
 
-  readonly busqueda = signal<Busqueda | null>(null);
-  private readonly areaVisible = signal<AreaMapa | null>(null);
-
-  /** El usuario movió o alejó el mapa fuera de lo que ya se consultó. */
-  readonly hayZonaNueva = computed(() => {
-    const area = this.areaVisible();
-    const busqueda = this.busqueda();
-
-    if (!area || !busqueda || this.estado() === 'cargando') {
-      return false;
-    }
-
-    const desplazamiento =
-      distanceBetween(
-        [area.centro.lat, area.centro.lng],
-        [busqueda.centro.lat, busqueda.centro.lng],
-      ) * 1000;
-
-    const seMovio = desplazamiento > busqueda.radioMetros * PARAMETROS_MAPA.umbralDesplazamiento;
-    const seAlejo =
-      area.radioMetros > busqueda.radioMetros * PARAMETROS_MAPA.umbralAlejamiento &&
-      busqueda.radioMetros < PARAMETROS_MAPA.radioMaximoMetros;
-
-    return seMovio || seAlejo;
+  /** La región que está en pantalla. */
+  readonly region = computed<Region | null>(() => {
+    const seleccion = this.seleccion();
+    return seleccion === 'actual'
+      ? this.regionActual()
+      : (this.regiones().find((r) => r.codigo === seleccion) ?? null);
   });
-
-  /** uid de la sesión cuyos datos están en pantalla (BUG 32). */
-  private uidCargado: string | null = null;
 
   readonly marcadores = computed<MapMarker[]>(() => {
     // Opcional: sin el módulo de confianza no hay reportes destacados.
     const destacarValidados = this.modulos.activo('confianza');
 
-    return this.resultados().map(({ report }) => {
+    return this.resultados().map((report) => {
       const destacado = destacarValidados && report.validacion?.validado === true;
 
       return {
@@ -146,18 +128,38 @@ export class MapaPage {
         destacado,
         titulo:
           `${report.descripcion.slice(0, 60)} · ${ETIQUETAS_ESTADO[report.estado]}` +
+          (report.comuna ? ` · ${report.comuna}` : '') +
           (destacado ? ' · Validado por la comunidad' : ''),
       };
     });
   });
 
   /**
+   * Lo que el mapa debe mostrar completo: todos los reportes encontrados, o
+   * la región entera si no hay ninguno.
+   */
+  readonly encuadre = computed<CajaMapa | null>(() => {
+    const marcadores = this.marcadores();
+
+    if (marcadores.length === 0) {
+      return this.region()?.caja ?? null;
+    }
+
+    return {
+      minLat: Math.min(...marcadores.map((m) => m.lat)),
+      minLng: Math.min(...marcadores.map((m) => m.lng)),
+      maxLat: Math.max(...marcadores.map((m) => m.lat)),
+      maxLng: Math.max(...marcadores.map((m) => m.lng)),
+    };
+  });
+
+  /**
    * Carga la línea de tiempo de un reporte cuando el usuario pulsa "Ver
-   * historial de estados" en el popup. El reporte ya está en memoria desde la
-   * búsqueda; solo se lee su historial, y solo en ese momento.
+   * historial de estados" en el popup. El reporte ya está en memoria; solo se
+   * lee su historial, y solo en ese momento.
    */
   readonly cargadorHistorial = (reportId: string) => {
-    const reporte = this.resultados().find((item) => item.report.id === reportId)?.report;
+    const reporte = this.resultados().find((item) => item.id === reportId);
 
     if (!reporte) {
       return Promise.reject(new Error('Reporte no encontrado en la vista actual.'));
@@ -166,8 +168,11 @@ export class MapaPage {
     return this.historialService.lineaDeTiempo(reporte);
   };
 
+  /** uid de la sesión cuyos datos están en pantalla (BUG 32). */
+  private uidCargado: string | null = null;
+
   constructor() {
-    addIcons({ locateOutline, refreshOutline, searchOutline });
+    addIcons({ locateOutline, refreshOutline });
   }
 
   /**
@@ -179,16 +184,40 @@ export class MapaPage {
 
     if (uidActual !== this.uidCargado) {
       this.ubicacion.set(null);
+      this.regionActual.set(null);
+      this.seleccion.set('actual');
       this.resultados.set([]);
-      this.busqueda.set(null);
-      this.areaVisible.set(null);
-      this.estado.set('sin_ubicacion');
+      this.hayMas.set(false);
+      this.estado.set('ubicando');
       this.uidCargado = uidActual;
     }
 
-    if (!this.ubicacion()) {
+    if (this.regiones().length === 0) {
+      try {
+        this.regiones.set(await this.regionesService.todas());
+      } catch {
+        // Sin el catálogo solo se pierde el selector; la región propia sigue
+        // funcionando si se puede detectar.
+      }
+    }
+
+    // Al volver desde el detalle no se vuelve a consultar: una región puede
+    // tener cientos de reportes. Para refrescar está el botón «Actualizar».
+    if (!this.ubicacion() && this.estado() !== 'listo') {
       await this.ubicar();
     }
+  }
+
+  async cambiarRegion(valor: string | number | undefined): Promise<void> {
+    const seleccion = String(valor ?? 'actual');
+    this.seleccion.set(seleccion);
+
+    if (seleccion === 'actual' && !this.regionActual()) {
+      await this.ubicar();
+      return;
+    }
+
+    await this.cargar();
   }
 
   async cambiarCategoria(valor: string | number | undefined): Promise<void> {
@@ -211,29 +240,7 @@ export class MapaPage {
     void this.router.navigate(['/report', reportId]);
   }
 
-  alCambiarArea(area: AreaMapa): void {
-    this.areaVisible.set(area);
-  }
-
-  /** «Buscar en esta zona»: consulta lo que está a la vista. */
-  async buscarEnEstaZona(): Promise<void> {
-    const area = this.areaVisible();
-
-    if (!area) {
-      return;
-    }
-
-    const { radioMinimoMetros, radioMaximoMetros } = PARAMETROS_MAPA;
-
-    this.busqueda.set({
-      centro: area.centro,
-      radioMetros: Math.min(Math.max(area.radioMetros, radioMinimoMetros), radioMaximoMetros),
-      recortada: area.radioMetros > radioMaximoMetros,
-    });
-    await this.cargar();
-  }
-
-  /** BUG 33 · Reintento explícito cuando falla la geolocalización. */
+  /** Ubica al usuario y deduce su región. BUG 33 · se puede reintentar. */
   async ubicar(): Promise<void> {
     this.estado.set('ubicando');
     this.mensajeError.set(null);
@@ -241,41 +248,47 @@ export class MapaPage {
     try {
       const posicion = await this.geolocationService.getCurrentPosition();
       this.ubicacion.set(posicion);
-      this.busqueda.set({
-        centro: { lat: posicion.lat, lng: posicion.lng },
-        radioMetros: PARAMETROS_MAPA.radioInicialMetros,
-        recortada: false,
-      });
-      await this.cargar();
+      this.regionActual.set(await this.regionesService.regionDe(posicion));
     } catch (error) {
       this.estado.set('error_ubicacion');
       this.mensajeError.set(
         error instanceof LocationError
-          ? error.message
-          : 'No pudimos obtener tu ubicación para centrar el mapa.',
+          ? `${error.message} Igual puedes elegir una región en la lista.`
+          : 'No pudimos obtener tu ubicación. Igual puedes elegir una región en la lista.',
       );
+      return;
     }
+
+    if (!this.region()) {
+      this.estado.set('sin_region');
+      return;
+    }
+
+    await this.cargar();
   }
 
   async cargar(): Promise<void> {
-    const busqueda = this.busqueda();
+    const region = this.region();
 
-    if (!busqueda) {
+    if (!region) {
       return;
     }
 
     this.estado.set('cargando');
 
     try {
-      const centro: GeoPoint = { ...busqueda.centro, accuracy: 0 };
-      this.resultados.set(
-        await this.queryService.findNearby(centro, busqueda.radioMetros, this.filtros()),
-      );
+      const { reportes, hayMas } = await this.queryService.porRegion(region, this.filtros(), {
+        maximo: PARAMETROS_MAPA.maximoPorRegion,
+        incluirSinRegion: PARAMETROS_MAPA.incluirSinRegion,
+      });
+      this.resultados.set(reportes);
+      this.hayMas.set(hayMas);
       this.estado.set('listo');
     } catch {
       this.resultados.set([]);
+      this.hayMas.set(false);
       this.estado.set('error_datos');
-      this.mensajeError.set('No se pudieron cargar las incidencias de esta zona.');
+      this.mensajeError.set(`No se pudieron cargar las incidencias de ${region.nombreCorto}.`);
     }
   }
 }

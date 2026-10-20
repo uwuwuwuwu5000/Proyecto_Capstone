@@ -3,17 +3,18 @@
  * parte de la app los repite.
  */
 export const PARAMETROS_MAPA = {
-  /** Primera búsqueda alrededor del usuario. Cubre el zoom 14 de un teléfono. */
-  radioInicialMetros: 3000,
-  /** «Buscar en esta zona» nunca consulta menos que esto. */
-  radioMinimoMetros: 500,
   /**
-   * Ni más que esto: con el mapa muy alejado, la consulta por geohash traería
-   * miles de reportes. 10 km cubren una comuna grande de Santiago.
+   * Reportes de una región como máximo, los más recientes. Con más, el mapa
+   * lo dice en pantalla. 500 alcanza para el piloto y mantiene la carga en
+   * una sola consulta de Firestore.
    */
-  radioMaximoMetros: 10_000,
-  /** El botón aparece si el centro se movió más de esta fracción del radio buscado… */
-  umbralDesplazamiento: 0.35,
-  /** …o si la zona visible es esta cantidad de veces más grande que la buscada. */
-  umbralAlejamiento: 1.25,
+  maximoPorRegion: 500,
+
+  /**
+   * Suma los reportes antiguos que no tienen el campo `region`, buscándolos
+   * por comuna (2 consultas más en la Metropolitana). Cuando todos los
+   * reportes tengan región (scripts/ubicaciones-reportes.mjs --aplicar),
+   * ponlo en false: ahorra esas lecturas.
+   */
+  incluirSinRegion: true,
 } as const;

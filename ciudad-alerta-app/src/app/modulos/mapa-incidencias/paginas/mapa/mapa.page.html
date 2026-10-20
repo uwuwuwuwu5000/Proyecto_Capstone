@@ -14,6 +14,26 @@
   <div class="mapa-shell">
     <div class="filtros">
       <ion-select
+        class="filtros__region"
+        label="Región"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="alert"
+        [interfaceOptions]="{ header: 'Región' }"
+        cancelText="Cancelar"
+        okText="Ver"
+        [value]="seleccion()"
+        (ionChange)="cambiarRegion($event.detail.value)"
+      >
+        <ion-select-option value="actual">
+          Mi región{{ regionActual() ? ' · ' + regionActual()!.nombreCorto : '' }}
+        </ion-select-option>
+        @for (r of regiones(); track r.codigo) {
+          <ion-select-option [value]="r.codigo">{{ r.nombreCorto }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
         label="Categoría"
         labelPlacement="stacked"
         fill="outline"
@@ -44,52 +64,41 @@
       </ion-select>
     </div>
 
-    @if (ubicacion(); as punto) {
-      <div class="mapa-zona">
-        <app-map-view
-          class="mapa-grande"
-          [latitude]="punto.lat"
-          [longitude]="punto.lng"
-          [zoom]="14"
-          [markers]="marcadores()"
-          [cargarHistorial]="cargadorHistorial"
-          (markerSelected)="abrirDetalle($event)"
-          (areaCambiada)="alCambiarArea($event)"
-        ></app-map-view>
-
-        @if (hayZonaNueva()) {
-          <ion-button class="buscar-zona" size="small" (click)="buscarEnEstaZona()">
-            <ion-icon slot="start" name="search-outline" aria-hidden="true"></ion-icon>
-            Buscar en esta zona
-          </ion-button>
-        }
-      </div>
+    @if (region()) {
+      <app-map-view
+        class="mapa-grande"
+        [latitude]="ubicacion()?.lat ?? null"
+        [longitude]="ubicacion()?.lng ?? null"
+        markerLabel="Tu ubicación"
+        [centrarEnUbicacion]="false"
+        [encuadre]="encuadre()"
+        [markers]="marcadores()"
+        [cargarHistorial]="cargadorHistorial"
+        (markerSelected)="abrirDetalle($event)"
+      ></app-map-view>
     }
 
     @switch (estado()) {
       @case ('ubicando') {
-        <p class="estado">Obteniendo tu ubicación…</p>
-      }
-      @case ('sin_ubicacion') {
-        <div class="bloque-estado">
-          <p class="estado">Necesitamos tu ubicación para centrar el mapa.</p>
-          <ion-button fill="outline" expand="block" (click)="ubicar()">
-            <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
-            Usar mi ubicación
-          </ion-button>
-        </div>
+        <p class="estado">Buscando tu ubicación para saber en qué región estás…</p>
       }
       @case ('error_ubicacion') {
         <div class="bloque-estado">
           <p class="estado estado--error">{{ mensajeError() }}</p>
           <ion-button fill="outline" expand="block" (click)="ubicar()">
-            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
             Reintentar ubicación
           </ion-button>
         </div>
       }
+      @case ('sin_region') {
+        <p class="estado estado--error">
+          No pudimos saber en qué región estás (¿estás fuera de Chile?). Elige una región en la
+          lista.
+        </p>
+      }
       @case ('cargando') {
-        <p class="estado">Cargando incidencias de esta zona…</p>
+        <p class="estado">Cargando las incidencias de {{ region()?.nombreCorto }}…</p>
       }
       @case ('error_datos') {
         <div class="bloque-estado">
@@ -101,22 +110,25 @@
         </div>
       }
       @case ('listo') {
-        <p class="estado">
-          @if (resultados().length === 0) {
-            No hay incidencias en esta zona con estos filtros.
-          } @else {
-            {{ resultados().length }}
-            {{ resultados().length === 1 ? 'incidencia' : 'incidencias' }} en esta zona. Toca un
-            marcador para ver el detalle.
-          }
-          Mueve o aleja el mapa para buscar en otro sector.
-        </p>
-        @if (busqueda()?.recortada) {
+        <div class="resumen">
           <p class="estado">
-            La zona visible es muy grande: se muestran los reportes a {{ radioMaximoKm }} km del
-            centro del mapa. Acércalo para ver otro sector completo.
+            @if (resultados().length === 0) {
+              No hay incidencias en {{ region()?.nombreCorto }} con estos filtros.
+            } @else {
+              {{ resultados().length }}
+              {{ resultados().length === 1 ? 'incidencia' : 'incidencias' }} en
+              {{ region()?.nombreCorto }}, cada una en su ubicación. Las que están en el mismo
+              lugar se juntan en un círculo con el total: tócalo para acercarte.
+            }
+            @if (hayMas()) {
+              Se muestran las {{ maximo }} más recientes.
+            }
           </p>
-        }
+          <ion-button class="actualizar" fill="clear" size="small" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Actualizar
+          </ion-button>
+        </div>
       }
       @default {
         <p class="estado">

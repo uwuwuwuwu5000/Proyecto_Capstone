@@ -24,6 +24,10 @@
   gap: 0.6rem;
 }
 
+.filtros__region {
+  grid-column: 1 / -1;
+}
+
 ion-select {
   --background: var(--ca-surface);
   --color: var(--ca-ink);
@@ -34,28 +38,8 @@ ion-select {
   font-size: 0.9rem;
 }
 
-.mapa-zona {
-  position: relative;
-}
-
 .mapa-grande {
-  --mapa-alto: 380px;
-}
-
-/* Sobre los controles de Leaflet (z-index 1000), centrado arriba. */
-.buscar-zona {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1100;
-  margin: 0;
-  --background: var(--ca-signal);
-  --color: var(--ca-base);
-  --border-radius: 999px;
-  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  text-transform: none;
-  font-weight: 600;
+  --mapa-alto: 400px;
 }
 
 .bloque-estado {
@@ -70,6 +54,19 @@ ion-select {
     text-transform: none;
     margin: 0;
   }
+}
+
+.resumen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.actualizar {
+  --color: var(--ca-signal);
+  margin: 0;
+  text-transform: none;
 }
 
 .estado {
