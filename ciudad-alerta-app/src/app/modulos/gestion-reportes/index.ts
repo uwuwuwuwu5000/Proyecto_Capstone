@@ -1,2 +1,2 @@
-/** API pública del módulo. Por ahora solo el manifiesto: su código sigue en src/app/pages. */
+/** API pública del módulo de gestión de reportes. */
 export { MODULO_GESTION_REPORTES } from './gestion-reportes.modulo';

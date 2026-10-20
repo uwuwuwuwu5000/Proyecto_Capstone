@@ -17,11 +17,11 @@ import {
 import { addIcons } from 'ionicons';
 import { imageOutline, refreshOutline } from 'ionicons/icons';
 
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../../services/auth.service';
 import {
   FiltrosBandejaReportes,
   ReportQueryService,
-} from '../../services/report-query.service';
+} from '../../../../services/report-query.service';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
@@ -30,8 +30,8 @@ import {
   Report,
   ReportCategory,
   ReportStatus,
-} from '../../models/report.model';
-import { RanuraComponent } from '../../nucleo/modulos';
+} from '../../../../models/report.model';
+import { RanuraComponent } from '../../../../nucleo/modulos';
 
 /**
  * Bandeja de gestión: todas las incidencias del sistema.

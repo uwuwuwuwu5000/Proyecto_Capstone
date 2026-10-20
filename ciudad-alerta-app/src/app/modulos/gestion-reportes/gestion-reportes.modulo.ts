@@ -7,7 +7,8 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
  * Bandeja de gestión: el admin ve todas las incidencias; el operador, las
  * asignadas a su organismo. Desde aquí se cambian estados.
  *
- * Código: todavía en src/app/pages/admin-reports.
+ * Contenido: paginas/admin-reports. Las tarjetas dejan la ranura
+ * `tarjeta-reporte.insignias` (el sistema de confianza pone ahí su estado).
  */
 export const MODULO_GESTION_REPORTES: ModuloApp = {
   id: 'gestion-reportes',
@@ -18,7 +19,7 @@ export const MODULO_GESTION_REPORTES: ModuloApp = {
     {
       path: 'admin-reports',
       canActivate: [staffGuard],
-      loadComponent: () => import('../../pages/admin-reports/admin-reports.page').then((m) => m.AdminReportsPage),
+      loadComponent: () => import('./paginas/admin-reports/admin-reports.page').then((m) => m.AdminReportsPage),
     },
   ],
   accesos: [
