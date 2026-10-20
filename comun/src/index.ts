@@ -16,3 +16,10 @@ export * from './reportes/tiempos';
 // Sistema de confianza
 export * from './confianza/parametros';
 export * from './confianza/calculos';
+
+// Territorio y geografía
+export * from './territorio/texto';
+export * from './territorio/codigos';
+export * from './territorio/mapa-calor';
+export * from './geo/cajas';
+export * from './geo/distancia';
