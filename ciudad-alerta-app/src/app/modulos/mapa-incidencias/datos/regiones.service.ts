@@ -9,9 +9,9 @@ import {
   unirCajas,
 } from '@ciudad-alerta/comun';
 
-import { GeoPoint } from '../models/report.model';
-import { CatalogoComunasService } from './catalogo-comunas.service';
-import { ComunaService } from './comuna.service';
+import { GeoPoint } from '../../../models/report.model';
+import { CatalogoComunasService } from '../../../services/catalogo-comunas.service';
+import { ComunaService } from '../../../services/comuna.service';
 
 export type { CajaGeografica };
 

@@ -2,6 +2,7 @@ import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
+import { providePhotoStorage } from './datos/photo-storage.providers';
 
 /**
  * Crear reportes, ver los propios y el detalle de cualquier reporte.
@@ -9,18 +10,25 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
  * Contenido:
  *  - paginas/report          crear un reporte (foto, ubicación, duplicados)
  *  - paginas/my-reports      historial propio
- *  - paginas/report-detail   detalle, confirmación y gestión de estado
+ *  - paginas/report-detail   detalle, confirmación y seguimiento
  *  - componentes/similar-reports
- *  - datos/confirmation.service.ts y datos/duplicate-detection.service.ts
+ *  - datos/                  crear reportes (report.service), cámara, fotos
+ *                            (photo-storage + providers), privacidad, similitud
+ *                            de imágenes (TensorFlow), confirmaciones y duplicados
+ *  - resolucion.ts           textos de tiempo de respuesta y resolución (F12)
  *
- * El detalle deja la ranura `detalle-reporte.verificacion` y las tarjetas
- * `tarjeta-reporte.insignias`; el sistema de confianza las llena si está activo.
+ * El detalle deja las ranuras `detalle-reporte.verificacion` (la llena el
+ * sistema de confianza) y `detalle-reporte.gestion` (la llena gestión de
+ * reportes); las tarjetas, `tarjeta-reporte.insignias`.
+ *
+ * Registra PHOTO_STORAGE (dónde se guardan las fotos, según environment.ts).
  */
 export const MODULO_REPORTES: ModuloApp = {
   id: 'reportes',
   nombre: 'Reportes',
   descripcion: 'Crear un reporte con foto y ubicación, ver mis reportes y el detalle de cualquier reporte.',
-  opcionales: ['confianza'],
+  opcionales: ['confianza', 'gestion-reportes'],
+  proveedores: [providePhotoStorage()],
   rutas: [
     {
       path: 'report-new',

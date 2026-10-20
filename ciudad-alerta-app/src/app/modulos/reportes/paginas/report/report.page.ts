@@ -38,11 +38,11 @@ import { MapViewComponent } from '../../../../compartido/mapa';
 import { SimilarReportsComponent } from '../../componentes/similar-reports/similar-reports.component';
 import { ComunaDetectada, ComunaService } from '../../../../services/comuna.service';
 import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
-import { ImageSimilarityService } from '../../../../services/image-similarity.service';
-import { CameraService, CapturedPhoto, PhotoError } from '../../../../services/camera.service';
-import { PrivacidadError, PrivacidadService } from '../../../../services/privacidad.service';
+import { ImageSimilarityService } from '../../datos/image-similarity.service';
+import { CameraService, CapturedPhoto, PhotoError } from '../../datos/camera.service';
+import { PrivacidadError, PrivacidadService } from '../../datos/privacidad.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
-import { ReportService } from '../../../../services/report.service';
+import { ReportService } from '../../datos/report.service';
 import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,

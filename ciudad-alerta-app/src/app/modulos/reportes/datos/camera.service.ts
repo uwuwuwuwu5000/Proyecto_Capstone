@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
-import { InfoPrivacidad } from '../models/report.model';
+import { InfoPrivacidad } from '../../../models/report.model';
 
 /** Imagen ya validada y comprimida, lista para subir. */
 export interface CapturedPhoto {

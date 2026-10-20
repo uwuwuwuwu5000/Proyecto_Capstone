@@ -283,6 +283,8 @@ export function revisarModulos({ informe, SRC, codigo, componentes, rel }) {
       const ajeno = dentroDe(destino);
       if (!ajeno || ajeno === propio) continue;
       if (archivo === config.archivo) continue; // la configuración importa los manifiestos
+      // Las ayudas de pruebas (src/testing) arman el entorno de cada módulo.
+      if (rel(archivo).startsWith('src/testing/')) continue;
 
       const partes = relative(join(inv.carpeta, ajeno), destino).split(sep).filter(Boolean);
       const porIndice = partes.length === 0 || (partes.length === 1 && partes[0] === 'index');

@@ -25,7 +25,7 @@ import {
 import { MapViewComponent } from '../../../../compartido/mapa';
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { ReportQueryService } from '../../../../services/report-query.service';
-import { ReportService } from '../../../../services/report.service';
+import { ReportService } from '../../datos/report.service';
 import { RoutingService } from '../../../../services/routing.service';
 import { AuthService } from '../../../../services/auth.service';
 import { RanuraComponent } from '../../../../nucleo/modulos';

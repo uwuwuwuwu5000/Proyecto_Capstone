@@ -12,21 +12,21 @@ import {
 import { FirebaseError } from 'firebase/app';
 import { geohashForLocation } from 'geofire-common';
 
-import { FIRESTORE } from '../core/firebase.providers';
-import { AuthService } from './auth.service';
+import { FIRESTORE } from '../../../core/firebase.providers';
+import { AuthService } from '../../../services/auth.service';
 import { CapturedPhoto } from './camera.service';
-import { ComunaDetectada, ComunaService } from './comuna.service';
+import { ComunaDetectada, ComunaService } from '../../../services/comuna.service';
 import { ImageSimilarityService } from './image-similarity.service';
-import { RoutingService } from './routing.service';
+import { RoutingService } from '../../../services/routing.service';
 import { PHOTO_STORAGE } from './photo-storage.service';
-import { INTERVALO_MINIMO_REPORTE_MS } from '../models/user-profile.model';
+import { INTERVALO_MINIMO_REPORTE_MS } from '../../../models/user-profile.model';
 import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
   GeoPoint,
   Report,
   ReportCategory,
-} from '../models/report.model';
+} from '../../../models/report.model';
 
 export interface NuevoReporte {
   descripcion: string;

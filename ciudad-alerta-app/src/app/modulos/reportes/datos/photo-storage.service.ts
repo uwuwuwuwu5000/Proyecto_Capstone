@@ -16,16 +16,16 @@ import {
   uploadBytes,
 } from 'firebase/storage';
 
-import { FIREBASE_STORAGE, FIRESTORE } from '../core/firebase.providers';
+import { FIREBASE_STORAGE, FIRESTORE } from '../../../core/firebase.providers';
 import { CapturedPhoto } from './camera.service';
-import { PhotoReference, ReportPhotoDoc } from '../models/report.model';
+import { PhotoReference, ReportPhotoDoc } from '../../../models/report.model';
 
 /**
  * Contrato de almacenamiento de fotografías.
  *
  * Existen dos implementaciones intercambiables y la elección se hace en un solo
- * lugar (`core/photo-storage.providers.ts`), sin tocar la UI ni el flujo de
- * reporte:
+ * lugar (`photo-storage.providers.ts`, que registra el manifiesto del módulo
+ * de reportes), sin tocar la UI ni el flujo de reporte:
  *
  *  - CloudStoragePhotoService: Firebase Storage. Es lo que pide el criterio de
  *    aceptación, pero exige el plan Blaze desde el 3 de febrero de 2026.

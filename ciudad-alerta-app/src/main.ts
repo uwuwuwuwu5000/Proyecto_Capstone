@@ -12,7 +12,6 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { provideFirebase } from './app/core/firebase.providers';
-import { providePhotoStorage } from './app/core/photo-storage.providers';
 import { provideModulos } from './app/nucleo/modulos';
 import { environment } from './environments/environment';
 
@@ -38,10 +37,8 @@ bootstrapApplication(AppComponent, {
     // CA-45 / CA-78 · App, Auth y Firestore del SDK modular de Firebase.
     provideFirebase(),
 
-    // Selecciona la implementación de almacenamiento de fotografías.
-    providePhotoStorage(),
-
     // Servicios de arranque e íconos de los módulos activos (modulos.config.ts).
+    // El almacenamiento de fotografías lo registra el módulo de reportes.
     provideModulos(),
   ],
 }).catch((err) => console.error(err));

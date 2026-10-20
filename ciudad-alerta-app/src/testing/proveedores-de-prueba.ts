@@ -2,7 +2,7 @@ import { Provider } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideIonicAngular } from '@ionic/angular';
 
-import { PHOTO_STORAGE, FirestorePhotoService } from '../app/services/photo-storage.service';
+import { PHOTO_STORAGE, FirestorePhotoService } from '../app/modulos/reportes/datos/photo-storage.service';
 import { UsuarioDePrueba, proveedoresFirebaseDePrueba } from './firebase-de-prueba';
 
 /**

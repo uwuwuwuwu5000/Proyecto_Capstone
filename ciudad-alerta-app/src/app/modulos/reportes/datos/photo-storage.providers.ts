@@ -1,11 +1,11 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 
-import { environment } from '../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import {
   CloudStoragePhotoService,
   FirestorePhotoService,
   PHOTO_STORAGE,
-} from '../services/photo-storage.service';
+} from './photo-storage.service';
 
 /**
  * Punto único de decisión sobre dónde se guardan las fotografías.

@@ -30,7 +30,7 @@ import { ModulosService, RanuraComponent } from '../../../../nucleo/modulos';
 import { AuthService } from '../../../../services/auth.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
 import { HistorialService } from '../../../../services/historial.service';
-import { Region, RegionesService } from '../../../../services/regiones.service';
+import { Region, RegionesService } from '../../datos/regiones.service';
 import { FiltrosMapa, ReportQueryService } from '../../../../services/report-query.service';
 import { PARAMETROS_MAPA } from '../../parametros';
 

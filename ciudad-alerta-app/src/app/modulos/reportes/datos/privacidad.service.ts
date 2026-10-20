@@ -13,9 +13,9 @@ import type * as TF from '@tensorflow/tfjs-core';
 import type * as FaceDetection from '@tensorflow-models/face-detection';
 import type * as CocoSsd from '@tensorflow-models/coco-ssd';
 
-import { prepararTensorflow, resolverModulo } from '../core/tensorflow';
+import { prepararTensorflow, resolverModulo } from './tensorflow';
 import { CapturedPhoto } from './camera.service';
-import { InfoPrivacidad } from '../models/report.model';
+import { InfoPrivacidad } from '../../../models/report.model';
 
 /**
  * Copias locales de los modelos, dentro de la app.

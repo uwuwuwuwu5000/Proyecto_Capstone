@@ -16,7 +16,7 @@ import { Injectable, signal } from '@angular/core';
 import type * as TF from '@tensorflow/tfjs-core';
 import type * as MobileNet from '@tensorflow-models/mobilenet';
 
-import { prepararTensorflow, resolverModulo } from '../core/tensorflow';
+import { prepararTensorflow, resolverModulo } from './tensorflow';
 
 @Injectable({ providedIn: 'root' })
 export class ImageSimilarityService {

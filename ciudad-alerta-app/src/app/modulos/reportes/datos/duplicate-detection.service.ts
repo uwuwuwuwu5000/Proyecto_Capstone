@@ -14,7 +14,7 @@ import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
-import { ImageSimilarityService } from '../../../services/image-similarity.service';
+import { ImageSimilarityService } from './image-similarity.service';
 import {
   ESTADOS_INACTIVOS,
   GeoPoint,
