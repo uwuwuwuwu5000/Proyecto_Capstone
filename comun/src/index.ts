@@ -11,6 +11,7 @@
 export * from './reportes/estados';
 export * from './reportes/categorias';
 export * from './reportes/descripcion';
+export * from './reportes/tiempos';
 
 // Sistema de confianza
 export * from './confianza/parametros';
