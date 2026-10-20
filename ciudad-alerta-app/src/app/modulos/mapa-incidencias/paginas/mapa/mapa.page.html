@@ -13,25 +13,31 @@
 <ion-content class="mapa-content" [fullscreen]="true">
   <div class="mapa-shell">
     <div class="filtros">
-      <ion-select
-        class="filtros__region"
-        label="Región"
-        labelPlacement="stacked"
-        fill="outline"
-        interface="alert"
-        [interfaceOptions]="{ header: 'Región' }"
-        cancelText="Cancelar"
-        okText="Ver"
-        [value]="seleccion()"
-        (ionChange)="cambiarRegion($event.detail.value)"
-      >
-        <ion-select-option value="actual">
-          Mi región{{ regionActual() ? ' · ' + regionActual()!.nombreCorto : '' }}
-        </ion-select-option>
-        @for (r of regiones(); track r.codigo) {
-          <ion-select-option [value]="r.codigo">{{ r.nombreCorto }}</ion-select-option>
-        }
-      </ion-select>
+      <!--
+        ion-select no actualiza el texto de la opción elegida si cambia después:
+        se vuelve a crear cuando se conoce la región del usuario.
+      -->
+      @for (clave of [regionActual()?.codigo ?? 'sin-region']; track clave) {
+        <ion-select
+          class="filtros__region"
+          label="Región"
+          labelPlacement="stacked"
+          fill="outline"
+          interface="alert"
+          [interfaceOptions]="{ header: 'Región' }"
+          cancelText="Cancelar"
+          okText="Ver"
+          [value]="seleccion()"
+          (ionChange)="cambiarRegion($event.detail.value)"
+        >
+          <ion-select-option value="actual">
+            Mi región{{ regionActual() ? ' · ' + regionActual()!.nombreCorto : '' }}
+          </ion-select-option>
+          @for (r of regiones(); track r.codigo) {
+            <ion-select-option [value]="r.codigo">{{ r.nombreCorto }}</ion-select-option>
+          }
+        </ion-select>
+      }
 
       <ion-select
         label="Categoría"
