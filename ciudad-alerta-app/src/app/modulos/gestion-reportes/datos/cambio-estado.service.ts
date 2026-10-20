@@ -1,7 +1,21 @@
 import { Injectable, inject } from '@angular/core';
 import { FirebaseError } from 'firebase/app';
-import { Firestore, collection, doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
-import { PermisoGestion, permisoDeGestion, transicionesDisponibles } from '@ciudad-alerta/comun';
+import {
+  Firestore,
+  Timestamp,
+  collection,
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+} from 'firebase/firestore';
+import {
+  PermisoGestion,
+  ResolucionDelCambio,
+  permisoDeGestion,
+  resolucionDelCambio,
+  transicionesDisponibles,
+} from '@ciudad-alerta/comun';
 
 import { FIRESTORE } from '../../../core/firebase.providers';
 import {
@@ -55,7 +69,14 @@ export class CambioEstadoService {
 
   /**
    * Cambia el estado y deja constancia del movimiento en `statusHistory`.
-   * Devuelve el reporte con el estado nuevo.
+   * Devuelve el reporte con el estado nuevo (y, si corresponde, sus datos de
+   * resolución, para mostrarlos sin volver a leer).
+   *
+   * F12 · Al resolver guarda `resueltoAt` y `tiempoResolucionMs`; al cerrar sin
+   * resolver, `cerradoSinResolverAt`, igual que el portal. Etapa blanda: si las
+   * reglas rechazan esos campos (reloj del teléfono muy desviado, reglas sin
+   * actualizar), se reintenta sin ellos. Un dato de análisis nunca debe
+   * impedir el cambio de estado.
    */
   async cambiar(reporte: Report, nuevoEstado: ReportStatus, comentario = ''): Promise<Report> {
     const usuario = this.authService.user;
@@ -79,13 +100,16 @@ export class CambioEstadoService {
     const referenciaReporte = doc(this.firestore, 'reports', reporte.id);
     const referenciaHistorial = doc(collection(this.firestore, 'reports', reporte.id, 'statusHistory'));
 
-    try {
+    /** Si el intento llevaba datos de resolución (para saber si reintentar sin ellos). */
+    let llevabaResolucion = false;
+
+    const escribir = (conResolucion: boolean): Promise<ResolucionDelCambio> =>
       /**
        * BUG 14 · El historial y el estado se escriben juntos o ninguno. La
        * transacción relee el estado: si otro gestor movió el reporte mientras
        * este diálogo estaba abierto, el cambio se rechaza en vez de pisarlo.
        */
-      await runTransaction(this.firestore, async (transaccion) => {
+      runTransaction(this.firestore, async (transaccion) => {
         const actual = await transaccion.get(referenciaReporte);
 
         if (!actual.exists()) {
@@ -111,12 +135,38 @@ export class CambioEstadoService {
           createdAt: serverTimestamp(),
         };
 
+        const creado = actual.data()['createdAt'];
+        const resolucion = conResolucion
+          ? resolucionDelCambio(
+              estadoActual,
+              nuevoEstado,
+              creado instanceof Timestamp ? creado.toMillis() : null,
+            )
+          : null;
+        llevabaResolucion = resolucion !== null;
+
         transaccion.set(referenciaHistorial, cambio);
         transaccion.update(referenciaReporte, {
           estado: nuevoEstado,
           updatedAt: serverTimestamp(),
+          ...camposDeResolucion(resolucion),
         });
+
+        return resolucion;
       });
+
+    let resolucion: ResolucionDelCambio;
+
+    try {
+      try {
+        resolucion = await escribir(true);
+      } catch (error) {
+        const rechazado = error instanceof FirebaseError && error.code === 'permission-denied';
+        if (!rechazado || !llevabaResolucion) throw error;
+
+        console.warn('Las reglas rechazaron los datos de resolución; se reintenta sin ellos.');
+        resolucion = await escribir(false);
+      }
     } catch (error) {
       if (error instanceof CambioEstadoError) {
         throw error;
@@ -126,7 +176,16 @@ export class CambioEstadoService {
       throw this.traducir(error);
     }
 
-    return { ...reporte, estado: nuevoEstado };
+    // Copia local para mostrar de inmediato: la hora exacta es la del servidor.
+    const ahora = Timestamp.now();
+    return {
+      ...reporte,
+      estado: nuevoEstado,
+      ...(resolucion?.tipo === 'resuelto'
+        ? { resueltoAt: ahora, tiempoResolucionMs: resolucion.tiempoResolucionMs }
+        : {}),
+      ...(resolucion?.tipo === 'cerrado_sin_resolver' ? { cerradoSinResolverAt: ahora } : {}),
+    };
   }
 
   /**
@@ -175,5 +234,20 @@ export class CambioEstadoService {
     }
 
     return new CambioEstadoError('No se pudo actualizar el estado del reporte.', 'desconocido');
+  }
+}
+
+/**
+ * Campos de Firestore para los datos de resolución (cambioDeEstadoValido() en
+ * las reglas). Exportada solo para las pruebas.
+ */
+export function camposDeResolucion(resolucion: ResolucionDelCambio): Record<string, unknown> {
+  switch (resolucion?.tipo) {
+    case 'resuelto':
+      return { resueltoAt: serverTimestamp(), tiempoResolucionMs: resolucion.tiempoResolucionMs };
+    case 'cerrado_sin_resolver':
+      return { cerradoSinResolverAt: serverTimestamp() };
+    default:
+      return {};
   }
 }

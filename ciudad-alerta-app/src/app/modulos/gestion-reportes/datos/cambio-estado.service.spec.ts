@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 
 import { Report } from '../../../models/report.model';
 import { AuthService } from '../../../services/auth.service';
-import { CambioEstadoError, CambioEstadoService } from './cambio-estado.service';
+import { serverTimestamp } from 'firebase/firestore';
+
+import { CambioEstadoError, CambioEstadoService, camposDeResolucion } from './cambio-estado.service';
 
 describe('CambioEstadoService', () => {
   let servicio: CambioEstadoService;
@@ -53,5 +55,22 @@ describe('CambioEstadoService', () => {
       puede: false,
       motivo: null,
     });
+  });
+});
+
+describe('camposDeResolucion (F12)', () => {
+  it('al resolver: resueltoAt con la hora del servidor y tiempoResolucionMs', () => {
+    const campos = camposDeResolucion({ tipo: 'resuelto', tiempoResolucionMs: 7_200_000 });
+    expect(Object.keys(campos).sort()).toEqual(['resueltoAt', 'tiempoResolucionMs']);
+    expect(campos['tiempoResolucionMs']).toBe(7_200_000);
+    expect(campos['resueltoAt']).toEqual(serverTimestamp());
+  });
+
+  it('al cerrar sin resolver: solo cerradoSinResolverAt', () => {
+    expect(Object.keys(camposDeResolucion({ tipo: 'cerrado_sin_resolver' }))).toEqual(['cerradoSinResolverAt']);
+  });
+
+  it('en los demás cambios no agrega campos (las reglas no aceptan otros)', () => {
+    expect(camposDeResolucion(null)).toEqual({});
   });
 });

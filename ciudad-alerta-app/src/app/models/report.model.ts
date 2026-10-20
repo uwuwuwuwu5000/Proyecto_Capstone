@@ -209,6 +209,16 @@ export interface Report {
   embedding: number[] | null;
   /** Sistema de confianza. Ausente en los reportes anteriores. */
   validacion?: ValidacionReporte;
+  /**
+   * F12 · Hora del servidor en que pasó a «resuelto» y milisegundos desde la
+   * creación. Los escribe quien resuelve (app o portal), siempre juntos. Las
+   * reglas los aceptan pero todavía no los exigen: los reportes anteriores no
+   * los traen y su tiempo se deduce del historial.
+   */
+  resueltoAt?: Timestamp | FieldValue | null;
+  tiempoResolucionMs?: number | null;
+  /** F12 · Hora del servidor en que se cerró sin haber pasado por «resuelto». */
+  cerradoSinResolverAt?: Timestamp | FieldValue | null;
   createdAt: Timestamp | FieldValue;
   updatedAt: Timestamp | FieldValue;
 }
