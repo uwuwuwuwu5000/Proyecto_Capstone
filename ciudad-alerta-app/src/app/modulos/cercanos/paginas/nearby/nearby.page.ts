@@ -19,11 +19,11 @@ import { addIcons } from 'ionicons';
 
 import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
-import { MapMarker, MapViewComponent } from '../../compartido/mapa';
-import { AuthService } from '../../services/auth.service';
-import { GeolocationService, LocationError } from '../../services/geolocation.service';
-import { HistorialService } from '../../services/historial.service';
-import { FiltrosMapa, ReportQueryService } from '../../services/report-query.service';
+import { MapMarker, MapViewComponent } from '../../../../compartido/mapa';
+import { AuthService } from '../../../../services/auth.service';
+import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
+import { HistorialService } from '../../../../services/historial.service';
+import { FiltrosMapa, ReportQueryService } from '../../../../services/report-query.service';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
@@ -33,8 +33,8 @@ import {
   REPORT_CATEGORIES,
   etiquetaCategoria,
   ReportCategory,
-} from '../../models/report.model';
-import { RanuraComponent } from '../../nucleo/modulos';
+} from '../../../../models/report.model';
+import { RanuraComponent } from '../../../../nucleo/modulos';
 
 type EstadoVista =
   | 'sin_ubicacion'

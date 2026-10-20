@@ -6,7 +6,8 @@ import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 /**
  * Lista de reportes ordenada por distancia, con radio seleccionable.
  *
- * Código: todavía en src/app/pages/nearby.
+ * Contenido: paginas/nearby. Usa el mapa compartido (compartido/mapa) y deja
+ * las ranuras `cabecera.acciones` y `tarjeta-reporte.insignias`.
  */
 export const MODULO_CERCANOS: ModuloApp = {
   id: 'cercanos',
@@ -17,7 +18,7 @@ export const MODULO_CERCANOS: ModuloApp = {
     {
       path: 'nearby',
       canActivate: [authGuard],
-      loadComponent: () => import('../../pages/nearby/nearby.page').then((m) => m.NearbyPage),
+      loadComponent: () => import('./paginas/nearby/nearby.page').then((m) => m.NearbyPage),
     },
   ],
   accesos: [{ id: 'cercanos', texto: 'Cerca de mí', icono: 'navigate-outline', ruta: '/nearby', orden: 30 }],
