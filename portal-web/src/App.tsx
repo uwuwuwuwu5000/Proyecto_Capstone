@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
+import { AvisosProvider } from './context/AvisosContext'
 import { SoporteProvider } from './context/SoporteContext'
 import AdminLayout from './components/AdminLayout/AdminLayout'
 import CargandoPagina from './components/Carga/CargandoPagina'
@@ -71,9 +72,11 @@ export default function App() {
     <AuthProvider>
       <CategoriasProvider>
         <SoporteProvider>
-          <BrowserRouter>
-            <Rutas />
-          </BrowserRouter>
+          <AvisosProvider>
+            <BrowserRouter>
+              <Rutas />
+            </BrowserRouter>
+          </AvisosProvider>
         </SoporteProvider>
       </CategoriasProvider>
     </AuthProvider>

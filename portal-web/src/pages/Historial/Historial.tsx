@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import {
   collection,
   getCountFromServer,
@@ -26,7 +26,13 @@ export default function Historial() {
   const [confirmaciones, setConfirmaciones] = useState<Record<string, number>>({})
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [detalleId, setDetalleId] = useState<string | null>(null)
+  const [params, setParams] = useSearchParams()
+  // `?reporte=<id>` abre el detalle (enlace desde la campana de avisos).
+  const [detalleId, setDetalleId] = useState<string | null>(params.get('reporte'))
+
+  useEffect(() => {
+    if (params.has('reporte')) setParams({}, { replace: true })
+  }, [params, setParams])
 
   useEffect(() => {
     if (sesionCargando || !user) {

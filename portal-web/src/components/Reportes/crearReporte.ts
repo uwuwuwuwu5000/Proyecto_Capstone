@@ -4,13 +4,16 @@
 // report.service.ts de main-mobile), para que pase la misma regla de creación
 // y el resto del sistema no distinga su origen salvo por el campo `origen`.
 //
-// PENDIENTE: la fotografía. La regla fotoProtegida() exige que la imagen haya
-// pasado por el difuminado de rostros que hace el móvil, y ese código todavía
-// no está en el repositorio. Hasta integrarlo, el reporte se crea sin foto.
-import { collection, doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+// La fotografía es opcional y llega ya difuminada (privacidad/privacidad.ts):
+// la regla fotoProtegida() exige `foto.privacidad.aplicada`. Se guarda igual
+// que en la app: imagen en `reportPhotos/{id}` y referencia en `reports/{id}`,
+// las dos en un mismo lote para que no quede una sin la otra.
+import { collection, doc, getDoc, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
 import { geohashForLocation } from 'geofire-common'
 import { db } from '../../firebase/config'
+import type { FotoProtegida } from '../../privacidad/privacidad'
+import { LIMITE_DATA_URL } from '../../privacidad/comprimir'
 import { calcularAsignacion } from './asignacion'
 import type { Punto } from './asignacion'
 
@@ -29,6 +32,8 @@ export interface NuevoReporteAdmin {
   punto: Punto
   categoria: string
   descripcion: string
+  /** Foto ya difuminada; sin ella el reporte se crea sin imagen. */
+  foto?: FotoProtegida | null
 }
 
 export async function crearReporteAdmin(datos: NuevoReporteAdmin): Promise<string> {
@@ -52,6 +57,17 @@ export async function crearReporteAdmin(datos: NuevoReporteAdmin): Promise<strin
   // operador pudo cambiar mientras se llenaba el formulario.
   const { comuna, organismo, operadorId } = await calcularAsignacion(datos.punto, datos.categoria)
 
+  if (datos.foto) {
+    if (!datos.foto.privacidad.aplicada) {
+      throw new Error('La fotografía no pasó por el difuminado de privacidad.')
+    }
+    if (datos.foto.dataUrl.length > LIMITE_DATA_URL) {
+      throw new Error('La fotografía es demasiado pesada. Elige otra.')
+    }
+  }
+
+  const referencia = doc(collection(db, 'reports'))
+
   const reporte: Record<string, unknown> = {
     uid: datos.uid,
     descripcion,
@@ -60,13 +76,22 @@ export async function crearReporteAdmin(datos: NuevoReporteAdmin): Promise<strin
     comuna: comuna.comuna,
     region: comuna.region,
     comunaFuente: comuna.fuente,
-    foto: null,
+    foto: datos.foto
+      ? {
+          kind: 'firestore',
+          path: `reportPhotos/${referencia.id}`,
+          url: null,
+          mimeType: datos.foto.mimeType,
+          sizeBytes: datos.foto.sizeBytes,
+          privacidad: datos.foto.privacidad,
+        }
+      : null,
     estado: 'reportado',
     confirmaciones: 0,
     organismo,
     operadorId,
     geohash: geohashForLocation([datos.punto.lat, datos.punto.lng]),
-    // Sin foto no hay vector para la detección de duplicados del móvil.
+    // El portal no calcula el vector de la foto (detección de duplicados del móvil).
     embedding: null,
     origen: ORIGEN_PORTAL_ADMIN,
     createdAt: serverTimestamp(),
@@ -79,9 +104,20 @@ export async function crearReporteAdmin(datos: NuevoReporteAdmin): Promise<strin
     reporte.autorNombre = perfil.displayName.slice(0, 60)
   }
 
-  const referencia = doc(collection(db, 'reports'))
   try {
-    await setDoc(referencia, reporte)
+    const lote = writeBatch(db)
+    lote.set(referencia, reporte)
+    if (datos.foto) {
+      lote.set(doc(db, 'reportPhotos', referencia.id), {
+        reportId: referencia.id,
+        ownerUid: datos.uid,
+        dataUrl: datos.foto.dataUrl,
+        mimeType: datos.foto.mimeType,
+        sizeBytes: datos.foto.sizeBytes,
+        createdAt: serverTimestamp(),
+      })
+    }
+    await lote.commit()
   } catch (err) {
     console.error('Error al crear el reporte:', err)
     if (err instanceof FirebaseError && err.code === 'permission-denied') {

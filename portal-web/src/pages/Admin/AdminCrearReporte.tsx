@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { comprimirImagen } from '../../privacidad/comprimir'
+import type { FotoProtegida } from '../../privacidad/privacidad'
 import type { ClipboardEvent, FormEvent, KeyboardEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
@@ -87,6 +89,14 @@ export default function AdminCrearReporte() {
   const [asignacion, setAsignacion] = useState<Asignacion | null>(null)
   const [calculando, setCalculando] = useState(false)
   const [errorAsignacion, setErrorAsignacion] = useState('')
+
+  // Foto: se difumina apenas se elige, y la vista previa ya es la versión
+  // protegida, que es la única que se publica.
+  const [foto, setFoto] = useState<FotoProtegida | null>(null)
+  const [procesandoFoto, setProcesandoFoto] = useState(false)
+  const [errorFoto, setErrorFoto] = useState('')
+  const [arrastrando, setArrastrando] = useState(false)
+  const entradaFoto = useRef<HTMLInputElement>(null)
 
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
@@ -195,6 +205,24 @@ export default function AdminCrearReporte() {
     if (e.key === 'Enter') e.preventDefault()
   }
 
+  async function elegirFoto(archivo: File | undefined) {
+    if (!archivo) return
+    setErrorFoto('')
+    setFoto(null)
+    setProcesandoFoto(true)
+    try {
+      const comprimida = await comprimirImagen(archivo)
+      // Los modelos (~19 MB) solo se descargan la primera vez que se elige una foto.
+      const { anonimizar } = await import('../../privacidad/privacidad')
+      setFoto(await anonimizar(comprimida))
+    } catch (err) {
+      setErrorFoto(err instanceof Error ? err.message : 'No se pudo procesar la foto.')
+    } finally {
+      setProcesandoFoto(false)
+      if (entradaFoto.current) entradaFoto.current.value = ''
+    }
+  }
+
   async function crear(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
@@ -215,15 +243,21 @@ export default function AdminCrearReporte() {
       return
     }
 
+    if (procesandoFoto) {
+      setError('Espera a que termine de procesarse la fotografía.')
+      return
+    }
+
     setGuardando(true)
     try {
-      const id = await crearReporteAdmin({ uid: user.uid, punto, categoria, descripcion })
+      const id = await crearReporteAdmin({ uid: user.uid, punto, categoria, descripcion, foto })
       setCreadoId(id)
       setPunto(null)
       setLatTexto('')
       setLngTexto('')
       setCategoria('')
       setDescripcion('')
+      setFoto(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo crear el reporte.')
     } finally {
@@ -418,13 +452,74 @@ export default function AdminCrearReporte() {
 
               <div className={styles.field}>
                 <span className={styles.label}>Fotografía</span>
-                <p className={styles.pendiente}>
-                  Pendiente: la carga de fotos se habilitará cuando el portal incorpore el difuminado
-                  de rostros que exige la app. Por ahora el reporte se crea sin foto.
+                <p className={styles.hintCampo}>
+                  Antes de publicarla se difuminan los rostros y las personas que aparezcan; la vista
+                  previa es la imagen que se guardará.
                 </p>
+                <input
+                  ref={entradaFoto}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => void elegirFoto(e.target.files?.[0])}
+                />
+                <div
+                  className={`${styles.zonaFoto} ${arrastrando ? styles.zonaFotoActiva : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-disabled={procesandoFoto}
+                  aria-label="Adjuntar fotografía: arrastra una imagen o haz clic para elegirla"
+                  onClick={() => !procesandoFoto && entradaFoto.current?.click()}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && !procesandoFoto) {
+                      e.preventDefault()
+                      entradaFoto.current?.click()
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setArrastrando(true)
+                  }}
+                  onDragLeave={() => setArrastrando(false)}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    setArrastrando(false)
+                    if (!procesandoFoto) void elegirFoto(e.dataTransfer.files?.[0])
+                  }}
+                >
+                  {procesandoFoto ? (
+                    <span className={styles.zonaFotoTexto} aria-live="polite">
+                      Protegiendo la imagen… la primera vez puede tardar unos segundos.
+                    </span>
+                  ) : foto ? (
+                    <>
+                      <img
+                        src={foto.dataUrl}
+                        alt="Vista previa de la fotografía con rostros difuminados"
+                        className={styles.zonaFotoImagen}
+                      />
+                      <span className={styles.zonaFotoTexto}>
+                        Difuminado aplicado: {foto.privacidad.rostros} rostro(s) y{' '}
+                        {foto.privacidad.personas} persona(s) lejana(s). Arrastra otra imagen o haz
+                        clic para cambiarla.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className={styles.zonaFotoTitulo}>Arrastra una imagen aquí</span>
+                      <span className={styles.zonaFotoTexto}>o haz clic para adjuntarla (JPG, PNG o WebP)</span>
+                    </>
+                  )}
+                </div>
+                {foto && !procesandoFoto && (
+                  <button type="button" className={styles.quitarFoto} onClick={() => setFoto(null)}>
+                    Quitar fotografía
+                  </button>
+                )}
+                {errorFoto && <p className={styles.errorCampo}>{errorFoto}</p>}
               </div>
 
-              {error && <p className={styles.error}>{error}</p>}
+              {error &&<p className={styles.error}>{error}</p>}
               {creadoId && (
                 <p className={styles.aviso}>
                   Reporte creado. Ya aparece en el mapa.{' '}
@@ -434,7 +529,7 @@ export default function AdminCrearReporte() {
                 </p>
               )}
 
-              <button type="submit" className={styles.submit} disabled={guardando || calculando}>
+              <button type="submit" className={styles.submit} disabled={guardando || calculando || procesandoFoto}>
                 {guardando ? 'Creando…' : 'Crear reporte'}
               </button>
             </div>

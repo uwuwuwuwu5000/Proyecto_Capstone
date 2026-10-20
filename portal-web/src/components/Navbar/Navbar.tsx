@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useSoporte } from '../../context/SoporteContext'
+import CampanaAvisos from '../Avisos/CampanaAvisos'
 import Logo from '../Marca/Logo'
 import styles from './Navbar.module.css'
 
@@ -192,6 +193,8 @@ export default function Navbar() {
               </button>
             </div>
           </nav>
+
+          <CampanaAvisos />
 
           {/* Escritorio: menú de usuario. */}
           <div className={styles.usuario}>

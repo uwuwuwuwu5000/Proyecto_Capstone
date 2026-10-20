@@ -1,9 +1,18 @@
 import react from '@vitejs/plugin-react'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      // Ver src/privacidad/mediapipe-stub.ts.
+      '@mediapipe/face_detection': fileURLToPath(
+        new URL('./src/privacidad/mediapipe-stub.ts', import.meta.url),
+      ),
+    },
+  },
   build: {
     rolldownOptions: {
       output: {

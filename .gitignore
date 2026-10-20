@@ -13,6 +13,11 @@ node_modules/
 
 # Datos de prueba (fotos, Excel, modelo de IA) y documentos de trabajo: solo locales
 datos_prueba/
-context_admin.md
-github.md
-pendiente.md
+
+# Documentos de trabajo de la raíz (.md): contexto, pendientes, sistema de confianza, correcciones, guía de GitHub…
+# (portal-web/README.md no se ignora: es del proyecto)
+/*.md
+
+# Plan de pruebas (Excel original, copia revisada y archivos temporales que Excel crea al abrirlos)
+Plan_de_Pruebas_*
+~$Plan_de_Pruebas_*

@@ -1,0 +1,137 @@
+.raiz {
+  position: relative;
+  align-self: center;
+  /* Sin margin-left:auto: el menú principal ya empuja todo a la derecha. */
+  margin: 0 12px 0 14px;
+}
+
+.boton {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  cursor: pointer;
+}
+
+.boton:hover {
+  border-color: var(--ca-signal);
+  color: var(--ca-signal);
+}
+
+.boton:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.icono {
+  width: 22px;
+  height: 22px;
+}
+
+.insignia {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--ca-signal);
+  color: #04202a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-base);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  z-index: 1300;
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--ca-line);
+  font-size: 0.95rem;
+}
+
+.todos {
+  border: 0;
+  background: none;
+  color: var(--ca-signal);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.lista {
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.vacio {
+  margin: 0;
+  padding: 20px 14px;
+  opacity: 0.7;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.aviso {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--ca-line);
+  background: transparent;
+  color: var(--ca-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.aviso:hover {
+  background: rgba(28, 169, 201, 0.08);
+}
+
+.nuevo {
+  border-left: 3px solid var(--ca-signal);
+  background: rgba(28, 169, 201, 0.06);
+}
+
+.titulo {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.texto,
+.comentario {
+  font-size: 0.82rem;
+  opacity: 0.85;
+}
+
+.comentario {
+  font-style: italic;
+}
+
+.meta {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
