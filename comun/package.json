@@ -1,0 +1,18 @@
+{
+  "name": "@ciudad-alerta/comun",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Lógica de Ciudad Alerta compartible entre la app móvil y el portal web: TypeScript puro, sin Angular, React ni Firebase.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:vigilar": "vitest",
+    "tipos": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.0",
+    "vitest": "^4.0.8"
+  }
+}
