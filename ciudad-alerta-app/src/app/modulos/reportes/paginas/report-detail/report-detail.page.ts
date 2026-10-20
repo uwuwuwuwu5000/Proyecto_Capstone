@@ -15,9 +15,11 @@ import { addIcons } from 'ionicons';
 import {
   businessOutline,
   checkmarkCircleOutline,
+  checkmarkDoneOutline,
   imageOutline,
   peopleOutline,
   refreshOutline,
+  timeOutline,
 } from 'ionicons/icons';
 
 import { MapViewComponent } from '../../../../compartido/mapa';
@@ -27,6 +29,7 @@ import { ReportService } from '../../../../services/report.service';
 import { RoutingService } from '../../../../services/routing.service';
 import { AuthService } from '../../../../services/auth.service';
 import { RanuraComponent } from '../../../../nucleo/modulos';
+import { resolucionDe, textoPrimeraAtencion, textoResolucion } from '../../resolucion';
 import {
   COLORES_ESTADO,
   ETIQUETAS_ESTADO,
@@ -94,6 +97,18 @@ export class ReportDetailPage {
   /** null = el historial no se pudo leer, distinto de no tener movimientos. */
   readonly historial = signal<StatusChange[] | null>([]);
 
+  /** F12 · "Resuelto en 2 h 15 min"; null mientras siga abierto. */
+  readonly resolucion = computed(() => {
+    const reporte = this.reporte();
+    return reporte ? textoResolucion(resolucionDe(reporte, this.historial())) : null;
+  });
+
+  /** F12 · Cuánto tardó el primer cambio de estado. */
+  readonly primeraAtencion = computed(() => {
+    const reporte = this.reporte();
+    return reporte ? textoPrimeraAtencion(reporte, this.historial()) : null;
+  });
+
   readonly esAutor = computed(
     () => this.reporte()?.uid === this.authService.user?.uid,
   );
@@ -122,9 +137,11 @@ export class ReportDetailPage {
     addIcons({
       businessOutline,
       checkmarkCircleOutline,
+      checkmarkDoneOutline,
       imageOutline,
       peopleOutline,
       refreshOutline,
+      timeOutline,
     });
 
     /**

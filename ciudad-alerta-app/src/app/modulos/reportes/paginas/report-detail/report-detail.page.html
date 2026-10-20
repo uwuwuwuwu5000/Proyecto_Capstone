@@ -40,6 +40,18 @@
           <dt><ion-icon name="business-outline" aria-hidden="true"></ion-icon> Responsable</dt>
           <dd>{{ item.organismo?.nombre ?? 'Sin asignar' }}</dd>
         </div>
+        @if (primeraAtencion(); as texto) {
+          <div class="datos__fila">
+            <dt><ion-icon name="time-outline" aria-hidden="true"></ion-icon> Primera respuesta</dt>
+            <dd>{{ texto }}</dd>
+          </div>
+        }
+        @if (resolucion(); as texto) {
+          <div class="datos__fila">
+            <dt><ion-icon name="checkmark-done-outline" aria-hidden="true"></ion-icon> Resolución</dt>
+            <dd>{{ texto }}</dd>
+          </div>
+        }
         <div class="datos__fila">
           <dt><ion-icon name="people-outline" aria-hidden="true"></ion-icon> Confirmaciones</dt>
           <dd>

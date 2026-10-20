@@ -30,6 +30,8 @@ import {
   etiquetaCategoria,
 } from '../../../../models/report.model';
 import { RanuraComponent } from '../../../../nucleo/modulos';
+import { resolucionDe } from '../../resolucion';
+import { formatearDuracion } from '@ciudad-alerta/comun';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
 @Component({
@@ -97,6 +99,17 @@ export class MyReportsPage {
 
   fechaLegible(reporte: Report): string {
     return this.queryService.formatearFecha(reporte.createdAt);
+  }
+
+  /**
+   * F12 · "Resuelto en 2 h" cuando el reporte guardó su tiempo de resolución.
+   * El listado no lee el historial: los reportes antiguos lo muestran en el detalle.
+   */
+  tiempoResolucion(reporte: Report): string | null {
+    const resolucion = resolucionDe(reporte);
+    return resolucion.tipo === 'resuelto' && resolucion.ms !== null
+      ? `Resuelto en ${formatearDuracion(resolucion.ms)}`
+      : null;
   }
 
   /** Devuelve null cuando el conteo todavía no llegó o no se pudo obtener. */

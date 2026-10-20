@@ -53,6 +53,9 @@
                     · {{ total }} {{ total === 1 ? 'confirmación' : 'confirmaciones' }}
                   }
                 </span>
+                @if (tiempoResolucion(reporte); as texto) {
+                  <span class="tarjeta__meta tarjeta__resolucion">{{ texto }}</span>
+                }
                 <app-ranura nombre="tarjeta-reporte.insignias" [entradas]="{ reporte: reporte }" />
               </span>
 

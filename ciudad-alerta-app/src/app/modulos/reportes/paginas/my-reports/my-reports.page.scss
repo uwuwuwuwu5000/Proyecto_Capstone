@@ -102,6 +102,11 @@
   color: var(--ca-muted);
 }
 
+.tarjeta__resolucion {
+  color: var(--ca-signal);
+  font-weight: 600;
+}
+
 ion-badge {
   --background: var(--ca-velo-fuerte);
   --color: var(--ca-muted);
