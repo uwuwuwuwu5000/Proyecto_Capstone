@@ -1,0 +1,86 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Mi perfil</ion-title>
+    <ion-buttons slot="end">
+      <app-ranura nombre="cabecera.acciones" />
+      <app-theme-toggle></app-theme-toggle>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="contenido" [fullscreen]="true">
+  <div class="shell">
+    @if (usuario(); as user) {
+      <header class="identidad">
+        <ion-icon name="person-circle-outline" aria-hidden="true"></ion-icon>
+        <div>
+          <h1 class="identidad__nombre">{{ perfil()?.displayName ?? user.displayName ?? 'Tu cuenta' }}</h1>
+          <p class="identidad__correo">{{ user.email }}</p>
+          @if (perfil()) {
+            <span class="identidad__rol">{{ rol() }}</span>
+          }
+        </div>
+      </header>
+
+      @if (!correoVerificado()) {
+        <app-verificacion-correo (verificado)="alVerificar()" />
+      }
+
+      <!-- Lo llenan los módulos: por ejemplo, el nivel de confianza. -->
+      <app-ranura nombre="perfil.resumen" [entradas]="{ perfil: perfil() }" />
+
+      <section class="bloque">
+        <h2>Datos de la cuenta</h2>
+
+        @if (estado() === 'cargando') {
+          <p class="nota">Cargando tu perfil…</p>
+        } @else if (estado() === 'error') {
+          <p class="nota">No pudimos leer tu perfil. Revisa tu conexión y vuelve a entrar.</p>
+        }
+
+        <dl class="datos">
+          <div class="datos__fila">
+            <dt>Correo</dt>
+            <dd>{{ user.email }}</dd>
+          </div>
+          <div class="datos__fila">
+            <dt>Correo verificado</dt>
+            <dd>{{ correoVerificado() ? 'Sí' : 'Pendiente' }}</dd>
+          </div>
+          @if (perfil(); as datos) {
+            <div class="datos__fila">
+              <dt>Nombre</dt>
+              <dd>{{ datos.displayName }}</dd>
+            </div>
+            <div class="datos__fila">
+              <dt>Tipo de cuenta</dt>
+              <dd>{{ rol() }}</dd>
+            </div>
+            @if (organismo(); as nombre) {
+              <div class="datos__fila">
+                <dt>Organismo</dt>
+                <dd>{{ nombre }}</dd>
+              </div>
+            }
+            @if (miembroDesde(); as fecha) {
+              <div class="datos__fila">
+                <dt>Miembro desde</dt>
+                <dd>{{ fecha }}</dd>
+              </div>
+            }
+          }
+          <div class="datos__fila datos__fila--tecnica">
+            <dt>Identificador</dt>
+            <dd>{{ user.uid }}</dd>
+          </div>
+        </dl>
+        <p class="nota">Si escribes a soporte, el identificador nos ayuda a encontrar tu cuenta.</p>
+      </section>
+
+      <app-cerrar-sesion />
+    }
+  </div>
+</ion-content>

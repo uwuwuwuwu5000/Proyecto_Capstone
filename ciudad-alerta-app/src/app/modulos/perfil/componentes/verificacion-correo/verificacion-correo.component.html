@@ -1,0 +1,24 @@
+<section class="verificacion" role="region" aria-label="Verificación de correo">
+  <div class="verificacion__encabezado">
+    <ion-icon name="mail-unread-outline" aria-hidden="true"></ion-icon>
+    <div>
+      <h2>Verifica tu correo</h2>
+      <p>
+        Confirmar tu correo nos ayuda a validar que los reportes vienen de personas reales y te
+        permite recuperar tu cuenta si olvidas la contraseña.
+      </p>
+    </div>
+  </div>
+
+  <div class="verificacion__acciones">
+    <ion-button class="accion-verificar" expand="block" [disabled]="enviando()" (click)="enviar()">
+      {{ enviando() ? 'Enviando…' : enviado() ? 'Reenviar correo' : 'Enviar correo de verificación' }}
+    </ion-button>
+
+    @if (enviado()) {
+      <ion-button fill="outline" expand="block" [disabled]="comprobando()" (click)="comprobar()">
+        {{ comprobando() ? 'Comprobando…' : 'Ya lo verifiqué' }}
+      </ion-button>
+    }
+  </div>
+</section>

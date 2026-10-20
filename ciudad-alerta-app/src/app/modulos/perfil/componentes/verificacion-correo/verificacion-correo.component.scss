@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.verificacion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(28, 169, 201, 0.4);
+  border-radius: 12px;
+  background: rgba(28, 169, 201, 0.08);
+}
+
+.verificacion__encabezado {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+
+  ion-icon {
+    font-size: 1.4rem;
+    color: var(--ca-signal);
+    flex-shrink: 0;
+  }
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    color: var(--ca-muted);
+  }
+}
+
+.verificacion__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  ion-button {
+    margin: 0;
+    text-transform: none;
+    font-weight: 600;
+  }
+
+  ion-button[fill='outline'] {
+    --border-color: var(--ca-line);
+    --color: var(--ca-ink);
+    --border-radius: 10px;
+  }
+}
+
+.accion-verificar {
+  --background: var(--ca-signal);
+  --background-activated: var(--ca-signal-dark);
+  --color: var(--ca-base);
+  --border-radius: 10px;
+  --box-shadow: none;
+}

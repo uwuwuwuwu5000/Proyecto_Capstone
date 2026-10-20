@@ -39,6 +39,12 @@ export const RANURAS = {
   inicioResumen: 'inicio.resumen',
 
   /**
+   * «Mi perfil», bajo el nombre y el correo.
+   * Entradas: `perfil: UserProfile | null`.
+   */
+  perfilResumen: 'perfil.resumen',
+
+  /**
    * Botones de la barra superior, a la derecha del título (la campana de
    * avisos, por ejemplo). Sin entradas. Debe ser un `ion-button` pequeño.
    */

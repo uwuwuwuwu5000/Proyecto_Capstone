@@ -43,5 +43,11 @@ export const MODULO_CONFIANZA: ModuloApp = {
       cargar: () =>
         import('./componentes/resumen-confianza.component').then((m) => m.ResumenConfianzaComponent),
     },
+    {
+      // La misma tarjeta en «Mi perfil», si ese módulo está activo.
+      ranura: RANURAS.perfilResumen,
+      cargar: () =>
+        import('./componentes/resumen-confianza.component').then((m) => m.ResumenConfianzaComponent),
+    },
   ],
 };

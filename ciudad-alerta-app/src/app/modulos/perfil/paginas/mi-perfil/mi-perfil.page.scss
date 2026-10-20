@@ -1,0 +1,104 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.contenido {
+  --background: linear-gradient(180deg, var(--ca-base) 0%, var(--ca-fondo-fin) 100%);
+  --color: var(--ca-ink);
+}
+
+.shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.identidad {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+
+  ion-icon {
+    font-size: 3rem;
+    color: var(--ca-signal);
+    flex-shrink: 0;
+  }
+}
+
+.identidad__nombre {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.identidad__correo {
+  margin: 0.15rem 0 0.4rem;
+  font-size: 0.86rem;
+  color: var(--ca-muted);
+  word-break: break-all;
+}
+
+.identidad__rol {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: var(--ca-velo-fuerte);
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--ca-muted);
+}
+
+.datos {
+  margin: 0;
+  border-top: 1px solid var(--ca-velo-fuerte);
+}
+
+.datos__fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--ca-velo);
+
+  dt {
+    font-size: 0.85rem;
+    color: var(--ca-muted);
+    flex-shrink: 0;
+  }
+
+  dd {
+    margin: 0;
+    font-size: 0.88rem;
+    text-align: right;
+    word-break: break-all;
+  }
+}
+
+.datos__fila--tecnica dd {
+  font-family: ui-monospace, monospace;
+  font-size: 0.74rem;
+}
