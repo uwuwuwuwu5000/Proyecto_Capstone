@@ -10,7 +10,8 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
  * ranuras. Al desactivarlo, el detalle vuelve a la confirmación simple, las
  * tarjetas pierden la insignia y el inicio pierde la tarjeta de nivel.
  *
- * Los números del sistema están en `dominio/parametros.ts` y deben coincidir
+ * Los números del sistema están en `comun/src/confianza/parametros.ts` (paquete
+ * compartido con el portal) y deben coincidir
  * con firestore.rules.
  */
 export const MODULO_CONFIANZA: ModuloApp = {

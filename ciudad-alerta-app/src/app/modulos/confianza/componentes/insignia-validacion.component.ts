@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
 import { Report } from '../../../models/report.model';
-import { porcentajeDeValidacion, validacionCompleta } from '../dominio/calculos';
+import { porcentajeDeValidacion, validacionCompleta } from '@ciudad-alerta/comun';
 
 /**
  * A5 · Estado de validación en una tarjeta de reporte: «Validado», el

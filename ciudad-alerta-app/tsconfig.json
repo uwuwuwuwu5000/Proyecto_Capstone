@@ -19,7 +19,11 @@
     "module": "es2020",
     "lib": ["es2022", "dom"],
     "skipLibCheck": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    /* Código compartido con el portal web: ver comun/LEEME.md. */
+    "paths": {
+      "@ciudad-alerta/comun": ["../comun/src/index.ts"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

@@ -79,6 +79,44 @@ const declaradas = new Set([
 ]);
 if (!declaradas.size) informe.agregar('error', 'No se pudo leer package.json.');
 
+/**
+ * Alias de `compilerOptions.paths` del tsconfig (por ejemplo
+ * '@ciudad-alerta/comun' → '../comun/src/index.ts'). No son paquetes de npm:
+ * se resuelven contra el archivo al que apuntan.
+ */
+const alias = (() => {
+  const crudo = leerSiExiste(join(RAIZ, 'tsconfig.json'));
+  if (!crudo) return [];
+  try {
+    const tsconfig = JSON.parse(sinComentarios(crudo).replace(/,(\s*[}\]])/g, '$1'));
+    const base = resolve(RAIZ, tsconfig.compilerOptions?.baseUrl ?? '.');
+    return Object.entries(tsconfig.compilerOptions?.paths ?? {}).map(([clave, destinos]) => ({
+      clave,
+      comodin: clave.endsWith('/*'),
+      prefijo: clave.replace(/\*$/, ''),
+      destinos: destinos.map((d) => resolve(base, d)),
+    }));
+  } catch {
+    informe.agregar('advertencia', 'No se pudo leer tsconfig.json para conocer sus alias (paths)', {
+      archivo: 'tsconfig.json',
+    });
+    return [];
+  }
+})();
+
+/** Archivos a los que apunta un import con alias; null si no usa ningún alias. */
+function destinosDeAlias(especificador) {
+  const a = alias.find((x) => (x.comodin ? especificador.startsWith(x.prefijo) : especificador === x.clave));
+  if (!a) return null;
+  const resto = a.comodin ? especificador.slice(a.prefijo.length) : '';
+  return a.destinos.map((d) => d.replace('*', resto));
+}
+
+const existeModulo = (base) =>
+  [base, `${base}.ts`, `${base}.js`, `${base}.mjs`, `${base}.json`, join(base, 'index.ts')].some(
+    (c) => existsSync(c) && statSync(c).isFile(),
+  );
+
 const usadas = new Map(); // paquete → primer archivo que lo usa
 let importsRotos = 0;
 const REGEX_IMPORT = /(?:^|[\s;])(?:import|export)\s+(?:type\s+)?(?:[\w*{}\s,$]+\s+from\s+)?['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)/g;
@@ -90,8 +128,14 @@ for (const [archivo, texto] of codigo) {
 
     if (especificador.startsWith('.')) {
       const base = resolve(dirname(archivo), especificador);
-      const candidatos = [base, `${base}.ts`, `${base}.js`, `${base}.mjs`, `${base}.json`, join(base, 'index.ts')];
-      if (!candidatos.some((c) => existsSync(c) && statSync(c).isFile())) {
+      if (/(^|\/)comun\/src(\/|$)/.test(especificador)) {
+        informe.agregar('advertencia', `Import relativo al paquete compartido: '${especificador}'`, {
+          archivo: rel(archivo),
+          linea,
+          solucion: "Importa desde '@ciudad-alerta/comun': la ruta relativa se rompe si el archivo se mueve.",
+        });
+      }
+      if (!existeModulo(base)) {
         importsRotos++;
         informe.agregar('error', `Import a un archivo que no existe: '${especificador}'`, {
           archivo: rel(archivo),
@@ -103,6 +147,21 @@ for (const [archivo, texto] of codigo) {
     }
 
     if (especificador.startsWith('node:')) continue;
+
+    const destinos = destinosDeAlias(especificador);
+    if (destinos) {
+      if (!destinos.some(existeModulo)) {
+        importsRotos++;
+        informe.agregar('error', `El alias '${especificador}' apunta a un archivo que no existe`, {
+          archivo: rel(archivo),
+          linea,
+          detalle: `Destino según tsconfig.json: ${destinos.map(rel).join(', ')}`,
+          solucion: 'Revisa que la carpeta comun/ esté en la raíz del repositorio (junto a ciudad-alerta-app/).',
+        });
+      }
+      continue;
+    }
+
     const nombre = especificador.startsWith('@')
       ? especificador.split('/').slice(0, 2).join('/')
       : especificador.split('/')[0];
@@ -167,7 +226,33 @@ if (sinUso.length) {
     detalle: 'Pueden ser plugins de Capacitor usados solo desde Android o restos de pruebas anteriores.',
   });
 }
-if (!importsRotos) informe.ok(`${archivosTs.length} archivos TypeScript, imports relativos resueltos`);
+if (!importsRotos) {
+  informe.ok(
+    `${archivosTs.length} archivos TypeScript, imports relativos` + (alias.length ? ' y alias de tsconfig' : '') + ' resueltos',
+  );
+}
+
+// El paquete compartido debe seguir siendo TypeScript puro: si importa
+// Angular, Ionic, React o Firebase, deja de servirle a la otra aplicación.
+const COMUN_SRC = resolve(RAIZ, '..', 'comun', 'src');
+if (alias.some((a) => a.destinos.some((d) => d.startsWith(COMUN_SRC)))) {
+  const archivosComun = listar(COMUN_SRC, (n) => n.endsWith('.ts') && !n.endsWith('.d.ts'));
+  let externos = 0;
+  for (const archivo of archivosComun) {
+    const texto = sinComentarios(leer(archivo));
+    for (const m of texto.matchAll(REGEX_IMPORT)) {
+      const especificador = m[1] ?? m[2];
+      if (especificador.startsWith('.')) continue;
+      externos++;
+      informe.agregar('error', `comun/ importa '${especificador}': el paquete compartido debe ser TypeScript puro`, {
+        archivo: rel(archivo),
+        linea: lineaDe(texto, m.index),
+        solucion: 'Deja aquí solo la regla de negocio y pon el uso del framework o de Firebase en cada aplicación.',
+      });
+    }
+  }
+  if (!externos) informe.ok(`Paquete comun/: ${archivosComun.length} archivos, sin dependencias de Angular, React ni Firebase`);
+}
 
 // ═══ 2. Componentes ═════════════════════════════════════════════════════════
 informe.seccion('Componentes, plantillas e íconos');

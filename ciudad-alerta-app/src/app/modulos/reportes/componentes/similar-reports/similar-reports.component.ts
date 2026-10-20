@@ -3,6 +3,8 @@ import { IonBadge, IonButton, IonIcon, IonSpinner, ToastController } from '@ioni
 import { addIcons } from 'ionicons';
 import { checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
 
+import { formatearDistancia } from '@ciudad-alerta/comun';
+
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { ETIQUETAS_ESTADO, MatchCandidate } from '../../../../models/report.model';
 
@@ -67,9 +69,7 @@ export class SimilarReportsComponent {
 
   /** v2-D3 · La distancia es la señal más útil para decidir si es duplicado. */
   formatearDistancia(metros: number): string {
-    return metros < 1000
-      ? `a ${Math.max(10, Math.round(metros / 10) * 10)} m`
-      : `a ${(metros / 1000).toFixed(1)} km`;
+    return `a ${formatearDistancia(metros, { aproximada: true })}`;
   }
 
   async confirmar(candidato: MatchCandidate): Promise<void> {

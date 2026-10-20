@@ -1,74 +1,41 @@
 import { FieldValue, Timestamp } from 'firebase/firestore';
 
+/*
+ * Estados, categorías, transiciones, etiquetas, colores y límites vienen del
+ * paquete compartido `comun/` (también lo puede usar el portal web). Se
+ * reexportan aquí con los nombres de siempre para no tocar las pantallas.
+ */
+import {
+  CATEGORIAS,
+  COLORES_ESTADO,
+  DESCRIPCION_MAX,
+  DESCRIPCION_MIN,
+  ESTADOS_FINALIZADOS,
+  ETIQUETAS_ESTADO,
+  TRANSICIONES,
+  etiquetaCategoria,
+} from '@ciudad-alerta/comun';
+import type { CategoriaReporte, EstadoReporte, InfoPrivacidad } from '@ciudad-alerta/comun';
+
+export { COLORES_ESTADO, DESCRIPCION_MAX, DESCRIPCION_MIN, ETIQUETAS_ESTADO, TRANSICIONES, etiquetaCategoria };
+export type { InfoPrivacidad };
+
 /** Estados del ciclo de vida de una incidencia (ver lámina 8 de la presentación). */
-export type ReportStatus =
-  | 'reportado'
-  | 'en_revision'
-  | 'derivado'
-  | 'en_proceso'
-  | 'resuelto'
-  | 'cerrado';
+export type ReportStatus = EstadoReporte;
 
 /** Categorías habilitadas en el piloto. */
-export type ReportCategory =
-  | 'microbasural'
-  | 'luminaria'
-  | 'fuga_agua'
-  | 'arbol_peligroso'
-  | 'calle_deteriorada'
-  | 'accesibilidad'
-  | 'otro';
+export type ReportCategory = CategoriaReporte;
 
-export const REPORT_CATEGORIES: ReadonlyArray<{ id: ReportCategory; label: string }> = [
-  { id: 'microbasural', label: 'Microbasural' },
-  { id: 'luminaria', label: 'Luminaria dañada' },
-  { id: 'fuga_agua', label: 'Fuga de agua' },
-  { id: 'arbol_peligroso', label: 'Árbol peligroso' },
-  { id: 'calle_deteriorada', label: 'Calle deteriorada' },
-  { id: 'accesibilidad', label: 'Problema de accesibilidad' },
-  { id: 'otro', label: 'Otro' },
-];
-
-const ETIQUETAS_CATEGORIA: Readonly<Record<string, string>> = Object.fromEntries(
-  REPORT_CATEGORIES.map((c) => [c.id, c.label]),
+/** Para los selectores: `label` es el nombre que usan las plantillas. */
+export const REPORT_CATEGORIES: ReadonlyArray<{ id: ReportCategory; label: string }> = CATEGORIAS.map(
+  (c) => ({ id: c.id, label: c.etiqueta }),
 );
-
-/**
- * Nombre legible de una categoría ("luminaria" → "Luminaria dañada"). Si llega
- * un id que no está en la lista (un reporte antiguo o una categoría retirada),
- * devuelve el id tal cual para no mostrar un hueco.
- */
-export function etiquetaCategoria(id: string | null | undefined): string {
-  if (!id) return 'Sin categoría';
-  return ETIQUETAS_CATEGORIA[id] ?? id;
-}
-
-/** Límites de la descripción, validados en el formulario y en las reglas de Firestore. */
-export const DESCRIPCION_MIN = 10;
-export const DESCRIPCION_MAX = 500;
 
 export interface GeoPoint {
   lat: number;
   lng: number;
   /** Precisión en metros informada por el dispositivo. */
   accuracy: number;
-}
-
-/**
- * Resultado de la protección de privacidad aplicada a una fotografía.
- *
- * Viaja dentro de la referencia de la foto del reporte. Las reglas exigen
- * `aplicada: true` en todo reporte con fotografía, de modo que una versión
- * antigua de la app —sin difuminado— no pueda publicar imágenes con rostros.
- */
-export interface InfoPrivacidad {
-  aplicada: boolean;
-  /** Rostros detectados y difuminados. */
-  rostros: number;
-  /** Personas lejanas cuya cabeza se difuminó sin detectar el rostro. */
-  personas: number;
-  /** Modelos usados, para poder auditar o reprocesar si cambian. */
-  version: string;
 }
 
 /**
@@ -92,7 +59,7 @@ export const VENTANA_COINCIDENCIA_HORAS = 72;
 export const RADIO_COINCIDENCIA_METROS = 150;
 
 /** Estados que descartan una coincidencia: el incidente ya se cerró. */
-export const ESTADOS_INACTIVOS: ReadonlyArray<ReportStatus> = ['resuelto', 'cerrado'];
+export const ESTADOS_INACTIVOS: ReadonlyArray<ReportStatus> = ESTADOS_FINALIZADOS;
 
 /** Tipos de organismo responsable contemplados en el piloto. */
 export type TipoOrganismo = 'municipio' | 'empresa_sanitaria' | 'empresa_electrica';
@@ -159,43 +126,6 @@ export const ORGANISMOS: Readonly<Record<ReportCategory, Organismo>> = {
 export const IDS_ORGANISMOS: ReadonlyArray<string> = [
   'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria',
 ];
-
-/** Transiciones permitidas entre estados. Se valida en cliente y en reglas. */
-export const TRANSICIONES: Readonly<Record<ReportStatus, ReadonlyArray<ReportStatus>>> = {
-  reportado: ['en_revision', 'derivado', 'cerrado'],
-  en_revision: ['derivado', 'cerrado'],
-  derivado: ['en_proceso', 'cerrado'],
-  en_proceso: ['resuelto', 'cerrado'],
-  resuelto: ['cerrado'],
-  cerrado: [],
-};
-
-export const ETIQUETAS_ESTADO: Readonly<Record<ReportStatus, string>> = {
-  reportado: 'Reportado',
-  en_revision: 'En revisión',
-  derivado: 'Derivado',
-  en_proceso: 'En proceso',
-  resuelto: 'Resuelto',
-  cerrado: 'Cerrado',
-};
-
-/** Color del marcador según estado, usado en el mapa de incidencias. */
-/**
- * Colores de los marcadores.
- *
- * v2-B8 · `resuelto` usaba el blanco de la paleta y resultaba casi invisible
- * sobre los tiles claros de OpenStreetMap. Se usa un verde, que además aporta
- * el significado convencional de "resuelto"; es la única excepción deliberada
- * a la paleta de marca, justificada por legibilidad sobre el mapa.
- */
-export const COLORES_ESTADO: Readonly<Record<ReportStatus, string>> = {
-  reportado: '#1ca9c9',
-  en_revision: '#7fd3e4',
-  derivado: '#a5b4c3',
-  en_proceso: '#4a90a4',
-  resuelto: '#3fbf8f',
-  cerrado: '#5c677d',
-};
 
 /** Radios disponibles en la página de reportes cercanos, en metros. */
 export const RADIOS_BUSQUEDA: ReadonlyArray<number> = [500, 1000, 2000, 5000];

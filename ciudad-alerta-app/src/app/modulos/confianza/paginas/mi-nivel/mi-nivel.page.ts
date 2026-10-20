@@ -16,8 +16,13 @@ import { Report } from '../../../../models/report.model';
 import { AuthService } from '../../../../services/auth.service';
 import { ReportQueryService } from '../../../../services/report-query.service';
 import { ConfianzaService, CupoDelDia, EstadoConfianza } from '../../datos/confianza.service';
-import { limiteDiario, pesoDeNivel, progresoDeNivel } from '../../dominio/calculos';
-import { NIVELES, PARAMETROS_CONFIANZA } from '../../dominio/parametros';
+import {
+  NIVELES,
+  PARAMETROS_CONFIANZA,
+  limiteDiario,
+  pesoDeNivel,
+  progresoDeNivel,
+} from '@ciudad-alerta/comun';
 
 /** Un veredicto sobre un reporte propio: lo que movió los puntos (A2.3). */
 interface EventoPuntos {

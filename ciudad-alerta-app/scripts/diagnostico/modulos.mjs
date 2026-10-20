@@ -362,13 +362,17 @@ export function revisarModulos({ informe, SRC, codigo, componentes, rel }) {
 }
 
 /**
- * Compara la tabla del sistema de confianza (modulos/confianza/dominio/parametros.ts)
- * con las funciones de firestore.rules. Si difieren, la app calcula valores
- * que las reglas rechazan.
+ * Compara la tabla del sistema de confianza (comun/src/confianza/parametros.ts,
+ * compartida con el portal) con las funciones de firestore.rules. Si difieren,
+ * la app calcula valores que las reglas rechazan.
  */
 export function revisarParametrosConfianza({ informe, SRC, reglas, rel }) {
-  const archivo = join(SRC, 'app', 'modulos', 'confianza', 'dominio', 'parametros.ts');
-  if (!existsSync(archivo) || !reglas) return;
+  const archivo = [
+    join(SRC, '..', '..', 'comun', 'src', 'confianza', 'parametros.ts'),
+    // Ubicación anterior a la fase 3, por si se ejecuta en una copia antigua.
+    join(SRC, 'app', 'modulos', 'confianza', 'dominio', 'parametros.ts'),
+  ].find((ruta) => existsSync(ruta));
+  if (!archivo || !reglas) return;
   const ts = leer(archivo);
 
   const funcionDeReglas = (nombre, parametro) => {

@@ -6,7 +6,7 @@ import { checkmarkCircleOutline, refreshOutline, shieldCheckmarkOutline } from '
 
 import { Report } from '../../../../models/report.model';
 import { ConfianzaError, ConfianzaService, Disponibilidad } from '../../datos/confianza.service';
-import { porcentajeDeValidacion, validacionCompleta } from '../../dominio/calculos';
+import { porcentajeDeValidacion, validacionCompleta } from '@ciudad-alerta/comun';
 
 type EstadoBoton = 'cargando' | 'error' | 'listo' | 'enviando';
 

@@ -1,16 +1,19 @@
 import { Injectable, inject } from '@angular/core';
+import {
+  CajaGeografica,
+  areaDeCaja,
+  cajaDesdeGeoJson,
+  codigoRegionDeComuna,
+  dentroDeCaja,
+  nombreCortoRegion,
+  unirCajas,
+} from '@ciudad-alerta/comun';
 
 import { GeoPoint } from '../models/report.model';
 import { CatalogoComunasService } from './catalogo-comunas.service';
 import { ComunaService } from './comuna.service';
 
-/** Caja geográfica en grados. */
-export interface CajaGeografica {
-  minLat: number;
-  minLng: number;
-  maxLat: number;
-  maxLng: number;
-}
+export type { CajaGeografica };
 
 /** Una de las 16 regiones de Chile. */
 export interface Region {
@@ -76,7 +79,7 @@ export class RegionesService {
   async regionDe(punto: GeoPoint): Promise<Region | null> {
     const regiones = await this.todas();
     const detectada = await this.comunaService.detectar(punto);
-    const codigo = detectada.codigo?.padStart(5, '0').slice(0, 2);
+    const codigo = detectada.codigo ? codigoRegionDeComuna(detectada.codigo) : undefined;
 
     const porComuna =
       regiones.find((r) => r.codigo === codigo) ??
@@ -86,9 +89,9 @@ export class RegionesService {
       return porComuna;
     }
 
-    const contienen = regiones.filter((r) => r.caja && dentro(punto, r.caja));
+    const contienen = regiones.filter((r) => r.caja && dentroDeCaja(punto, r.caja));
     // Con cajas que se traslapan, la más chica es la más probable.
-    contienen.sort((a, b) => area(a.caja!) - area(b.caja!));
+    contienen.sort((a, b) => areaDeCaja(a.caja!) - areaDeCaja(b.caja!));
     return contienen[0] ?? null;
   }
 
@@ -104,7 +107,7 @@ export class RegionesService {
         region = {
           codigo: comuna.codigoRegion,
           nombre: comuna.region,
-          nombreCorto: nombreCorto(comuna.region),
+          nombreCorto: nombreCortoRegion(comuna.region),
           comunas: [],
           caja: null,
         };
@@ -115,12 +118,7 @@ export class RegionesService {
 
       const caja = cajaDe.get(comuna.codigo);
       if (caja && !COMUNAS_OCEANICAS.has(comuna.codigo)) {
-        region.caja = unir(region.caja, {
-          minLng: caja[0],
-          minLat: caja[1],
-          maxLng: caja[2],
-          maxLat: caja[3],
-        });
+        region.caja = unirCajas(region.caja, cajaDesdeGeoJson(caja));
       }
     }
 
@@ -138,31 +136,6 @@ export class RegionesService {
       return null;
     }
   }
-}
-
-/** "Región del Libertador Bernardo O'Higgins" → "Libertador Bernardo O'Higgins". */
-function nombreCorto(nombre: string): string {
-  return nombre.replace(/^Región\s+(del\s+|de\s+)?/i, '').trim() || nombre;
-}
-
-function unir(a: CajaGeografica | null, b: CajaGeografica): CajaGeografica {
-  if (!a) return b;
-  return {
-    minLat: Math.min(a.minLat, b.minLat),
-    minLng: Math.min(a.minLng, b.minLng),
-    maxLat: Math.max(a.maxLat, b.maxLat),
-    maxLng: Math.max(a.maxLng, b.maxLng),
-  };
-}
-
-function dentro(punto: GeoPoint, caja: CajaGeografica): boolean {
-  return (
-    punto.lat >= caja.minLat && punto.lat <= caja.maxLat && punto.lng >= caja.minLng && punto.lng <= caja.maxLng
-  );
-}
-
-function area(caja: CajaGeografica): number {
-  return (caja.maxLat - caja.minLat) * (caja.maxLng - caja.minLng);
 }
 
 function centroLat(caja: CajaGeografica): number {

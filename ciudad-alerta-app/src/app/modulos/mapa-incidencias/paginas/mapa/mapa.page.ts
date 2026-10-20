@@ -12,6 +12,7 @@ import {
   IonTitle,
   IonToolbar,
 } from '@ionic/angular';
+import { cajaDePuntos } from '@ciudad-alerta/comun';
 import { addIcons } from 'ionicons';
 import { locateOutline, refreshOutline } from 'ionicons/icons';
 
@@ -145,12 +146,7 @@ export class MapaPage {
       return this.region()?.caja ?? null;
     }
 
-    return {
-      minLat: Math.min(...marcadores.map((m) => m.lat)),
-      minLng: Math.min(...marcadores.map((m) => m.lng)),
-      maxLat: Math.max(...marcadores.map((m) => m.lat)),
-      maxLng: Math.max(...marcadores.map((m) => m.lng)),
-    };
+    return cajaDePuntos(marcadores);
   });
 
   /**

@@ -19,6 +19,8 @@ import { addIcons } from 'ionicons';
 
 import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
+import { formatearDistancia } from '@ciudad-alerta/comun';
+
 import { MapMarker, MapViewComponent } from '../../../../compartido/mapa';
 import { AuthService } from '../../../../services/auth.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
@@ -177,13 +179,10 @@ export class NearbyPage {
   /**
    * BUG 44 · La distancia se redondea a la decena: el GPS tiene un error de
    * varias decenas de metros y mostrar "37 m" sugiere una precisión que no existe.
+   * La regla está en `comun` para que el portal la muestre igual.
    */
   formatearDistancia(metros: number): string {
-    if (metros < 1000) {
-      return `${Math.max(10, Math.round(metros / 10) * 10)} m aprox.`;
-    }
-
-    return `${(metros / 1000).toFixed(1)} km aprox.`;
+    return formatearDistancia(metros, { aproximada: true });
   }
 
   async cargar(): Promise<void> {

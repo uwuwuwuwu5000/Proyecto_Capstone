@@ -24,8 +24,8 @@ import {
   pesoDeVoto,
   sumarConfirmacion,
   validacionCompleta,
-} from '../dominio/calculos';
-import { PARAMETROS_CONFIANZA } from '../dominio/parametros';
+  PARAMETROS_CONFIANZA,
+} from '@ciudad-alerta/comun';
 
 /** Datos de `users/{uid}/confianza/actual`. Sin documento = nivel 0. */
 export interface EstadoConfianza {
@@ -119,7 +119,7 @@ const MARGEN_RELOJ_MS = 2 * 60_000;
  *
  * Todo lo que escribe lo comprueban las reglas de Firestore (no hay servidor).
  * Por eso cada número se calcula aquí con las mismas funciones de
- * `dominio/calculos.ts`, y la escritura va en una transacción: si dos vecinos
+ * `comun/src/confianza/calculos.ts`, y la escritura va en una transacción: si dos vecinos
  * confirman a la vez, Firestore repite la segunda con la suma nueva.
  */
 @Injectable({ providedIn: 'root' })

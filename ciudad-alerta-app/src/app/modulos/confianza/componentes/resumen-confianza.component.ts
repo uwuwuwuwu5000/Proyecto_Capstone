@@ -6,7 +6,7 @@ import { chevronForwardOutline, ribbonOutline } from 'ionicons/icons';
 
 import { UserProfile } from '../../../models/user-profile.model';
 import { ConfianzaService } from '../datos/confianza.service';
-import { ProgresoNivel, progresoDeNivel } from '../dominio/calculos';
+import { ProgresoNivel, progresoDeNivel } from '@ciudad-alerta/comun';
 
 /**
  * Tarjeta del inicio con el nivel de confianza y el avance al siguiente.

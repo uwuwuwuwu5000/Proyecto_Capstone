@@ -1,4 +1,13 @@
 import { Injectable, signal } from '@angular/core';
+import {
+  CALIDAD_SALIDA,
+  CONFIANZA_PERSONA,
+  Caja,
+  MAXIMO_PERSONAS,
+  tamanoReducido,
+  versionDeModelos,
+  zonasADifuminar,
+} from '@ciudad-alerta/comun';
 
 import type * as TF from '@tensorflow/tfjs-core';
 import type * as FaceDetection from '@tensorflow-models/face-detection';
@@ -19,24 +28,13 @@ import { InfoPrivacidad } from '../models/report.model';
 const MODELO_LOCAL_PERSONAS = 'assets/models/coco-ssd/model.json';
 const MODELO_LOCAL_ROSTROS = 'assets/models/face-detection/model.json';
 
-/**
- * Umbral de confianza bajo a propósito para las personas. En anonimización,
- * un falso positivo —difuminar algo que no era una persona— cuesta poco; un
- * falso negativo —publicar un rostro sin difuminar— es justo lo que esta
- * función debe evitar. El detector de rostros con runtime tfjs aplica su
- * propio umbral interno y no expone uno configurable.
+/*
+ * Umbrales y geometría (qué zonas difuminar) están en `comun/src/privacidad`,
+ * compartidos con el portal: los dos deben proteger igual. CONFIANZA_PERSONA
+ * es bajo a propósito: difuminar algo que no era una persona cuesta poco;
+ * publicar un rostro sin difuminar es justo lo que esta función debe evitar.
+ * El detector de rostros con runtime tfjs aplica su propio umbral interno.
  */
-const CONFIANZA_PERSONA = 0.35;
-
-/** Calidad JPEG de salida, la misma que usa la compresión de la cámara. */
-const CALIDAD_SALIDA = 0.6;
-
-interface Caja {
-  x: number;
-  y: number;
-  ancho: number;
-  alto: number;
-}
 
 export class PrivacidadError extends Error {
   constructor(override readonly message: string) {
@@ -124,33 +122,23 @@ export class PrivacidadService {
     }
 
     // Rostros: elipse holgada que cubre también frente, cabello y mentón.
-    for (const rostro of rostros) {
-      this.difuminar(contexto, lienzo, this.ampliar(rostro, lienzo), true);
+    // Personas: zona de la cabeza, salvo que ya contenga un rostro detectado.
+    const zonas = zonasADifuminar(rostros, personas, lienzo);
+
+    for (const rostro of zonas.rostros) {
+      this.difuminar(contexto, lienzo, rostro, true);
     }
 
-    // Personas: zona de la cabeza, salvo que ya se haya difuminado un rostro
-    // dentro de ella.
-    let personasDifuminadas = 0;
-
-    for (const persona of personas) {
-      const cabeza = this.zonaCabeza(persona, lienzo);
-
-      if (rostros.some((rostro) => this.solapa(rostro, cabeza))) {
-        continue;
-      }
-
+    for (const cabeza of zonas.cabezas) {
       this.difuminar(contexto, lienzo, cabeza, false);
-      personasDifuminadas += 1;
     }
 
     const privacidad: InfoPrivacidad = {
       aplicada: true,
       rostros: rostros.length,
-      personas: personasDifuminadas,
+      personas: zonas.cabezas.length,
       // Registra qué detectores corrieron realmente en esta foto.
-      version: this.detectorRostros
-        ? 'mediapipe-face-full+coco-ssd-lite-v2'
-        : 'coco-ssd-lite-v2',
+      version: versionDeModelos(this.detectorRostros !== null),
     };
 
     return this.exportar(lienzo, foto, privacidad);
@@ -363,49 +351,11 @@ export class PrivacidadService {
   }
 
   private async detectarPersonas(lienzo: HTMLCanvasElement): Promise<Caja[]> {
-    const objetos = await this.detectorPersonas!.detect(lienzo, 30, CONFIANZA_PERSONA);
+    const objetos = await this.detectorPersonas!.detect(lienzo, MAXIMO_PERSONAS, CONFIANZA_PERSONA);
 
     return objetos
       .filter((objeto) => objeto.class === 'person')
       .map(({ bbox: [x, y, ancho, alto] }) => ({ x, y, ancho, alto }));
-  }
-
-  /**
-   * El detector entrega una caja ajustada a los rasgos. Se amplía para cubrir
-   * frente, cabello, orejas y mentón, que también permiten reconocer a alguien.
-   */
-  private ampliar(caja: Caja, lienzo: HTMLCanvasElement): Caja {
-    const margenX = caja.ancho * 0.3;
-    const margenArriba = caja.alto * 0.45;
-    const margenAbajo = caja.alto * 0.25;
-
-    return this.recortar(
-      {
-        x: caja.x - margenX,
-        y: caja.y - margenArriba,
-        ancho: caja.ancho + margenX * 2,
-        alto: caja.alto + margenArriba + margenAbajo,
-      },
-      lienzo,
-    );
-  }
-
-  /**
-   * Zona de la cabeza a partir de la caja de una persona completa. La cabeza
-   * ocupa aproximadamente el séptimo superior del cuerpo; se toma el cuarto
-   * superior y todo el ancho, para no fallar con personas agachadas, de perfil
-   * o parcialmente cortadas por el borde de la foto.
-   */
-  private zonaCabeza(persona: Caja, lienzo: HTMLCanvasElement): Caja {
-    return this.recortar(
-      {
-        x: persona.x,
-        y: persona.y - persona.alto * 0.03,
-        ancho: persona.ancho,
-        alto: persona.alto * 0.28,
-      },
-      lienzo,
-    );
   }
 
   /**
@@ -425,8 +375,7 @@ export class PrivacidadService {
     }
 
     // Unos 6 bloques a lo ancho, sin importar el tamaño del rostro.
-    const anchoReducido = Math.max(2, Math.min(8, Math.round(zona.ancho / 6)));
-    const altoReducido = Math.max(2, Math.round(anchoReducido * (zona.alto / zona.ancho)));
+    const { ancho: anchoReducido, alto: altoReducido } = tamanoReducido(zona);
 
     const reducido = document.createElement('canvas');
     reducido.width = anchoReducido;
@@ -469,27 +418,6 @@ export class PrivacidadService {
     );
 
     contexto.restore();
-  }
-
-  private solapa(a: Caja, b: Caja): boolean {
-    return (
-      a.x < b.x + b.ancho &&
-      a.x + a.ancho > b.x &&
-      a.y < b.y + b.alto &&
-      a.y + a.alto > b.y
-    );
-  }
-
-  private recortar(caja: Caja, lienzo: HTMLCanvasElement): Caja {
-    const x = Math.max(0, caja.x);
-    const y = Math.max(0, caja.y);
-
-    return {
-      x,
-      y,
-      ancho: Math.min(lienzo.width - x, caja.ancho - (x - caja.x)),
-      alto: Math.min(lienzo.height - y, caja.alto - (y - caja.y)),
-    };
   }
 
   private aLienzo(dataUrl: string): Promise<HTMLCanvasElement> {
