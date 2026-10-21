@@ -526,6 +526,10 @@ npm run diagnostico
 
 `npm test` deja Vitest mirando los cambios mientras se programa.
 
+**Cómo se preparan.** Cada `*.spec.ts` llama a `usarEntornoDePrueba()` (`src/testing`) antes del
+`describe`. No se hace en `src/test-setup.ts` porque en Windows lo que se configura ahí no llega a
+las pruebas.
+
 **Qué cubren.** Las pruebas de la app usan Firebase de prueba (`src/testing/firebase-de-prueba.ts`):
 Firestore y Storage reales de un proyecto `demo-*` que nunca se conectan, y una sesión
 simulada. Por eso prueban la lógica y lo que se ve en pantalla, pero no lo que Firestore
@@ -538,4 +542,5 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
   (F12), Mi perfil, inicio por rol y cierre de sesión;
 - historial público, catálogo de comunas y regiones del mapa.
 
-Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`.
+Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`, y empieza
+con `usarEntornoDePrueba()`.

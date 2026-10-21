@@ -252,13 +252,24 @@ this.router.navigate(RUTAS_REPORTES.detalle(reporte.id));
 
 ### Escribir una prueba
 
-Junto al archivo, con el mismo nombre y `.spec.ts`. Firebase, Ionic y el router ya están registrados para todas las pruebas (`src/test-setup.ts`), sin red. Lo que lea datos se simula reemplazando el servicio:
+Junto al archivo, con el mismo nombre y `.spec.ts`, y **siempre** empezando con `usarEntornoDePrueba()`: registra Ionic, el router y Firebase sin red para cada prueba del archivo. Lo que lea datos se simula reemplazando el servicio:
 
 ```ts
-TestBed.configureTestingModule({
-  providers: [{ provide: AuthService, useValue: { user: { uid: 'u1' }, getUserProfile: vi.fn() } }],
+import { usarEntornoDePrueba } from '../../testing';
+
+usarEntornoDePrueba();
+
+describe('MiPantalla', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: { user: { uid: 'u1' }, getUserProfile: vi.fn() } }],
+    });
+  });
+  …
 });
 ```
+
+No se pone en `src/test-setup.ts`: en Windows, Angular carga ese archivo con otra copia de `TestBed` y los proveedores no llegan a las pruebas (fallaban 32 con «No provider found for InjectionToken FIRESTORE»). `test-setup.ts` queda solo para polyfills. El diagnóstico avisa si una prueba no llama a `usarEntornoDePrueba()`.
 
 Para el núcleo hay módulos ficticios en `src/testing/modulos-de-prueba.ts` y el token `CONFIGURACION_MODULOS`.
 
@@ -359,7 +370,7 @@ El cambio de estado está en `gestion-reportes/datos/cambio-estado.service.ts` (
 
 ### Pruebas
 
-`npm run test:una-vez` corre las pruebas de la app (Vitest, sin red) y `npm run test:comun` las del paquete compartido. El diagnóstico de reglas suma seis casos de F12 (80 en total). El detalle está en `PLAN_DE_PRUEBAS.md`, sección 21.
+`npm run test:una-vez` corre las pruebas de la app (Vitest, sin red; cada archivo empieza con `usarEntornoDePrueba()`) y `npm run test:comun` las del paquete compartido. El diagnóstico de reglas suma seis casos de F12 (80 en total). El detalle está en `PLAN_DE_PRUEBAS.md`, sección 21.
 
 ---
 
