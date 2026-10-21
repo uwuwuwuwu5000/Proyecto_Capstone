@@ -32,7 +32,7 @@ import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Informe, aCamel, aPascal, bloqueBalanceado, lineaDe, sinComentarios } from './comun.mjs';
+import { Informe, aCamel, aPascal, bloqueBalanceado, catalogosDeLaApp, lineaDe, sinComentarios } from './comun.mjs';
 import { leerModulos, revisarModulos, revisarParametrosConfianza } from './modulos.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -557,9 +557,15 @@ for (const [archivo, texto] of codigo) {
 }
 if (!indicesFaltantes) informe.ok(`${consultasRevisadas} consultas literales revisadas; índices compuestos presentes`);
 
-// Catálogos que deben coincidir entre la app y las reglas
-const modelo = codigo.get(join(SRC, 'app', 'models', 'report.model.ts')) ?? '';
-const categoriasApp = [...(modelo.match(/REPORT_CATEGORIES[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? '').matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
+// Catálogos que deben coincidir entre la app y las reglas (desde la fase 3,
+// en comun/src/reportes; ver catalogosDeLaApp).
+const catalogos = catalogosDeLaApp(RAIZ);
+const categoriasApp = catalogos.categorias;
+if (!categoriasApp.length || !Object.keys(catalogos.transiciones).length) {
+  informe.agregar('advertencia', 'No se encontraron las categorías o las transiciones de la app para compararlas con las reglas', {
+    detalle: 'Se buscan en comun/src/reportes/categorias.ts y estados.ts (o en models/report.model.ts en versiones anteriores).',
+  });
+}
 const categoriasReglas = [...(reglas?.match(/categoria\s+in\s+\[([\s\S]*?)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
 if (categoriasApp.length && categoriasReglas.length) {
   const soloApp = categoriasApp.filter((c) => !categoriasReglas.includes(c));
@@ -573,10 +579,7 @@ if (categoriasApp.length && categoriasReglas.length) {
   if (!soloApp.length && !soloReglas.length) informe.ok(`Categorías sincronizadas (${categoriasApp.length})`);
 }
 
-const transApp = {};
-for (const m of (modelo.match(/TRANSICIONES[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? '').matchAll(/(\w+):\s*\[([^\]]*)\]/g)) {
-  transApp[m[1]] = [...m[2].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort();
-}
+const transApp = catalogos.transiciones;
 const transReglas = {};
 const cuerpoTransicion = reglas?.match(/function\s+transicionValida\s*\([^)]*\)\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';
 for (const m of cuerpoTransicion.matchAll(/desde\s*==\s*'(\w+)'\s*&&\s*hacia\s*(?:in\s*\[([^\]]*)\]|==\s*'(\w+)')/g)) {

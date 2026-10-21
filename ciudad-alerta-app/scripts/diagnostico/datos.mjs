@@ -29,7 +29,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Informe } from './comun.mjs';
+import { Informe, catalogosDeLaApp } from './comun.mjs';
 
 const RAIZ = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -57,22 +57,23 @@ console.log(`\nCiudad Alerta · diagnóstico de datos (solo lectura)\nProyecto: 
 
 // ── Valores esperados, leídos del propio proyecto ────────────────────────────
 const reglas = existsSync(join(RAIZ, 'firestore.rules')) ? readFileSync(join(RAIZ, 'firestore.rules'), 'utf8') : '';
-const modelo = existsSync(join(RAIZ, 'src', 'app', 'models', 'report.model.ts'))
-  ? readFileSync(join(RAIZ, 'src', 'app', 'models', 'report.model.ts'), 'utf8')
-  : '';
+// Categorías y transiciones: las mismas de la app (comun/src/reportes).
+const catalogos = catalogosDeLaApp(RAIZ);
 
 const CORREOS_ADMIN = [...(reglas.match(/request\.auth\.token\.email\s+in\s+\[([\s\S]*?)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1].toLowerCase());
-const ESTADOS = ['reportado', 'en_revision', 'derivado', 'en_proceso', 'resuelto', 'cerrado'];
-const CATEGORIAS = [...(modelo.match(/REPORT_CATEGORIES[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? '').matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
+const CATEGORIAS = catalogos.categorias;
 const GENERICOS = ['muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'];
-const TRANSICIONES = {
-  reportado: ['en_revision', 'derivado', 'cerrado'],
-  en_revision: ['derivado', 'cerrado'],
-  derivado: ['en_proceso', 'cerrado'],
-  en_proceso: ['resuelto', 'cerrado'],
-  resuelto: ['cerrado'],
-  cerrado: [],
-};
+const TRANSICIONES = Object.keys(catalogos.transiciones).length
+  ? catalogos.transiciones
+  : {
+      reportado: ['en_revision', 'derivado', 'cerrado'],
+      en_revision: ['derivado', 'cerrado'],
+      derivado: ['en_proceso', 'cerrado'],
+      en_proceso: ['resuelto', 'cerrado'],
+      resuelto: ['cerrado'],
+      cerrado: [],
+    };
+const ESTADOS = Object.keys(TRANSICIONES);
 
 const muestra = (lista, n = 8) => (lista.length > n ? `${lista.slice(0, n).join(', ')} … (+${lista.length - n})` : lista.join(', '));
 const ms = (t) => (typeof t?.toMillis === 'function' ? t.toMillis() : null);

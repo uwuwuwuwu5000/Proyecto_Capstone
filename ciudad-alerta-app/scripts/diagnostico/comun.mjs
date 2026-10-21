@@ -2,7 +2,7 @@
  * Utilidades compartidas por los scripts de diagnóstico: registro de
  * hallazgos, impresión por consola e informe en Markdown.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /** Severidades, de más a menos grave. */
@@ -167,3 +167,40 @@ export const aCamel = (s) => s.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase()
 
 /** ion-back-button → IonBackButton */
 export const aPascal = (s) => aCamel(s).replace(/^./, (c) => c.toUpperCase());
+
+/**
+ * Categorías y transiciones de estado de la app, para compararlas con las
+ * reglas y con los datos. Desde la fase 3 están en el paquete compartido
+ * (comun/src/reportes); en copias anteriores, en src/app/models/report.model.ts.
+ *
+ * @param raiz Carpeta de la app (ciudad-alerta-app).
+ * @returns Las listas vacías si no se encuentran: quien llama decide si avisa.
+ */
+export function catalogosDeLaApp(raiz) {
+  const leerLimpio = (...partes) => {
+    const ruta = join(raiz, ...partes);
+    return existsSync(ruta) ? { ruta, texto: sinComentarios(readFileSync(ruta, 'utf8')) } : null;
+  };
+
+  const categoriasTs = leerLimpio('..', 'comun', 'src', 'reportes', 'categorias.ts');
+  const estadosTs = leerLimpio('..', 'comun', 'src', 'reportes', 'estados.ts');
+  const modelo = leerLimpio('src', 'app', 'models', 'report.model.ts');
+
+  const fuenteCategorias = categoriasTs ?? modelo;
+  const lista = fuenteCategorias?.texto.match(/(?:CATEGORIAS|REPORT_CATEGORIES)\b[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? '';
+  const categorias = [...lista.matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
+
+  const fuenteTransiciones = estadosTs ?? modelo;
+  const transiciones = {};
+  const cuerpo = fuenteTransiciones?.texto.match(/TRANSICIONES\b[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? '';
+  for (const m of cuerpo.matchAll(/(\w+):\s*\[([^\]]*)\]/g)) {
+    transiciones[m[1]] = [...m[2].matchAll(/'([^']+)'/g)].map((x) => x[1]).sort();
+  }
+
+  return {
+    categorias,
+    transiciones,
+    archivoCategorias: fuenteCategorias?.ruta ?? null,
+    archivoTransiciones: fuenteTransiciones?.ruta ?? null,
+  };
+}
