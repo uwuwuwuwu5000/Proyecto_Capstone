@@ -185,9 +185,10 @@ const como = (uid, token = {}) =>
   entorno.authenticatedContext(uid, { email: `${uid}@correo.cl`, email_verified: true, ...token }).firestore();
 const anonimo = () => entorno.unauthenticatedContext().firestore();
 
-const cambioDeEstado = (db, quien, rol, nombre, reportId, desde, hacia) => {
+/** `extra`: campos de resolución (F12) que la app y el portal agregan al resolver o cerrar. */
+const cambioDeEstado = (db, quien, rol, nombre, reportId, desde, hacia, extra = {}) => {
   const lote = writeBatch(db);
-  lote.update(doc(db, 'reports', reportId), { estado: hacia, updatedAt: serverTimestamp() });
+  lote.update(doc(db, 'reports', reportId), { estado: hacia, updatedAt: serverTimestamp(), ...extra });
   lote.set(doc(collection(db, 'reports', reportId, 'statusHistory')), {
     reportId, desde, hacia, autorUid: quien, autorRol: rol, autorNombre: nombre, comentario: '', createdAt: serverTimestamp(),
   });
@@ -223,6 +224,22 @@ control('Un admin cambia el estado y deja historial', () =>
   cambioDeEstado(como('admin'), 'admin', 'admin', 'Administración Ciudad Alerta', 'r_ana', 'reportado', 'en_revision'));
 control('El operador asignado cambia el estado de su reporte', () =>
   cambioDeEstado(como('opmaipu'), 'opmaipu', 'operador', 'Municipalidad de Maipú', 'r_ana', 'reportado', 'derivado'));
+
+// F12 · Datos de resolución (etapa blanda de cambioDeEstadoValido): los escribe
+// CambioEstadoService (módulo gestion-reportes) y también el portal.
+const DOS_HORAS = 2 * 3_600_000;
+const enProcesoHaceDosHoras = (db) =>
+  updateDoc(doc(db, 'reports/r_ana'), { estado: 'en_proceso', createdAt: Timestamp.fromMillis(Date.now() - DOS_HORAS) });
+const resolverRAna = (extra) =>
+  cambioDeEstado(como('opmaipu'), 'opmaipu', 'operador', 'Municipalidad de Maipú', 'r_ana', 'en_proceso', 'resuelto', extra);
+control('F12: al resolver se guardan resueltoAt y tiempoResolucionMs', () =>
+  resolverRAna({ resueltoAt: serverTimestamp(), tiempoResolucionMs: DOS_HORAS }), enProcesoHaceDosHoras);
+control('F12: resolver sin datos de resolución sigue permitido (etapa blanda)', () => resolverRAna({}), enProcesoHaceDosHoras);
+control('F12: al cerrar sin resolver se guarda cerradoSinResolverAt', () =>
+  cambioDeEstado(como('admin'), 'admin', 'admin', 'Administración Ciudad Alerta', 'r_ana', 'reportado', 'cerrado', {
+    cerradoSinResolverAt: serverTimestamp(),
+  }));
+
 control('Un ciudadano abre un ticket con su primer mensaje', () => {
   const db = como('ana');
   const lote = writeBatch(db);
@@ -239,6 +256,15 @@ control('Un ciudadano lista solo sus tickets', () =>
   getDocs(query(collection(como('luis'), 'supportTickets'), where('uid', '==', 'luis'))));
 
 // BLOQUEO: lo que debe rechazarse
+bloqueo('F12: un tiempo de resolución que no calza con la hora del servidor (más de 15 min) se rechaza', () =>
+  resolverRAna({ resueltoAt: serverTimestamp(), tiempoResolucionMs: 60_000 }), enProcesoHaceDosHoras);
+bloqueo('F12: resueltoAt debe ser la hora del servidor', () =>
+  resolverRAna({ resueltoAt: Timestamp.fromMillis(Date.now() - 86_400_000), tiempoResolucionMs: DOS_HORAS }), enProcesoHaceDosHoras);
+bloqueo('F12: no se guardan datos de resolución en un cambio que no resuelve', () =>
+  cambioDeEstado(como('admin'), 'admin', 'admin', 'Administración Ciudad Alerta', 'r_ana', 'reportado', 'en_revision', {
+    resueltoAt: serverTimestamp(),
+    tiempoResolucionMs: 0,
+  }));
 bloqueo('Sin sesión no se leen reportes', () => getDocs(collection(anonimo(), 'reports')));
 bloqueo('Un ciudadano no lee el perfil de otro', () => getDoc(doc(como('ana'), 'users/luis')));
 bloqueo('Un ciudadano no lista todos los perfiles', () => getDocs(collection(como('ana'), 'users')));
