@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { calcularTiempos, formatearDuracion, mediana, promedio, resolucionDeReporte } from '../src';
+import { calcularTiempos, formatearDuracion, haceCuanto, mediana, promedio, resolucionDeReporte } from '../src';
 
 const creado = new Date('2026-10-01T12:00:00Z');
 const horas = (h: number) => new Date(creado.getTime() + h * 3_600_000);
@@ -110,5 +110,21 @@ describe('resolucionDeReporte (F12)', () => {
     expect(
       resolucionDeReporte({ estado: 'en_proceso', creado, cambios: [{ fecha: horas(2), hacia: 'en_proceso' }] }),
     ).toEqual({ tipo: 'abierto' });
+  });
+});
+
+describe('haceCuanto', () => {
+  const min = 60_000;
+  it('en minutos, horas y días', () => {
+    expect(haceCuanto(30_000)).toBe('recién');
+    expect(haceCuanto(5 * min)).toBe('hace 5 min');
+    expect(haceCuanto(59 * min)).toBe('hace 59 min');
+    expect(haceCuanto(2 * 60 * min + 10 * min)).toBe('hace 2 h');
+    expect(haceCuanto(30 * 60 * min)).toBe('ayer');
+    expect(haceCuanto(3 * 24 * 60 * min)).toBe('hace 3 días');
+  });
+
+  it('una fecha en el futuro (reloj adelantado) es «recién»', () => {
+    expect(haceCuanto(-5 * min)).toBe('recién');
   });
 });

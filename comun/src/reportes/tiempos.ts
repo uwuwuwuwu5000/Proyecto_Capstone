@@ -137,3 +137,17 @@ export function resolucionDeReporte(datos: {
 
   return { tipo: 'abierto' };
 }
+
+/**
+ * Cuánto hace que pasó algo, en corto: «recién», «hace 5 min», «hace 2 h»,
+ * «ayer», «hace 3 días». Para fechas futuras (reloj desfasado) dice «recién».
+ */
+export function haceCuanto(ms: number): string {
+  const minutos = Math.floor(ms / 60_000);
+  if (minutos < 1) return 'recién';
+  if (minutos < 60) return `hace ${minutos} min`;
+  const horas = Math.floor(minutos / 60);
+  if (horas < 24) return `hace ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  return dias === 1 ? 'ayer' : `hace ${dias} días`;
+}
