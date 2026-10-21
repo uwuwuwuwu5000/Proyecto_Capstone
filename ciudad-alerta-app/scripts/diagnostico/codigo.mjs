@@ -1007,6 +1007,31 @@ const pendientes = [...todoElCodigo.matchAll(/\b(TODO|FIXME|HACK)\b/g)].length;
 if (pendientes) informe.agregar('info', `${pendientes} marcas TODO/FIXME/HACK en src/`);
 
 // ═══ 9. Módulos ═════════════════════════════════════════════════════════════
+// ═══ Pruebas automáticas ════════════════════════════════════════════════════
+informe.seccion('Pruebas automáticas (npm run test:una-vez)');
+{
+  const specs = listar(SRC, (n) => n.endsWith('.spec.ts'));
+  const sinEntorno = specs.filter((f) => !/usarEntornoDePrueba\s*\(/.test(sinComentarios(leer(f))));
+  if (sinEntorno.length) {
+    informe.agregar('advertencia', `${sinEntorno.length} pruebas no llaman a usarEntornoDePrueba()`, {
+      detalle: `${sinEntorno.map(rel).join(', ')}. Sin eso no tienen Firebase de prueba, Ionic ni router: en Windows fallan con «No provider found for InjectionToken FIRESTORE».`,
+      solucion: "Al comienzo del archivo: import { usarEntornoDePrueba } from '<ruta>/testing'; y usarEntornoDePrueba(); antes del describe.",
+    });
+  } else if (specs.length) {
+    informe.ok(`${specs.length} archivos de prueba preparan su entorno con usarEntornoDePrueba()`);
+  }
+
+  // En Windows, el builder carga test-setup.ts fuera del paquete de pruebas
+  // (con otra copia de Angular): lo que configure en TestBed no llega.
+  const setup = leerSiExiste(join(SRC, 'test-setup.ts'));
+  if (setup && /\bTestBed\b/.test(sinComentarios(setup))) {
+    informe.agregar('advertencia', 'src/test-setup.ts configura TestBed: en Windows esa configuración no llega a las pruebas', {
+      archivo: 'src/test-setup.ts',
+      solucion: 'Deja ahí solo polyfills globales y pon los proveedores en src/testing/entorno-de-prueba.ts.',
+    });
+  }
+}
+
 informe.seccion('Módulos (src/app/modulos)');
 revisarModulos({ informe, SRC, codigo, componentes, rel });
 revisarParametrosConfianza({ informe, SRC, reglas, rel });
