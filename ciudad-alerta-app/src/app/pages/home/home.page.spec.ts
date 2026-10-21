@@ -22,7 +22,7 @@ describe('HomePage', () => {
     fixture = TestBed.createComponent(HomePage);
     await fixture.componentInstance.ionViewWillEnter();
     fixture.detectChanges();
-    return [...fixture.nativeElement.querySelectorAll('.accesos ion-button')].map((b: Element) =>
+    return [...fixture.nativeElement.querySelectorAll('.grupo .accion-reportar, .grupo .acceso')].map((b: Element) =>
       b.textContent!.trim(),
     );
   }
@@ -53,6 +53,19 @@ describe('HomePage', () => {
     expect(botones[0]).toBe('Crear un reporte');
     expect(botones).toContain('Mi perfil');
     expect(botones).not.toContain('Todas las incidencias');
+  });
+
+  it('agrupa los botones: acción principal, «Explorar», «Tu cuenta» y, para staff, «Gestión»', async () => {
+    await entrar({ displayName: 'Rodrigo', role: 'admin' });
+    const titulos = [...fixture.nativeElement.querySelectorAll('.grupo__titulo')].map((t: Element) => t.textContent!.trim());
+
+    expect(titulos).toEqual(['Explorar', 'Tu cuenta', 'Gestión']);
+    expect(fixture.nativeElement.querySelector('.grupo .accion-reportar')?.textContent).toContain('Crear un reporte');
+  });
+
+  it('un ciudadano no ve el grupo «Gestión»', async () => {
+    await entrar({ displayName: 'Rodrigo', role: 'ciudadano' });
+    expect(fixture.nativeElement.textContent).not.toContain('Gestión');
   });
 
   it('un operador ve su bandeja con el texto de su rol', async () => {

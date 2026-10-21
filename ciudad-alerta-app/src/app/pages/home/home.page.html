@@ -20,25 +20,38 @@
       </section>
 
       <!--
-        Lo llenan los módulos: el recordatorio de verificar el correo (Mi
-        perfil) y el nivel de confianza, por ejemplo.
+        Lo llenan los módulos: verificar el correo (perfil), tus reportes
+        (reportes), por atender (gestión) y el nivel de confianza.
       -->
-      <app-ranura nombre="inicio.resumen" [entradas]="{ perfil: perfil() }" />
+      <section class="resumen" aria-label="Resumen">
+        <app-ranura nombre="inicio.resumen" [entradas]="{ perfil: perfil() }" />
+      </section>
 
-      <nav class="accesos">
-        @for (acceso of accesos(); track acceso.id) {
-          <ion-button
-            expand="block"
-            [routerLink]="acceso.ruta"
-            [fill]="acceso.estilo === 'principal' || acceso.estilo === 'gestion' ? 'solid' : 'outline'"
-            [class.accion-reportar]="acceso.estilo === 'principal'"
-            [class.accion-staff]="acceso.estilo === 'gestion'"
-          >
-            <ion-icon slot="start" [name]="acceso.icono" aria-hidden="true"></ion-icon>
-            {{ modulos.texto(acceso, perfil()?.role ?? null) }}
-          </ion-button>
-        }
-      </nav>
+      @for (grupo of grupos(); track grupo.id) {
+        <nav class="grupo" [attr.aria-label]="grupo.titulo ?? 'Acción principal'">
+          @if (grupo.titulo; as titulo) {
+            <h2 class="grupo__titulo">{{ titulo }}</h2>
+          }
+
+          @if (grupo.id === 'principal') {
+            @for (acceso of grupo.accesos; track acceso.id) {
+              <ion-button class="accion-reportar" expand="block" [routerLink]="acceso.ruta">
+                <ion-icon slot="start" [name]="acceso.icono" aria-hidden="true"></ion-icon>
+                {{ modulos.texto(acceso, perfil()?.role ?? null) }}
+              </ion-button>
+            }
+          } @else {
+            <div class="grupo__cuadricula">
+              @for (acceso of grupo.accesos; track acceso.id) {
+                <a class="acceso" [class.acceso--staff]="grupo.id === 'gestion'" [routerLink]="acceso.ruta">
+                  <ion-icon [name]="acceso.icono" aria-hidden="true"></ion-icon>
+                  <span>{{ modulos.texto(acceso, perfil()?.role ?? null) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </nav>
+      }
 
       <app-cerrar-sesion />
     }

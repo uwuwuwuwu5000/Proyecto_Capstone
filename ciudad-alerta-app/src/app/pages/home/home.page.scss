@@ -13,10 +13,10 @@
   min-height: 100%;
   max-width: 420px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 2.5rem;
+  padding: 1.5rem 1.25rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1.4rem;
 }
 
 .sesion {
@@ -44,19 +44,58 @@
   color: var(--ca-muted);
 }
 
-.accesos {
+.resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.grupo {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: auto;
+}
 
-  ion-button[fill='outline'] {
-    --border-color: var(--ca-line);
-    --color: var(--ca-ink);
-    --border-radius: 10px;
-    text-transform: none;
-    margin: 0;
+.grupo__titulo {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
+}
+
+.grupo__cuadricula {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.acceso {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 4.6rem;
+  padding: 0.6rem;
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  color: var(--ca-ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+
+  ion-icon {
+    font-size: 1.35rem;
+    color: var(--ca-signal);
   }
+}
+
+.acceso--staff {
+  border-color: var(--ca-signal);
+  color: var(--ca-signal);
 }
 
 .accion-reportar {
@@ -68,19 +107,6 @@
   margin: 0;
   font-weight: 600;
   text-transform: none;
-}
-
-.accion-staff {
-  --background: transparent;
-  --border-color: var(--ca-signal);
-  --border-style: solid;
-  --border-width: 1px;
-  --color: var(--ca-signal);
-  --border-radius: 10px;
-  --box-shadow: none;
-  text-transform: none;
-  font-weight: 600;
-  margin: 0;
 }
 
 *:focus-visible {

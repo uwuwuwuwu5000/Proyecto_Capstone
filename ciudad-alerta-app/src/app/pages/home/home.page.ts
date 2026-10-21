@@ -20,9 +20,10 @@ import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 import { AuthService } from '../../services/auth.service';
 
 /**
- * Inicio: saludo, lo que los módulos ponen en `inicio.resumen` (nivel de
- * confianza, recordatorio de verificar el correo) y los botones de cada
- * módulo activo.
+ * Inicio: saludo, lo que los módulos ponen en `inicio.resumen` (recordatorio
+ * de verificar el correo, tus reportes, por atender, nivel de confianza) y los
+ * botones de cada módulo activo, agrupados: la acción principal, «Explorar»,
+ * «Tu cuenta» y «Gestión».
  *
  * Los datos de la cuenta y la verificación del correo están en «Mi perfil»
  * (feedback Sprint 5). Aquí queda lo mínimo para que el inicio funcione con
@@ -61,7 +62,7 @@ export class HomePage {
    * se filtran por rol. Mostrar u ocultar un botón es una ayuda de interfaz:
    * el acceso real lo controlan los guards y las reglas de Firestore.
    */
-  readonly accesos = computed(() => this.modulos.accesos(this.perfil()?.role ?? null));
+  readonly grupos = computed(() => this.modulos.grupos(this.perfil()?.role ?? null));
 
   /** "Hola, Rodrigo": el nombre del perfil, o el comienzo del correo. */
   readonly saludo = computed(() => {
