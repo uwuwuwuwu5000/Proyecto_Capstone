@@ -12,7 +12,10 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
  *   `tarjeta-reporte.insignias` (el sistema de confianza pone ahí su estado).
  * - componentes/gestion-reporte: bloque «Gestión» del detalle de un reporte
  *   (ranura `detalle-reporte.gestion`), con el cambio de estado.
+ * - componentes/resumen-gestion: «Por atender» en el inicio (ranura
+ *   `inicio.resumen`), solo para staff.
  * - datos/cambio-estado.service: el cambio de estado con su historial.
+ * - datos/resumen-gestion.service: los conteos de «Por atender».
  *
  * Al desactivarlo, nadie puede cambiar estados desde la app.
  */
@@ -44,6 +47,12 @@ export const MODULO_GESTION_REPORTES: ModuloApp = {
   ],
   iconos: { 'albums-outline': albumsOutline },
   ranuras: [
+    {
+      // «Por atender» en el inicio de operadores y administradores.
+      ranura: RANURAS.inicioResumen,
+      orden: 5,
+      cargar: () => import('./componentes/resumen-gestion.component').then((m) => m.ResumenGestionComponent),
+    },
     {
       ranura: RANURAS.detalleReporteGestion,
       cargar: () =>
