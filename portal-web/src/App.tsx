@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
+import MiNivel from './pages/MiNivel/MiNivel'
+import MiPerfil from './pages/MiPerfil/MiPerfil'
 import { AvisosProvider } from './context/AvisosContext'
 import { SoporteProvider } from './context/SoporteContext'
 import AdminLayout from './components/AdminLayout/AdminLayout'
@@ -42,6 +44,8 @@ function Rutas() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/historial" element={<Historial />} />
+          <Route path="/mi-nivel" element={<MiNivel />} />
+          <Route path="/mi-perfil" element={<MiPerfil />} />
           <Route path="/mapa" element={<Mapa />} />
           {/* Panel de administración: navbar + barra lateral + la pantalla. */}
           <Route path="/admin" element={<AdminLayout />}>

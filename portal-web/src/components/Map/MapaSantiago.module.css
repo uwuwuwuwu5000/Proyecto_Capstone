@@ -136,6 +136,19 @@
   color: var(--ca-danger);
 }
 
+/* La confirmación se registró, pero su voto pesa 0: no es un error. */
+.confirmarAviso {
+  padding: 8px 10px;
+  border: 1px solid #e0b43c;
+  border-radius: 8px;
+  background: rgba(224, 180, 60, 0.12);
+  color: #e0b43c;
+}
+
+.confirmarOk {
+  color: #38b97a;
+}
+
 /* Pin de marcador coloreado por estado (ver crearIconoEstado en MapaSantiago.tsx). */
 .pin span {
   display: block;
@@ -371,4 +384,22 @@
   border-radius: 50%;
   border: 1px solid var(--ca-ink);
   flex: none;
+}
+
+/* Atajo del administrador a la gestión del reporte abierto. */
+.enlaceAdmin {
+  display: block;
+  margin: 10px 0 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 8px;
+  color: var(--ca-signal);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.enlaceAdmin:hover {
+  background: rgba(28, 169, 201, 0.14);
 }

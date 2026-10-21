@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { FirebaseError } from 'firebase/app'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
@@ -116,6 +116,10 @@ export default function Registro() {
         setEnviando(false)
         return
       }
+
+      // Enlace de verificación: sin correo verificado, sus confirmaciones pesan 0.
+      // No bloquea el registro si falla; «Mi perfil» permite reenviarlo.
+      void sendEmailVerification(cred.user).catch(() => undefined)
 
       // 5. Todo bien: al portal.
       navigate('/', { replace: true })

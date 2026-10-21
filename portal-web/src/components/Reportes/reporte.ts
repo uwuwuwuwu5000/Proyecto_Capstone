@@ -2,6 +2,9 @@ import { collection, doc, serverTimestamp, writeBatch } from 'firebase/firestore
 import { FirebaseError } from 'firebase/app'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
+import { leerValidacion } from '../../confianza/tipos'
+import { ErrorSinVeredicto, motivoSinVeredicto } from '../../confianza/exigirVeredicto'
+import type { Validacion } from '../../confianza/tipos'
 
 export type FotoInfo = { tipo: 'cloud-storage'; url: string } | { tipo: 'firestore'; path: string }
 
@@ -34,6 +37,8 @@ export interface Reporte {
   tiempoResolucionMs?: number | null
   /** Cuándo se cerró sin haber pasado por «Resuelto» (solo reportes posteriores al campo). */
   cerradoSinResolverAt?: Date | null
+  /** Verificación comunitaria y veredicto. Un reporte antiguo no lo tiene: se lee con ceros. */
+  validacion: Validacion
 }
 
 export interface OperadorResumen {
@@ -79,6 +84,7 @@ export function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte {
     tiempoResolucionMs: typeof data.tiempoResolucionMs === 'number' ? data.tiempoResolucionMs : null,
     cerradoSinResolverAt:
       typeof data.cerradoSinResolverAt?.toDate === 'function' ? data.cerradoSinResolverAt.toDate() : null,
+    validacion: leerValidacion(data.validacion),
   }
 }
 
@@ -162,6 +168,8 @@ export async function cambiarEstadoReporte(
   comentario: string,
   autor: AutorCambio,
 ): Promise<void> {
+  // Sin veredicto, el estado no cambia (salvo los reportes que no admiten veredicto).
+  if (motivoSinVeredicto(reporte, autor.uid)) throw new ErrorSinVeredicto()
   const extra = camposDeResolucion(reporte, hacia)
   try {
     await escribirCambioDeEstado(reporte, hacia, comentario, autor, extra)

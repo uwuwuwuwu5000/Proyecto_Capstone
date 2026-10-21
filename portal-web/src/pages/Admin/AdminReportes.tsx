@@ -19,6 +19,7 @@ import {
   FILTROS_VACIOS,
   filtrarReportes,
   hayFiltrosActivos,
+  verificacionDeUrl,
   resumenListado,
   soloFiltrosLocales,
 } from '../../components/Reportes/filtros'
@@ -41,7 +42,8 @@ import {
 import { useConfirmacion } from '../../components/Dialogo/useConfirmacion'
 import { fechaInput } from '../../components/Reportes/rangosRapidos'
 import { useCategorias } from '../../context/CategoriasContext'
-import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import { ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { ErrorSinVeredicto, motivoSinVeredicto, siguientesEstados } from '../../confianza/exigirVeredicto'
 import styles from './Admin.module.css'
 import propios from '../../components/Reportes/Reportes.module.css'
 
@@ -69,6 +71,13 @@ export default function AdminReportes() {
   const [error, setError] = useState('')
   const [filtros, setFiltros] = useState<Filtros>(() => filtrosDesdeUrl(params))
   const [tamano, setTamano] = useState(24)
+
+  // El acceso «Por verificar» del menú cambia solo la URL de esta misma pantalla.
+  const verificacionUrl = params.get('verificacion')
+  useEffect(() => {
+    const v = verificacionDeUrl(verificacionUrl)
+    setFiltros((actual) => (actual.verificacion === v ? actual : { ...actual, verificacion: v }))
+  }, [verificacionUrl])
 
   // Una página de reportes a la vez, leída en Firestore (ver useReportesPaginados).
   const lista = useReportesPaginados({ activo: autorizado, filtros, tamano })
@@ -224,7 +233,9 @@ export default function AdminReportes() {
       lista.recargar()
     } catch (err) {
       console.error('Error al guardar el reporte:', err)
-      setErrorEdicion('No pudimos guardar los cambios. Inténtalo nuevamente.')
+      setErrorEdicion(
+        err instanceof ErrorSinVeredicto ? err.message : 'No pudimos guardar los cambios. Inténtalo nuevamente.',
+      )
     } finally {
       setGuardando(false)
     }
@@ -450,7 +461,8 @@ export default function AdminReportes() {
         <div className={propios.grid} style={{ opacity: lista.cargando && pagina.length > 0 ? 0.6 : 1 }}>
           {reportesFiltrados.map((reporte) => {
             const editando = editandoId === reporte.id
-            const siguientes = TRANSICIONES[reporte.estado] ?? []
+            const siguientes = siguientesEstados(reporte, user?.uid)
+            const sinVeredicto = motivoSinVeredicto(reporte, user?.uid)
 
             return (
               <TarjetaReporte
@@ -479,6 +491,8 @@ export default function AdminReportes() {
                         ))}
                       </select>
                     </label>
+
+                    {sinVeredicto && <p className={styles.hintCampo}>{sinVeredicto}</p>}
 
                     {estadoNuevo !== reporte.estado && (
                       <label className={styles.field}>

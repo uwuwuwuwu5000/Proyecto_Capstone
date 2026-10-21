@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import { FirebaseError } from 'firebase/app'
 import { useAuth } from '../../context/AuthContext'
 import { useRequiereOperador } from '../../hooks/useRequiereOperador'
@@ -12,13 +12,15 @@ import {
   FILTROS_VACIOS,
   filtrarReportes,
   hayFiltrosActivos,
+  verificacionDeUrl,
   resumenListado,
   soloFiltrosLocales,
 } from '../../components/Reportes/filtros'
 import type { Filtros } from '../../components/Reportes/filtros'
 import { cambiarEstadoReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
-import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import { ETIQUETA_POR_ESTADO } from '../../constants/reportes'
+import { ErrorSinVeredicto, motivoSinVeredicto, siguientesEstados } from '../../confianza/exigirVeredicto'
 import BarraSeleccion from '../../components/Reportes/BarraSeleccion'
 import type { MensajeLote } from '../../components/Reportes/BarraSeleccion'
 import CasillaTodos from '../../components/Reportes/CasillaTodos'
@@ -33,8 +35,20 @@ export default function OperadorReportes() {
     useRequiereOperador()
   const { user, perfil } = useAuth()
 
-  const [filtros, setFiltros] = useState<Filtros>(FILTROS_VACIOS)
+  const [params] = useSearchParams()
+  // La pestaña «Por verificar» llega con ?verificacion=por_verificar.
+  const [filtros, setFiltros] = useState<Filtros>(() => {
+    const v = verificacionDeUrl(params.get('verificacion'))
+    return v ? { ...FILTROS_VACIOS, verificacion: v } : FILTROS_VACIOS
+  })
   const [tamano, setTamano] = useState(24)
+
+  // Pasar de «Reportes» a «Por verificar» (y al revés) cambia solo la URL.
+  const verificacionUrl = params.get('verificacion')
+  useEffect(() => {
+    const v = verificacionDeUrl(verificacionUrl)
+    setFiltros((actual) => (actual.verificacion === v ? actual : { ...actual, verificacion: v }))
+  }, [verificacionUrl])
 
   // Solo los reportes de este operador, una página a la vez (índice operadorId + createdAt).
   const lista = useReportesPaginados({
@@ -74,7 +88,7 @@ export default function OperadorReportes() {
   const reporteDetalle = detalleId ? reportes.find((r) => r.id === detalleId) ?? null : null
 
   function iniciarCambio(reporte: Reporte) {
-    const siguientes = TRANSICIONES[reporte.estado] ?? []
+    const siguientes = siguientesEstados(reporte, user?.uid)
     setCambiandoId(reporte.id)
     setEstadoNuevo(siguientes[0] ?? '')
     setComentario('')
@@ -100,7 +114,9 @@ export default function OperadorReportes() {
       console.error('Error al cambiar el estado del reporte:', err)
       const code = err instanceof FirebaseError ? err.code : ''
       setErrorCambio(
-        code === 'permission-denied'
+        err instanceof ErrorSinVeredicto
+          ? err.message
+          : code === 'permission-denied'
           ? 'No tienes permiso para cambiar este reporte (puede que ya no esté asignado a tu operador).'
           : 'No pudimos cambiar el estado. Inténtalo nuevamente.',
       )
@@ -194,7 +210,8 @@ export default function OperadorReportes() {
 
         <div className={styles.grid} style={{ opacity: lista.cargando && reportes.length > 0 ? 0.6 : 1 }}>
           {reportesFiltrados.map((reporte) => {
-            const siguientes = TRANSICIONES[reporte.estado] ?? []
+            const siguientes = siguientesEstados(reporte, user?.uid)
+            const sinVeredicto = motivoSinVeredicto(reporte, user?.uid)
             const cambiando = cambiandoId === reporte.id
 
             return (
@@ -268,6 +285,10 @@ export default function OperadorReportes() {
                       >
                         Cambiar estado
                       </button>
+                    ) : sinVeredicto ? (
+                      <span className={styles.estadoCarga} title={sinVeredicto}>
+                        Falta el veredicto para cambiar el estado
+                      </span>
                     ) : (
                       <span className={styles.estadoCarga}>Estado final</span>
                     )}

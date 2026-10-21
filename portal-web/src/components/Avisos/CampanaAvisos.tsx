@@ -1,16 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { useSoporte } from '../../context/SoporteContext'
 import { useAvisos } from '../../context/AvisosContext'
 import type { Aviso } from '../../context/AvisosContext'
-import { ETIQUETA_POR_ESTADO } from '../../constants/reportes'
 import styles from './CampanaAvisos.module.css'
-
-function quien(a: Aviso): string {
-  if (a.autorRol === 'admin') return 'Administración Ciudad Alerta'
-  return a.autorNombre ?? 'El organismo'
-}
 
 function hace(fecha: Date | null): string {
   if (!fecha) return ''
@@ -28,7 +21,6 @@ function hace(fecha: Date | null): string {
 export default function CampanaAvisos() {
   const { perfil } = useAuth()
   const { avisos, noVistos, cargando, error, marcarVisto, marcarTodos } = useAvisos()
-  const { abiertos } = useSoporte()
   const navigate = useNavigate()
   const [abierta, setAbierta] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)
@@ -49,15 +41,16 @@ export default function CampanaAvisos() {
 
   if (perfil?.role !== 'ciudadano' && perfil?.role !== 'admin') return null
 
-  // Solo el administrador: conversaciones de soporte que nadie ha atendido.
-  // Es un conteo en vivo: crece con cada ciudadano que escribe y baja al responder.
-  const soporte = perfil.role === 'admin' ? (abiertos ?? 0) : 0
-  const total = noVistos + soporte
+  // Las conversaciones de soporte abiertas del administrador llegan como avisos:
+  // al abrirlas quedan vistas, y un mensaje nuevo las vuelve a avisar. El
+  // contador de «abiertas» del menú del panel sigue siendo la carga de trabajo.
+  const total = noVistos
 
   function abrir(a: Aviso) {
     void marcarVisto(a.id)
     setAbierta(false)
-    navigate(`/historial?reporte=${a.reportId}`)
+    // El aviso de nivel no pertenece a un reporte: lleva a «Mi nivel».
+    navigate(a.ruta ?? (a.reportId ? `/historial?reporte=${a.reportId}` : '/mi-nivel'))
   }
 
   return (
@@ -68,7 +61,7 @@ export default function CampanaAvisos() {
         onClick={() => setAbierta((v) => !v)}
         aria-expanded={abierta}
         aria-haspopup="dialog"
-        aria-label={total ? `Avisos, ${total} sin atender` : 'Avisos'}
+        aria-label={total ? `Avisos, ${total} sin ver` : 'Avisos'}
       >
         <svg viewBox="0 0 24 24" className={styles.icono} aria-hidden="true">
           <path
@@ -94,28 +87,10 @@ export default function CampanaAvisos() {
             )}
           </div>
           <div className={styles.lista}>
-            {soporte > 0 && (
-              <button
-                type="button"
-                className={`${styles.aviso} ${styles.nuevo}`}
-                onClick={() => {
-                  setAbierta(false)
-                  navigate('/admin/soporte')
-                }}
-              >
-                <span className={styles.titulo}>
-                  {soporte === 1
-                    ? 'Tienes 1 mensaje de soporte sin responder'
-                    : `Tienes ${soporte} conversaciones de soporte sin responder`}
-                </span>
-                <span className={styles.texto}>Ciudadanos esperando respuesta.</span>
-                <span className={styles.meta}>Soporte · ver conversaciones</span>
-              </button>
-            )}
             {error && <p className={styles.vacio}>{error}</p>}
             {!error && cargando && <p className={styles.vacio}>Cargando…</p>}
-            {!error && !cargando && avisos.length === 0 && soporte === 0 && (
-              <p className={styles.vacio}>Aún no hay cambios en tus reportes.</p>
+            {!error && !cargando && avisos.length === 0 && (
+              <p className={styles.vacio}>Aún no hay novedades en tus reportes.</p>
             )}
             {avisos.map((a) => (
               <button
@@ -124,14 +99,10 @@ export default function CampanaAvisos() {
                 className={`${styles.aviso} ${a.visto ? '' : styles.nuevo}`}
                 onClick={() => abrir(a)}
               >
-                <span className={styles.titulo}>
-                  Tu reporte pasó a «{ETIQUETA_POR_ESTADO[a.hacia] ?? a.hacia}»
-                </span>
+                <span className={styles.titulo}>{a.titulo}</span>
                 <span className={styles.texto}>{a.reporte}</span>
                 {a.comentario && <span className={styles.comentario}>“{a.comentario}”</span>}
-                <span className={styles.meta}>
-                  {quien(a)} · {hace(a.fecha)}
-                </span>
+                <span className={styles.meta}>{[a.autor, hace(a.fecha)].filter(Boolean).join(' · ')}</span>
               </button>
             ))}
           </div>

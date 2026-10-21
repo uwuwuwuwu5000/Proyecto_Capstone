@@ -23,6 +23,11 @@ export const GRUPOS_ADMIN: GrupoAdmin[] = [
         texto: 'Revisa, edita o elimina reportes y vincúlalos con su operador.',
       },
       {
+        ruta: '/admin/reportes?verificacion=por_verificar',
+        titulo: 'Por verificar',
+        texto: 'Reportes que la comunidad validó y esperan el veredicto de un operador o administrador.',
+      },
+      {
         ruta: '/admin/reportes/nuevo',
         titulo: 'Crear reporte',
         texto: 'Registra una incidencia en cualquier punto del mapa, con su organismo asignado.',

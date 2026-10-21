@@ -132,6 +132,22 @@ export default function FiltrosReportes({
         </select>
       </label>
 
+      <label className={styles.campo}>
+        <span className={styles.etiqueta}>Verificación / veredicto</span>
+        <select
+          className={styles.entrada}
+          value={filtros.verificacion}
+          onChange={(e) => cambiar('verificacion', e.target.value as Filtros['verificacion'])}
+        >
+          <option value="">Todos</option>
+          <option value="validados">Validados por la comunidad</option>
+          <option value="por_verificar">Por verificar</option>
+          <option value="real">Veredicto: real</option>
+          <option value="falso">Veredicto: falso</option>
+          <option value="sin_veredicto">Sin veredicto</option>
+        </select>
+      </label>
+
       <div className={`${styles.campo} ${styles.filtroAncho}`}>
         <span className={styles.etiqueta}>Fecha</span>
         <SelectorRangos

@@ -3,6 +3,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { MapContainer, Marker, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
 import FotoReporte from '../Reportes/FotoReporte'
 import {
@@ -11,15 +12,16 @@ import {
   getCountFromServer,
   getDoc,
   onSnapshot,
-  serverTimestamp,
-  setDoc,
 } from 'firebase/firestore'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import { FirebaseError } from 'firebase/app'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
+import BarraVerificacion from '../../confianza/BarraVerificacion'
+import { leerValidacion } from '../../confianza/tipos'
+import type { Validacion } from '../../confianza/tipos'
+import { ErrorConfirmacion, avisoPesoCero, confirmarReporte as confirmarConPeso, mensajeDeError } from '../../confianza/confirmar'
 import {
   ICONOS_POR_ESTADO,
   ICONOS_SELECCIONADOS_POR_ESTADO,
@@ -67,6 +69,7 @@ interface Reporte {
   lng: number
   fecha: Date | null
   foto: FotoInfo | null
+  validacion: Validacion
 }
 
 /** Estado de carga de la foto de un reporte, cacheado por id de reporte. */
@@ -122,6 +125,7 @@ function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte | null {
     lng,
     fecha: typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : null,
     foto,
+    validacion: leerValidacion(data.validacion),
   }
 }
 
@@ -209,7 +213,9 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
   // Reportes con una confirmación en curso (deshabilita el botón mientras espera).
   const [confirmando, setConfirmando] = useState<Record<string, boolean>>({})
   // Mensaje puntual tras intentar confirmar (p. ej. "Ya confirmaste este reporte").
-  const [mensajeConfirmacion, setMensajeConfirmacion] = useState<Record<string, string>>({})
+  const [mensajeConfirmacion, setMensajeConfirmacion] = useState<
+    Record<string, { texto: string; tipo: 'ok' | 'aviso' | 'error' }>
+  >({})
   // Historial de estados, pedido solo al apretar "Ver historial". Se guarda
   // con el estado que tenía el reporte al leerlo: si cambió, se vuelve a leer.
   const [historiales, setHistoriales] = useState<Record<string, EstadoHistorial>>({})
@@ -266,18 +272,33 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
     }
 
     setConfirmando((prev) => ({ ...prev, [reporte.id]: true }))
-    setMensajeConfirmacion((prev) => ({ ...prev, [reporte.id]: '' }))
+    setMensajeConfirmacion((prev) => {
+      const { [reporte.id]: _quitado, ...resto } = prev
+      return resto
+    })
     try {
-      // Único efecto en la base de datos: este documento. No se toca
-      // reports/{id} (el contador "confirmaciones" queda pendiente, es tarea
-      // del sistema de confianza) ni users/{autorUid}.
-      await setDoc(doc(db, 'reports', reporte.id, 'confirmations', user.uid), {
-        uid: user.uid,
+      // `email_verified` del token es lo que ven las reglas (el del perfil
+      // de Auth puede ir adelantado hasta que el token se renueva).
+      const token = await user.getIdTokenResult()
+      const resultado = await confirmarConPeso(db, {
         reportId: reporte.id,
-        createdAt: serverTimestamp(),
+        uid: user.uid,
+        correoVerificado: token.claims.email_verified === true,
+        creadaEnMs: perfil?.createdAt?.getTime() ?? null,
       })
 
       setConfirmados((prev) => ({ ...prev, [reporte.id]: true }))
+      setMensajeConfirmacion((prev) => ({
+        ...prev,
+        [reporte.id]: resultado.motivoPesoCero
+          ? { texto: avisoPesoCero(resultado.motivoPesoCero), tipo: 'aviso' }
+          : {
+              texto: resultado.recienValidado
+                ? 'Gracias. Tu confirmación dejó este reporte validado por la comunidad.'
+                : 'Gracias. Tu confirmación sumó a la verificación de la comunidad.',
+              tipo: 'ok',
+            },
+      }))
       // Actualización optimista del conteo ya cargado, sin volver a consultar.
       setConfirmaciones((prev) => {
         const actual = prev[reporte.id]
@@ -287,24 +308,13 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
         return { ...prev, [reporte.id]: { ...actual, total: actual.total + 1 } }
       })
     } catch (err) {
-      // El id del documento es el propio uid: un segundo intento es un
-      // "update" sobre un documento existente, y las reglas lo rechazan con
-      // permission-denied — así es como Firestore garantiza una sola
-      // confirmación por usuario y reporte, sin lógica extra en el cliente.
-      const code = err instanceof FirebaseError ? err.code : ''
-      if (code === 'permission-denied') {
+      if (err instanceof ErrorConfirmacion && err.codigo === 'ya_confirmo') {
         setConfirmados((prev) => ({ ...prev, [reporte.id]: true }))
-        setMensajeConfirmacion((prev) => ({
-          ...prev,
-          [reporte.id]: 'Ya confirmaste este reporte.',
-        }))
-      } else {
-        console.error('Error al confirmar el reporte:', err)
-        setMensajeConfirmacion((prev) => ({
-          ...prev,
-          [reporte.id]: 'No pudimos registrar tu confirmación.',
-        }))
       }
+      setMensajeConfirmacion((prev) => ({
+        ...prev,
+        [reporte.id]: { texto: mensajeDeError(err), tipo: 'error' },
+      }))
     } finally {
       setConfirmando((prev) => ({ ...prev, [reporte.id]: false }))
     }
@@ -467,6 +477,8 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
             </dd>
           </dl>
 
+          <BarraVerificacion validacion={reporte.validacion} />
+
           {!esAutor && !esOperador && (
             <div className={styles.confirmar}>
               {yaConfirmado ? (
@@ -482,9 +494,27 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
                 </button>
               )}
               {mensajeConfirmacion[reporte.id] && (
-                <p className={styles.confirmarMensaje}>{mensajeConfirmacion[reporte.id]}</p>
+                <p
+                  className={`${styles.confirmarMensaje} ${
+                    mensajeConfirmacion[reporte.id].tipo === 'aviso'
+                      ? styles.confirmarAviso
+                      : mensajeConfirmacion[reporte.id].tipo === 'ok'
+                        ? styles.confirmarOk
+                        : ''
+                  }`}
+                  role={mensajeConfirmacion[reporte.id].tipo === 'error' ? 'alert' : 'status'}
+                >
+                  {mensajeConfirmacion[reporte.id].texto}
+                </p>
               )}
             </div>
+          )}
+
+          {/* El administrador pasa de aquí a la administración del mismo reporte (detalle, estado, veredicto, moderación). */}
+          {perfil?.role === 'admin' && (
+            <Link to={`/admin/reportes?reporte=${reporte.id}`} className={styles.enlaceAdmin}>
+              Editar / ver más en administración →
+            </Link>
           )}
 
           <div className={styles.historial}>

@@ -2,6 +2,15 @@ import type { Reporte } from './reporte'
 
 export const SIN_OPERADOR = '__sin_operador__'
 
+export type Verificacion = '' | 'validados' | 'por_verificar' | 'real' | 'falso' | 'sin_veredicto'
+
+const VERIFICACIONES: readonly string[] = ['validados', 'por_verificar', 'real', 'falso', 'sin_veredicto']
+
+/** Valor de `?verificacion=` de la URL, o '' si no es uno de los conocidos. */
+export function verificacionDeUrl(valor: string | null): Verificacion {
+  return valor !== null && VERIFICACIONES.includes(valor) ? (valor as Verificacion) : ''
+}
+
 export interface Filtros {
   texto: string
   categoria: string
@@ -11,6 +20,13 @@ export interface Filtros {
   // '' = todos, SIN_OPERADOR = solo sin asignar, o el id de un operador.
   operador: string
   foto: '' | 'con' | 'sin'
+  /**
+   * Verificación y veredicto: '' = todos; 'validados' = validados por la
+   * comunidad; 'por_verificar' = validados que aún no tienen veredicto;
+   * 'real' / 'falso' = con ese veredicto; 'sin_veredicto' = cualquier reporte
+   * que aún no tiene veredicto.
+   */
+  verificacion: Verificacion
   desde: string
   hasta: string
 }
@@ -22,18 +38,30 @@ export const FILTROS_VACIOS: Filtros = {
   comuna: '',
   operador: '',
   foto: '',
+  verificacion: '',
   desde: '',
   hasta: '',
 }
 
-/** Texto y foto no se pueden filtrar en Firestore: actúan sobre la página cargada. */
+/** Los filtros de verificación que la página termina de aplicar (el servidor no puede). */
+const VERIFICACION_LOCAL: readonly Verificacion[] = ['por_verificar', 'sin_veredicto']
+
+/**
+ * Texto y foto no se pueden filtrar en Firestore: actúan sobre la página
+ * cargada. «Por verificar» y «Sin veredicto» tampoco del todo: los reportes
+ * anteriores al sistema de confianza no tienen el campo `veredicto`, y una
+ * consulta por `veredicto == null` no los encontraría; el servidor trae los
+ * validados (o todos) y la página oculta los que ya tienen veredicto.
+ */
 export function filtrosLocalesActivos(filtros: Filtros): boolean {
-  return filtros.texto.trim() !== '' || filtros.foto !== ''
+  return (
+    filtros.texto.trim() !== '' || filtros.foto !== '' || VERIFICACION_LOCAL.includes(filtros.verificacion)
+  )
 }
 
 /** Deja solo texto y foto; el resto ya lo filtró el servidor. */
 export function soloFiltrosLocales(filtros: Filtros): Filtros {
-  return { ...FILTROS_VACIOS, texto: filtros.texto, foto: filtros.foto }
+  return { ...FILTROS_VACIOS, texto: filtros.texto, foto: filtros.foto, verificacion: filtros.verificacion }
 }
 
 export function hayFiltrosActivos(filtros: Filtros): boolean {
@@ -57,6 +85,12 @@ export function filtrarReportes(reportes: Reporte[], filtros: Filtros): Reporte[
     }
     if (filtros.foto === 'con' && !r.foto) return false
     if (filtros.foto === 'sin' && r.foto) return false
+    if ((filtros.verificacion === 'validados' || filtros.verificacion === 'por_verificar') && !r.validacion.validado) {
+      return false
+    }
+    if (filtros.verificacion === 'real' && r.validacion.veredicto !== 'real') return false
+    if (filtros.verificacion === 'falso' && r.validacion.veredicto !== 'falso') return false
+    if (VERIFICACION_LOCAL.includes(filtros.verificacion) && r.validacion.veredicto !== null) return false
     if (desde && (!r.fecha || r.fecha < desde)) return false
     if (hasta && (!r.fecha || r.fecha > hasta)) return false
     if (
@@ -86,5 +120,9 @@ export function resumenListado(
       ? 'Contando reportes…'
       : `${total.toLocaleString('es-CL')} ${total === 1 ? 'reporte' : 'reportes'}`
   if (!filtrosLocalesActivos(filtros)) return base
-  return `${base} · la búsqueda de texto y foto filtra solo los ${enPagina} de esta página (${visibles} coinciden)`
+  if (VERIFICACION_LOCAL.includes(filtros.verificacion) && !filtros.texto.trim() && !filtros.foto) {
+    const nombre = filtros.verificacion === 'por_verificar' ? 'Por verificar' : 'Sin veredicto'
+    return `${base} · «${nombre}» oculta los que ya tienen veredicto: ${visibles} de los ${enPagina} de esta página`
+  }
+  return `${base} · la búsqueda de texto, foto y verificación filtra solo los ${enPagina} de esta página (${visibles} coinciden)`
 }

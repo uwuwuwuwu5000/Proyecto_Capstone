@@ -16,6 +16,12 @@ const TRAZOS: Record<string, ReactNode> = {
       <path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3" />
     </>
   ),
+  '/admin/reportes?verificacion=por_verificar': (
+    <>
+      <path d="M12 3.5 5 6.5v5.2c0 4.2 2.9 7.3 7 8.8 4.1-1.5 7-4.6 7-8.8V6.5Z" />
+      <path d="m9 12 2.2 2.2L15.5 10" />
+    </>
+  ),
   '/admin/reportes/nuevo': (
     <>
       <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" />

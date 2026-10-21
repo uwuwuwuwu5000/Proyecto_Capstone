@@ -6,7 +6,8 @@
 // siempre las de una página, sin importar cuántos reportes haya.
 //
 // Índices que usa (Firestore → Índices, colección `reports`, createdAt
-// descendente): estado, categoria y operadorId, cada uno + createdAt.
+// descendente): estado, categoria, operadorId, `validacion.validado` y
+// `validacion.veredicto`, cada uno + createdAt.
 // Firestore los combina cuando se filtra por más de un campo.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -32,7 +33,10 @@ import { mapearReporte } from './reporte'
 import type { Reporte } from './reporte'
 
 /** Los filtros que se resuelven en Firestore; texto y foto actúan sobre la página. */
-type FiltrosServidor = Pick<Filtros, 'categoria' | 'estado' | 'comuna' | 'operador' | 'desde' | 'hasta'>
+type FiltrosServidor = Pick<
+  Filtros,
+  'categoria' | 'estado' | 'comuna' | 'operador' | 'verificacion' | 'desde' | 'hasta'
+>
 
 export const TAMANOS_PAGINA = [12, 24, 48]
 
@@ -48,6 +52,7 @@ function filtrosServidor(f: Filtros): FiltrosServidor {
     estado: f.estado,
     comuna: f.comuna,
     operador: f.operador,
+    verificacion: f.verificacion,
     desde: f.desde,
     hasta: f.hasta,
   }
@@ -58,6 +63,15 @@ function igualdades(f: FiltrosServidor, operadorFijo: string | null): QueryConst
   if (f.categoria) restricciones.push(where('categoria', '==', f.categoria))
   if (f.estado) restricciones.push(where('estado', '==', f.estado))
   if (f.comuna) restricciones.push(where('comuna', '==', f.comuna))
+  // «Validados» y «por verificar»: ambos parten de los validados por la comunidad.
+  if (f.verificacion === 'validados' || f.verificacion === 'por_verificar') {
+    restricciones.push(where('validacion.validado', '==', true))
+  }
+  // «Real» y «falso»: el veredicto del operador o del administrador.
+  if (f.verificacion === 'real' || f.verificacion === 'falso') {
+    restricciones.push(where('validacion.veredicto', '==', f.verificacion))
+  }
+  // «Sin veredicto» no se consulta en el servidor: la página oculta los que lo tienen.
   const operador = operadorFijo ?? f.operador
   // Un reporte "sin operador" tiene operadorId null (así lo escribe la app).
   if (operador === SIN_OPERADOR) restricciones.push(where('operadorId', '==', null))

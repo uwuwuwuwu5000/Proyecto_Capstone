@@ -1,0 +1,37 @@
+.fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 2px;
+}
+
+.validado,
+.pendiente,
+.real,
+.falso {
+  padding: 1px 9px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.validado {
+  color: #38b97a;
+  border-color: #38b97a;
+}
+
+.pendiente {
+  color: #e0b43c;
+  border-color: #e0b43c;
+}
+
+.real {
+  color: var(--ca-signal);
+  border-color: var(--ca-signal);
+}
+
+.falso {
+  color: var(--ca-danger);
+  border-color: var(--ca-danger);
+}

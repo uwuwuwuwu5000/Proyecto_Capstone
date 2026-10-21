@@ -19,6 +19,8 @@ export interface PerfilUsuario {
   displayName: string | null
   role: string
   operadorId: string | null
+  /** Cuándo se creó el perfil (cuenta de menos de 24 h: su voto pesa 0). */
+  createdAt: Date | null
 }
 
 interface AuthContextValue {
@@ -71,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 role: typeof data.role === 'string' ? data.role : 'ciudadano',
                 operadorId:
                   typeof data.operadorId === 'string' ? data.operadorId : null,
+                createdAt:
+                  typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : null,
               }
             : null,
         )

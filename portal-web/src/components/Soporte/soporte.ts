@@ -175,6 +175,21 @@ export function escucharMensajes(
   )
 }
 
+/**
+ * Las conversaciones abiertas (nadie las ha tomado), con su detalle: de aquí
+ * salen el contador del panel y los avisos de la campana del administrador.
+ */
+export function escucharAbiertasDetalle(
+  alCambiar: (tickets: Ticket[]) => void,
+  alFallar: (err: unknown) => void,
+): Unsubscribe {
+  return onSnapshot(
+    query(collection(db, 'supportTickets'), where('estado', '==', 'abierto'), limit(100)),
+    (snapshot) => alCambiar(snapshot.docs.map((d) => mapearTicket(d.id, d.data()))),
+    alFallar,
+  )
+}
+
 /** Cantidad de conversaciones abiertas (nadie las ha tomado): el contador del panel. */
 export function escucharAbiertos(
   alCambiar: (cantidad: number) => void,

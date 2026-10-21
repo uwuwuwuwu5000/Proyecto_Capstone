@@ -1,0 +1,137 @@
+.raiz {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ca-line);
+}
+
+.titulo {
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-danger);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+}
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nombre {
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detalle {
+  font-size: 0.76rem;
+  color: var(--ca-muted);
+}
+
+.activo,
+.suspendido {
+  padding: 1px 9px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.activo {
+  color: #38b97a;
+  border-color: #38b97a;
+}
+
+.suspendido {
+  color: var(--ca-danger);
+  border-color: var(--ca-danger);
+}
+
+.acciones {
+  display: flex;
+  gap: 6px;
+}
+
+.boton,
+.botonPeligro,
+.botonCancelar {
+  padding: 5px 12px;
+  border: 1px solid;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton {
+  align-self: flex-start;
+  color: var(--ca-signal);
+  border-color: var(--ca-signal);
+}
+
+.botonPeligro {
+  color: var(--ca-danger);
+  border-color: var(--ca-danger);
+}
+
+.botonCancelar {
+  color: var(--ca-muted);
+  border-color: var(--ca-line);
+}
+
+.boton:hover:not(:disabled) {
+  background: rgba(28, 169, 201, 0.14);
+}
+
+.botonPeligro:hover:not(:disabled) {
+  background: rgba(224, 101, 107, 0.14);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .fila {
+    grid-template-columns: 1fr;
+  }
+}

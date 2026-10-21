@@ -4,6 +4,7 @@ import { FirebaseError } from 'firebase/app'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
+import { ErrorSinVeredicto, motivoSinVeredicto, siguientesEstados } from '../../confianza/exigirVeredicto'
 import { useCategorias } from '../../context/CategoriasContext'
 import FotoReporte from './FotoReporte'
 import { EstadoPildora } from './TarjetaReporte'
@@ -11,9 +12,12 @@ import { cambiarEstadoReporte, formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
 import { cargarHistorial } from './historial'
 import { cargarReporte } from './useReportesPaginados'
-import { formatearDuracion } from './tiempos'
+import { textoResolucion } from './tiempos'
 import HistorialEstados from './HistorialEstados'
 import type { CambioEstado } from './historial'
+import BarraVerificacion from '../../confianza/BarraVerificacion'
+import VeredictoReporte from '../../confianza/VeredictoReporte'
+import ModeracionReporte from '../../confianza/ModeracionReporte'
 import styles from './Reportes.module.css'
 
 interface DetalleReporteProps {
@@ -63,7 +67,11 @@ export default function DetalleReporte({
   const [refrescado, setRefrescado] = useState<Reporte | null>(null)
   const reporte: Reporte = { ...(refrescado ?? reporteDelPadre), estado: estadoActual }
 
-  const siguientes = TRANSICIONES[reporte.estado] ?? []
+  const sinVeredicto = motivoSinVeredicto(reporte, user?.uid)
+  const siguientes = siguientesEstados(reporte, user?.uid)
+  // Igual que la app: con los datos guardados al resolver y, en los reportes
+  // anteriores a esos datos, con el historial de estados.
+  const resolucion = textoResolucion(reporte, historial)
   const [estadoNuevo, setEstadoNuevo] = useState('')
   const [comentario, setComentario] = useState('')
   const [guardando, setGuardando] = useState(false)
@@ -102,6 +110,10 @@ export default function DetalleReporte({
         .catch((e) => console.error('No se pudo refrescar el reporte:', e))
     } catch (err) {
       console.error('Error al cambiar el estado del reporte:', err)
+      if (err instanceof ErrorSinVeredicto) {
+        setErrorCambio(err.message)
+        return
+      }
       const code = err instanceof FirebaseError ? err.code : ''
       if (code === 'permission-denied') {
         // Antes de culpar a los permisos, se comprueba si el reporte ya cambió de
@@ -196,24 +208,18 @@ export default function DetalleReporte({
               <dd>{formatearFecha(reporte.fecha, true)}</dd>
               <dt>Estado actual</dt>
               <dd>{ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}</dd>
-              {reporte.resueltoAt && (
+              {resolucion && (
                 <>
                   <dt>Resolución</dt>
-                  <dd>
-                    Resuelto el {formatearFecha(reporte.resueltoAt, true)}
-                    {typeof reporte.tiempoResolucionMs === 'number' &&
-                      ` · en ${formatearDuracion(reporte.tiempoResolucionMs)}`}
-                  </dd>
-                </>
-              )}
-              {!reporte.resueltoAt && reporte.cerradoSinResolverAt && (
-                <>
-                  <dt>Resolución</dt>
-                  <dd>Cerrado sin resolver el {formatearFecha(reporte.cerradoSinResolverAt, true)}</dd>
+                  <dd>{resolucion}</dd>
                 </>
               )}
               <dt>Confirmaciones</dt>
               <dd>{confirmaciones ?? (error ? '—' : 'Cargando…')}</dd>
+              <dt>Verificación</dt>
+              <dd>
+                <BarraVerificacion validacion={reporte.validacion} compacta />
+              </dd>
               <dt>Comuna</dt>
               <dd>{reporte.comuna || '—'}</dd>
               <dt>Región</dt>
@@ -252,7 +258,9 @@ export default function DetalleReporte({
             {gestionable && (
               <div className={styles.cambioRapido}>
                 <span className={styles.etiqueta}>Cambiar estado</span>
-                {siguientes.length === 0 ? (
+                {sinVeredicto ? (
+                  <p className={styles.estadoCarga}>{sinVeredicto}</p>
+                ) : siguientes.length === 0 ? (
                   <p className={styles.estadoCarga}>
                     Este reporte está en su estado final: ya no se puede mover.
                   </p>
@@ -294,6 +302,19 @@ export default function DetalleReporte({
                 {errorCambio && <p className={styles.errorTexto}>{errorCambio}</p>}
                 {avisoCambio && <p className={styles.avisoTexto}>{avisoCambio}</p>}
               </div>
+            )}
+
+            {gestionable && vista === 'gestion' && <ModeracionReporte reporte={reporte} />}
+
+            {gestionable && vista === 'gestion' && (
+              <VeredictoReporte
+                reporte={reporte}
+                onAplicado={() => {
+                  void cargarReporte(reporte.id)
+                    .then((fresco) => fresco && setRefrescado(fresco))
+                    .catch((e) => console.error('No se pudo refrescar el reporte:', e))
+                }}
+              />
             )}
           </div>
         </div>

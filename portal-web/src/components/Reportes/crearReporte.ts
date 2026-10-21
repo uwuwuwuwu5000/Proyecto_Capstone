@@ -14,6 +14,7 @@ import { geohashForLocation } from 'geofire-common'
 import { db } from '../../firebase/config'
 import type { FotoProtegida } from '../../privacidad/privacidad'
 import { LIMITE_DATA_URL } from '../../privacidad/comprimir'
+import { VALIDACION_INICIAL } from '../../confianza/tipos'
 import { calcularAsignacion } from './asignacion'
 import type { Punto } from './asignacion'
 
@@ -88,6 +89,8 @@ export async function crearReporteAdmin(datos: NuevoReporteAdmin): Promise<strin
       : null,
     estado: 'reportado',
     confirmaciones: 0,
+    // Verificación comunitaria en ceros (la exigen las reglas del sistema de confianza).
+    validacion: VALIDACION_INICIAL,
     organismo,
     operadorId,
     geohash: geohashForLocation([datos.punto.lat, datos.punto.lng]),

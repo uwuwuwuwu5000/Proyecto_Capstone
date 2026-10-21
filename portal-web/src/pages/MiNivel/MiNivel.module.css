@@ -1,0 +1,234 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 1.8rem;
+  color: var(--ca-ink);
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--ca-muted);
+}
+
+.estado {
+  color: var(--ca-muted);
+}
+
+.tarjetaNivel,
+.tarjeta {
+  margin-bottom: 18px;
+  padding: 22px;
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  background: var(--ca-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.tarjetaNivel {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 22px;
+}
+
+.insignia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 76px;
+  border: 2px solid var(--ca-signal);
+  border-radius: 50%;
+  color: var(--ca-signal);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.nivelNombre {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.nivelPuntos {
+  margin: 2px 0 12px;
+  color: var(--ca-muted);
+}
+
+.barra {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--ca-surface-alt);
+  border: 1px solid var(--ca-line);
+  overflow: hidden;
+}
+
+.barraRelleno {
+  height: 100%;
+  background: var(--ca-signal);
+  transition: width 0.3s;
+}
+
+.nivelSiguiente {
+  margin: 8px 0 0;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+}
+
+.contadores {
+  display: flex;
+  gap: 22px;
+  margin: 0;
+}
+
+.contadores dt {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.contadores dd {
+  margin: 2px 0 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.subtitulo {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  color: var(--ca-ink);
+}
+
+.pesoVoto {
+  margin: 0 0 10px;
+  color: var(--ca-ink);
+}
+
+.pesoVoto strong {
+  color: var(--ca-signal);
+  font-size: 1.15rem;
+}
+
+.condiciones {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.condiciones li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.cumple {
+  color: var(--ca-ink);
+}
+
+.noCumple {
+  color: var(--ca-danger);
+}
+
+.enlace {
+  padding: 2px 10px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-signal);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.enlace:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.nota {
+  margin: 8px 0;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.alerta {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border: 1px solid var(--ca-danger);
+  border-radius: 10px;
+  color: var(--ca-danger);
+}
+
+.limite {
+  margin: 12px 0 0;
+  color: var(--ca-muted);
+}
+
+.limite strong {
+  color: var(--ca-ink);
+}
+
+.pasos {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ca-ink);
+  line-height: 1.6;
+}
+
+.tablaScroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.tabla th,
+.tabla td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ca-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabla th {
+  color: var(--ca-muted);
+  font-weight: 600;
+}
+
+.filaActual {
+  background: rgba(28, 169, 201, 0.12);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .main {
+    padding: 24px 16px 48px;
+  }
+
+  .tarjetaNivel {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}
+
+.tarjetaNivel + .nota {
+  margin: -6px 0 18px;
+}

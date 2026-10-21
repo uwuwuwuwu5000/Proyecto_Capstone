@@ -1,0 +1,126 @@
+.raiz {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ca-line);
+}
+
+.titulo {
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.nota {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.comentario {
+  margin: 0;
+  font-style: italic;
+  color: var(--ca-ink);
+}
+
+.real {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ca-signal);
+}
+
+.falso {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ca-danger);
+}
+
+.ok {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #38b97a;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-danger);
+}
+
+.botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.etiqueta {
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}
+
+.entrada {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.entrada:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.botonReal,
+.botonFalso,
+.botonCancelar {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid;
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botonReal {
+  color: var(--ca-signal);
+  border-color: var(--ca-signal);
+}
+
+.botonReal:hover:not(:disabled) {
+  background: rgba(28, 169, 201, 0.14);
+}
+
+.botonFalso {
+  color: var(--ca-danger);
+  border-color: var(--ca-danger);
+}
+
+.botonFalso:hover:not(:disabled) {
+  background: rgba(224, 101, 107, 0.14);
+}
+
+.botonCancelar {
+  color: var(--ca-muted);
+  border-color: var(--ca-line);
+}
+
+.botonReal:disabled,
+.botonFalso:disabled,
+.botonCancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

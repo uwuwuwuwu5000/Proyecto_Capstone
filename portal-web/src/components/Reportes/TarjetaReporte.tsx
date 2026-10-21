@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { COLOR_POR_ESTADO, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
 import FotoReporte from './FotoReporte'
+import InsigniasReporte from '../../confianza/InsigniasReporte'
 import { formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
 import styles from './Reportes.module.css'
@@ -47,6 +48,7 @@ export default function TarjetaReporte({
           </span>
           <EstadoPildora estado={reporte.estado} />
         </div>
+        <InsigniasReporte validacion={reporte.validacion} />
 
         <p className={styles.descripcion}>{reporte.descripcion || 'Sin descripción'}</p>
 

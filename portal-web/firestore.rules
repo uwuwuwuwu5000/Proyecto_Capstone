@@ -72,6 +72,235 @@ service cloud.firestore {
       return exists(perfil) && get(perfil).data.role == 'operador';
     }
 
+    // ======================================================================
+    // SISTEMA DE CONFIANZA (ver sistema_confianza.md)
+    // ======================================================================
+
+    function rutaConfianza(uid) {
+      return /databases/$(database)/documents/users/$(uid)/confianza/actual;
+    }
+
+    /** Datos de confianza de un usuario; sin documento equivale a nivel 0. */
+    function confianzaDe(uid) {
+      let ruta = rutaConfianza(uid);
+      return exists(ruta)
+        ? get(ruta).data
+        : {'puntosConfianza': 0, 'trustLevel': 0, 'validatedReports': 0,
+           'reportesFalsos': 0, 'confirmacionesSuspendidas': false};
+    }
+
+    /** Nivel (0-10) que corresponde a unos puntos de confianza (sección 4.1). */
+    function nivelDePuntos(pc) {
+      return pc >= 760 ? 10
+           : pc >= 640 ? 9
+           : pc >= 530 ? 8
+           : pc >= 430 ? 7
+           : pc >= 340 ? 6
+           : pc >= 260 ? 5
+           : pc >= 190 ? 4
+           : pc >= 130 ? 3
+           : pc >= 80 ? 2
+           : pc >= 40 ? 1
+           : 0;
+    }
+
+    /** Peso de una confirmación según el nivel (sección 4.2): 10 x (1 + 0,25 x nivel), máximo 34. */
+    function pesoDeNivel(nivel) {
+      return nivel >= 10 ? 34 : 10 + 2.5 * nivel;
+    }
+
+    /** Confirmaciones por día según el nivel (sección 4.5). */
+    function limiteDiario(nivel) {
+      return nivel == 0 ? 5
+           : nivel == 1 ? 8
+           : nivel <= 3 ? 12
+           : nivel <= 6 ? 20
+           : 30;
+    }
+
+    /** Número de día con desfase fijo UTC-3: identifica el documento del contador. */
+    function numeroDeDia() {
+      // La división entre enteros ya trunca: no hace falta redondear.
+      return (request.time.toMillis() - 10800000) / 86400000;
+    }
+
+    function rutaLimiteDeHoy(uid) {
+      return /databases/$(database)/documents/users/$(uid)/limites/$(string(numeroDeDia()));
+    }
+
+    function rutaConfirmacion(reportId, uid) {
+      return /databases/$(database)/documents/reports/$(reportId)/confirmations/$(uid);
+    }
+
+    function validacionDe(reporte) {
+      return reporte.get('validacion', {});
+    }
+
+    /** Mapa `validacion` de un reporte nuevo: todo en cero. */
+    function validacionInicial(v) {
+      return v is map
+        && v.keys().hasOnly(['puntos', 'votos', 'validado', 'validadoAt', 'veredicto'])
+        && v.get('puntos', 0) == 0
+        && v.get('votos', 0) == 0
+        && v.get('validado', false) == false
+        && v.get('validadoAt', null) == null
+        && v.get('veredicto', null) == null;
+    }
+
+    /**
+     * La confirmación comunitaria con peso (formato nuevo). Se evalúa al crear
+     * `confirmations/{uid}`: exige que en el mismo lote vayan la suma en el
+     * reporte y el contador del día.
+     */
+    function confirmacionConPesoValida(reportId, userId) {
+      let datos = request.resource.data;
+      let perfil = get(/databases/$(database)/documents/users/$(userId)).data;
+      let conf = confianzaDe(userId);
+      let nivel = conf.get('trustLevel', 0);
+      let verificado = request.auth.token.email_verified == true;
+      let antiguo = perfil.get('createdAt', null) != null
+        && request.time.toMillis() - perfil.createdAt.toMillis() >= 86400000;
+      let peso = (verificado && antiguo) ? pesoDeNivel(nivel) : 0;
+      let rutaLim = rutaLimiteDeHoy(userId);
+      let hoyAntes = exists(rutaLim) ? get(rutaLim).data.confirmaciones : 0;
+      let reporte = datosReporte(reportId);
+      let despues = getAfter(/databases/$(database)/documents/reports/$(reportId)).data;
+      return datos.keys().hasOnly(['uid', 'reportId', 'createdAt', 'nivel', 'peso'])
+        && datos.nivel == nivel
+        && datos.peso == peso
+        && conf.get('confirmacionesSuspendidas', false) == false
+        // Contador del día: +1, sin pasar del límite, y la pausa de 20 s.
+        && existsAfter(rutaLim)
+        && getAfter(rutaLim).data.confirmaciones == hoyAntes + 1
+        && hoyAntes + 1 <= limiteDiario(nivel)
+        && (!exists(rutaLim)
+            || request.time.toMillis() - get(rutaLim).data.ultimaAt.toMillis() >= 20000)
+        // La suma del reporte viaja en el mismo lote.
+        && validacionDe(despues).get('puntos', 0) == validacionDe(reporte).get('puntos', 0) + peso
+        && validacionDe(despues).get('votos', 0) == validacionDe(reporte).get('votos', 0) + (peso > 0 ? 1 : 0);
+    }
+
+    /**
+     * Un vecino suma su confirmación al mapa `validacion` del reporte. Solo
+     * toca puntos, votos y validado, y solo junto a su documento de confirmación.
+     */
+    function sumaDeConfirmacionValida(reportId) {
+      let nuevo = request.resource.data;
+      let antes = resource.data;
+      let cambios = nuevo.diff(antes).affectedKeys();
+      let vNuevo = validacionDe(nuevo);
+      let vAntes = validacionDe(antes);
+      let rutaConf = rutaConfirmacion(reportId, request.auth.uid);
+      let peso = existsAfter(rutaConf) ? getAfter(rutaConf).data.get('peso', 0) : 0;
+      let puntos = vAntes.get('puntos', 0) + peso;
+      let votos = vAntes.get('votos', 0) + (peso > 0 ? 1 : 0);
+      let validado = vAntes.get('validado', false) || (puntos >= 100 && votos >= 3);
+      return cambios.hasOnly(['validacion'])
+        && vNuevo.diff(vAntes).affectedKeys()
+             .hasOnly(['puntos', 'votos', 'validado', 'validadoAt', 'veredicto'])
+        && vNuevo.get('veredicto', null) == vAntes.get('veredicto', null)
+        && existsAfter(rutaConf)
+        && !exists(rutaConf)
+        && vNuevo.puntos == puntos
+        && vNuevo.votos == votos
+        && vNuevo.validado == validado
+        && (validado == vAntes.get('validado', false)
+              ? vNuevo.get('validadoAt', null) == vAntes.get('validadoAt', null)
+              : vNuevo.validadoAt == request.time);
+    }
+
+    /**
+     * Veredicto de un gestor sobre un reporte. Solo toca el bloque de
+     * veredicto de `validacion` y `updatedAt`, y exige que en el mismo lote
+     * vayan los puntos del autor (confianza/actual).
+     */
+    function veredictoValido(reportId) {
+      let nuevo = request.resource.data;
+      let antes = resource.data;
+      let vNuevo = validacionDe(nuevo);
+      let vAntes = validacionDe(antes);
+      let autor = antes.uid;
+      let confDespues = getAfter(rutaConfianza(autor));
+      return nuevo.diff(antes).affectedKeys().hasOnly(['validacion', 'updatedAt'])
+        && nuevo.updatedAt == request.time
+        && vNuevo.diff(vAntes).affectedKeys().hasOnly(
+             ['veredicto', 'veredictoPor', 'veredictoAt', 'veredictoComentario', 'veredictoPuntos'])
+        && vAntes.get('veredicto', null) == null
+        && vNuevo.veredicto in ['real', 'falso']
+        && vNuevo.veredictoPor == request.auth.uid
+        && vNuevo.veredictoAt == request.time
+        && (vNuevo.veredicto == 'real'
+            || (vNuevo.get('veredictoComentario', null) is string
+                && vNuevo.veredictoComentario.matches('.*[^ ].*')
+                && vNuevo.veredictoComentario.size() <= 512))
+        && vNuevo.veredictoPuntos is int
+        && autor != request.auth.uid
+        && get(/databases/$(database)/documents/users/$(autor)).data.role == 'ciudadano'
+        && existsAfter(rutaConfianza(autor))
+        && confDespues.data.ultimoReporteId == reportId;
+    }
+
+    /**
+     * Puntos del autor tras un veredicto (documento confianza/actual). Se
+     * comprueba contra el reporte tal como queda al final del lote.
+     */
+    function confianzaDeVeredictoValida(userId) {
+      let nuevo = request.resource.data;
+      let previo = resource == null
+        ? {'puntosConfianza': 0, 'validatedReports': 0, 'reportesFalsos': 0,
+           'confirmacionesSuspendidas': false}
+        : resource.data;
+      let reportId = nuevo.ultimoReporteId;
+      let rutaReporte = /databases/$(database)/documents/reports/$(reportId);
+      let reporteDespues = getAfter(rutaReporte).data;
+      let reporteAntes = get(rutaReporte).data;
+      let v = validacionDe(reporteDespues);
+      let pcAntes = previo.get('puntosConfianza', 0);
+      let esReal = v.get('veredicto', null) == 'real';
+      let pcNuevo = esReal ? (pcAntes + 10 > 760 ? 760 : pcAntes + 10) : (pcAntes - 15 < 0 ? 0 : pcAntes - 15);
+      return nuevo.keys().hasOnly(['puntosConfianza', 'trustLevel', 'validatedReports',
+                                   'reportesFalsos', 'confirmacionesSuspendidas',
+                                   'ultimoReporteId', 'updatedAt'])
+        && nuevo.get('updatedAt', null) == request.time
+        && reporteAntes.uid == userId
+        && validacionDe(reporteAntes).get('veredicto', null) == null
+        && v.get('veredicto', null) in ['real', 'falso']
+        && nuevo.puntosConfianza == pcNuevo
+        && nuevo.trustLevel == nivelDePuntos(pcNuevo)
+        && v.veredictoPuntos == pcNuevo - pcAntes
+        && nuevo.validatedReports == previo.get('validatedReports', 0) + (esReal ? 1 : 0)
+        && nuevo.reportesFalsos == previo.get('reportesFalsos', 0) + (esReal ? 0 : 1)
+        && nuevo.confirmacionesSuspendidas == previo.get('confirmacionesSuspendidas', false)
+        && puedeGestionarReporte(reporteAntes);
+    }
+
+    /** El espejo en users/{autor} debe coincidir con confianza/actual al final del lote. */
+    function espejoDeConfianzaValido(userId) {
+      let nuevo = request.resource.data;
+      let conf = getAfter(rutaConfianza(userId)).data;
+      return esGestor()
+        && existsAfter(rutaConfianza(userId))
+        && nuevo.diff(resource.data).affectedKeys()
+             .hasOnly(['trustLevel', 'validatedReports', 'updatedAt'])
+        && nuevo.trustLevel == conf.trustLevel
+        && nuevo.validatedReports == conf.validatedReports;
+    }
+
+    /** El administrador suspende o rehabilita confirmaciones de un usuario. */
+    function suspensionValida() {
+      let nuevo = request.resource.data;
+      let previo = resource == null
+        ? {'puntosConfianza': 0, 'trustLevel': 0, 'validatedReports': 0, 'reportesFalsos': 0}
+        : resource.data;
+      return esAdministrador()
+        && nuevo.get('confirmacionesSuspendidas', null) is bool
+        && nuevo.get('puntosConfianza', 0) == previo.get('puntosConfianza', 0)
+        && nuevo.get('trustLevel', 0) == previo.get('trustLevel', 0)
+        && nuevo.get('validatedReports', 0) == previo.get('validatedReports', 0)
+        && nuevo.get('reportesFalsos', 0) == previo.get('reportesFalsos', 0)
+        && nuevo.get('ultimoReporteId', null) == previo.get('ultimoReporteId', null);
+    }
+
     // Campos que el cliente no puede fijar ni modificar por su cuenta:
     // el nivel de confianza y el conteo de reportes los administrará el backend
     // (Cloud Functions) cuando se implemente el sistema de reputación.
@@ -103,6 +332,8 @@ service cloud.firestore {
       return request.resource.data.uid == userId
         && request.resource.data.trustLevel == 0
         && request.resource.data.validatedReports == 0
+        // La antigüedad de la cuenta cuenta para el peso del voto: no se puede falsear.
+        && request.resource.data.createdAt == request.time
         // Un correo de la lista puede nacer con rol admin; cualquier otro, no.
         && (
              request.resource.data.role == 'ciudadano'
@@ -144,14 +375,21 @@ service cloud.firestore {
         || (esAdministrador() && creacionCuentaOperador(userId));
       // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
       // campos arbitrarios a su propio documento.
-      allow update: if esPropietario(userId)
+      allow update: if (esPropietario(userId)
         && camposProtegidosIntactos()
+        // createdAt no cambia (cuenta antigua = voto con peso). Un perfil sin esa fecha
+        // puede completarla una vez, con la hora del servidor.
+        && (request.resource.data.get('createdAt', null) == resource.data.get('createdAt', null)
+            || (resource.data.get('createdAt', null) == null
+                && request.resource.data.createdAt == request.time))
         && verificacionCoherente()
         && request.resource.data.keys().hasOnly([
              'uid', 'email', 'displayName', 'role', 'trustLevel',
              'validatedReports', 'emailVerified', 'ultimoReporteAt',
              'operadorId', 'createdAt', 'updatedAt'
-           ]);
+           ]))
+        // Veredicto de un gestor: el espejo de nivel y reportes validados.
+        || espejoDeConfianzaValido(userId);
 
       // El borrado de cuentas se maneja desde el backend, no desde el cliente.
       allow delete: if false;
@@ -161,6 +399,43 @@ service cloud.firestore {
        * su dueño lee y escribe. La lista de vistos se acota para que no crezca
        * sin límite; la app la compacta con `vistosHasta` al acercarse al tope.
        */
+      /**
+       * Datos de confianza: fuente de verdad del nivel. Los leen su dueño y los
+       * gestores (para decidir un veredicto); no contienen correo ni nombre.
+       * Se escriben solo en el lote de un veredicto (gestor) o al suspender
+       * confirmaciones (administrador).
+       */
+      match /confianza/{docId} {
+        allow read: if esPropietario(userId) || esGestor();
+        allow create, update: if docId == 'actual'
+          && (
+               (esGestor() && request.resource.data.get('ultimoReporteId', null) != null
+                  && confianzaDeVeredictoValida(userId))
+               || suspensionValida()
+             );
+        allow delete: if false;
+      }
+
+      /**
+       * Contador de confirmaciones del día y hora de la última (pausa de 20 s).
+       * El id es el número de día; se crea con la primera confirmación del día
+       * y solo sube de uno en uno.
+       */
+      match /limites/{dia} {
+        allow read: if esPropietario(userId);
+        allow create: if esPropietario(userId)
+          && dia == string(numeroDeDia())
+          && request.resource.data.keys().hasOnly(['confirmaciones', 'ultimaAt'])
+          && request.resource.data.confirmaciones == 1
+          && request.resource.data.ultimaAt == request.time;
+        allow update: if esPropietario(userId)
+          && dia == string(numeroDeDia())
+          && request.resource.data.keys().hasOnly(['confirmaciones', 'ultimaAt'])
+          && request.resource.data.confirmaciones == resource.data.confirmaciones + 1
+          && request.resource.data.ultimaAt == request.time;
+        allow delete: if false;
+      }
+
       match /avisos/{docId} {
         allow read: if esPropietario(userId);
 
@@ -491,6 +766,7 @@ service cloud.firestore {
         && organismoReporteValido()
         && operadorReporteValido()
         && fotoProtegida()
+        && (!('validacion' in request.resource.data) || validacionInicial(request.resource.data.validacion))
         && respetaIntervaloDeReporte();
 
       /**
@@ -528,7 +804,11 @@ service cloud.firestore {
              && transicionValida(resource.data.estado, request.resource.data.estado)
              && cambioDeEstadoValido()
            )
-        || (esAdministrador() && reasignacionValida());
+        || (esAdministrador() && reasignacionValida())
+        // Sistema de confianza: veredicto de un gestor.
+        || (puedeGestionarReporte(resource.data) && veredictoValido(reportId))
+        // Sistema de confianza: un vecino suma su confirmación.
+        || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId));
 
       // Solo un admin elimina, desde el panel "Administrar reportes". El
       // panel borra en el mismo lote la foto y las subcolecciones, para no
@@ -542,13 +822,21 @@ service cloud.firestore {
         allow read: if estaAutenticado();
 
         // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
+        // Dos formatos. El antiguo (solo uid, reportId y createdAt) sigue
+        // aceptado mientras la app nueva no esté publicada: cuenta en el conteo
+        // de confirmaciones pero no pesa en la validación. El nuevo lleva nivel
+        // y peso, y exige la suma en el reporte y el contador del día.
         allow create: if esPropietario(userId)
           && request.resource.data.uid == userId
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
           && datosReporte(reportId).uid != request.auth.uid
-          && !esCuentaOperador();
+          && !esCuentaOperador()
+          && (
+               request.resource.data.keys().hasOnly(['uid', 'reportId', 'createdAt'])
+               || confirmacionConPesoValida(reportId, userId)
+             );
 
         allow update: if false;
         // Solo al eliminar el reporte completo desde el panel de admin.

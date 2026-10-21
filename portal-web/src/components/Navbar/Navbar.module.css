@@ -539,3 +539,48 @@
   line-height: 1;
   vertical-align: middle;
 }
+
+/* Recordatorio de verificar el correo y acceso a «Mi perfil». */
+.avatar {
+  position: relative;
+}
+
+.puntoAlerta {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--ca-base);
+  border-radius: 50%;
+  background: #e0b43c;
+}
+
+.usuarioMenuItem,
+.usuarioMenuVerificar {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.usuarioMenuItem {
+  color: var(--ca-ink);
+}
+
+.usuarioMenuItem:hover {
+  background: rgba(28, 169, 201, 0.12);
+}
+
+.usuarioMenuVerificar {
+  border: 1px solid #e0b43c;
+  background: rgba(224, 180, 60, 0.12);
+  color: #e0b43c;
+}
+
+.usuarioMenuVerificar:hover {
+  background: rgba(224, 180, 60, 0.2);
+}

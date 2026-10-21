@@ -83,9 +83,9 @@ export default function BarraSeleccion({
     return dialogo
   }
 
-  const alcanzables = estadosAlcanzables(seleccionados)
+  const alcanzables = estadosAlcanzables(seleccionados, autor?.uid)
   const opcionesEstado = ESTADOS_EN_ORDEN.filter((e) => alcanzables.has(e))
-  const aplicables = estadoNuevo ? puedenPasarA(seleccionados, estadoNuevo) : []
+  const aplicables = estadoNuevo ? puedenPasarA(seleccionados, estadoNuevo, autor?.uid) : []
   const ocupado = progreso !== null
 
   function abrir(nueva: Accion) {
@@ -120,8 +120,8 @@ export default function BarraSeleccion({
           </p>
           {omitidos > 0 && (
             <p>
-              {contarReportes(omitidos)} no pueden pasar a ese estado desde el suyo y quedarán
-              igual.
+              {contarReportes(omitidos)} no pueden pasar a ese estado (por su estado actual o porque
+              aún no tienen veredicto) y quedarán igual.
             </p>
           )}
         </>

@@ -1,6 +1,7 @@
-// Avisos del ciudadano: cambios de estado en sus reportes. No se guardan; se
-// derivan de `statusHistory` (igual que la app móvil), así que no hace falta
-// Cloud Functions. Vive en un contexto para tener una sola suscripción aunque
+// Avisos del ciudadano: cambios de estado en sus reportes, validación de la
+// comunidad, veredicto y cambio de nivel. No se guardan; se derivan de
+// `statusHistory`, del propio reporte y de `confianza/actual`, así que no hace
+// falta Cloud Functions. Vive en un contexto para tener una sola suscripción aunque
 // la barra superior se vuelva a montar en cada página.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -20,28 +21,21 @@ import {
   where,
 } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { ETIQUETA_POR_ESTADO } from '../constants/reportes'
+import { avisoDeNivel, avisoDeSoporte, avisosDeValidacion, idAvisoNivel, nivelVistoDe } from '../components/Avisos/derivar'
+import type { AvisoBase } from '../components/Avisos/derivar'
+import { leerConfianza, leerValidacion } from '../confianza/tipos'
 import { useAuth } from './AuthContext'
+import { useSoporte } from './SoporteContext'
 
 /** Reportes propios que se vigilan (sin orderBy: no depende de un índice compuesto). */
 const REPORTES_VIGILADOS = 50
 const CAMBIOS_POR_REPORTE = 10
 const MAX_VISTOS = 200
 
-export interface Aviso {
-  /** `${reportId}_${cambioId}` */
-  id: string
-  reportId: string
-  reporte: string
-  desde: string
-  hacia: string
-  autorNombre: string | null
-  autorRol: string | null
-  comentario: string | null
-  fecha: Date | null
+export interface Aviso extends AvisoBase {
   visto: boolean
 }
-
-type AvisoBase = Omit<Aviso, 'visto'>
 
 interface AvisosContextValue {
   avisos: Aviso[]
@@ -63,9 +57,11 @@ const AvisosContext = createContext<AvisosContextValue>({
 
 const ms = (v: unknown): number | null => (v instanceof Timestamp ? v.toMillis() : null)
 const resumir = (t: string) => (t.length <= 60 ? t : `${t.slice(0, 57)}…`)
+const masReciente = (a: AvisoBase, b: AvisoBase) => (b.fecha?.getTime() ?? 0) - (a.fecha?.getTime() ?? 0)
 
 export function AvisosProvider({ children }: { children: ReactNode }) {
   const { user, perfil } = useAuth()
+  const { tickets } = useSoporte()
   // Avisos de los reportes propios: los ciudadanos y los administradores (que
   // también reportan). El operador no crea reportes; el suyo será otro aviso.
   const uid = user && (perfil?.role === 'ciudadano' || perfil?.role === 'admin') ? user.uid : null
@@ -73,11 +69,16 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
   const [base, setBase] = useState<AvisoBase[]>([])
   const [vistos, setVistos] = useState<Set<string>>(new Set())
   const [vistosHasta, setVistosHasta] = useState<Date | null>(null)
+  // Nivel de confianza actual: solo los vecinos lo ganan.
+  const esCiudadano = perfil?.role === 'ciudadano'
+  const [nivel, setNivel] = useState<{ nivel: number; fecha: Date | null } | null>(null)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const uidRef = useRef<string | null>(null)
   const vistosRef = useRef(vistos)
   vistosRef.current = vistos
+  const nivelRef = useRef<number | null>(null)
+  nivelRef.current = nivel ? nivel.nivel : null
 
   useEffect(() => {
     uidRef.current = uid
@@ -92,7 +93,10 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
 
     let activo = true
     let desuscribir: (() => void) | null = null
+    // Cambios de estado (cuestan una lectura del historial) y avisos de validación
+    // y veredicto (salen del propio documento, sin lecturas extra).
     const cache = new Map<string, { marca: string; avisos: AvisoBase[] }>()
+    const deValidacion = new Map<string, AvisoBase[]>()
     setCargando(true)
 
     async function leerAvisos(reportId: string, descripcion: string): Promise<AvisoBase[]> {
@@ -108,15 +112,17 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
           .filter((d) => d.data().autorUid !== uid)
           .map((d) => {
             const c = d.data()
+            const hacia = typeof c.hacia === 'string' ? c.hacia : ''
+            const autorNombre =
+              typeof c.autorNombre === 'string' && c.autorNombre.trim() ? c.autorNombre : null
             return {
               id: `${reportId}_${d.id}`,
+              tipo: 'estado' as const,
               reportId,
+              titulo: `Tu reporte pasó a «${ETIQUETA_POR_ESTADO[hacia] ?? hacia}»`,
               reporte: resumir(descripcion),
-              desde: typeof c.desde === 'string' ? c.desde : '',
-              hacia: typeof c.hacia === 'string' ? c.hacia : '',
-              autorNombre:
-                typeof c.autorNombre === 'string' && c.autorNombre.trim() ? c.autorNombre : null,
-              autorRol: typeof c.autorRol === 'string' ? c.autorRol : null,
+              // Los cambios de un administrador se muestran sin su nombre.
+              autor: c.autorRol === 'admin' ? 'Administración Ciudad Alerta' : (autorNombre ?? 'El organismo'),
               comentario:
                 typeof c.comentario === 'string' && c.comentario.trim() ? c.comentario.trim() : null,
               fecha: typeof c.createdAt?.toDate === 'function' ? c.createdAt.toDate() : null,
@@ -145,23 +151,27 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
         query(collection(db, 'reports'), where('uid', '==', uid), limit(REPORTES_VIGILADOS)),
         async (snapshot) => {
           setError(null)
+          // Un reporte que ya no existe (o salió de los vigilados) deja de avisar.
+          const vigentes = new Set(snapshot.docs.map((d) => d.id))
+          for (const id of [...cache.keys()]) if (!vigentes.has(id)) cache.delete(id)
+          deValidacion.clear()
           await Promise.all(
             snapshot.docs.map(async (d) => {
               const r = d.data()
+              const descripcion = typeof r.descripcion === 'string' ? r.descripcion : ''
+              deValidacion.set(d.id, avisosDeValidacion(d.id, descripcion, leerValidacion(r.validacion)))
               const marca = `${r.estado}|${ms(r.updatedAt) ?? ''}`
               if (cache.get(d.id)?.marca === marca) return
               const intacto = r.estado === 'reportado' && ms(r.updatedAt) === ms(r.createdAt)
-              const avisos = intacto
-                ? []
-                : await leerAvisos(d.id, typeof r.descripcion === 'string' ? r.descripcion : '')
+              const avisos = intacto ? [] : await leerAvisos(d.id, descripcion)
               cache.set(d.id, { marca, avisos })
             }),
           )
           if (!activo) return
           setBase(
-            [...cache.values()]
+            [...cache.values(), ...[...deValidacion.values()].map((avisos) => ({ avisos }))]
               .flatMap((e) => e.avisos)
-              .sort((a, b) => (b.fecha?.getTime() ?? 0) - (a.fecha?.getTime() ?? 0)),
+              .sort(masReciente),
           )
           setCargando(false)
         },
@@ -181,25 +191,48 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
     }
   }, [uid])
 
-  const avisos = useMemo<Aviso[]>(
-    () =>
-      base.map((a) => ({
-        ...a,
-        visto:
-          vistos.has(a.id) || (vistosHasta !== null && a.fecha !== null && a.fecha <= vistosHasta),
-      })),
-    [base, vistos, vistosHasta],
-  )
+  // Nivel de confianza actual (solo vecinos). Sin documento, es el nivel 0.
+  useEffect(() => {
+    if (!uid || !esCiudadano) {
+      setNivel(null)
+      return
+    }
+    return onSnapshot(
+      doc(db, 'users', uid, 'confianza', 'actual'),
+      (snap) => {
+        const d = snap.data()
+        setNivel({
+          nivel: leerConfianza(d).trustLevel,
+          fecha: typeof d?.updatedAt?.toDate === 'function' ? d.updatedAt.toDate() : null,
+        })
+      },
+      () => setNivel(null),
+    )
+  }, [uid, esCiudadano])
+
+  const avisos = useMemo<Aviso[]>(() => {
+    // El aviso de nivel se compara con el último nivel que el usuario ya vio.
+    const deNivel = nivel ? avisoDeNivel(nivel.nivel, nivelVistoDe(vistos, nivel.nivel), nivel.fecha) : null
+    // Administrador: una conversación de soporte abierta por aviso (vacío para los demás roles).
+    const deSoporte = tickets.map(avisoDeSoporte).filter((a): a is AvisoBase => a !== null)
+    return [...base, ...(deNivel ? [deNivel] : []), ...deSoporte].sort(masReciente).map((a) => ({
+      ...a,
+      visto: vistos.has(a.id) || (vistosHasta !== null && a.fecha !== null && a.fecha <= vistosHasta),
+    }))
+  }, [base, nivel, tickets, vistos, vistosHasta])
 
   const marcarTodos = useCallback(async () => {
     const u = uidRef.current
     if (!u) return
     setVistosHasta(new Date())
-    setVistos(new Set())
+    // Se conserva el marcador del nivel actual: de él depende saber, después,
+    // si el nivel subió o bajó.
+    const conservados = nivelRef.current !== null ? [idAvisoNivel(nivelRef.current)] : []
+    setVistos(new Set(conservados))
     try {
       await setDoc(
         doc(db, 'users', u, 'avisos', 'estado'),
-        { vistos: [], vistosHasta: serverTimestamp(), updatedAt: serverTimestamp() },
+        { vistos: conservados, vistosHasta: serverTimestamp(), updatedAt: serverTimestamp() },
         { merge: true },
       )
     } catch {

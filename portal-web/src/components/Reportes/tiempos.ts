@@ -1,57 +1,64 @@
+// Tiempos de atención y de resolución de un reporte. El cálculo vive en
+// `comun/` (paquete compartido con la app móvil), así que el portal y la app
+// muestran los mismos números: si el reporte ya trae `tiempoResolucionMs` (lo
+// guarda quien resuelve), ese es el dato oficial; si no, se deduce del historial.
+//
+// Este archivo conserva los nombres que ya usaba el portal.
+import {
+  ESTADOS_FINALIZADOS as ESTADOS_FINALIZADOS_COMUN,
+  calcularTiempos as calcularTiemposComun,
+  resolucionDeReporte,
+} from '@ciudad-alerta/comun'
+import type { TiemposReporte } from '@ciudad-alerta/comun'
 import type { CambioEstado } from './historial'
+import { formatearDuracion } from '@ciudad-alerta/comun'
+import { formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
 
-export const ESTADOS_FINALIZADOS = new Set(['resuelto', 'cerrado'])
+export { formatearDuracion, mediana, promedio } from '@ciudad-alerta/comun'
+export type { TiemposReporte }
 
-export interface TiemposReporte {
-  /** Desde la creación hasta el primer cambio de estado; null si nunca se atendió. */
-  primeraAtencionMs: number | null
-  /** Desde la creación hasta que pasó a resuelto o cerrado; null si sigue abierto. */
-  resolucionMs: number | null
-}
+export const ESTADOS_FINALIZADOS: ReadonlySet<string> = new Set(ESTADOS_FINALIZADOS_COMUN)
 
 export function calcularTiempos(reporte: Reporte, cambios: CambioEstado[]): TiemposReporte {
-  if (!reporte.fecha) {
-    return { primeraAtencionMs: null, resolucionMs: null }
-  }
-  const inicio = reporte.fecha.getTime()
-  const conFecha = cambios.filter((c): c is CambioEstado & { fecha: Date } => c.fecha !== null)
-  const primera = conFecha[0]
-  const resolucion = conFecha.find((c) => ESTADOS_FINALIZADOS.has(c.hacia))
-  // max(0, …): el reloj del dispositivo que creó el reporte puede ir adelantado.
-  return {
-    primeraAtencionMs: primera ? Math.max(0, primera.fecha.getTime() - inicio) : null,
-    resolucionMs: resolucion ? Math.max(0, resolucion.fecha.getTime() - inicio) : null,
-  }
+  return calcularTiemposComun(reporte.fecha, cambios, reporte.tiempoResolucionMs ?? null)
 }
 
-/** La mediana resiste los casos extremos mejor que el promedio: un reporte olvidado un mes no la arrastra. */
-export function mediana(valores: number[]): number | null {
-  if (valores.length === 0) return null
-  const ordenados = [...valores].sort((a, b) => a - b)
-  const mitad = Math.floor(ordenados.length / 2)
-  return ordenados.length % 2 === 0
-    ? (ordenados[mitad - 1] + ordenados[mitad]) / 2
-    : ordenados[mitad]
-}
+/**
+ * Texto de la fila «Resolución» del detalle de un reporte, o null si no hay
+ * nada que decir (sigue abierto, o todavía no se leyó el historial que hace
+ * falta para saberlo). Igual que la app: usa los datos guardados al resolver y,
+ * en los reportes resueltos antes de existir esos datos, el historial.
+ */
+export function textoResolucion(reporte: Reporte, cambios: CambioEstado[] | null): string | null {
+  const tieneRegistro = typeof reporte.tiempoResolucionMs === 'number' || !!reporte.cerradoSinResolverAt
+  // Sin registro propio, un reporte terminado necesita su historial para decir algo.
+  if (!tieneRegistro && cambios === null && ESTADOS_FINALIZADOS.has(reporte.estado)) return null
 
-export function promedio(valores: number[]): number | null {
-  if (valores.length === 0) return null
-  return valores.reduce((suma, v) => suma + v, 0) / valores.length
-}
+  const r = resolucionDeReporte({
+    estado: reporte.estado,
+    creado: reporte.fecha,
+    cambios: cambios ?? [],
+    tiempoResolucionMs: reporte.tiempoResolucionMs ?? null,
+    cerradoSinResolver: !!reporte.cerradoSinResolverAt,
+  })
 
-/** "12 min", "2 h 15 min", "3,5 días", "18 días". */
-export function formatearDuracion(ms: number): string {
-  const minutos = Math.round(ms / 60000)
-  if (minutos < 1) return 'menos de 1 min'
-  if (minutos < 60) return `${minutos} min`
-  if (minutos < 24 * 60) {
-    const horas = Math.floor(minutos / 60)
-    const resto = minutos % 60
-    return resto > 0 ? `${horas} h ${resto} min` : `${horas} h`
+  switch (r.tipo) {
+    case 'resuelto':
+      return (
+        'Resuelto' +
+        (reporte.resueltoAt ? ` el ${formatearFecha(reporte.resueltoAt, true)}` : '') +
+        (r.ms !== null ? ` · en ${formatearDuracion(r.ms)}` : '') +
+        (r.segun === 'historial' ? ' (según el historial)' : '')
+      )
+    case 'cerrado_sin_resolver':
+      return (
+        'Cerrado sin resolver' +
+        (reporte.cerradoSinResolverAt ? ` el ${formatearFecha(reporte.cerradoSinResolverAt, true)}` : '')
+      )
+    case 'cerrado':
+      return 'Cerrado (no hay datos para saber si antes se resolvió)'
+    default:
+      return null
   }
-  const dias = minutos / (24 * 60)
-  if (dias >= 10) return `${Math.round(dias)} días`
-  const redondeado = Math.round(dias * 10) / 10
-  return redondeado === 1 ? '1 día' : `${redondeado.toLocaleString('es-CL')} días`
 }

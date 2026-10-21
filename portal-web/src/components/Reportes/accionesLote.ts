@@ -6,7 +6,7 @@
 // cuántos se hicieron y cuántos fallaron.
 import { collection, doc, getDocs, serverTimestamp, updateDoc, writeBatch } from 'firebase/firestore'
 import { db } from '../../firebase/config'
-import { TRANSICIONES } from '../../constants/reportes'
+import { siguientesEstados } from '../../confianza/exigirVeredicto'
 import { cambiarEstadoReporte } from './reporte'
 import type { AutorCambio, Reporte } from './reporte'
 
@@ -62,14 +62,14 @@ export function eliminarReportes(reportes: Reporte[], onProgreso?: Progreso) {
   return porCada(reportes, eliminarReporte, onProgreso)
 }
 
-/** Reportes que pueden pasar a `hacia` desde su estado actual. */
-export function puedenPasarA(reportes: Reporte[], hacia: string): Reporte[] {
-  return reportes.filter((r) => (TRANSICIONES[r.estado] ?? []).includes(hacia))
+/** Reportes que pueden pasar a `hacia` desde su estado actual (y que ya tienen veredicto). */
+export function puedenPasarA(reportes: Reporte[], hacia: string, gestorUid: string | undefined): Reporte[] {
+  return reportes.filter((r) => siguientesEstados(r, gestorUid).includes(hacia))
 }
 
 /** Estados a los que puede pasar al menos uno de los reportes. */
-export function estadosAlcanzables(reportes: Reporte[]): Set<string> {
-  return new Set(reportes.flatMap((r) => TRANSICIONES[r.estado] ?? []))
+export function estadosAlcanzables(reportes: Reporte[], gestorUid: string | undefined): Set<string> {
+  return new Set(reportes.flatMap((r) => siguientesEstados(r, gestorUid)))
 }
 
 /** Cambia el estado de los reportes que admiten esa transición (el resto se omite). */
@@ -81,7 +81,7 @@ export function cambiarEstadoEnLote(
   onProgreso?: Progreso,
 ) {
   return porCada(
-    puedenPasarA(reportes, hacia),
+    puedenPasarA(reportes, hacia, autor.uid),
     (r) => cambiarEstadoReporte(r, hacia, comentario, autor),
     onProgreso,
   )

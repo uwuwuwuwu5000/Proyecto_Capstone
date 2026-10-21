@@ -95,9 +95,15 @@ export default function Navbar() {
   }, [menuAbierto, usuarioAbierto])
 
   async function handleLogout() {
-    await logout()
+    // Primero se sale de la pantalla y después se cierra la sesión: si fuera al
+    // revés, una página que exige sesión (el mapa) redirigía al registro en
+    // cuanto la sesión se cerraba, antes de llegar al inicio.
     navigate('/', { replace: true })
+    await logout()
   }
+
+  // Recordatorio para los vecinos: sin correo verificado su voto pesa 0.
+  const falta = !!user && perfil?.role === 'ciudadano' && !user.emailVerified
 
   const claseOpcion = (extra = '') =>
     ({ isActive }: { isActive: boolean }) =>
@@ -141,6 +147,13 @@ export default function Navbar() {
             {perfil?.role !== 'operador' && (
               <NavLink to="/historial" className={claseOpcion()}>
                 Historial
+              </NavLink>
+            )}
+
+            {/* La confianza se gana reportando: solo las cuentas de vecinos. */}
+            {perfil?.role === 'ciudadano' && (
+              <NavLink to="/mi-nivel" className={claseOpcion()}>
+                Mi nivel
               </NavLink>
             )}
 
@@ -188,6 +201,9 @@ export default function Navbar() {
                   {rol} · {user.email}
                 </span>
               </span>
+              <Link to="/mi-perfil" className={styles.logoutButton} style={{ color: 'var(--ca-signal)' }}>
+                {falta ? 'Mi perfil · verificar correo' : 'Mi perfil'}
+              </Link>
               <button type="button" className={styles.logoutButton} onClick={handleLogout}>
                 Cerrar sesión
               </button>
@@ -210,6 +226,7 @@ export default function Navbar() {
             >
               <span className={styles.avatar} aria-hidden="true">
                 {inicialesUsuario}
+                {falta && <span className={styles.puntoAlerta} />}
               </span>
               <span className={styles.usuarioNombre}>{nombre}</span>
               <span className={styles.flecha} aria-hidden="true">
@@ -222,6 +239,14 @@ export default function Navbar() {
                 <p className={styles.usuarioMenuNombre}>{nombre}</p>
                 <p className={styles.usuarioMenuCorreo}>{user.email}</p>
                 <p className={styles.usuarioMenuRol}>{rol}</p>
+                {falta && (
+                  <Link to="/mi-perfil" role="menuitem" className={styles.usuarioMenuVerificar}>
+                    Verificar correo
+                  </Link>
+                )}
+                <Link to="/mi-perfil" role="menuitem" className={styles.usuarioMenuItem}>
+                  Mi perfil
+                </Link>
                 <button
                   type="button"
                   role="menuitem"
