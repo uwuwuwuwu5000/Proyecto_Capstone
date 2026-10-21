@@ -88,21 +88,27 @@ export function leerModulos(src) {
         indice: texto.indexOf(m[0]),
       }));
 
-      const bloqueAccesos = bloque(cuerpo, 'accesos');
-      const idsAcceso = textos(bloqueAccesos, /\bid:\s*'([^']+)'/g);
-      const iconosAcceso = textos(bloqueAccesos, /icono:\s*'([^']+)'/g);
-      const rutasAcceso = textos(bloqueAccesos, /ruta:\s*'([^']+)'/g);
-      const accesos = idsAcceso.map((id, i) => ({ id, icono: iconosAcceso[i], ruta: rutasAcceso[i] }));
+      // Cada botón por separado: una ruta escrita como constante
+      // (RUTAS_REPORTES.crear) no debe correr los datos de los demás.
+      const accesos = objetos(bloque(cuerpo, 'accesos')).map((o) => ({
+        id: o.match(/\bid:\s*'([^']+)'/)?.[1],
+        icono: o.match(/icono:\s*'([^']+)'/)?.[1],
+        ruta: o.match(/ruta:\s*'([^']+)'/)?.[1] ?? null,
+      })).filter((a) => a.id);
 
-      const bloqueRanuras = bloque(cuerpo, 'ranuras');
-      const aportes = [...bloqueRanuras.matchAll(/ranura:\s*(?:RANURAS\.(\w+)|'([^']+)')/g)].map((m) =>
-        m[1] ? ranuras.get(m[1]) ?? `RANURAS.${m[1]}` : m[2],
-      );
-      const cargasRanura = [...bloqueRanuras.matchAll(/import\(\s*'([^']+)'\s*\)\s*\.then\(\s*\(?\s*(\w+)\s*\)?\s*=>\s*\2\.(\w+)/g)].map((m) => ({
-        ruta: m[1],
-        clase: m[3],
-        indice: texto.indexOf(m[0]),
-      }));
+      const REGEX_CARGA = /import\(\s*'([^']+)'\s*\)\s*\.then\(\s*\(?\s*(\w+)\s*\)?\s*=>\s*\2\.(\w+)/;
+      const aportesDetalle = objetos(bloque(cuerpo, 'ranuras')).map((o) => {
+        const nombre = o.match(/ranura:\s*(?:RANURAS\.(\w+)|'([^']+)')/);
+        const carga = o.match(REGEX_CARGA);
+        return {
+          ranura: nombre?.[1] ? ranuras.get(nombre[1]) ?? `RANURAS.${nombre[1]}` : nombre?.[2],
+          ruta: carga?.[1] ?? null,
+          clase: carga?.[3] ?? null,
+          indice: carga ? texto.indexOf(carga[0]) : -1,
+        };
+      }).filter((a) => a.ranura);
+      const aportes = aportesDetalle.map((a) => a.ranura);
+      const cargasRanura = aportesDetalle.filter((a) => a.ruta).map(({ ruta, clase, indice }) => ({ ruta, clase, indice }));
 
       modulos.push({
         ...base,
@@ -119,6 +125,7 @@ export function leerModulos(src) {
         accesos,
         iconos: textos(bloque(cuerpo, 'iconos', '{', '}'), /'([^']+)'\s*:/g),
         ranuras: aportes,
+        aportesDetalle,
         enConfig,
         activo: enConfig?.activo ?? false,
       });
@@ -126,6 +133,26 @@ export function leerModulos(src) {
   }
 
   return { carpeta, config, modulos, ranuras };
+}
+
+/** Los objetos `{ ... }` de primer nivel dentro del texto de un arreglo. */
+function objetos(texto) {
+  const lista = [];
+  let i = texto.indexOf('{');
+  while (i >= 0) {
+    const cuerpo = bloqueBalanceado(texto, i, '{', '}');
+    lista.push(cuerpo);
+    i = texto.indexOf('{', i + cuerpo.length + 2);
+  }
+  return lista;
+}
+
+/** Nombres de los inputs que declara un componente (input(), input.required(), model(), @Input()). */
+function inputsDe(codigo) {
+  return new Set([
+    ...[...codigo.matchAll(/(\w+)\s*=\s*(?:input|model)(?:\.required)?\s*[<(]/g)].map((m) => m[1]),
+    ...[...codigo.matchAll(/@Input\([^)]*\)\s*(?:set\s+)?(\w+)/g)].map((m) => m[1]),
+  ]);
 }
 
 /** Rutas de los módulos activos, para la revisión de enlaces. */
@@ -267,6 +294,41 @@ export function revisarModulos({ informe, SRC, codigo, componentes, rel }) {
   }
   for (const nombre of nombresRanura) {
     if (!usadas.has(nombre)) informe.agregar('info', `La ranura '${nombre}' está declarada pero ninguna pantalla la muestra`);
+  }
+
+  // Entradas de cada ranura: lo que las pantallas pasan en [entradas] debe
+  // existir como input en cada pieza que la llena. Si falta uno, Angular
+  // lanza NG0303 al mostrar la pantalla (NgComponentOutlet no lo ignora).
+  const entradasDe = new Map();
+  for (const c of componentes) {
+    for (const m of c.plantilla.matchAll(/<app-ranura\b([^>]*)>/g)) {
+      const nombre = m[1].match(/\snombre="([^"]+)"/)?.[1];
+      const objeto = m[1].match(/\[entradas\]="\{([^"]*)\}"/)?.[1] ?? '';
+      if (!nombre) continue;
+      const claves = [...objeto.matchAll(/(?:^|,)\s*(\w+)\s*:/g)].map((x) => x[1]);
+      const lista = entradasDe.get(nombre) ?? [];
+      lista.push({ claves, archivo: c.archivoPlantilla, linea: lineaDe(c.plantilla, m.index) });
+      entradasDe.set(nombre, lista);
+    }
+  }
+  for (const m of activos) {
+    for (const aporte of m.aportesDetalle) {
+      if (!aporte.ruta) continue;
+      const destino = resolve(m.dir, aporte.ruta);
+      const archivo = [`${destino}.ts`, destino].find((p) => existsSync(p));
+      if (!archivo) continue; // ya se informó como carga inexistente
+      const inputs = inputsDe(readFileSync(archivo, 'utf8'));
+      for (const uso of entradasDe.get(aporte.ranura) ?? []) {
+        const faltan = uso.claves.filter((clave) => !inputs.has(clave));
+        if (faltan.length) {
+          avisar('error', `${aporte.clase} (de '${m.id}') no declara ${faltan.map((f) => `'${f}'`).join(', ')}, que la ranura '${aporte.ranura}' le pasa`, {
+            archivo: rel(archivo),
+            detalle: `Lo pasa ${rel(uso.archivo)}:${uso.linea}. Angular falla con NG0303 al abrir esa pantalla.`,
+            solucion: `Agrega en ${aporte.clase}: readonly ${faltan[0]} = input<…>(…); aunque no lo use (contrato de ranuras.ts).`,
+          });
+        }
+      }
+    }
   }
 
   // 4 · Fronteras: quién importa qué
