@@ -18,7 +18,8 @@ import {
 
 import { FIREBASE_STORAGE, FIRESTORE } from '../../../core/firebase.providers';
 import { CapturedPhoto } from './camera.service';
-import { PhotoReference, ReportPhotoDoc } from '../../../models/report.model';
+import { PhotoReference } from '../../../models/report.model';
+import { ReportPhotoDoc } from '../modelo/fotos';
 
 /**
  * Contrato de almacenamiento de fotografías.

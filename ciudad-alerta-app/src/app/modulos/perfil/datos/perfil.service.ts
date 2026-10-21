@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Firestore, doc, getDoc } from 'firebase/firestore';
 
 import { FIRESTORE } from '../../../core/firebase.providers';
-import { OperadorDoc, OrganismoDoc } from '../../../models/report.model';
+import { OperadorDoc, OrganismoDoc } from '../../../models/organismo.model';
 
 /**
  * Datos complementarios de «Mi perfil». El perfil en sí lo lee AuthService,

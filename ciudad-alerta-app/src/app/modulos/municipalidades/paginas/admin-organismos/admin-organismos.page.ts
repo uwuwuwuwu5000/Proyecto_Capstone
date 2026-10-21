@@ -20,7 +20,7 @@ import { businessOutline, cloudUploadOutline } from 'ionicons/icons';
 import { AuthService } from '../../../../services/auth.service';
 import { CatalogoComunasService } from '../../../../services/catalogo-comunas.service';
 import { OrganismosService } from '../../datos/organismos.service';
-import { OrganismoDoc } from '../../../../models/report.model';
+import { OrganismoDoc } from '../../../../models/organismo.model';
 
 const TOTAL_ESPERADO = 345;
 

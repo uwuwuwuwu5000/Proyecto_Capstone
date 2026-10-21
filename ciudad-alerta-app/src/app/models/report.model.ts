@@ -1,21 +1,28 @@
 import { FieldValue, Timestamp } from 'firebase/firestore';
 
 /*
+ * Tipos de un reporte que comparte toda la app.
+ *
  * Estados, categorías, transiciones, etiquetas, colores y límites vienen del
  * paquete compartido `comun/` (también lo puede usar el portal web). Se
  * reexportan aquí con los nombres de siempre para no tocar las pantallas.
+ *
+ * Lo que usa un solo módulo vive en ese módulo: coincidencias y fotos en
+ * `modulos/reportes/modelo`, radios de búsqueda en `modulos/cercanos`. Los
+ * organismos y operadores están en `organismo.model.ts`.
  */
 import {
   CATEGORIAS,
   COLORES_ESTADO,
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
-  ESTADOS_FINALIZADOS,
   ETIQUETAS_ESTADO,
   TRANSICIONES,
   etiquetaCategoria,
 } from '@ciudad-alerta/comun';
 import type { CategoriaReporte, EstadoReporte, InfoPrivacidad } from '@ciudad-alerta/comun';
+
+import type { Organismo } from './organismo.model';
 
 export { COLORES_ESTADO, DESCRIPCION_MAX, DESCRIPCION_MIN, ETIQUETAS_ESTADO, TRANSICIONES, etiquetaCategoria };
 export type { InfoPrivacidad };
@@ -51,84 +58,6 @@ export interface PhotoReference {
   mimeType: string;
   sizeBytes: number;
 }
-
-/** Ventana temporal, en horas, dentro de la cual dos reportes pueden ser el mismo incidente. */
-export const VENTANA_COINCIDENCIA_HORAS = 72;
-
-/** Radio de búsqueda de reportes cercanos, en metros. */
-export const RADIO_COINCIDENCIA_METROS = 150;
-
-/** Estados que descartan una coincidencia: el incidente ya se cerró. */
-export const ESTADOS_INACTIVOS: ReadonlyArray<ReportStatus> = ESTADOS_FINALIZADOS;
-
-/** Tipos de organismo responsable contemplados en el piloto. */
-export type TipoOrganismo = 'municipio' | 'empresa_sanitaria' | 'empresa_electrica';
-
-export interface Organismo {
-  id: string;
-  nombre: string;
-  tipo: TipoOrganismo;
-  /** Comuna que atiende, en el caso de las municipalidades. */
-  comuna?: string | null;
-}
-
-/**
- * Documento de la colección `organismos`.
- *
- * El id de cada municipalidad es `muni_` seguido del código CUT de su comuna:
- * `muni_13101` es la Municipalidad de Santiago. Usar el código oficial como
- * identificador hace que la asignación sea directa —de la comuna detectada al
- * documento— sin consultas por nombre, que fallan con las variantes
- * ortográficas.
- */
-export interface OrganismoDoc {
-  id: string;
-  nombre: string;
-  tipo: TipoOrganismo;
-  /** Códigos CUT de las comunas que atiende. Casi siempre uno solo. */
-  comunasAtendidas: string[];
-  comuna: string | null;
-  codigoRegion: string | null;
-  region: string | null;
-  activo: boolean;
-}
-
-/**
- * Operador que gestiona los reportes de un organismo, en `operadores/{id}`.
- * Lo administra el portal web; la app solo lo lee para asignar reportes.
- */
-export interface OperadorDoc {
-  id: string;
-  nombre: string;
-  /** Organismo al que pertenece. Debe existir en `organismos`. */
-  organismoId: string;
-  activo: boolean;
-  telefonoContacto?: string | null;
-  correoContacto?: string | null;
-  direccionContacto?: string | null;
-}
-
-/**
- * Catálogo simulado de organismos. En el MVP la asignación se resuelve por
- * categoría; la integración productiva con municipios y empresas queda fuera
- * del alcance declarado en Fase 1.
- */
-export const ORGANISMOS: Readonly<Record<ReportCategory, Organismo>> = {
-  microbasural: { id: 'muni_aseo', nombre: 'Dirección de Aseo y Ornato', tipo: 'municipio' },
-  luminaria: { id: 'elec_dist', nombre: 'Empresa distribuidora eléctrica', tipo: 'empresa_electrica' },
-  fuga_agua: { id: 'sanitaria', nombre: 'Empresa sanitaria', tipo: 'empresa_sanitaria' },
-  arbol_peligroso: { id: 'muni_aseo', nombre: 'Dirección de Aseo y Ornato', tipo: 'municipio' },
-  calle_deteriorada: { id: 'muni_obras', nombre: 'Dirección de Obras Municipales', tipo: 'municipio' },
-  accesibilidad: { id: 'muni_obras', nombre: 'Dirección de Obras Municipales', tipo: 'municipio' },
-  otro: { id: 'muni_oirs', nombre: 'OIRS Municipal', tipo: 'municipio' },
-};
-
-export const IDS_ORGANISMOS: ReadonlyArray<string> = [
-  'muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria',
-];
-
-/** Radios disponibles en la página de reportes cercanos, en metros. */
-export const RADIOS_BUSQUEDA: ReadonlyArray<number> = [500, 1000, 2000, 5000];
 
 /**
  * Mapa `validacion` de un reporte (sistema de confianza). Lo escriben la app
@@ -261,39 +190,4 @@ export interface EventoHistorial {
 export interface NearbyReport {
   report: Report;
   distanciaMetros: number;
-}
-
-/** Confirmación comunitaria. El id del documento es el uid, lo que impide duplicados. */
-export interface Confirmation {
-  uid: string;
-  reportId: string;
-  createdAt: Timestamp | FieldValue;
-  /** Formato con peso (sistema de confianza): nivel y peso de quien confirmó, congelados. */
-  nivel?: number;
-  peso?: number;
-}
-
-/** Reporte cercano detectado, con el detalle de por qué se considera coincidente. */
-export interface MatchCandidate {
-  report: Report;
-  /** Distancia en metros al nuevo reporte. */
-  distanciaMetros: number;
-  /** Horas transcurridas desde que se creó el reporte existente. */
-  horasTranscurridas: number;
-  /** Similitud visual entre 0 y 1. Null si no se pudo calcular. */
-  similitudImagen: number | null;
-  /** Puntaje combinado entre 0 y 1. */
-  puntaje: number;
-  /** Explicación legible de la coincidencia, para mostrar al usuario. */
-  motivos: string[];
-}
-
-/** Documento de la colección `reportPhotos`, usado solo por la variante Firestore. */
-export interface ReportPhotoDoc {
-  reportId: string;
-  ownerUid: string;
-  dataUrl: string;
-  mimeType: string;
-  sizeBytes: number;
-  createdAt: Timestamp | FieldValue;
 }

@@ -62,7 +62,12 @@ const catalogos = catalogosDeLaApp(RAIZ);
 
 const CORREOS_ADMIN = [...(reglas.match(/request\.auth\.token\.email\s+in\s+\[([\s\S]*?)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1].toLowerCase());
 const CATEGORIAS = catalogos.categorias;
-const GENERICOS = ['muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'];
+// Organismos genéricos, los mismos de la app (models/organismo.model.ts).
+const modeloOrganismos = existsSync(join(RAIZ, 'src', 'app', 'models', 'organismo.model.ts'))
+  ? readFileSync(join(RAIZ, 'src', 'app', 'models', 'organismo.model.ts'), 'utf8')
+  : '';
+const genericosApp = [...(modeloOrganismos.match(/IDS_ORGANISMOS[^=]*=\s*\[([\s\S]*?)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
+const GENERICOS = genericosApp.length ? genericosApp : ['muni_aseo', 'muni_obras', 'muni_oirs', 'elec_dist', 'sanitaria'];
 const TRANSICIONES = Object.keys(catalogos.transiciones).length
   ? catalogos.transiciones
   : {

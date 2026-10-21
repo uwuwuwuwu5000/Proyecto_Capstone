@@ -14,7 +14,7 @@ import {
 
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { CatalogoComunasService } from '../../../services/catalogo-comunas.service';
-import { OrganismoDoc } from '../../../models/report.model';
+import { OrganismoDoc } from '../../../models/organismo.model';
 
 /**
  * Escrituras por lote.

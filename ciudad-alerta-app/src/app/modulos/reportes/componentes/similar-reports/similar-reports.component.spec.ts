@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ToastController } from '@ionic/angular';
 
-import { MatchCandidate, Report } from '../../../../models/report.model';
+import { Report } from '../../../../models/report.model';
+import { MatchCandidate } from '../../modelo/coincidencias';
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { SimilarReportsComponent } from './similar-reports.component';
 

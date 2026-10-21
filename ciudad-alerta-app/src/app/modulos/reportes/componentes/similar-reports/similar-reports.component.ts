@@ -6,7 +6,8 @@ import { checkmarkCircleOutline, warningOutline } from 'ionicons/icons';
 import { formatearDistancia } from '@ciudad-alerta/comun';
 
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
-import { ETIQUETAS_ESTADO, MatchCandidate } from '../../../../models/report.model';
+import { ETIQUETAS_ESTADO } from '../../../../models/report.model';
+import { MatchCandidate } from '../../modelo/coincidencias';
 
 /**
  * Muestra los reportes cercanos detectados y permite confirmarlos.

@@ -13,14 +13,8 @@ import {
 
 import { FIRESTORE } from '../core/firebase.providers';
 import { ComunaDetectada } from './comuna.service';
-import {
-  ORGANISMOS,
-  OperadorDoc,
-  Organismo,
-  OrganismoDoc,
-  ReportCategory,
-  StatusChange,
-} from '../models/report.model';
+import { ReportCategory, StatusChange } from '../models/report.model';
+import { ORGANISMOS, OperadorDoc, Organismo, OrganismoDoc } from '../models/organismo.model';
 
 /**
  * HU-28 · A quién se deriva un reporte y su historial de estados.

@@ -47,10 +47,10 @@ import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
   GeoPoint,
-  MatchCandidate,
   REPORT_CATEGORIES,
   ReportCategory,
 } from '../../../../models/report.model';
+import { MatchCandidate } from '../../modelo/coincidencias';
 
 @Component({
   selector: 'app-report',

@@ -18,14 +18,8 @@ import {
 } from '@ciudad-alerta/comun';
 
 import { FIRESTORE } from '../../../core/firebase.providers';
-import {
-  NOMBRE_ADMINISTRACION,
-  OperadorDoc,
-  OrganismoDoc,
-  Report,
-  ReportStatus,
-  StatusChange,
-} from '../../../models/report.model';
+import { NOMBRE_ADMINISTRACION, Report, ReportStatus, StatusChange } from '../../../models/report.model';
+import { OperadorDoc, OrganismoDoc } from '../../../models/organismo.model';
 import { AuthService } from '../../../services/auth.service';
 
 export class CambioEstadoError extends Error {

@@ -32,11 +32,11 @@ import {
   ETIQUETAS_ESTADO,
   GeoPoint,
   NearbyReport,
-  RADIOS_BUSQUEDA,
   REPORT_CATEGORIES,
   etiquetaCategoria,
   ReportCategory,
 } from '../../../../models/report.model';
+import { RADIOS_BUSQUEDA } from '../../parametros';
 import { RanuraComponent } from '../../../../nucleo/modulos';
 
 type EstadoVista =

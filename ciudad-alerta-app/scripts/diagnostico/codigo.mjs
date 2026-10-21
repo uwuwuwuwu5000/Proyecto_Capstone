@@ -579,6 +579,25 @@ if (categoriasApp.length && categoriasReglas.length) {
   if (!soloApp.length && !soloReglas.length) informe.ok(`Categorías sincronizadas (${categoriasApp.length})`);
 }
 
+// Organismos genéricos: los ids que la app asigna sin municipalidad deben ser
+// los que acepta la regla de creación de reportes.
+const modeloOrganismos = codigo.get(join(SRC, 'app', 'models', 'organismo.model.ts')) ?? '';
+const idsApp = [...(modeloOrganismos.match(/IDS_ORGANISMOS[^=]*=\s*\[([\s\S]*?)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
+const idsAsignados = [...(modeloOrganismos.match(/ORGANISMOS\s*:[^=]*=\s*\{([\s\S]*?)\n\};/)?.[1] ?? '').matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
+const idsReglas = [...(reglas?.match(/organismoId\s+in\s+\[([^\]]*)\]/)?.[1] ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]);
+if (idsApp.length && idsReglas.length) {
+  const fuera = [...new Set([...idsApp, ...idsAsignados])].filter((id) => !idsReglas.includes(id));
+  if (fuera.length) {
+    informe.agregar('error', `Organismos genéricos que las reglas no aceptan: ${fuera.join(', ')}`, {
+      archivo: 'src/app/models/organismo.model.ts',
+      detalle: 'Un reporte asignado a uno de ellos falla con "permiso denegado".',
+      solucion: 'Iguala IDS_ORGANISMOS y ORGANISMOS con la lista organismoId in [...] de firestore.rules.',
+    });
+  } else {
+    informe.ok(`Organismos genéricos sincronizados (${idsApp.length})`);
+  }
+}
+
 const transApp = catalogos.transiciones;
 const transReglas = {};
 const cuerpoTransicion = reglas?.match(/function\s+transicionValida\s*\([^)]*\)\s*\{([\s\S]*?)\n\s*\}/)?.[1] ?? '';

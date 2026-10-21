@@ -15,15 +15,13 @@ import { distanceBetween, geohashQueryBounds } from 'geofire-common';
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
 import { ImageSimilarityService } from './image-similarity.service';
+import { GeoPoint, Report, ReportCategory } from '../../../models/report.model';
 import {
   ESTADOS_INACTIVOS,
-  GeoPoint,
   MatchCandidate,
   RADIO_COINCIDENCIA_METROS,
-  Report,
-  ReportCategory,
   VENTANA_COINCIDENCIA_HORAS,
-} from '../../../models/report.model';
+} from '../modelo/coincidencias';
 
 export interface ConsultaCoincidencias {
   ubicacion: GeoPoint;

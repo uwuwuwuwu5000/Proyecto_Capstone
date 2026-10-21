@@ -12,7 +12,7 @@ import { FirebaseError } from 'firebase/app';
 
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
-import { Confirmation } from '../../../models/report.model';
+import { Confirmation } from '../modelo/confirmacion';
 
 export class ConfirmationError extends Error {
   constructor(
