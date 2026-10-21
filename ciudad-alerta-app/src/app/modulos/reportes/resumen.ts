@@ -53,6 +53,15 @@ export function resumenDeMisReportes(reportes: readonly Report[], hayMas: boolea
   return { total: reportes.length, hayMas, enCurso, resueltos, cerrados, ultimo };
 }
 
+/** Acorta en el último espacio antes del límite, para no partir palabras. */
+function acortar(texto: string, maximo: number): string {
+  if (texto.length <= maximo) return texto;
+  let corte = texto.slice(0, maximo - 1);
+  const espacio = corte.lastIndexOf(' ');
+  if (espacio > maximo * 0.6) corte = corte.slice(0, espacio);
+  return `${corte.trimEnd()}…`;
+}
+
 /** "2 en curso · 1 resuelto"; las cantidades en cero no se nombran. */
 export function textoConteos(resumen: ResumenMisReportes): string {
   const partes = [
@@ -64,13 +73,16 @@ export function textoConteos(resumen: ResumenMisReportes): string {
   return resumen.hayMas ? `${texto} (últimos ${resumen.total})` : texto;
 }
 
-/** "«Bache en Av. Pajaritos» está en proceso · hace 2 h". */
+/**
+ * "En proceso hace 2 h: «Bache en Av. Pajaritos…»". El estado y el tiempo van
+ * primero para que nunca queden cortados; la descripción se acorta.
+ */
 export function textoUltimo(resumen: ResumenMisReportes): string | null {
   const ultimo = resumen.ultimo;
   if (!ultimo) return null;
-  const descripcion = ultimo.descripcion.length > 38 ? `${ultimo.descripcion.slice(0, 37).trimEnd()}…` : ultimo.descripcion;
+  const descripcion = acortar(ultimo.descripcion, 34);
   const cuando = haceCuanto(ultimo.haceMs);
   return ultimo.cambio
-    ? `«${descripcion}» está ${etiquetaEstado(ultimo.estado).toLowerCase()} · ${cuando}`
-    : `Último: «${descripcion}» · ${cuando}`;
+    ? `${etiquetaEstado(ultimo.estado)} ${cuando}: «${descripcion}»`
+    : `Último reporte, ${cuando}: «${descripcion}»`;
 }

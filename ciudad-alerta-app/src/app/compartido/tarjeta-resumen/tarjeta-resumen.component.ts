@@ -67,12 +67,15 @@ import { chevronForwardOutline } from 'ionicons/icons';
       font-size: 0.82rem;
     }
 
+    /* Hasta dos líneas: lo importante (estado, cuándo) no debe quedar cortado. */
     .tarjeta__nota {
-      font-size: 0.78rem;
-      color: var(--ca-muted);
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: var(--ca-muted);
     }
   `,
 })

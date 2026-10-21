@@ -41,7 +41,7 @@ import { AuthService } from '../../../services/auth.service';
     }
 
     .aviso__icono {
-      font-size: 1.4rem;
+      font-size: 1.6rem;
       color: var(--ca-signal);
       flex-shrink: 0;
     }

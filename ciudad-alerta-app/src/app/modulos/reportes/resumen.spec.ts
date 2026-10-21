@@ -35,17 +35,19 @@ describe('resumen de mis reportes (inicio)', () => {
     const resumen = resumenDeMisReportes([reporte('nuevo', 'reportado', 5), reporte('viejo', 'en_proceso', 80, 2)], false, AHORA);
 
     expect(resumen.ultimo).toMatchObject({ id: 'viejo', cambio: true });
-    expect(textoUltimo(resumen)).toBe('«Reporte viejo» está en proceso · hace 2 h');
+    expect(textoUltimo(resumen)).toBe('En proceso hace 2 h: «Reporte viejo»');
   });
 
   it('si nada cambió desde que se creó, muestra el último creado', () => {
     const resumen = resumenDeMisReportes([reporte('x', 'reportado', 26)], false, AHORA);
-    expect(textoUltimo(resumen)).toBe('Último: «Reporte x» · ayer');
+    expect(textoUltimo(resumen)).toBe('Último reporte, ayer: «Reporte x»');
   });
 
   it('acorta las descripciones largas', () => {
     const largo = { ...reporte('l', 'reportado', 1), descripcion: 'Un bache enorme frente al paradero de la avenida principal' } as Report;
-    expect(textoUltimo(resumenDeMisReportes([largo], false, AHORA))).toMatch(/^Último: «Un bache enorme frente al paradero de…» · hace 1 h$/);
+    expect(textoUltimo(resumenDeMisReportes([largo], false, AHORA))).toBe(
+      'Último reporte, hace 1 h: «Un bache enorme frente al…»',
+    );
   });
 
   it('si hay más de los leídos, lo dice', () => {

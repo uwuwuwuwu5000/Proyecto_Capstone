@@ -93,6 +93,11 @@
   }
 }
 
+/* Un cuadro solo en su fila ocupa todo el ancho. */
+.acceso:last-child:nth-child(odd) {
+  grid-column: span 2;
+}
+
 .acceso--staff {
   border-color: var(--ca-signal);
   color: var(--ca-signal);
