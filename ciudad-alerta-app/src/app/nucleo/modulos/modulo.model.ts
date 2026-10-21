@@ -66,6 +66,15 @@ export interface ModuloApp {
   readonly proveedores?: ReadonlyArray<Provider | EnvironmentProviders>;
 }
 
+/**
+ * Grupos de botones del inicio, en este orden:
+ * - 'principal': la acción destacada (Crear un reporte), sin título;
+ * - 'explorar': ver lo que pasa en la ciudad (mapa, cerca de mí);
+ * - 'cuenta': lo propio (mis reportes, quejas, perfil);
+ * - 'gestion': herramientas de operadores y administradores.
+ */
+export type SeccionInicio = 'principal' | 'explorar' | 'cuenta' | 'gestion';
+
 /** Un botón del inicio que lleva a una pantalla del módulo. */
 export interface AccesoInicio {
   /** Único dentro de toda la app; sirve de clave al dibujar la lista. */
@@ -83,6 +92,19 @@ export interface AccesoInicio {
   readonly orden: number;
   /** 'principal' = botón destacado; 'gestion' = color de staff. */
   readonly estilo?: 'principal' | 'secundario' | 'gestion';
+  /**
+   * Grupo del inicio donde aparece. Sin valor se deduce del estilo:
+   * 'principal' → principal, 'gestion' → gestión, el resto → «Tu cuenta».
+   */
+  readonly seccion?: SeccionInicio;
+}
+
+/** Un grupo de botones del inicio, ya filtrado por rol. */
+export interface GrupoInicio {
+  readonly id: SeccionInicio;
+  /** Null para el grupo principal, que no lleva título. */
+  readonly titulo: string | null;
+  readonly accesos: readonly AccesoInicio[];
 }
 
 /**

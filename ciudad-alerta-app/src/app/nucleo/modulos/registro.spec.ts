@@ -4,10 +4,12 @@ import { RANURAS } from './ranuras';
 import {
   accesosParaRol,
   aportesDeRanura,
+  gruposDeInicio,
   iconosDeModulos,
   modulosActivos,
   problemasDeConfiguracion,
   rutasDeModulos,
+  seccionDeAcceso,
   textoDeAcceso,
 } from './registro';
 import { usarEntornoDePrueba } from '../../../testing';
@@ -151,5 +153,43 @@ describe('modulos.config.ts (la configuración real)', () => {
     const aportes = CONFIG_MODULOS.flatMap((e) => e.modulo.ranuras ?? []);
     const componentes = await Promise.all(aportes.map((a) => a.cargar()));
     expect(componentes.every((c) => typeof c === 'function')).toBe(true);
+  });
+});
+
+describe('grupos del inicio', () => {
+  const config = [
+    entrada(
+      moduloDePrueba('a', {
+        accesos: [
+          { id: 'crear', texto: 'Crear', icono: 'i', ruta: '/c', orden: 10, estilo: 'principal' },
+          { id: 'mapa', texto: 'Mapa', icono: 'i', ruta: '/m', orden: 20, seccion: 'explorar' },
+          { id: 'mios', texto: 'Mis reportes', icono: 'i', ruta: '/r', orden: 40 },
+          { id: 'bandeja', texto: 'Bandeja', icono: 'i', ruta: '/b', orden: 100, estilo: 'gestion', roles: ['admin'] },
+        ],
+      }),
+    ),
+  ];
+
+  it('reparte los botones en principal, explorar, cuenta y gestión', () => {
+    expect(gruposDeInicio(config, 'admin').map((g) => [g.id, g.titulo, g.accesos.map((a) => a.id)])).toEqual([
+      ['principal', null, ['crear']],
+      ['explorar', 'Explorar', ['mapa']],
+      ['cuenta', 'Tu cuenta', ['mios']],
+      ['gestion', 'Gestión', ['bandeja']],
+    ]);
+  });
+
+  it('no deja grupos vacíos (un ciudadano no ve «Gestión»)', () => {
+    expect(gruposDeInicio(config, 'ciudadano').map((g) => g.id)).toEqual(['principal', 'explorar', 'cuenta']);
+  });
+
+  it('sin sección declarada, la deduce del estilo', () => {
+    expect(seccionDeAcceso({ id: 'x', texto: 'X', icono: 'i', ruta: '/x', orden: 1, estilo: 'gestion' })).toBe('gestion');
+    expect(seccionDeAcceso({ id: 'x', texto: 'X', icono: 'i', ruta: '/x', orden: 1 })).toBe('cuenta');
+  });
+
+  it('en la configuración real, mapa y cerca de mí van en «Explorar»', () => {
+    const explorar = gruposDeInicio(CONFIG_MODULOS, 'ciudadano').find((g) => g.id === 'explorar');
+    expect(explorar?.accesos.map((a) => a.id)).toEqual(['mapa-incidencias', 'cercanos']);
   });
 });

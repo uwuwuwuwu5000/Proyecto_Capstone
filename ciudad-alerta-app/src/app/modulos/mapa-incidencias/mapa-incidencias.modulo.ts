@@ -27,7 +27,14 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
     },
   ],
   accesos: [
-    { id: 'mapa-incidencias', texto: 'Mapa de incidencias', icono: 'map-outline', ruta: '/map', orden: 20 },
+    {
+      id: 'mapa-incidencias',
+      texto: 'Mapa de incidencias',
+      icono: 'map-outline',
+      ruta: '/map',
+      orden: 20,
+      seccion: 'explorar',
+    },
   ],
   iconos: { 'map-outline': mapOutline },
 };

@@ -12,11 +12,12 @@ import { addIcons } from 'ionicons';
 
 import { CONFIG_MODULOS } from '../../modulos.config';
 import { UserRole } from '../../models/user-profile.model';
-import { AccesoInicio, EntradaModulo } from './modulo.model';
+import { AccesoInicio, EntradaModulo, GrupoInicio } from './modulo.model';
 import { NombreRanura } from './ranuras';
 import {
   accesosParaRol,
   cargarRanura,
+  gruposDeInicio,
   iconosDeModulos,
   modulosActivos,
   problemasDeConfiguracion,
@@ -52,6 +53,11 @@ export class ModulosService {
 
   accesos(rol: UserRole | null): AccesoInicio[] {
     return accesosParaRol(this.config, rol);
+  }
+
+  /** Los mismos botones, en los grupos del inicio (Explorar, Tu cuenta, Gestión). */
+  grupos(rol: UserRole | null): GrupoInicio[] {
+    return gruposDeInicio(this.config, rol);
   }
 
   texto(acceso: AccesoInicio, rol: UserRole | null): string {

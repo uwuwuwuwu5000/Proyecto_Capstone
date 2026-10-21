@@ -23,6 +23,8 @@ export const MODULO_CERCANOS: ModuloApp = {
       loadComponent: () => import('./paginas/nearby/nearby.page').then((m) => m.NearbyPage),
     },
   ],
-  accesos: [{ id: 'cercanos', texto: 'Cerca de mí', icono: 'navigate-outline', ruta: '/nearby', orden: 30 }],
+  accesos: [
+    { id: 'cercanos', texto: 'Cerca de mí', icono: 'navigate-outline', ruta: '/nearby', orden: 30, seccion: 'explorar' },
+  ],
   iconos: { 'navigate-outline': navigateOutline },
 };

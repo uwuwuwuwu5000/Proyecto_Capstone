@@ -2,7 +2,7 @@ import { Type } from '@angular/core';
 import { Routes } from '@angular/router';
 
 import { UserRole } from '../../models/user-profile.model';
-import { AccesoInicio, AporteRanura, EntradaModulo, ModuloApp } from './modulo.model';
+import { AccesoInicio, AporteRanura, EntradaModulo, GrupoInicio, ModuloApp, SeccionInicio } from './modulo.model';
 import { NOMBRES_RANURAS, NombreRanura } from './ranuras';
 
 /**
@@ -83,6 +83,31 @@ export function accesosParaRol(
     .flatMap((m) => m.accesos ?? [])
     .filter((a) => !a.roles || (rol !== null && a.roles.includes(rol)))
     .sort((a, b) => a.orden - b.orden);
+}
+
+/** Grupos del inicio, en orden, con su título. */
+export const SECCIONES_INICIO: readonly { id: SeccionInicio; titulo: string | null }[] = [
+  { id: 'principal', titulo: null },
+  { id: 'explorar', titulo: 'Explorar' },
+  { id: 'cuenta', titulo: 'Tu cuenta' },
+  { id: 'gestion', titulo: 'Gestión' },
+];
+
+/** Grupo de un botón: el declarado o, si no, el que corresponde a su estilo. */
+export function seccionDeAcceso(acceso: AccesoInicio): SeccionInicio {
+  if (acceso.seccion) return acceso.seccion;
+  if (acceso.estilo === 'principal') return 'principal';
+  if (acceso.estilo === 'gestion') return 'gestion';
+  return 'cuenta';
+}
+
+/** Botones del inicio para un rol, repartidos en grupos; sin grupos vacíos. */
+export function gruposDeInicio(entradas: readonly EntradaModulo[], rol: UserRole | null): GrupoInicio[] {
+  const accesos = accesosParaRol(entradas, rol);
+  return SECCIONES_INICIO.map((seccion) => ({
+    ...seccion,
+    accesos: accesos.filter((acceso) => seccionDeAcceso(acceso) === seccion.id),
+  })).filter((grupo) => grupo.accesos.length > 0);
 }
 
 /** Texto de un acceso para el rol actual. */
