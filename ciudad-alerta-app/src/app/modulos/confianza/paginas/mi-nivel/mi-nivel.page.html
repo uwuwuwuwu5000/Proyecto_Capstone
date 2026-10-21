@@ -72,7 +72,7 @@
           <ul class="historial">
             @for (e of historial()!; track e.reportId) {
               <li>
-                <a [routerLink]="['/report', e.reportId]">
+                <a [routerLink]="detalleReporte(e.reportId)">
                   <strong [class.negativo]="e.puntos < 0">
                     {{ e.puntos > 0 ? '+' : '' }}{{ e.puntos }} PC ·
                     {{ e.veredicto === 'real' ? 'Reporte real' : 'Reporte falso' }}

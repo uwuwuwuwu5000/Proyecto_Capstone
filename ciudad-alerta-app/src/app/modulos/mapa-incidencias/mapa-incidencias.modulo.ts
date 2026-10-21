@@ -15,6 +15,8 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
   id: 'mapa-incidencias',
   nombre: 'Mapa de incidencias',
   descripcion: 'Mapa con todas las incidencias de tu región o de la región que elijas, con filtros por categoría y estado.',
+  // Cada marcador abre el detalle del reporte.
+  requiere: ['reportes'],
   // Con confianza activo, los reportes validados se ven destacados.
   opcionales: ['confianza'],
   rutas: [

@@ -18,6 +18,8 @@ export const MODULO_CONFIANZA: ModuloApp = {
   id: 'confianza',
   nombre: 'Sistema de confianza',
   descripcion: 'Niveles de usuario, confirmaciones con peso, validación comunitaria y pantalla «Mi nivel».',
+  // Confirma reportes y «Mi nivel» enlaza a ellos.
+  requiere: ['reportes'],
   rutas: [
     {
       path: 'mi-nivel',

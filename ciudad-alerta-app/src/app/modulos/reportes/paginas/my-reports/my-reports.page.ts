@@ -31,6 +31,7 @@ import {
 } from '../../../../models/report.model';
 import { RanuraComponent } from '../../../../nucleo/modulos';
 import { resolucionDe } from '../../resolucion';
+import { RUTAS_REPORTES } from '../../rutas';
 import { formatearDuracion } from '@ciudad-alerta/comun';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
@@ -118,11 +119,11 @@ export class MyReportsPage {
   }
 
   abrirDetalle(reportId: string): void {
-    void this.router.navigate(['/report', reportId]);
+    void this.router.navigate(RUTAS_REPORTES.detalle(reportId));
   }
 
   irACrear(): void {
-    void this.router.navigateByUrl('/report-new');
+    void this.router.navigateByUrl(RUTAS_REPORTES.crear);
   }
 
   async cargarMas(): Promise<void> {

@@ -16,6 +16,7 @@ import { cajaDePuntos } from '@ciudad-alerta/comun';
 import { addIcons } from 'ionicons';
 import { locateOutline, refreshOutline } from 'ionicons/icons';
 
+import { RUTAS_REPORTES } from '../../../reportes';
 import { CajaMapa, MapMarker, MapViewComponent } from '../../../../compartido/mapa';
 import {
   COLORES_ESTADO,
@@ -233,7 +234,7 @@ export class MapaPage {
   }
 
   abrirDetalle(reportId: string): void {
-    void this.router.navigate(['/report', reportId]);
+    void this.router.navigate(RUTAS_REPORTES.detalle(reportId));
   }
 
   /** Ubica al usuario y deduce su región. BUG 33 · se puede reintentar. */

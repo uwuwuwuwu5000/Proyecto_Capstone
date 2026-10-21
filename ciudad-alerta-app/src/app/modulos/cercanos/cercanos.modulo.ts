@@ -13,6 +13,8 @@ export const MODULO_CERCANOS: ModuloApp = {
   id: 'cercanos',
   nombre: 'Cerca de mí',
   descripcion: 'Reportes alrededor del usuario, ordenados por distancia, con radio de 500 m a 5 km.',
+  // Cada resultado abre el detalle del reporte.
+  requiere: ['reportes'],
   opcionales: ['confianza'],
   rutas: [
     {

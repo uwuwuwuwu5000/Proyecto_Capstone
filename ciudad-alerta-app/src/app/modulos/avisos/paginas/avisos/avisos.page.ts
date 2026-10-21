@@ -14,6 +14,7 @@ import { addIcons } from 'ionicons';
 import { checkmarkDoneOutline, notificationsOffOutline } from 'ionicons/icons';
 
 import { AvisosService } from '../../datos/avisos.service';
+import { RUTAS_REPORTES } from '../../../reportes';
 import { HistorialService } from '../../../../services/historial.service';
 import { Aviso } from '../../modelo/aviso.model';
 import { ETIQUETAS_ESTADO } from '../../../../models/report.model';
@@ -53,7 +54,7 @@ export class AvisosPage {
   /** Abrir un aviso lo marca como visto y lleva al detalle del reporte. */
   async abrir(aviso: Aviso): Promise<void> {
     void this.avisosService.marcarVisto(aviso.id);
-    await this.router.navigate(['/report', aviso.reportId]);
+    await this.router.navigate(RUTAS_REPORTES.detalle(aviso.reportId));
   }
 
   async marcarTodos(): Promise<void> {

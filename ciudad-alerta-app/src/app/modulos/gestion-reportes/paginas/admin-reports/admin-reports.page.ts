@@ -17,6 +17,7 @@ import {
 import { addIcons } from 'ionicons';
 import { imageOutline, refreshOutline } from 'ionicons/icons';
 
+import { RUTAS_REPORTES } from '../../../reportes';
 import { AuthService } from '../../../../services/auth.service';
 import {
   FiltrosBandejaReportes,
@@ -153,7 +154,7 @@ export class AdminReportsPage {
   }
 
   abrir(reportId: string): void {
-    void this.router.navigate(['/report', reportId]);
+    void this.router.navigate(RUTAS_REPORTES.detalle(reportId));
   }
 
   private async cargarPagina(): Promise<void> {

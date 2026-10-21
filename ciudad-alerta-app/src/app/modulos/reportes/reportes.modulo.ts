@@ -3,6 +3,7 @@ import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 import { providePhotoStorage } from './datos/photo-storage.providers';
+import { RUTAS_REPORTES } from './rutas';
 
 /**
  * Crear reportes, ver los propios y el detalle de cualquier reporte.
@@ -49,8 +50,15 @@ export const MODULO_REPORTES: ModuloApp = {
     },
   ],
   accesos: [
-    { id: 'crear-reporte', texto: 'Crear un reporte', icono: 'add-circle-outline', ruta: '/report-new', orden: 10, estilo: 'principal' },
-    { id: 'mis-reportes', texto: 'Mis reportes', icono: 'document-text-outline', ruta: '/my-reports', orden: 40 },
+    {
+      id: 'crear-reporte',
+      texto: 'Crear un reporte',
+      icono: 'add-circle-outline',
+      ruta: RUTAS_REPORTES.crear,
+      orden: 10,
+      estilo: 'principal',
+    },
+    { id: 'mis-reportes', texto: 'Mis reportes', icono: 'document-text-outline', ruta: RUTAS_REPORTES.mios, orden: 40 },
   ],
   iconos: { 'add-circle-outline': addCircleOutline, 'document-text-outline': documentTextOutline },
 };

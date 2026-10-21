@@ -15,6 +15,7 @@ import { Timestamp } from 'firebase/firestore';
 import { Report } from '../../../../models/report.model';
 import { AuthService } from '../../../../services/auth.service';
 import { ReportQueryService } from '../../../../services/report-query.service';
+import { RUTAS_REPORTES } from '../../../reportes';
 import { ConfianzaService, CupoDelDia, EstadoConfianza } from '../../datos/confianza.service';
 import {
   NIVELES,
@@ -61,6 +62,7 @@ export class MiNivelPage {
   private readonly route = inject(ActivatedRoute);
 
   readonly niveles = NIVELES;
+  readonly detalleReporte = RUTAS_REPORTES.detalle;
   readonly pesoDeNivel = pesoDeNivel;
   readonly limiteDiario = limiteDiario;
   readonly parametros = PARAMETROS_CONFIANZA;

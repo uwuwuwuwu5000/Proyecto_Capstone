@@ -21,6 +21,7 @@ import { locateOutline, navigateOutline, refreshOutline } from 'ionicons/icons';
 
 import { formatearDistancia } from '@ciudad-alerta/comun';
 
+import { RUTAS_REPORTES } from '../../../reportes';
 import { MapMarker, MapViewComponent } from '../../../../compartido/mapa';
 import { AuthService } from '../../../../services/auth.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
@@ -173,7 +174,7 @@ export class NearbyPage {
   }
 
   abrirDetalle(reportId: string): void {
-    void this.router.navigate(['/report', reportId]);
+    void this.router.navigate(RUTAS_REPORTES.detalle(reportId));
   }
 
   /**

@@ -20,6 +20,8 @@ export const MODULO_AVISOS: ModuloApp = {
   id: 'avisos',
   nombre: 'Avisos',
   descripcion: 'Campana con el número de avisos y lista de cambios de estado en los reportes propios.',
+  // Cada aviso abre el detalle del reporte.
+  requiere: ['reportes'],
   rutas: [
     {
       path: 'avisos',

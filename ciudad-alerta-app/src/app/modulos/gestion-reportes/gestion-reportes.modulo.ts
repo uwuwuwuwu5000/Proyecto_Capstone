@@ -20,6 +20,8 @@ export const MODULO_GESTION_REPORTES: ModuloApp = {
   id: 'gestion-reportes',
   nombre: 'Gestión de reportes',
   descripcion: 'Listado para operadores y administradores, con filtros y cambio de estado.',
+  // La bandeja abre el detalle, donde está la ranura de gestión.
+  requiere: ['reportes'],
   opcionales: ['confianza'],
   rutas: [
     {
