@@ -101,11 +101,13 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
 | `requiere` | Módulos sin los que este **no funciona**. Activarlo sin ellos es un error. |
 | `opcionales` | Módulos que usa **si están**. El código pregunta `modulos.activo('id')`. |
 | `rutas` | Sus pantallas. Siempre con `loadComponent` (carga diferida). |
-| `accesos` | Botones del inicio: `roles` (quién los ve), `orden`, `estilo` (`principal`, `gestion`), `textoSegunRol`. |
+| `accesos` | Botones del inicio: `roles` (quién los ve), `orden`, `estilo` (`principal`, `gestion`), `seccion` (`explorar`, `cuenta`, `gestion`) y `textoSegunRol`. |
 | `ranuras` | Lo que pone en pantallas de otros módulos (ver 3.3), con `orden` si hay varios. |
 | `proveedores` | Lo que debe existir en toda la app: los avisos arrancan con ella; reportes registra `PHOTO_STORAGE`. |
 
 **Orden de los botones:** 10–50 ciudadano, 60–90 nuevos para ciudadano (Mi perfil es 90), 100–199 staff.
+
+**Grupos del inicio** (`seccion`): la acción principal va sola y destacada; debajo, en cuadros de dos columnas, «Explorar» (mapa, cerca de mí), «Tu cuenta» (mis reportes, quejas, perfil) y «Gestión» (solo staff). Sin `seccion`, un botón con `estilo: 'gestion'` va a «Gestión» y el resto a «Tu cuenta». Un grupo sin botones para el rol no aparece.
 
 **Guards:** el archivo es `src/app/guards/auth-guard.ts` (con guion, no `auth.guard.ts`):
 
@@ -154,9 +156,11 @@ La pantalla **no importa al módulo**. Si nadie llena la ranura, muestra lo que 
 | `detalle-reporte.verificacion` | Detalle del reporte | `reporte`, `esAutor`, `alConfirmar` | confianza: barra y confirmación con peso |
 | `detalle-reporte.gestion` | Detalle del reporte, al final | `reporte`, `alCambiar` | gestión: botones de estado, motivo para otro operador, «Reportado por» |
 | `tarjeta-reporte.insignias` | Mis reportes, Cerca de mí, Gestión | `reporte` | confianza: «Validado», «Verificación 45 %» |
-| `inicio.resumen` | Inicio | `perfil` | perfil: «Verifica tu correo» (primero) · confianza: tarjeta de nivel |
+| `inicio.resumen` | Inicio, bajo el saludo | `perfil` | perfil: «Verifica tu correo» (orden −10) · reportes: «Tus reportes» (0) · gestión: «Por atender» (5, solo staff) · confianza: nivel (10) |
 | `perfil.resumen` | Mi perfil | `perfil` | confianza: tarjeta de nivel |
 | `cabecera.acciones` | Barra superior | (ninguna) | avisos: la campana |
+
+Las tarjetas del inicio usan `compartido/tarjeta-resumen` (ícono, título, detalle, nota y enlace) para verse todas igual.
 
 **Contrato:** la pieza que llena una ranura declara un `input()` **por cada entrada**, con el mismo nombre, aunque no la use. Si falta uno, Angular falla con NG0303 al abrir la pantalla; el diagnóstico lo detecta antes.
 
@@ -358,7 +362,9 @@ El cambio de estado está en `gestion-reportes/datos/cambio-estado.service.ts` (
 ### Mi perfil e inicio
 
 - Módulo nuevo `perfil` (`/perfil`): nombre, correo, tipo de cuenta, organismo del operador, miembro desde, identificador para soporte, verificación de correo y cerrar sesión (feedback Sprint 5).
-- El **inicio** quedó con el saludo, la ranura `inicio.resumen`, los botones y «Cerrar sesión». Se quitaron el identificador y el texto del «próximo sprint». Mientras el correo no esté verificado, perfil pone ahí un recordatorio.
+- El **inicio** quedó con el saludo, el resumen (ranura `inicio.resumen`), los botones agrupados y «Cerrar sesión». Se quitaron el identificador y el texto del «próximo sprint».
+- **Resumen del inicio:** «Verifica tu correo» mientras no esté verificado; «Tus reportes» (en curso, resueltos y el último movimiento, o una invitación a crear el primero); «Por atender» para operadores (su organismo) y administradores (todo el sistema, con conteos en el servidor, sin índices nuevos); y el nivel de confianza. Cada tarjeta es de su módulo: si el módulo se desactiva, la tarjeta desaparece.
+- **Botones agrupados:** «Crear un reporte» destacado y el resto en «Explorar», «Tu cuenta» y «Gestión», en cuadros de dos columnas. Se quitó el espacio vacío que dejaba la tarjeta de nivel «flotando».
 - Si se desactiva `perfil`, el inicio sigue funcionando (incluido cerrar sesión), pero no hay dónde verificar el correo.
 
 ### Cada cosa en su módulo

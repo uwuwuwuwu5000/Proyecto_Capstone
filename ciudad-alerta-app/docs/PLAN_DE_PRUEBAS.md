@@ -395,7 +395,7 @@ Ejecutar en el Rules Playground de la consola (E4).
 
 ---
 
-## 16. Mi perfil (feedback Sprint 5)
+## 16. Mi perfil e inicio (feedback Sprint 5)
 
 | ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
 |---|---|---|---|---|---|
@@ -408,6 +408,11 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-PER-07 | Cerrar sesión e ingresar con U2 | Abrir Mi perfil | Muestra los datos de U2, no los de U1 | A | S |
 | CP-PER-08 | `npm run modulo -- desactivar perfil` | Abrir el inicio | Saludo y «Cerrar sesión» siguen; no aparece «Mi perfil» | B | F |
 | CP-PER-09 | U1 | Abrir el inicio | «Hola, <nombre>», sin identificador ni texto de sprints anteriores | C | UX |
+| CP-PER-10 | U1 con reportes en distintos estados | Abrir el inicio | «Tus reportes» con en curso y resueltos, y el último movimiento con su estado y hace cuánto | B | F |
+| CP-PER-11 | Cuenta sin reportes | Abrir el inicio y tocar la tarjeta | «Aún no has reportado nada» lleva a crear un reporte | C | UX |
+| CP-PER-12 | U3 operador | Abrir el inicio | «Por atender en tu organismo»: abiertos, sin revisar y nuevos hoy coinciden con su bandeja | A | F |
+| CP-PER-13 | Cuenta admin | Abrir el inicio | «Por atender» con los conteos de todo el sistema; lleva a la bandeja | B | F |
+| CP-PER-14 | U1 ciudadano | Revisar los botones del inicio | «Crear un reporte» destacado; grupos «Explorar» y «Tu cuenta»; sin «Gestión» ni espacio vacío | B | UX |
 
 ---
 
@@ -496,9 +501,9 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | HU-27 Historial | CP-HIS-01 a CP-HIS-11 |
 | HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13, CP-EST-20 |
 | F12 Tiempo de resolución | CP-EST-14 a CP-EST-19 |
-| Mi perfil (feedback Sprint 5) | CP-PER-01 a CP-PER-09 |
+| Mi perfil e inicio (feedback Sprint 5) | CP-PER-01 a CP-PER-14 |
 
-**Total: 278 casos** — 177 de prioridad A, 84 de prioridad B y 17 de prioridad C.
+**Total: 283 casos** — 178 de prioridad A, 87 de prioridad B y 18 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
