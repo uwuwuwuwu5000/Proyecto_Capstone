@@ -2,6 +2,7 @@ import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
+import { RANURAS } from '../../nucleo/modulos/ranuras';
 import { providePhotoStorage } from './datos/photo-storage.providers';
 import { RUTAS_REPORTES } from './rutas';
 
@@ -20,7 +21,8 @@ import { RUTAS_REPORTES } from './rutas';
  *
  * El detalle deja las ranuras `detalle-reporte.verificacion` (la llena el
  * sistema de confianza) y `detalle-reporte.gestion` (la llena gestión de
- * reportes); las tarjetas, `tarjeta-reporte.insignias`.
+ * reportes); las tarjetas, `tarjeta-reporte.insignias`. Pone «Tus reportes»
+ * en la ranura `inicio.resumen` del inicio.
  *
  * Registra PHOTO_STORAGE (dónde se guardan las fotos, según environment.ts).
  */
@@ -61,4 +63,12 @@ export const MODULO_REPORTES: ModuloApp = {
     { id: 'mis-reportes', texto: 'Mis reportes', icono: 'document-text-outline', ruta: RUTAS_REPORTES.mios, orden: 40 },
   ],
   iconos: { 'add-circle-outline': addCircleOutline, 'document-text-outline': documentTextOutline },
+  ranuras: [
+    {
+      // «Tus reportes» en el inicio: conteos y último movimiento.
+      ranura: RANURAS.inicioResumen,
+      orden: 0,
+      cargar: () => import('./componentes/resumen-reportes.component').then((m) => m.ResumenReportesComponent),
+    },
+  ],
 };

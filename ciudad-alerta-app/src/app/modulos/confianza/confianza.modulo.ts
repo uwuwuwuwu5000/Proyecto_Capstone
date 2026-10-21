@@ -41,7 +41,9 @@ export const MODULO_CONFIANZA: ModuloApp = {
         import('./componentes/insignia-validacion.component').then((m) => m.InsigniaValidacionComponent),
     },
     {
+      // Después de «Tus reportes» y «Por atender».
       ranura: RANURAS.inicioResumen,
+      orden: 10,
       cargar: () =>
         import('./componentes/resumen-confianza.component').then((m) => m.ResumenConfianzaComponent),
     },
