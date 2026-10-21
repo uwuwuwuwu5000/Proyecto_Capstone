@@ -383,12 +383,35 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-EST-09 | U3, modo avión | Cambiar estado | Error controlado y estado sin cambios | B | F |
 | CP-EST-10 | Rol cambiado a ciudadano en consola | Intentar cambiar estado | Rechazo por reglas | A | S |
 | CP-EST-11 | Varios cambios sucesivos | Revisar el historial | Todos los movimientos en orden cronológico | B | F |
-| CP-EST-12 | CP-EST-04 | Revisar el documento del reporte | Solo cambiaron `estado` y `updatedAt` | A | S |
+| CP-EST-12 | CP-EST-04 | Revisar el documento del reporte | Solo cambiaron `estado` y `updatedAt` (al resolver o cerrar, además los campos de CP-EST-15 y CP-EST-16) | A | S |
 | CP-EST-13 | U3 | Cancelar el diálogo de cambio | No se modifica nada | B | UX |
+| CP-EST-14 | U3, reporte asignado en `en_proceso` | Marcar Resuelto | El detalle muestra «Resolución: Resuelto en …» (F12) | A | F |
+| CP-EST-15 | CP-EST-14 | Revisar el documento en la consola | `resueltoAt` con la hora del servidor y `tiempoResolucionMs` ≈ ahora − `createdAt` | A | I |
+| CP-EST-16 | U3, reporte en `en_revision` | Marcar Cerrado | «Resolución: Cerrado sin resolver» y `cerradoSinResolverAt` en el documento | B | F |
+| CP-EST-17 | Reporte resuelto antes de la fase 3 (sin `tiempoResolucionMs`) | Abrir el detalle | El tiempo de resolución se deduce del seguimiento | B | F |
+| CP-EST-18 | U1 con un reporte resuelto en CP-EST-14 | Abrir Mis reportes | La tarjeta dice «Resuelto en …» | B | F |
+| CP-EST-19 | Reporte con al menos un cambio de estado | Abrir el detalle | «Primera respuesta» con el tiempo hasta el primer cambio | B | F |
+| CP-EST-20 | Operador de otra municipalidad | Abrir el detalle de un reporte ajeno | Bloque Gestión con el motivo y sin botones de estado | A | S |
 
 ---
 
-## 16. Comportamiento en dispositivo Android
+## 16. Mi perfil (feedback Sprint 5)
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-PER-01 | U1 autenticado | Inicio → «Mi perfil» | Nombre, correo, tipo de cuenta «Vecino o vecina» y «Miembro desde» | A | F |
+| CP-PER-02 | U3 operador | Abrir Mi perfil | Tipo «Operador municipal» y el nombre de su organismo | B | F |
+| CP-PER-03 | Cuenta con correo sin verificar | Abrir Mi perfil y pulsar «Enviar correo de verificación» | Mensaje de envío; aparece «Ya lo verifiqué» | A | F |
+| CP-PER-04 | CP-PER-03 y enlace abierto | Pulsar «Ya lo verifiqué» | Desaparece el bloque y «Correo verificado: Sí» | A | F |
+| CP-PER-05 | Cuenta con correo sin verificar | Abrir el inicio | Recordatorio «Verifica tu correo» que lleva a Mi perfil | B | UX |
+| CP-PER-06 | U1 en Mi perfil | Cerrar sesión y confirmar | Vuelve al acceso; el botón atrás no regresa | A | S |
+| CP-PER-07 | Cerrar sesión e ingresar con U2 | Abrir Mi perfil | Muestra los datos de U2, no los de U1 | A | S |
+| CP-PER-08 | `npm run modulo -- desactivar perfil` | Abrir el inicio | Saludo y «Cerrar sesión» siguen; no aparece «Mi perfil» | B | F |
+| CP-PER-09 | U1 | Abrir el inicio | «Hola, <nombre>», sin identificador ni texto de sprints anteriores | C | UX |
+
+---
+
+## 17. Comportamiento en dispositivo Android
 
 | ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
 |---|---|---|---|---|---|
@@ -407,7 +430,7 @@ Ejecutar en el Rules Playground de la consola (E4).
 
 ---
 
-## 17. Accesibilidad e interfaz
+## 18. Accesibilidad e interfaz
 
 | ID | Verificación | Resultado esperado | Pri | Tipo |
 |---|---|---|---|---|
@@ -424,9 +447,10 @@ Ejecutar en el Rules Playground de la consola (E4).
 
 ---
 
-## 18. Regresión mínima antes de cada entrega
+## 19. Regresión mínima antes de cada entrega
 
-Ejecutar en este orden; si alguno falla, la entrega se detiene.
+Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run test:comun` y
+`npm run diagnostico`. Luego, en este orden; si alguno falla, la entrega se detiene.
 
 | Orden | Caso | Descripción breve |
 |---|---|---|
@@ -443,11 +467,13 @@ Ejecutar en este orden; si alguno falla, la entrega se detiene.
 | 11 | CP-DET-03 | Abrir el detalle y ver la fotografía |
 | 12 | CP-HIS-01 | Revisar el historial propio |
 | 13 | CP-EST-04 | Cambiar un estado como operador |
-| 14 | CP-SES-07 | Cerrar sesión |
+| 14 | CP-EST-14 | Resolver un reporte y ver su tiempo de resolución |
+| 15 | CP-PER-01 | Abrir Mi perfil |
+| 16 | CP-SES-07 | Cerrar sesión |
 
 ---
 
-## 19. Trazabilidad
+## 20. Trazabilidad
 
 | Historia o tarea | Casos asociados |
 |---|---|
@@ -468,10 +494,48 @@ Ejecutar en este orden; si alguno falla, la entrega se detiene.
 | HU-25 Mapa de incidencias | CP-INC-01 a CP-INC-27 (MS8 = CP-INC-19, MS9 = CP-INC-20) |
 | HU-26 Detalle | CP-DET-01 a CP-DET-12 |
 | HU-27 Historial | CP-HIS-01 a CP-HIS-11 |
-| HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13 |
+| HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13, CP-EST-20 |
+| F12 Tiempo de resolución | CP-EST-14 a CP-EST-19 |
+| Mi perfil (feedback Sprint 5) | CP-PER-01 a CP-PER-09 |
 
-**Total: 262 casos** — 169 de prioridad A, 77 de prioridad B y 16 de prioridad C.
+**Total: 278 casos** — 177 de prioridad A, 84 de prioridad B y 17 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
 a resolverse, y los de prioridad C quedan como observaciones para el informe final.
+
+---
+
+## 21. Pruebas automáticas
+
+Además de los casos manuales, el repositorio trae pruebas que se ejecutan solas. Desde
+`ciudad-alerta-app`, en `cmd`:
+
+```cmd
+npm run test:una-vez
+npm run test:comun
+npm run diagnostico
+```
+
+| Comando | Qué prueba | Dónde |
+|---|---|---|
+| `npm run test:una-vez` | Pantallas, componentes, guards y servicios de la app con Vitest (`ng test`), sin red ni proyecto real | `src/**/*.spec.ts`, ayudas en `src/testing/` |
+| `npm run test:comun` | Reglas compartidas con el portal: estados, transiciones, confianza, tiempos, territorio, privacidad | `../comun/test/` (antes, una vez: `cd ..\comun` y `npm install`) |
+| `npm run diagnostico` | Estructura, imports, rutas, catálogos y módulos contra las reglas | `scripts/diagnostico/` |
+| `npm run diagnostico:reglas` | Las reglas en el emulador: 20 controles, 54 bloqueos y 6 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
+
+`npm test` deja Vitest mirando los cambios mientras se programa.
+
+**Qué cubren.** Las pruebas de la app usan Firebase de prueba (`src/testing/firebase-de-prueba.ts`):
+Firestore y Storage reales de un proyecto `demo-*` que nunca se conectan, y una sesión
+simulada. Por eso prueban la lógica y lo que se ve en pantalla, pero no lo que Firestore
+acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
+
+- núcleo de módulos: dependencias, rutas y botones repetidos, ranuras, y que al desactivar
+  cualquier módulo solo se quejen los que lo requieren;
+- guards (`guards/auth-guard.ts`) por sesión y rol;
+- coincidencias cercanas (v2-D2 a v2-D5), bloque de gestión (HU-28), tiempos de resolución
+  (F12), Mi perfil, inicio por rol y cierre de sesión;
+- historial público, catálogo de comunas y regiones del mapa.
+
+Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`.

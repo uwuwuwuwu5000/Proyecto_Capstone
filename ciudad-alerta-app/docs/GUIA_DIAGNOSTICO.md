@@ -38,18 +38,19 @@ npm pkg set "scripts.diagnostico:reglas=node scripts/diagnostico/reglas.mjs"
 
 Ejecútalo antes de cada APK y después de pegar código nuevo. Revisa:
 
-- **Dependencias e imports.** Paquetes usados que no están en `package.json` (el error de `supercluster` habría salido aquí), imports a archivos que no existen, imports prohibidos en Ionic 9 (`@ionic/angular/standalone`) o `@angular/fire`.
+- **Dependencias e imports.** Paquetes usados que no están en `package.json` (el error de `supercluster` habría salido aquí), imports a archivos que no existen, imports prohibidos en Ionic 9 (`@ionic/angular/standalone`) o `@angular/fire`. Los alias de `tsconfig.json` (`@ciudad-alerta/comun`) se resuelven contra su archivo y no se confunden con paquetes de npm.
+- **Paquete compartido `comun/`.** Que siga siendo TypeScript puro: si un archivo de `comun/src` importa Angular, React, Ionic o Firebase, deja de servirle a la otra aplicación y es un error. También avisa si alguien lo importa con una ruta relativa en vez del alias.
 - **Componentes.** Plantillas y hojas de estilo que no existen; etiquetas `<app-*>` o `<ion-*>` usadas sin agregarlas a `imports`; íconos sin registrar con `addIcons`, que la app no muestra y Angular no avisa.
 - **Navegación.** `routerLink`, `navigate` y `defaultHref` que apuntan a rutas inexistentes (las de `app.routes.ts` y las de todos los módulos), y rutas cuyo archivo o clase no existe.
 - **Firestore.**
   - Colecciones que el código usa sin regla (en producción dan "permiso denegado").
   - Consultas que necesitan índice compuesto y no lo tienen.
-  - Valores que deben coincidir entre la app y las reglas: categorías, transiciones de estado, intervalo entre reportes y lista de administradores.
+  - Valores que deben coincidir entre la app y las reglas: categorías y transiciones de estado (desde la fase 3 se leen de `comun/src/reportes`), organismos genéricos (`models/organismo.model.ts` frente a `organismoId in [...]`), intervalo entre reportes y lista de administradores.
 - **Reglas (como texto).** Denegación por defecto, reglas abiertas, creación sin lista blanca de campos, lecturas de documentos cerca del límite de 10 y brechas conocidas de este proyecto.
 - **Fugas.** `onSnapshot`, `subscribe`, `setInterval` y `addEventListener` sin cancelar en componentes; `getDocs` sobre colecciones completas.
 - **Seguridad del cliente.** `innerHTML`, `bypassSecurityTrust`, `eval`, `console.log` con datos personales, llaves privadas en `src/`, claves de cuenta de servicio o keystores que git subiría.
 - **Android y build.** `appId` distinto entre Capacitor y Gradle, `google-services.json` de otro paquete, `allowBackup` y tráfico sin cifrar, `targetSdkVersion`, estilos de componentes cerca del límite de 4 kB, modelos de privacidad y límites comunales incompletos.
-- **Módulos** (`scripts/diagnostico/modulos.mjs`). Manifiestos, `modulos.config.ts`, dependencias entre módulos, rutas y botones repetidos, íconos sin registrar, ranuras inexistentes, imports que cruzan la frontera de un módulo, pantallas que quedaron fuera de un módulo y los **parámetros del sistema de confianza comparados con `firestore.rules`**. El detalle está en `GUIA_MODULOS.md`, sección 5.
+- **Módulos** (`scripts/diagnostico/modulos.mjs`). Manifiestos, `modulos.config.ts`, dependencias entre módulos, rutas y botones repetidos, íconos sin registrar, ranuras inexistentes, **piezas de ranura que no declaran un input que la pantalla les pasa** (Angular fallaría con NG0303 al abrirla), imports que cruzan la frontera de un módulo, pantallas que quedaron fuera de un módulo y los **parámetros del sistema de confianza (`comun/src/confianza/parametros.ts`) comparados con `firestore.rules`**. Las ayudas de pruebas (`src/testing/`) pueden mirar dentro de los módulos. El detalle está en `GUIA_MODULOS.md`, sección 5.
 
 Con `npm run diagnostico:build` además compila en producción y agrega los errores de `ng build` al informe.
 
@@ -68,7 +69,7 @@ Revisa:
 
 - **Administradores.** Correos de la lista sin cuenta en Authentication. Es la brecha más urgente, porque cualquiera que registre ese correo se vuelve admin. También detecta correos sin verificar y perfiles de la lista que no tienen rol `admin`.
 - **Perfiles.** Cuentas sin perfil, perfiles huérfanos, roles inválidos, cuentas operador sin `operadorId` o con un operador inexistente o inactivo.
-- **Catálogo.** Organismos con id fuera del formato `muni_<CUT>` (como `muni_maipu`), varios organismos para una misma comuna, operadores que apuntan a organismos inexistentes y operadores activos sin ninguna cuenta.
+- **Catálogo.** Organismos genéricos distintos de los de la app, organismos con id fuera del formato `muni_<CUT>` (como `muni_maipu`), varios organismos para una misma comuna, operadores que apuntan a organismos inexistentes y operadores activos sin ninguna cuenta.
 - **Reportes.**
   - Estados o categorías inválidos.
   - Organismo u operador que no existe, o un operador de otra municipalidad.
@@ -81,7 +82,7 @@ Lee cada colección una vez; con los datos del piloto son pocos miles de lectura
 
 ## 3. Reglas — `npm run diagnostico:reglas`
 
-Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 74 casos y lo apaga. **Nunca toca el proyecto real.**
+Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 80 casos y lo apaga. **Nunca toca el proyecto real.**
 
 Requisitos:
 
@@ -95,8 +96,8 @@ La versión de `@firebase/rules-unit-testing` depende de la de `firebase`: 13.x 
 
 Tres tipos de caso:
 
-- **Control (17):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, abrir un ticket o confirmar con peso. Si alguno falla, una regla está bloqueando a usuarios legítimos.
-- **Bloqueo (51):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel o escribir en el ticket de otro. Si alguno pasa, es una brecha.
+- **Control (20):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Si alguno falla, una regla está bloqueando a usuarios legítimos.
+- **Bloqueo (54):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Si alguno pasa, es una brecha.
 - **Sistema de confianza** (25 de los anteriores, con el prefijo «Confianza:»): confirmación con peso, voto de peso 0 por correo sin verificar o cuenta nueva, validación al llegar a 100 puntos y 3 votos, contador del día, pausa de 20 s, límite diario, suspensión, puntos inventados, veredictos real y falso, y veredicto de un operador de otra comuna.
 - **Brecha (6):** huecos conocidos de las reglas actuales. **Hoy fallan a propósito** y se ponen en verde cuando se corrigen.
 
