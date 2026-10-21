@@ -1,7 +1,9 @@
 import {
   EnvironmentProviders,
+  InjectionToken,
   Injectable,
   Type,
+  inject,
   isDevMode,
   makeEnvironmentProviders,
   provideEnvironmentInitializer,
@@ -10,7 +12,7 @@ import { addIcons } from 'ionicons';
 
 import { CONFIG_MODULOS } from '../../modulos.config';
 import { UserRole } from '../../models/user-profile.model';
-import { AccesoInicio } from './modulo.model';
+import { AccesoInicio, EntradaModulo } from './modulo.model';
 import { NombreRanura } from './ranuras';
 import {
   accesosParaRol,
@@ -22,6 +24,15 @@ import {
 } from './registro';
 
 /**
+ * La configuración de módulos que usa ModulosService. En la app es siempre
+ * `modulos.config.ts`; las pruebas la reemplazan por módulos de prueba.
+ */
+export const CONFIGURACION_MODULOS = new InjectionToken<readonly EntradaModulo[]>('CONFIGURACION_MODULOS', {
+  providedIn: 'root',
+  factory: () => CONFIG_MODULOS,
+});
+
+/**
  * Consulta en tiempo de ejecución qué módulos están activos.
  *
  * Un componente que muestra algo de otro módulo opcional pregunta aquí antes:
@@ -30,7 +41,8 @@ import {
  */
 @Injectable({ providedIn: 'root' })
 export class ModulosService {
-  private readonly activos = new Set(modulosActivos(CONFIG_MODULOS).map((m) => m.id));
+  private readonly config = inject(CONFIGURACION_MODULOS);
+  private readonly activos = new Set(modulosActivos(this.config).map((m) => m.id));
   /** Una descarga por ranura, compartida por todas sus apariciones. */
   private readonly ranuras = new Map<NombreRanura, Promise<Type<unknown>[]>>();
 
@@ -39,7 +51,7 @@ export class ModulosService {
   }
 
   accesos(rol: UserRole | null): AccesoInicio[] {
-    return accesosParaRol(CONFIG_MODULOS, rol);
+    return accesosParaRol(this.config, rol);
   }
 
   texto(acceso: AccesoInicio, rol: UserRole | null): string {
@@ -51,7 +63,7 @@ export class ModulosService {
     let carga = this.ranuras.get(nombre);
 
     if (!carga) {
-      carga = cargarRanura(CONFIG_MODULOS, nombre).catch((error: unknown) => {
+      carga = cargarRanura(this.config, nombre).catch((error: unknown) => {
         // Sin red no se descarga el componente: se olvida para reintentar la
         // próxima vez y la ranura muestra su contenido por defecto.
         this.ranuras.delete(nombre);
