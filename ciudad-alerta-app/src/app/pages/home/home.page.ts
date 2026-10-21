@@ -1,8 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
-import { CerrarSesionComponent } from '../../compartido/sesion';
-import { ThemeToggleComponent } from '../../compartido/tema';
 import {
   IonButton,
   IonButtons,
@@ -11,17 +8,26 @@ import {
   IonIcon,
   IonTitle,
   IonToolbar,
-  ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { personCircleOutline } from 'ionicons/icons';
 
+import { CerrarSesionComponent } from '../../compartido/sesion';
+import { ThemeToggleComponent } from '../../compartido/tema';
 import { VersionDemoComponent } from '../../compartido/version-demo';
-import { mailUnreadOutline, personCircleOutline } from 'ionicons/icons';
-
-import { AuthFailure, AuthService } from '../../services/auth.service';
 import { UserProfile } from '../../models/user-profile.model';
 import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
+import { AuthService } from '../../services/auth.service';
 
+/**
+ * Inicio: saludo, lo que los módulos ponen en `inicio.resumen` (nivel de
+ * confianza, recordatorio de verificar el correo) y los botones de cada
+ * módulo activo.
+ *
+ * Los datos de la cuenta y la verificación del correo están en «Mi perfil»
+ * (feedback Sprint 5). Aquí queda lo mínimo para que el inicio funcione con
+ * cualquier combinación de módulos, incluido «Cerrar sesión».
+ */
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -44,7 +50,6 @@ import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 })
 export class HomePage {
   private readonly authService = inject(AuthService);
-  private readonly toastCtrl = inject(ToastController);
   protected readonly modulos = inject(ModulosService);
 
   /** Usuario autenticado expuesto como señal por el servicio. */
@@ -57,131 +62,43 @@ export class HomePage {
    * el acceso real lo controlan los guards y las reglas de Firestore.
    */
   readonly accesos = computed(() => this.modulos.accesos(this.perfil()?.role ?? null));
-  readonly cargandoPerfil = signal(true);
 
-  /** Estado del flujo de verificación de correo. */
-  readonly correoVerificado = signal(false);
-  readonly enviandoVerificacion = signal(false);
-  readonly verificacionEnviada = signal(false);
-  readonly comprobandoVerificacion = signal(false);
-
-  /** uid cuyo perfil está actualmente en pantalla. */
-  private uidCargado: string | null = null;
+  /** "Hola, Rodrigo": el nombre del perfil, o el comienzo del correo. */
+  readonly saludo = computed(() => {
+    const nombre = this.perfil()?.displayName?.trim() || this.usuario()?.email?.split('@')[0];
+    return nombre ? `Hola, ${nombre.split(' ')[0]}` : 'Hola';
+  });
 
   constructor() {
     // Los íconos de los botones de cada módulo los registra provideModulos().
-    addIcons({ mailUnreadOutline, personCircleOutline });
+    addIcons({ personCircleOutline });
   }
 
   /**
    * BUG 31 · Ionic reutiliza la instancia de la página al volver a entrar, y con
    * `ngOnInit` el perfil de la cuenta anterior quedaba en pantalla tras cerrar
-   * sesión e ingresar con otra. `ionViewWillEnter` corre en cada entrada, y la
-   * comparación de uid evita recargas innecesarias.
+   * sesión e ingresar con otra. `ionViewWillEnter` corre en cada entrada.
+   *
+   * El perfil se relee siempre, sin caché por uid: con caché, una cuenta
+   * promovida a `admin` seguía viendo el menú de ciudadano durante toda la
+   * sesión. Es una lectura por entrada, coste asumible frente a mostrar
+   * permisos equivocados.
    */
   async ionViewWillEnter(): Promise<void> {
     const actual = this.authService.user;
 
     if (!actual) {
       this.perfil.set(null);
-      this.uidCargado = null;
-      this.cargandoPerfil.set(false);
       return;
     }
-
-    /**
-     * El perfil se relee en cada entrada, sin caché por uid.
-     *
-     * Antes se omitía la recarga cuando el uid coincidía con el ya cargado, y
-     * eso dejaba el rol congelado: una cuenta promovida a `admin` seguía viendo
-     * el menú de ciudadano durante toda la sesión, incluso tras cerrar sesión y
-     * volver a entrar con el mismo usuario, porque Ionic conserva la instancia
-     * de la página. Es una lectura de documento por entrada, coste asumible
-     * frente a mostrar permisos equivocados.
-     */
-    this.cargandoPerfil.set(true);
-    this.correoVerificado.set(actual.emailVerified);
 
     try {
       // Repara el perfil si falta y alinea el rol con la lista de
       // administradores, por si la cuenta se promovió después del último acceso.
       await this.authService.asegurarPerfil();
-
       this.perfil.set(await this.authService.getUserProfile(actual.uid));
-      this.uidCargado = actual.uid;
     } catch {
       this.perfil.set(null);
-      this.uidCargado = null;
-    } finally {
-      this.cargandoPerfil.set(false);
     }
-  }
-
-  /** Envía el correo con el enlace de verificación. */
-  async enviarVerificacion(): Promise<void> {
-    if (this.enviandoVerificacion()) {
-      return;
-    }
-
-    this.enviandoVerificacion.set(true);
-
-    try {
-      await this.authService.enviarVerificacionCorreo();
-      this.verificacionEnviada.set(true);
-
-      const correo = this.authService.user?.email ?? 'tu correo';
-      await this.mostrarToast(
-        `Te enviamos un enlace a ${correo}. Revisa también la carpeta de spam.`,
-        'success',
-      );
-    } catch (error) {
-      const mensaje =
-        error instanceof AuthFailure
-          ? error.message
-          : 'No pudimos enviar el correo de verificación.';
-      await this.mostrarToast(mensaje, 'danger');
-    } finally {
-      this.enviandoVerificacion.set(false);
-    }
-  }
-
-  /**
-   * El usuario verifica desde su bandeja de correo, fuera de la app, así que
-   * hay que pedirle a Firebase el estado actualizado.
-   */
-  async comprobarVerificacion(): Promise<void> {
-    this.comprobandoVerificacion.set(true);
-
-    try {
-      const verificado = await this.authService.comprobarVerificacion();
-      this.correoVerificado.set(verificado);
-
-      if (verificado) {
-        this.perfil.update((actual) =>
-          actual ? { ...actual, emailVerified: true } : actual,
-        );
-        await this.mostrarToast('Correo verificado. ¡Gracias!', 'success');
-      } else {
-        await this.mostrarToast(
-          'Todavía no aparece como verificado. Abre el enlace del correo y vuelve a intentarlo.',
-          'danger',
-        );
-      }
-    } catch {
-      await this.mostrarToast('No pudimos comprobar la verificación.', 'danger');
-    } finally {
-      this.comprobandoVerificacion.set(false);
-    }
-  }
-
-  private async mostrarToast(message: string, color: 'success' | 'danger'): Promise<void> {
-    const toast = await this.toastCtrl.create({
-      message,
-      duration: 3500,
-      color,
-      position: 'bottom',
-      buttons: [{ text: 'Cerrar', role: 'cancel' }],
-    });
-    await toast.present();
   }
 }

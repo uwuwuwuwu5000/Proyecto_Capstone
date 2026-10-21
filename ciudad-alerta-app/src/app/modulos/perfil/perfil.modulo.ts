@@ -2,17 +2,20 @@ import { personCircleOutline } from 'ionicons/icons';
 
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
+import { RANURAS } from '../../nucleo/modulos/ranuras';
 
 /**
  * Mi perfil: datos de la cuenta, verificación del correo y cierre de sesión
  * (feedback Sprint 5). Para todos los roles.
  *
- * Contenido: paginas/mi-perfil, componentes/verificacion-correo (también lo
- * usa el recordatorio del inicio), datos/perfil.service.ts (organismo del
- * operador) y modelo.ts (nombres de los roles).
+ * Contenido: paginas/mi-perfil, componentes/verificacion-correo,
+ * componentes/aviso-verificacion (recordatorio en el inicio, ranura
+ * `inicio.resumen`), datos/perfil.service.ts (organismo del operador) y
+ * modelo.ts (nombres de los roles).
  *
  * Deja la ranura `perfil.resumen` (el sistema de confianza pone ahí el nivel).
- * Si se desactiva, el inicio sigue mostrando el correo y «Cerrar sesión».
+ * Si se desactiva, el inicio sigue mostrando el correo y «Cerrar sesión»,
+ * pero no hay dónde verificar el correo.
  */
 export const MODULO_PERFIL: ModuloApp = {
   id: 'perfil',
@@ -35,4 +38,12 @@ export const MODULO_PERFIL: ModuloApp = {
     },
   ],
   iconos: { 'person-circle-outline': personCircleOutline },
+  ranuras: [
+    {
+      // Antes que la tarjeta de nivel: verificar el correo es más urgente.
+      ranura: RANURAS.inicioResumen,
+      orden: -10,
+      cargar: () => import('./componentes/aviso-verificacion.component').then((m) => m.AvisoVerificacionComponent),
+    },
+  ],
 };

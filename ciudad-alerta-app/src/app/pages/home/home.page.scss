@@ -32,127 +32,16 @@
 
 .sesion__saludo {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--ca-muted);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ca-ink);
 }
 
 .sesion__email {
   margin: 0.15rem 0 0;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 0.86rem;
   word-break: break-all;
-  color: var(--ca-ink);
-}
-
-.verificacion {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  padding: 0.9rem;
-  border: 1px solid rgba(28, 169, 201, 0.4);
-  border-radius: 12px;
-  background: rgba(28, 169, 201, 0.08);
-}
-
-.verificacion__encabezado {
-  display: flex;
-  gap: 0.65rem;
-  align-items: flex-start;
-
-  ion-icon {
-    font-size: 1.4rem;
-    color: var(--ca-signal);
-    flex-shrink: 0;
-  }
-
-  h2 {
-    margin: 0 0 0.25rem;
-    font-size: 1rem;
-    font-weight: 700;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.84rem;
-    line-height: 1.5;
-    color: var(--ca-muted);
-  }
-}
-
-.verificacion__acciones {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-
-  ion-button {
-    margin: 0;
-    text-transform: none;
-    font-weight: 600;
-  }
-
-  ion-button[fill='outline'] {
-    --border-color: var(--ca-line);
-    --color: var(--ca-ink);
-    --border-radius: 10px;
-  }
-}
-
-.accion-verificar {
-  --background: var(--ca-signal);
-  --background-activated: var(--ca-signal-dark);
-  --color: var(--ca-base);
-  --border-radius: 10px;
-  --box-shadow: none;
-}
-
-.estado__titulo {
-  margin: 0 0 0.5rem;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.estado__texto {
-  margin: 0 0 1.25rem;
-  max-width: 46ch;
-  font-size: 0.94rem;
-  line-height: 1.55;
   color: var(--ca-muted);
-}
-
-.datos {
-  margin: 0;
-  padding: 0.25rem 0 0;
-  border-top: 1px solid var(--ca-velo-fuerte);
-}
-
-.datos__fila {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.7rem 0;
-  border-bottom: 1px solid var(--ca-velo);
-
-  dt {
-    font-size: 0.85rem;
-    color: var(--ca-muted);
-    flex-shrink: 0;
-  }
-
-  dd {
-    margin: 0;
-    font-size: 0.88rem;
-    text-align: right;
-    word-break: break-all;
-    color: var(--ca-ink);
-  }
-
-  ion-icon {
-    vertical-align: -2px;
-    margin-right: 0.2rem;
-    color: var(--ca-signal);
-  }
 }
 
 .accesos {
