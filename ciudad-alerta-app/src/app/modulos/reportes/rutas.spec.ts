@@ -1,5 +1,8 @@
 import { MODULO_REPORTES } from './reportes.modulo';
 import { RUTAS_REPORTES } from './rutas';
+import { usarEntornoDePrueba } from '../../../testing';
+
+usarEntornoDePrueba();
 
 describe('RUTAS_REPORTES', () => {
   const rutas = (MODULO_REPORTES.rutas ?? []).map((r) => `/${r.path}`);

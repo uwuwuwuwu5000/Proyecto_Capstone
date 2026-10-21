@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReportDetailPage } from './report-detail.page';
+import { usarEntornoDePrueba } from '../../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('ReportDetailPage', () => {
   let component: ReportDetailPage;

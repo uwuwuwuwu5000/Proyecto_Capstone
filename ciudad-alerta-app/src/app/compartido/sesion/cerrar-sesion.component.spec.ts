@@ -4,6 +4,9 @@ import { LoadingController, ToastController } from '@ionic/angular';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
 import { CerrarSesionComponent } from './cerrar-sesion.component';
+import { usarEntornoDePrueba } from '../../../testing';
+
+usarEntornoDePrueba();
 
 describe('CerrarSesionComponent', () => {
   let auth: { logout: ReturnType<typeof vi.fn> };

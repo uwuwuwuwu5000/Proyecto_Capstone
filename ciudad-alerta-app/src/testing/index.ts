@@ -1,7 +1,10 @@
 /**
  * Ayudas para las pruebas de la app (`npm test`). Solo las importan archivos
- * `*.spec.ts` y `src/test-setup.ts`: no entran al build de la aplicación.
+ * `*.spec.ts`: no entran al build de la aplicación.
+ *
+ * Cada prueba empieza con `usarEntornoDePrueba()` (ver entorno-de-prueba.ts).
  */
+export { usarEntornoDePrueba } from './entorno-de-prueba';
 export {
   authDePrueba,
   cerrarFirebaseDePrueba,

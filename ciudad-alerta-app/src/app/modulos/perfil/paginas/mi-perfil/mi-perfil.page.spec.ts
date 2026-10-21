@@ -6,6 +6,7 @@ import { UserProfile } from '../../../../models/user-profile.model';
 import { AuthService } from '../../../../services/auth.service';
 import { PerfilService } from '../../datos/perfil.service';
 import { MiPerfilPage } from './mi-perfil.page';
+import { usarEntornoDePrueba } from '../../../../../testing';
 
 const USUARIO = { uid: 'u-123', email: 'vecina@prueba.cl', emailVerified: true, displayName: null };
 
@@ -23,6 +24,8 @@ function perfil(datos: Partial<UserProfile>): UserProfile {
     ...datos,
   };
 }
+
+usarEntornoDePrueba();
 
 describe('MiPerfilPage', () => {
   let fixture: ComponentFixture<MiPerfilPage>;

@@ -4,6 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserProfile } from '../../models/user-profile.model';
 import { AuthService } from '../../services/auth.service';
 import { HomePage } from './home.page';
+import { usarEntornoDePrueba } from '../../../testing';
+
+usarEntornoDePrueba();
 
 describe('HomePage', () => {
   let fixture: ComponentFixture<HomePage>;

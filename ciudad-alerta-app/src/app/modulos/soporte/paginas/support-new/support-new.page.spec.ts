@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SupportNewPage } from './support-new.page';
+import { usarEntornoDePrueba } from '../../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('SupportNewPage', () => {
   let component: SupportNewPage;

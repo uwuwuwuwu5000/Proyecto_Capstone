@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { GeolocationService } from './geolocation.service';
+import { usarEntornoDePrueba } from '../../testing';
+
+usarEntornoDePrueba();
 
 describe('GeolocationService', () => {
   let service: GeolocationService;

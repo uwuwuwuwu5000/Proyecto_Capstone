@@ -5,6 +5,9 @@ import { AuthService } from '../../../services/auth.service';
 import { serverTimestamp } from 'firebase/firestore';
 
 import { CambioEstadoError, CambioEstadoService, camposDeResolucion } from './cambio-estado.service';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('CambioEstadoService', () => {
   let servicio: CambioEstadoService;

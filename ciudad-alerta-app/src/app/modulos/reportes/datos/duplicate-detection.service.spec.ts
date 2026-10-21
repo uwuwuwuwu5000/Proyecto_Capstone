@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { DuplicateDetectionService } from './duplicate-detection.service';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('DuplicateDetectionService', () => {
   let service: DuplicateDetectionService;

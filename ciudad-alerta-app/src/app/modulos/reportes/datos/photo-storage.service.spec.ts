@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { CapturedPhoto } from './camera.service';
 import { FirestorePhotoService, PHOTO_STORAGE } from './photo-storage.service';
+import { usarEntornoDePrueba } from '../../../../testing';
 
 function foto(bytes: number): CapturedPhoto {
   return {
@@ -10,6 +11,8 @@ function foto(bytes: number): CapturedPhoto {
     sizeBytes: bytes,
   } as CapturedPhoto;
 }
+
+usarEntornoDePrueba();
 
 describe('FirestorePhotoService', () => {
   let servicio: FirestorePhotoService;

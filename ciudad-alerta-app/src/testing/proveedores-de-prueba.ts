@@ -7,8 +7,8 @@ import { UsuarioDePrueba, proveedoresFirebaseDePrueba } from './firebase-de-prue
 
 /**
  * Lo mismo que registra `main.ts`, pero sin red: Ionic, un router vacío,
- * Firebase de prueba y el almacenamiento de fotos. `test-setup.ts` lo agrega a
- * todas las pruebas; una prueba puede sobrescribir cualquiera de estos
+ * Firebase de prueba y el almacenamiento de fotos. `usarEntornoDePrueba()` lo
+ * agrega a cada prueba; una prueba puede sobrescribir cualquiera de estos
  * proveedores en su propio `TestBed.configureTestingModule`.
  */
 export function proveedoresDePrueba(usuario: UsuarioDePrueba | null = null): (Provider | ReturnType<typeof provideRouter>)[] {

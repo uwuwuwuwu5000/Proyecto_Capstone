@@ -4,8 +4,11 @@ import { Observable, firstValueFrom, of } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 import { authGuard, guestGuard, staffGuard } from './auth-guard';
+import { usarEntornoDePrueba } from '../../testing';
 
 type Guard = typeof authGuard;
+
+usarEntornoDePrueba();
 
 describe('guards de guards/auth-guard.ts', () => {
   let auth: { authState$: Observable<{ uid: string } | null>; getUserProfile: ReturnType<typeof vi.fn> };

@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 import { NOMBRE_ADMINISTRACION, Report, StatusChange } from '../models/report.model';
 import { HistorialService } from './historial.service';
 import { RoutingService } from './routing.service';
+import { usarEntornoDePrueba } from '../../testing';
 
 const creado = Timestamp.fromDate(new Date('2026-10-01T12:00:00Z'));
 const reporte = { id: 'r1', createdAt: creado, autorNombre: 'Vecina Privada' } as Report;
@@ -19,6 +20,8 @@ function cambio(datos: Partial<StatusChange>): StatusChange {
     ...datos,
   };
 }
+
+usarEntornoDePrueba();
 
 describe('HistorialService', () => {
   let historial: ReturnType<typeof vi.fn>;

@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { RoutingService } from './routing.service';
+import { usarEntornoDePrueba } from '../../testing';
+
+usarEntornoDePrueba();
 
 describe('RoutingService', () => {
   let service: RoutingService;

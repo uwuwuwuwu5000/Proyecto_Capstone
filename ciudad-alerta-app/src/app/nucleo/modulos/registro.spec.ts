@@ -10,8 +10,11 @@ import {
   rutasDeModulos,
   textoDeAcceso,
 } from './registro';
+import { usarEntornoDePrueba } from '../../../testing';
 
 const icono = { 'icono-a': 'data:a' };
+
+usarEntornoDePrueba();
 
 describe('registro de módulos', () => {
   it('solo cuenta los módulos activos', () => {

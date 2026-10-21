@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AdminOrganismosPage } from './admin-organismos.page';
+import { usarEntornoDePrueba } from '../../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('AdminOrganismosPage', () => {
   let component: AdminOrganismosPage;

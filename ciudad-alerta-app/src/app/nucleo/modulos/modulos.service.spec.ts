@@ -3,6 +3,9 @@ import { TestBed } from '@angular/core/testing';
 import { cargarPieza, entrada, moduloDePrueba } from '../../../testing/modulos-de-prueba';
 import { CONFIGURACION_MODULOS, ModulosService } from './modulos.service';
 import { RANURAS } from './ranuras';
+import { usarEntornoDePrueba } from '../../../testing';
+
+usarEntornoDePrueba();
 
 describe('ModulosService', () => {
   function servicio(config: Parameters<typeof entrada>[0][] | ReturnType<typeof entrada>[]) {

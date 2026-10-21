@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SupportInboxPage } from './support-inbox.page';
+import { usarEntornoDePrueba } from '../../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('SupportInboxPage', () => {
   let component: SupportInboxPage;

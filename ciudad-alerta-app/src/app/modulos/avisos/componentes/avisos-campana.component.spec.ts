@@ -1,6 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AvisosCampanaComponent } from './avisos-campana.component';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('AvisosCampanaComponent', () => {
   let component: AvisosCampanaComponent;

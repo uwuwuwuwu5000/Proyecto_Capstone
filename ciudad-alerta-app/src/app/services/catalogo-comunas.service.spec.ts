@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { CatalogoComunasService, ComunaCatalogo } from './catalogo-comunas.service';
+import { usarEntornoDePrueba } from '../../testing';
 
 function comuna(codigo: string, nombre: string, codigoRegion: string, region: string): ComunaCatalogo {
   return { codigo, nombre, clave: CatalogoComunasService.clave(nombre), codigoRegion, region, organismoId: `muni_${codigo}` };
@@ -14,6 +15,8 @@ const CATALOGO_DE_PRUEBA: ComunaCatalogo[] = [
   comuna('05101', 'Valparaíso', '05', 'Región de Valparaíso'),
   comuna('05201', 'Isla de Pascua', '05', 'Región de Valparaíso'),
 ];
+
+usarEntornoDePrueba();
 
 describe('CatalogoComunasService', () => {
   let fetch: ReturnType<typeof vi.fn>;

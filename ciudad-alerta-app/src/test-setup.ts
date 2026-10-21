@@ -1,8 +1,3 @@
-import { TestBed } from '@angular/core/testing';
-import { afterAll, beforeEach } from 'vitest';
-
-import { cerrarFirebaseDePrueba, proveedoresDePrueba } from './testing';
-
 // Polyfills for running unit tests under jsdom (the default Vitest environment).
 // Ionic components such as ion-menu and ion-split-pane query `window.matchMedia`,
 // which jsdom does not implement.
@@ -20,11 +15,9 @@ if (!window.matchMedia) {
     }) as MediaQueryList;
 }
 
-// Ionic, router y Firebase sin red para todas las pruebas (ver src/testing).
-// Cada prueba puede agregar o sobrescribir proveedores con su propio
-// TestBed.configureTestingModule.
-beforeEach(() => {
-  TestBed.configureTestingModule({ providers: proveedoresDePrueba() });
-});
-
-afterAll(() => cerrarFirebaseDePrueba());
+// Solo polyfills globales. Los proveedores de las pruebas (Ionic, router,
+// Firebase sin red) NO van aquí: en Windows este archivo se carga fuera del
+// paquete de pruebas, con otra copia de Angular, y lo que configure en TestBed
+// no llega a las pruebas. Cada *.spec.ts llama a usarEntornoDePrueba()
+// (src/testing/entorno-de-prueba.ts).
+export {};

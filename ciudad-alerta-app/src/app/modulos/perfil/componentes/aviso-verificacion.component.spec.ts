@@ -4,6 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { UserProfile } from '../../../models/user-profile.model';
 import { AuthService } from '../../../services/auth.service';
 import { AvisoVerificacionComponent } from './aviso-verificacion.component';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('AvisoVerificacionComponent (ranura inicio.resumen)', () => {
   const usuario = signal<{ emailVerified: boolean } | null>(null);

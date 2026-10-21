@@ -5,6 +5,7 @@ import { ETIQUETAS_ESTADO, PermisoGestion, transicionesDisponibles } from '@ciud
 import { Report } from '../../../../models/report.model';
 import { CambioEstadoError, CambioEstadoService } from '../../datos/cambio-estado.service';
 import { GestionReporteComponent } from './gestion-reporte.component';
+import { usarEntornoDePrueba } from '../../../../../testing';
 
 const REPORTE = {
   id: 'r1',
@@ -12,6 +13,8 @@ const REPORTE = {
   autorNombre: 'Vecina de prueba',
   operadorId: 'op1',
 } as Report;
+
+usarEntornoDePrueba();
 
 describe('GestionReporteComponent (ranura detalle-reporte.gestion)', () => {
   let fixture: ComponentFixture<GestionReporteComponent>;

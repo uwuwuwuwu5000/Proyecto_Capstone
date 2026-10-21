@@ -21,9 +21,7 @@ import {
  *   que los lee, no ir a Firestore.
  * - **Auth** es un doble: una sesión cerrada, o el usuario que se indique.
  *
- * Se registran para todas las pruebas en `src/test-setup.ts`; por eso las
- * pruebas de componentes que solo verifican que se crean no necesitan
- * declarar nada.
+ * Los registra `usarEntornoDePrueba()`, que cada prueba llama al comienzo.
  */
 
 export interface UsuarioDePrueba {
@@ -74,7 +72,7 @@ function appDePrueba(): FirebaseApp {
   return app;
 }
 
-/** Libera las apps creadas (lo llama test-setup.ts al terminar cada archivo). */
+/** Libera las apps creadas (lo llama usarEntornoDePrueba() al terminar cada archivo). */
 export async function cerrarFirebaseDePrueba(): Promise<void> {
   await Promise.all(appsCreadas.splice(0).map((app) => deleteApp(app).catch(() => undefined)));
 }

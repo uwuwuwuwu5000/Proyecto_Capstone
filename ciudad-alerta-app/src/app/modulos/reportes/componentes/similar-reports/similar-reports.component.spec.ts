@@ -5,6 +5,7 @@ import { Report } from '../../../../models/report.model';
 import { MatchCandidate } from '../../modelo/coincidencias';
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { SimilarReportsComponent } from './similar-reports.component';
+import { usarEntornoDePrueba } from '../../../../../testing';
 
 function candidato(id: string, distanciaMetros: number): MatchCandidate {
   return {
@@ -16,6 +17,8 @@ function candidato(id: string, distanciaMetros: number): MatchCandidate {
     motivos: ['Está muy cerca'],
   };
 }
+
+usarEntornoDePrueba();
 
 describe('SimilarReportsComponent', () => {
   let fixture: ComponentFixture<SimilarReportsComponent>;

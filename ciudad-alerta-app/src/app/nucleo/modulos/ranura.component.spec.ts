@@ -6,6 +6,7 @@ import { EntradaModulo } from './modulo.model';
 import { CONFIGURACION_MODULOS } from './modulos.service';
 import { RanuraComponent } from './ranura.component';
 import { NombreRanura, RANURAS } from './ranuras';
+import { usarEntornoDePrueba } from '../../../testing';
 
 @Component({
   standalone: true,
@@ -34,6 +35,8 @@ class PantallaDePruebaComponent {
 class OtraPiezaComponent {
   readonly etiqueta = input('');
 }
+
+usarEntornoDePrueba();
 
 describe('RanuraComponent', () => {
   async function pantalla(config: EntradaModulo[], etiqueta = 'hola'): Promise<HTMLElement> {

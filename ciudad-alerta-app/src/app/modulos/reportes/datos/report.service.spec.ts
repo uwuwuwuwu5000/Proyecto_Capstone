@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ReportService } from './report.service';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('ReportService', () => {
   let service: ReportService;

@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { CatalogoComunasService, ComunaCatalogo } from '../../../services/catalogo-comunas.service';
 import { ComunaDetectada, ComunaService } from '../../../services/comuna.service';
 import { RegionesService } from './regiones.service';
+import { usarEntornoDePrueba } from '../../../../testing';
 
 const RM = 'Región Metropolitana de Santiago';
 const V = 'Región de Valparaíso';
@@ -26,6 +27,8 @@ const indice = {
 };
 
 const sinComuna: ComunaDetectada = { comuna: null, region: null, codigo: null, organismoId: null, fuente: 'no_disponible' };
+
+usarEntornoDePrueba();
 
 describe('RegionesService', () => {
   let detectar: ReturnType<typeof vi.fn>;

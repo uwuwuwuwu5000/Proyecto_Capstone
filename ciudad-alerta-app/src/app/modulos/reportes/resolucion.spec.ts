@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 
 import { Report, StatusChange } from '../../models/report.model';
 import { resolucionDe, textoPrimeraAtencion, textoResolucion } from './resolucion';
+import { usarEntornoDePrueba } from '../../../testing';
 
 const creado = Timestamp.fromDate(new Date('2026-10-01T12:00:00Z'));
 const horas = (h: number) => Timestamp.fromMillis(creado.toMillis() + h * 3_600_000);
@@ -13,6 +14,8 @@ function reporte(datos: Partial<Report>): Report {
 function cambio(hacia: StatusChange['hacia'], h: number): StatusChange {
   return { hacia, createdAt: horas(h) } as StatusChange;
 }
+
+usarEntornoDePrueba();
 
 describe('resolución de un reporte (F12)', () => {
   it('usa el tiempo guardado al resolver', () => {

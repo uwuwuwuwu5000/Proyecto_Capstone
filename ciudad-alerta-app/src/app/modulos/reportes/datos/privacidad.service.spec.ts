@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { PrivacidadService } from './privacidad.service';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('PrivacidadService', () => {
   let service: PrivacidadService;

@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ReportQueryService } from './report-query.service';
+import { usarEntornoDePrueba } from '../../testing';
+
+usarEntornoDePrueba();
 
 describe('ReportQueryService', () => {
   let service: ReportQueryService;

@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ConfirmationService } from './confirmation.service';
+import { usarEntornoDePrueba } from '../../../../testing';
+
+usarEntornoDePrueba();
 
 describe('ConfirmationService', () => {
   let service: ConfirmationService;

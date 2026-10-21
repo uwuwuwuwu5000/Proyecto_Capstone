@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ThemeService } from './theme.service';
+import { usarEntornoDePrueba } from '../../testing';
+
+usarEntornoDePrueba();
 
 describe('ThemeService', () => {
   let service: ThemeService;
