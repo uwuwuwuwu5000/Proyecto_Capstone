@@ -16,7 +16,6 @@ services:
       paths:
         - servicio-privacidad/**
         - comun/src/**
-        - ciudad-alerta-app/src/assets/models/**
         - render.yaml
     envVars:
       - key: FIREBASE_PROJECT_ID

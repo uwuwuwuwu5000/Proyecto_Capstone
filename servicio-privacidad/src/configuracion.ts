@@ -55,7 +55,7 @@ export function leerConfiguracion(entorno: NodeJS.ProcessEnv = process.env): Con
     bytesMaximos: numero(entorno['BYTES_MAXIMOS'], 6 * 1024 * 1024),
     fotosPorVentana: numero(entorno['FOTOS_POR_VENTANA'], 30),
     ventanaMs: numero(entorno['VENTANA_MS'], 10 * 60_000),
-    carpetaModelos: entorno['CARPETA_MODELOS'] || fileURLToPath(new URL('../../ciudad-alerta-app/src/assets/models', import.meta.url)),
+    carpetaModelos: entorno['CARPETA_MODELOS'] || fileURLToPath(new URL('../modelos', import.meta.url)),
     mobilenet: entorno['MOBILENET'] || 'remoto',
   };
 }

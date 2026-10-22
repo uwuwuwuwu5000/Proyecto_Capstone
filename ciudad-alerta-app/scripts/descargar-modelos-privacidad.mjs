@@ -1,11 +1,12 @@
 /**
- * Descarga los modelos de privacidad y los deja dentro de la app.
+ * Descarga los modelos de privacidad para el servicio en la nube.
  *
  *   node scripts/descargar-modelos-privacidad.mjs
  *
- * Con los modelos en src/assets/models/, la protección de fotos no depende de
- * servidores externos en el teléfono: funciona sin conexión desde el primer
- * uso y no se ve afectada por la redirección de tfhub.dev.
+ * Desde que el difuminado corre en el servidor (servicio-privacidad/), los
+ * modelos ya no van dentro de la app: quedan en servicio-privacidad/modelos/
+ * y entran en la imagen de Docker. Ya vienen en el repositorio; este script
+ * sirve para volver a descargarlos si se dañan.
  *
  * Garantías de esta versión:
  *  - Cada archivo de pesos se valida contra el tamaño que declara el propio
@@ -25,14 +26,14 @@ const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MODELOS = [
   {
     nombre: 'Detector de personas (COCO-SSD lite)',
-    carpeta: 'src/assets/models/coco-ssd',
+    carpeta: '../servicio-privacidad/modelos/coco-ssd',
     modelo: 'https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/model.json',
     pesos: (archivo) =>
       `https://storage.googleapis.com/tfjs-models/savedmodel/ssdlite_mobilenet_v2/${archivo}`,
   },
   {
     nombre: 'Detector de rostros (MediaPipe full)',
-    carpeta: 'src/assets/models/face-detection',
+    carpeta: '../servicio-privacidad/modelos/face-detection',
     modelo: 'https://tfhub.dev/mediapipe/tfjs-model/face_detection/full/1/model.json?tfjs-format=file',
     pesos: (archivo) =>
       `https://tfhub.dev/mediapipe/tfjs-model/face_detection/full/1/${archivo}?tfjs-format=file`,

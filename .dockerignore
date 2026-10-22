@@ -7,5 +7,4 @@
 !servicio-privacidad/.npmrc
 !servicio-privacidad/src
 !servicio-privacidad/scripts
-!ciudad-alerta-app/src/assets/models/coco-ssd
-!ciudad-alerta-app/src/assets/models/face-detection
+!servicio-privacidad/modelos

@@ -8,7 +8,7 @@
  *   node scripts/apk-demo.mjs --sin-subir      # recompila sin cambiar versionCode
  *
  * Pasos:
- *   1. Verifica configuración de producción, modelos de privacidad, límites
+ *   1. Verifica configuración de producción, servicio de privacidad, límites
  *      comunales, clave de firma y Java.
  *   2. Sube versionCode en android/app/build.gradle y escribe
  *      src/environments/version.ts (lo muestra la app).
@@ -25,7 +25,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -73,39 +73,38 @@ if (!existsSync(envProd)) {
   }
 }
 
-// ── Modelos de privacidad ───────────────────────────────────────────────────
-console.log('\nModelos de privacidad (src/assets/models)');
-const BYTES_POR_TIPO = { float32: 4, int32: 4, bool: 1, uint8: 1, uint16: 2, float16: 2 };
-for (const [nombre, carpeta] of [
-  ['Detector de personas', 'coco-ssd'],
-  ['Detector de rostros', 'face-detection'],
-]) {
-  const dir = ruta('src', 'assets', 'models', carpeta);
-  const manifiesto = join(dir, 'model.json');
-  if (!existsSync(manifiesto)) {
-    mal(`${nombre}: falta ${carpeta}/model.json. Ejecuta: node scripts/descargar-modelos-privacidad.mjs`);
-    continue;
-  }
+// ── Servicio de privacidad ──────────────────────────────────────────────────
+// El difuminado de rostros corre en la nube (servicio-privacidad/). Sin él,
+// el APK funciona pero no deja adjuntar fotos.
+console.log('\nServicio de privacidad (difuminado en la nube)');
+const archivoParametros = ruta('src', 'app', 'modulos', 'reportes', 'parametros.ts');
+const urlPrivacidad = existsSync(archivoParametros)
+  ? leer(archivoParametros).match(/url:\s*['"]([^'"]+)['"]/)?.[1] ?? null
+  : null;
+if (!urlPrivacidad) {
+  mal('No se encontró la URL del servicio en src/app/modulos/reportes/parametros.ts.');
+} else if (!urlPrivacidad.startsWith('https://')) {
+  mal(`La URL del servicio de privacidad debe empezar con https:// (es ${urlPrivacidad}).`);
+} else {
+  ok(`URL: ${urlPrivacidad}`);
+  console.log('    Consultando /salud (si estaba dormido, tarda hasta un minuto)…');
   try {
-    const modelo = JSON.parse(leer(manifiesto));
-    let completo = true;
-    for (const grupo of modelo.weightsManifest ?? []) {
-      const esperado = grupo.weights.reduce((t, p) => {
-        const n = p.shape.reduce((a, b) => a * b, 1);
-        return t + n * (BYTES_POR_TIPO[p.quantization?.dtype ?? p.dtype] ?? 4);
-      }, 0);
-      const real = grupo.paths.reduce((t, archivo) => {
-        const p = join(dir, archivo);
-        return t + (existsSync(p) ? statSync(p).size : 0);
-      }, 0);
-      if (real !== esperado) completo = false;
+    const respuesta = await fetch(`${urlPrivacidad}/salud`, { signal: AbortSignal.timeout(90_000) });
+    const salud = await respuesta.json();
+    if (salud.listo) {
+      ok(`Responde y tiene los modelos cargados (${salud.backend})`);
+    } else {
+      ojo(`Responde, pero los modelos no están listos${salud.error ? `: ${salud.error}` : ''}. Revisa los registros en Render.`);
     }
-    completo
-      ? ok(`${nombre} completo`)
-      : mal(`${nombre}: pesos incompletos o corruptos. Borra la carpeta ${carpeta} y vuelve a descargar.`);
+    if (salud.listo && !salud.similitud) {
+      ojo('MobileNet no está disponible en el servidor: los duplicados se detectarán sin comparar fotos.');
+    }
   } catch {
-    mal(`${nombre}: model.json no es válido. Borra la carpeta ${carpeta} y vuelve a descargar.`);
+    ojo('El servicio no respondió. Publícalo en Render (servicio-privacidad/LEEME.md); sin él no se pueden adjuntar fotos.');
   }
+}
+if (existsSync(ruta('src', 'assets', 'models'))) {
+  ojo('src/assets/models sigue en la app y engorda el APK. Bórrala: los modelos ahora viven en servicio-privacidad/modelos.');
 }
 
 // ── Límites comunales ───────────────────────────────────────────────────────

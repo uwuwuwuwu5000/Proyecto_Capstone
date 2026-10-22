@@ -24,8 +24,7 @@ COPY --from=construccion /repo/servicio-privacidad/package.json ./
 COPY --from=construccion /repo/servicio-privacidad/node_modules ./node_modules
 COPY --from=construccion /repo/servicio-privacidad/dist ./dist
 # Detectores de rostros y personas (los mismos que usaba la app).
-COPY ciudad-alerta-app/src/assets/models/coco-ssd ./modelos/coco-ssd
-COPY ciudad-alerta-app/src/assets/models/face-detection ./modelos/face-detection
+COPY servicio-privacidad/modelos ./modelos
 USER node
 EXPOSE 8080
 CMD ["node", "dist/servidor.mjs"]

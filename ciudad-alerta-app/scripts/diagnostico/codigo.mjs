@@ -974,13 +974,21 @@ if (limiteEstilo) {
   }
 }
 
-// Recursos que la app carga en tiempo de ejecución
+// Modelos de privacidad: desde que el difuminado corre en la nube, viven en
+// servicio-privacidad/modelos y entran en su imagen de Docker.
 const BYTES_POR_TIPO = { float32: 4, int32: 4, bool: 1, uint8: 1, uint16: 2, float16: 2 };
+const CARPETA_MODELOS = resolve(RAIZ, '..', 'servicio-privacidad', 'modelos');
+if (existsSync(join(SRC, 'assets', 'models'))) {
+  informe.agregar('advertencia', 'src/assets/models sigue en la app: el difuminado ahora corre en la nube', {
+    detalle: 'Esos modelos suman ~19 MB al APK y la app ya no los usa.',
+    solucion: 'Bórrala; los modelos están en servicio-privacidad/modelos.',
+  });
+}
 for (const carpeta of ['coco-ssd', 'face-detection']) {
-  const dir = join(SRC, 'assets', 'models', carpeta);
+  const dir = join(CARPETA_MODELOS, carpeta);
   const manifiesto = join(dir, 'model.json');
   if (!existsSync(manifiesto)) {
-    informe.agregar('error', `Falta el modelo de privacidad ${carpeta}: las fotos no se podrán proteger`, {
+    informe.agregar('error', `Falta el modelo de privacidad ${carpeta} en servicio-privacidad/modelos: el servicio no podrá proteger fotos`, {
       solucion: 'node scripts/descargar-modelos-privacidad.mjs',
     });
     continue;
@@ -992,7 +1000,11 @@ for (const carpeta of ['coco-ssd', 'face-detection']) {
       const real = g.paths.reduce((t, f) => t + (existsSync(join(dir, f)) ? statSync(join(dir, f)).size : 0), 0);
       return esperado === real;
     });
-    ok ? informe.ok(`Modelo ${carpeta} completo`) : informe.agregar('error', `Modelo ${carpeta} incompleto o corrupto`, { solucion: `Borra src/assets/models/${carpeta} y vuelve a descargarlo.` });
+    ok
+      ? informe.ok(`Modelo ${carpeta} completo (servicio de privacidad)`)
+      : informe.agregar('error', `Modelo ${carpeta} incompleto o corrupto`, {
+          solucion: `Borra servicio-privacidad/modelos/${carpeta} y ejecuta node scripts/descargar-modelos-privacidad.mjs.`,
+        });
   } catch {
     informe.agregar('error', `model.json de ${carpeta} no es JSON válido`);
   }
