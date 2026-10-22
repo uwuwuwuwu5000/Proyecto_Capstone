@@ -6,7 +6,8 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
 import { AvisosService } from './datos/avisos.service';
 
 /**
- * Campana y lista de avisos de cambios en los reportes propios.
+ * Campana y lista de avisos de cambios en los reportes propios: de estado y
+ * de veredicto (real o falso, con los puntos de confianza que movió).
  *
  * El servicio se crea al arrancar la app (antes lo forzaba AppComponent) para
  * que la campana tenga el contador desde la primera pantalla. La campana llega
@@ -19,7 +20,7 @@ import { AvisosService } from './datos/avisos.service';
 export const MODULO_AVISOS: ModuloApp = {
   id: 'avisos',
   nombre: 'Avisos',
-  descripcion: 'Campana con el número de avisos y lista de cambios de estado en los reportes propios.',
+  descripcion: 'Campana con el número de avisos y lista de cambios de estado y veredictos en los reportes propios.',
   // Cada aviso abre el detalle del reporte.
   requiere: ['reportes'],
   rutas: [

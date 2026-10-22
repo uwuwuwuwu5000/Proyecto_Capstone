@@ -20,7 +20,9 @@ import {
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
 import { HistorialService } from '../../../services/historial.service';
-import { Aviso, EstadoAvisos } from '../modelo/aviso.model';
+import { PARAMETROS_CONFIANZA } from '@ciudad-alerta/comun';
+
+import { Aviso, AvisoSinVisto, EstadoAvisos } from '../modelo/aviso.model';
 import { Report, StatusChange } from '../../../models/report.model';
 
 /**
@@ -38,7 +40,7 @@ const CAMBIOS_POR_REPORTE = 10;
 const MAX_VISTOS = 200;
 
 /**
- * Avisos de cambios de estado en los reportes del ciudadano.
+ * Avisos de cambios de estado y de veredictos en los reportes del ciudadano.
  *
  * Sin Cloud Functions no hay quien "empuje" un aviso al teléfono cuando
  * cambia un reporte. En su lugar, la app escucha en tiempo real sus propios
@@ -50,9 +52,13 @@ const MAX_VISTOS = 200;
  *  - El historial de un reporte solo se lee cuando su `updatedAt` cambió
  *    desde la última vez, y nunca para reportes que no se han modificado.
  *
- * Limitación declarada: solo genera avisos para cambios que queden registrados
- * en el historial de estados. Un cambio de estado hecho sin escribir historial
- * no produce aviso.
+ * El veredicto (real o falso) no tiene historial: se lee del mapa
+ * `validacion` del reporte, que ya viene en la escucha. Como también avanza
+ * `updatedAt`, el reporte se vuelve a procesar.
+ *
+ * Limitación declarada: solo genera avisos para cambios de estado que queden
+ * registrados en el historial. Un cambio de estado hecho sin escribir
+ * historial no produce aviso.
  */
 @Injectable({ providedIn: 'root' })
 export class AvisosService {
@@ -61,7 +67,7 @@ export class AvisosService {
   private readonly historialService = inject(HistorialService);
   private readonly zone = inject(NgZone);
 
-  private readonly avisosBase = signal<Omit<Aviso, 'visto'>[]>([]);
+  private readonly avisosBase = signal<AvisoSinVisto[]>([]);
   private readonly vistos = signal<Set<string>>(new Set());
   private readonly vistosHasta = signal<Date | null>(null);
 
@@ -70,12 +76,15 @@ export class AvisosService {
     const vistos = this.vistos();
     const hasta = this.vistosHasta();
 
-    return this.avisosBase().map((aviso) => ({
-      ...aviso,
-      visto:
-        vistos.has(aviso.id) ||
-        (hasta !== null && aviso.fecha !== null && aviso.fecha <= hasta),
-    }));
+    return this.avisosBase().map(
+      (aviso) =>
+        ({
+          ...aviso,
+          visto:
+            vistos.has(aviso.id) ||
+            (hasta !== null && aviso.fecha !== null && aviso.fecha <= hasta),
+        }) as Aviso,
+    );
   });
 
   readonly noVistos = computed(() => this.avisos().filter((aviso) => !aviso.visto).length);
@@ -86,7 +95,7 @@ export class AvisosService {
   private uid: string | null = null;
   private escucha: Unsubscribe | null = null;
   /** Por reporte: la marca de cambio procesada y los avisos que produjo. */
-  private readonly cache = new Map<string, { marca: string; avisos: Omit<Aviso, 'visto'>[] }>();
+  private readonly cache = new Map<string, { marca: string; avisos: AvisoSinVisto[] }>();
 
   constructor() {
     // Se activa al iniciar sesión y se apaga al cerrarla.
@@ -222,7 +231,7 @@ export class AvisosService {
           return;
         }
 
-        const avisos = await this.leerAvisos(uid, reporte);
+        const avisos = [...(await this.leerAvisos(uid, reporte)), ...this.avisoDeVeredicto(uid, reporte)];
         this.cache.set(reporte.id, { marca, avisos });
       }),
     );
@@ -240,7 +249,7 @@ export class AvisosService {
     this.cargando.set(false);
   }
 
-  private async leerAvisos(uid: string, reporte: Report): Promise<Omit<Aviso, 'visto'>[]> {
+  private async leerAvisos(uid: string, reporte: Report): Promise<AvisoSinVisto[]> {
     try {
       const snapshot = await getDocs(
         query(
@@ -254,7 +263,8 @@ export class AvisosService {
         .map((d) => ({ cambioId: d.id, cambio: d.data() as StatusChange }))
         // Los cambios que hizo el propio usuario no son avisos para él.
         .filter(({ cambio }) => cambio.autorUid !== uid)
-        .map(({ cambioId, cambio }) => ({
+        .map(({ cambioId, cambio }): AvisoSinVisto => ({
+          tipo: 'estado',
           id: `${reporte.id}_${cambioId}`,
           reportId: reporte.id,
           reporte: this.resumir(reporte.descripcion),
@@ -268,6 +278,40 @@ export class AvisosService {
       console.error(`Avisos: no se pudo leer el historial del reporte ${reporte.id}.`, error);
       return [];
     }
+  }
+
+  /**
+   * El veredicto de quien gestiona el reporte (real o falso) también es un
+   * aviso: cambia los puntos de confianza del autor. Se lee del propio
+   * reporte, sin otra consulta.
+   */
+  private avisoDeVeredicto(uid: string, reporte: Report): AvisoSinVisto[] {
+    const v = reporte.validacion;
+
+    if ((v?.veredicto !== 'real' && v?.veredicto !== 'falso') || v.veredictoPor === uid) {
+      return [];
+    }
+
+    const real = v.veredicto === 'real';
+    return [
+      {
+        tipo: 'veredicto',
+        id: `${reporte.id}_veredicto`,
+        reportId: reporte.id,
+        reporte: this.resumir(reporte.descripcion),
+        veredicto: v.veredicto,
+        // Reportes de antes de guardar veredictoPuntos: lo que dicen las reglas.
+        puntos:
+          typeof v.veredictoPuntos === 'number'
+            ? v.veredictoPuntos
+            : real
+              ? PARAMETROS_CONFIANZA.puntosPorReporteReal
+              : PARAMETROS_CONFIANZA.puntosPorReporteFalso,
+        autor: 'Revisado por quien gestiona el reporte',
+        comentario: v.veredictoComentario?.trim() || null,
+        fecha: this.historialService.aFecha(v.veredictoAt),
+      },
+    ];
   }
 
   private async cargarEstado(uid: string): Promise<void> {

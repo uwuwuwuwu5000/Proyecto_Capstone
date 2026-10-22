@@ -117,6 +117,10 @@
   font-size: 0.86rem;
 }
 
+.aviso__cambio--falso strong {
+  color: var(--ca-danger);
+}
+
 .aviso__autor {
   font-size: 0.8rem;
   color: var(--ca-muted);
