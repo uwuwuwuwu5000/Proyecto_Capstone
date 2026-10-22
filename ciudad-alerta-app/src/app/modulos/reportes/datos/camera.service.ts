@@ -56,6 +56,11 @@ export class CameraService {
         source,
         resultType: CameraResultType.DataUrl,
         quality: 80,
+        // La cámara entrega la foto ya achicada. Antes llegaba en resolución
+        // completa (12 a 48 MP) como texto base64 y se achicaba después: en
+        // teléfonos viejos eso agotaba la memoria y congelaba la app.
+        width: LADO_MAXIMO,
+        height: LADO_MAXIMO,
         allowEditing: false,
         correctOrientation: true,
         promptLabelHeader: 'Evidencia del reporte',
@@ -116,29 +121,18 @@ export class CameraService {
           }
 
           contexto.drawImage(imagen, 0, 0, width, height);
+          // Una sola codificación JPEG: el blob sale del mismo data URL.
           const comprimido = canvas.toDataURL('image/jpeg', CALIDAD_SALIDA);
+          const blob = blobDesdeDataUrl(comprimido);
 
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(
-                  new PhotoError('El dispositivo no pudo procesar la imagen.', 'procesamiento'),
-                );
-                return;
-              }
-
-              resolve({
-                dataUrl: comprimido,
-                blob,
-                mimeType: 'image/jpeg',
-                sizeBytes: blob.size,
-                width,
-                height,
-              });
-            },
-            'image/jpeg',
-            CALIDAD_SALIDA,
-          );
+          resolve({
+            dataUrl: comprimido,
+            blob,
+            mimeType: 'image/jpeg',
+            sizeBytes: blob.size,
+            width,
+            height,
+          });
         } catch {
           reject(new PhotoError('No se pudo procesar la imagen.', 'procesamiento'));
         }
@@ -171,4 +165,14 @@ export class CameraService {
 
     return new PhotoError('No se pudo obtener la fotografía. Intenta nuevamente.', 'procesamiento');
   }
+}
+
+/** Convierte un data URL base64 en Blob, sin volver a codificar la imagen. */
+export function blobDesdeDataUrl(dataUrl: string): Blob {
+  const coma = dataUrl.indexOf(',');
+  const tipo = /^data:([^;,]+)/.exec(dataUrl)?.[1] ?? 'application/octet-stream';
+  const binario = atob(dataUrl.slice(coma + 1));
+  const bytes = new Uint8Array(binario.length);
+  for (let i = 0; i < binario.length; i++) bytes[i] = binario.charCodeAt(i);
+  return new Blob([bytes], { type: tipo });
 }
