@@ -186,6 +186,30 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-FOT-17 | E3, almacenamiento lleno | Intentar capturar | Error controlado, sin caída | C | F |
 | CP-FOT-18 | Imagen PNG con transparencia | Adjuntarla | Se convierte a JPEG y se acepta | C | F |
 
+### Protección de la privacidad (difuminado en la nube)
+
+Desde octubre, los rostros y las personas se difuminan en el servicio de privacidad
+(`servicio-privacidad/`, en Render), no en el teléfono. El plan gratuito lo duerme tras 15 minutos
+sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-PRI-01 | E3, servicio despierto | Tomar una foto con una persona de frente | «Protegiendo la privacidad…» y luego la vista previa con el rostro pixelado y «1 persona difuminada» | A | F |
+| CP-PRI-02 | E3 | Foto sin personas | «Sin personas detectadas»; la foto se ve igual | A | F |
+| CP-PRI-03 | E3 | Foto con una persona lejana, de cuerpo entero | Se difumina su cabeza | B | F |
+| CP-PRI-04 | Servicio dormido | Abrir «Crear un reporte» y tomar una foto enseguida | A los 6 s cambia a «Despertando el servicio de privacidad…»; termina antes de 90 s | A | NF |
+| CP-PRI-05 | CP-PRI-04 en curso | Escribir la descripción, cambiar la categoría y pedir la ubicación mientras espera | Todo responde; bajo «Enviar» se lee que la foto está en proceso | A | NF |
+| CP-PRI-06 | CP-PRI-04 en curso | Pulsar Cancelar | Se quita la foto con un aviso; el reporte se puede enviar sin foto | A | F |
+| CP-PRI-07 | Modo avión | Tomar una foto | Mensaje de conexión con «Reintentar» y «Quitar»; Enviar bloqueado hasta elegir uno | A | F |
+| CP-PRI-08 | CP-PRI-07 | Volver a conectar y pulsar Reintentar | Se protege y aparece la vista previa | A | F |
+| CP-PRI-09 | Teléfono de gama baja (2 o 3 GB de RAM) | Tomar una foto con la cámara en su máxima resolución | La app no se congela: se puede escribir mientras se protege | A | NF |
+| CP-PRI-10 | E1 | Llamar a `POST <url>/v1/proteger` sin `Authorization` | 401 `sin_sesion` | A | S |
+| CP-PRI-11 | E1, misma cuenta | Más de 30 fotos en 10 minutos | 429 y el mensaje de esperar | B | S |
+| CP-PRI-12 | Reporte enviado con foto | Revisar `privacidad` de la foto en la consola | `aplicada: true` y `version` que empieza con `nube:` | A | I |
+| CP-PRI-13 | Reporte enviado con foto | Revisar `embedding` del reporte | 1280 números, o `null` si el servidor está sin MobileNet | B | I |
+| CP-PRI-14 | Foto en proceso | Volver atrás a Inicio | No queda nada esperando ni aparecen mensajes | B | UX |
+| CP-PRI-15 | E1 | Abrir `<url>/salud` | `"listo": true` y `"rostros": true` | A | I |
+
 ---
 
 ## 7. Ubicación del reporte (CA-52)
@@ -393,6 +417,28 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-EST-19 | Reporte con al menos un cambio de estado | Abrir el detalle | «Primera respuesta» con el tiempo hasta el primer cambio | B | F |
 | CP-EST-20 | Operador de otra municipalidad | Abrir el detalle de un reporte ajeno | Bloque Gestión con el motivo y sin botones de estado | A | S |
 
+### Veredicto del gestor y aviso al autor (sistema de confianza, 4.4)
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-VER-01 | U3, reporte de U1 asignado a U3 | Abrir el detalle | Bajo Gestión, el bloque «Veredicto» con «Es real» y «Es falso» | A | F |
+| CP-VER-02 | U1 | Abrir el mismo detalle | No aparece el bloque Veredicto | A | S |
+| CP-VER-03 | Operador de otra municipalidad | Abrir el detalle | No aparece el bloque Veredicto | A | S |
+| CP-VER-04 | CP-VER-01 | «Es real» y confirmar | «Veredicto registrado…»; el bloque dice «Verificado como real · +10 PC al autor» | A | F |
+| CP-VER-05 | CP-VER-04 | Revisar `users/{U1}/confianza/actual` en la consola | `puntosConfianza` +10, `validatedReports` +1 y `ultimoReporteId` del reporte | A | I |
+| CP-VER-06 | U3, otro reporte de U1 | «Es falso» sin escribir motivo | El diálogo sigue abierto y pide el motivo | A | F |
+| CP-VER-07 | CP-VER-06 | Escribir el motivo y confirmar | «Marcado como falso · −15 PC al autor»; `reportesFalsos` +1 | A | F |
+| CP-VER-08 | CP-VER-04 | Cerrar y volver a abrir el detalle | Muestra el resultado, sin botones | A | F |
+| CP-VER-09 | Dos gestores con el detalle abierto | Los dos dan veredicto | El segundo recibe «Otro gestor ya dio el veredicto» | B | F |
+| CP-VER-10 | Admin con un reporte propio | Abrir el detalle | «Es tu propio reporte: el veredicto lo da otro gestor.» | B | S |
+| CP-VER-11 | Reporte creado por una cuenta de operador | Dar un veredicto | Mensaje de que solo se da sobre reportes de vecinos; nada cambia | B | S |
+| CP-VER-12 | U1, tras CP-VER-04 | Abrir la campana | Aviso «Verificado como real · +10 puntos de confianza» | A | F |
+| CP-VER-13 | U1, tras CP-VER-07 | Abrir la campana | «Marcado como falso · −15 puntos de confianza» y «Motivo: …» | A | F |
+| CP-VER-14 | CP-VER-12 | Tocar el aviso | Abre el detalle y el contador de la campana baja | B | F |
+| CP-VER-15 | U1, tras CP-VER-04 | Abrir Mi nivel | El veredicto aparece con sus puntos | B | F |
+| CP-VER-16 | Autor con 760 PC | Veredicto real | «sin cambio de PC»; el aviso dice que ya tiene el máximo | C | F |
+| CP-VER-17 | U3, modo avión | «Es real» y confirmar | «Sin conexión: el veredicto no se guardó»; nada cambia | B | F |
+
 ---
 
 ## 16. Mi perfil e inicio (feedback Sprint 5)
@@ -463,18 +509,22 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | 2 | CP-LOG-01 | Iniciar sesión |
 | 3 | CP-SES-01 | Verificar el bloqueo de rutas privadas |
 | 4 | CP-SES-06 | Persistencia tras cerrar la app |
-| 5 | CP-FOT-01 | Adjuntar fotografía |
-| 6 | CP-UBI-02 | Obtener ubicación |
-| 7 | CP-DES-08 | Enviar un reporte completo |
-| 8 | CP-DUP-01 | Detectar una coincidencia |
-| 9 | CP-CON-01 | Confirmar un reporte ajeno |
-| 10 | CP-INC-01 | Ver el mapa de incidencias |
-| 11 | CP-DET-03 | Abrir el detalle y ver la fotografía |
-| 12 | CP-HIS-01 | Revisar el historial propio |
-| 13 | CP-EST-04 | Cambiar un estado como operador |
-| 14 | CP-EST-14 | Resolver un reporte y ver su tiempo de resolución |
-| 15 | CP-PER-01 | Abrir Mi perfil |
-| 16 | CP-SES-07 | Cerrar sesión |
+| 5 | CP-PRI-15 | El servicio de privacidad responde |
+| 6 | CP-FOT-01 | Adjuntar fotografía |
+| 7 | CP-PRI-01 | La foto vuelve con el rostro difuminado |
+| 8 | CP-UBI-02 | Obtener ubicación |
+| 9 | CP-DES-08 | Enviar un reporte completo |
+| 10 | CP-DUP-01 | Detectar una coincidencia |
+| 11 | CP-CON-01 | Confirmar un reporte ajeno |
+| 12 | CP-INC-01 | Ver el mapa de incidencias |
+| 13 | CP-DET-03 | Abrir el detalle y ver la fotografía |
+| 14 | CP-HIS-01 | Revisar el historial propio |
+| 15 | CP-EST-04 | Cambiar un estado como operador |
+| 16 | CP-EST-14 | Resolver un reporte y ver su tiempo de resolución |
+| 17 | CP-VER-04 | Dar un veredicto real como operador |
+| 18 | CP-VER-12 | El autor ve el aviso del veredicto |
+| 19 | CP-PER-01 | Abrir Mi perfil |
+| 20 | CP-SES-07 | Cerrar sesión |
 
 ---
 
@@ -492,6 +542,7 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | CA-51 Mapa | CP-MAP-01 a CP-MAP-12 |
 | CA-52 Geolocalización | CP-UBI-01 a CP-UBI-12 |
 | Fotografía | CP-FOT-01 a CP-FOT-18 |
+| Privacidad en la nube | CP-PRI-01 a CP-PRI-15 |
 | Descripción | CP-DES-01 a CP-DES-20 |
 | Validación inicial | CP-SEC-11 a CP-SEC-18, CP-DES-09, CP-DES-10 |
 | HU-20 Coincidencias | CP-DUP-01 a CP-DUP-18 |
@@ -501,9 +552,10 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | HU-27 Historial | CP-HIS-01 a CP-HIS-11 |
 | HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13, CP-EST-20 |
 | F12 Tiempo de resolución | CP-EST-14 a CP-EST-19 |
+| Veredicto y aviso (confianza 4.4) | CP-VER-01 a CP-VER-17 |
 | Mi perfil e inicio (feedback Sprint 5) | CP-PER-01 a CP-PER-14 |
 
-**Total: 283 casos** — 178 de prioridad A, 87 de prioridad B y 18 de prioridad C.
+**Total: 315 casos** — 199 de prioridad A, 97 de prioridad B y 19 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -520,6 +572,8 @@ Además de los casos manuales, el repositorio trae pruebas que se ejecutan solas
 npm run test:una-vez
 npm run test:comun
 npm run diagnostico
+cd ..\servicio-privacidad
+npm test
 ```
 
 | Comando | Qué prueba | Dónde |
@@ -527,6 +581,7 @@ npm run diagnostico
 | `npm run test:una-vez` | Pantallas, componentes, guards y servicios de la app con Vitest (`ng test`), sin red ni proyecto real | `src/**/*.spec.ts`, ayudas en `src/testing/` |
 | `npm run test:comun` | Reglas compartidas con el portal: estados, transiciones, confianza, tiempos, territorio, privacidad | `../comun/test/` (antes, una vez: `cd ..\comun` y `npm install`) |
 | `npm run diagnostico` | Estructura, imports, rutas, catálogos y módulos contra las reglas | `scripts/diagnostico/` |
+| `npm test` en `servicio-privacidad` | El difuminado con los modelos reales y una foto de dominio público, el token de sesión, los límites y las respuestas del servidor | `servicio-privacidad/test/` (antes, una vez: `npm install`) |
 | `npm run diagnostico:reglas` | Las reglas en el emulador: 20 controles, 54 bloqueos y 6 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
 
 `npm test` deja Vitest mirando los cambios mientras se programa.
@@ -545,7 +600,11 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
 - guards (`guards/auth-guard.ts`) por sesión y rol;
 - coincidencias cercanas (v2-D2 a v2-D5), bloque de gestión (HU-28), tiempos de resolución
   (F12), Mi perfil, inicio por rol y cierre de sesión;
-- historial público, catálogo de comunas y regiones del mapa.
+- historial público, catálogo de comunas y regiones del mapa;
+- la protección de la foto en la nube con `fetch` simulado: respuesta correcta, sesión vencida,
+  límite, foto ilegible, sin red, tiempo máximo, cancelar y el aviso de «despertando»;
+- el veredicto (qué campos escribe en cada documento, comparados con las reglas) y su aviso
+  en la campana.
 
 Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`, y empieza
 con `usarEntornoDePrueba()`.

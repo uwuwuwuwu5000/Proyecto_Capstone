@@ -1,6 +1,8 @@
 # Guía de módulos · App móvil Ciudad Alerta
 
 > **Fase 3.** La lógica que debe dar lo mismo en la app y en el portal está en un paquete compartido, `comun/`. El cambio de estado pasa al módulo de gestión, hay un módulo «Mi perfil», los servicios de un solo módulo viven en ese módulo y la app tiene pruebas automáticas (`npm run test:una-vez`). La rama `main-web` no se tocó.
+>
+> **Octubre.** El difuminado de rostros corre en la nube (`servicio-privacidad/`) y el teléfono ya no carga TensorFlow; quien gestiona un reporte puede marcarlo como real o falso, y el autor recibe el aviso. Ver la sección 11.
 
 La app está dividida en **módulos**: cada funcionalidad (mapa, confianza, soporte…) declara en un solo archivo sus pantallas, sus botones del inicio y lo que agrega a otras pantallas. Un único archivo, `src/app/modulos.config.ts`, decide cuáles están encendidos.
 
@@ -35,6 +37,11 @@ Proyecto_Capstone/
 │   ├── src/privacidad/            umbrales y geometría del difuminado
 │   └── test/                      npm test (Vitest)
 │
+├── servicio-privacidad/           ← DIFUMINADO EN LA NUBE (Node, en Render): LEEME.md
+│   ├── src/                       servidor, token de sesión, modelos, pixelado
+│   └── modelos/                   coco-ssd y face-detection (antes en la app)
+├── render.yaml                    cómo lo publica Render
+│
 └── ciudad-alerta-app/src/
     ├── testing/                   ← ayudas de pruebas: Firebase sin red, módulos ficticios
     ├── test-setup.ts              registra esas ayudas para todas las pruebas
@@ -53,11 +60,13 @@ Proyecto_Capstone/
         ├── guards/auth-guard.ts   ← con guion
         └── modulos/
             ├── reportes/          paginas/{report, my-reports, report-detail} · componentes/similar-reports
-            │                      datos/ (report, camera, photo-storage, privacidad, image-similarity,
-            │                      tensorflow, confirmation, duplicate-detection) · modelo/ · rutas.ts · resolucion.ts
+            │                      datos/ (report, camera, photo-storage, privacidad → nube, image-similarity,
+            │                      confirmation, duplicate-detection) · modelo/ · parametros.ts (URL del servicio)
+            │                      · rutas.ts · resolucion.ts
             ├── mapa-incidencias/  paginas/mapa · datos/regiones.service.ts · parametros.ts
             ├── cercanos/          paginas/nearby · parametros.ts
-            ├── confianza/         datos/ · componentes/ · paginas/mi-nivel (los números, en comun)
+            ├── confianza/         datos/ (confianza, veredicto) · componentes/ (… veredicto-reporte)
+            │                      · paginas/mi-nivel (los números, en comun)
             ├── avisos/            paginas/avisos · componentes/avisos-campana · datos/ · modelo/
             ├── soporte/           paginas/{support, support-new, support-chat, support-inbox} · datos/ · modelo/
             ├── gestion-reportes/  paginas/admin-reports · componentes/gestion-reporte · datos/cambio-estado.service.ts
@@ -66,7 +75,7 @@ Proyecto_Capstone/
                                    datos/perfil.service.ts · modelo.ts
 ```
 
-**Dentro de un módulo** siempre las mismas carpetas, solo las que necesite: `paginas/` (pantallas con ruta), `componentes/` (piezas sin ruta), `datos/` (servicios que leen o escriben Firestore, o que usan la cámara o TensorFlow), `modelo/` (tipos propios), `parametros.ts` (números ajustables), el manifiesto `<id>.modulo.ts` y su `index.ts`. Las reglas puras que también necesita el portal ya no van en `dominio/`: van en `comun/`.
+**Dentro de un módulo** siempre las mismas carpetas, solo las que necesite: `paginas/` (pantallas con ruta), `componentes/` (piezas sin ruta), `datos/` (servicios que leen o escriben Firestore, o que usan la cámara o un servicio externo), `modelo/` (tipos propios), `parametros.ts` (números ajustables), el manifiesto `<id>.modulo.ts` y su `index.ts`. Las reglas puras que también necesita el portal ya no van en `dominio/`: van en `comun/`.
 
 **¿Módulo, `services/` o `comun/`?**
 
@@ -154,7 +163,7 @@ La pantalla **no importa al módulo**. Si nadie llena la ranura, muestra lo que 
 | Ranura | Dónde | Entradas | Hoy la llena |
 |---|---|---|---|
 | `detalle-reporte.verificacion` | Detalle del reporte | `reporte`, `esAutor`, `alConfirmar` | confianza: barra y confirmación con peso |
-| `detalle-reporte.gestion` | Detalle del reporte, al final | `reporte`, `alCambiar` | gestión: botones de estado, motivo para otro operador, «Reportado por» |
+| `detalle-reporte.gestion` | Detalle del reporte, al final | `reporte`, `alCambiar` | gestión: botones de estado, motivo para otro operador, «Reportado por» (orden 0) · confianza: veredicto «Es real / Es falso» (10) |
 | `tarjeta-reporte.insignias` | Mis reportes, Cerca de mí, Gestión | `reporte` | confianza: «Validado», «Verificación 45 %» |
 | `inicio.resumen` | Inicio, bajo el saludo | `perfil` | perfil: «Verifica tu correo» (orden −10) · reportes: «Tus reportes» (0) · gestión: «Por atender» (5, solo staff) · confianza: nivel (10) |
 | `perfil.resumen` | Mi perfil | `perfil` | confianza: tarjeta de nivel |
@@ -337,6 +346,8 @@ Implementado **exactamente sobre las reglas del equipo**. Los números y las fó
 
 Cómo confirma la app (`confianza/datos/confianza.service.ts`), en una transacción: lee el reporte, el voto, `users/{uid}/confianza/actual` y el contador del día; calcula nivel, peso, suma y contador con `comun`; escribe la confirmación, `validacion.*` y el contador.
 
+Cómo da un veredicto (`confianza/datos/veredicto.service.ts`), también en una transacción: relee el reporte (si otro gestor ya lo decidió, se detiene) y `users/{autor}/confianza/actual`; calcula con `efectoDeVeredicto()` de `comun` (+10 PC y un validado si es real, −15 PC y un falso si no, con tope 760 y piso 0); escribe `validacion.veredicto*` en el reporte, la confianza del autor y el espejo `trustLevel` y `validatedReports` en su perfil. Son los mismos campos del lote de `diagnostico:reglas`. El autor se entera por la campana: `AvisosService` arma el aviso con `validacion.veredicto` del propio reporte.
+
 Puntos para coordinar con el equipo (siguen vigentes): perfiles sin `createdAt`, las brechas DIAG-1 y DIAG-2 en las reglas nuevas, `notifLeidasHasta` fuera de la lista blanca, veredicto revertido (A8) y reportes nuevos sin `validacion`.
 
 ---
@@ -385,6 +396,8 @@ El cambio de estado está en `gestion-reportes/datos/cambio-estado.service.ts` (
 `main-web` **no se modificó**. Cuando el equipo lo decida, el portal puede usar `comun/` igual que la app: se trae la carpeta a esa rama, se agrega el alias en `vite.config.ts` y `tsconfig.app.json`, y se reemplazan de a poco sus copias (`constants/reportes.ts`, `components/Reportes/tiempos.ts`, la agrupación de `pages/Admin/mapaCalor.ts` y los umbrales de `privacidad/privacidad.ts`). Los pasos exactos están en `comun/LEEME.md`.
 
 Un cambio visible al adoptarlo: en `comun`, `resuelto` es verde (`#3fbf8f`) y no blanco, porque el blanco casi no se veía sobre el mapa.
+
+Desde octubre, dos cosas que el portal todavía no tiene: su campana no muestra el aviso de veredicto (su `AvisosContext` lee solo el historial), y sigue difuminando en el navegador. Si el portal quisiera usar el servicio de privacidad, basta agregar su URL en **Environment → ORIGENES** en Render.
 
 ---
 
@@ -444,3 +457,91 @@ No hay reglas ni índices nuevos que desplegar: los campos de F12 ya los aceptab
 25. Casos del emulador para F12.
 26. Plan de pruebas y guía de diagnóstico.
 27. «modularización fase 3»: esta guía.
+
+---
+
+## 11. Privacidad en la nube y veredicto (octubre)
+
+### Qué se arregló
+
+- **Teléfonos viejos congelados.** Con una foto grande, la app dejaba de responder: no se podía escribir ni enviar el reporte, ni siquiera después de cerrar sesión. Había tres causas juntas: la cámara entregaba la foto en resolución completa (12 a 48 MP) como texto base64, la app la achicaba después en un canvas, y TensorFlow.js corría los tres modelos (rostros, personas y MobileNet) en el mismo hilo que dibuja la pantalla. Ahora la cámara entrega la foto ya en 1024 px y todo lo de TensorFlow corre en el **servicio de privacidad**. El teléfono solo envía la foto y espera; el formulario sigue disponible.
+- **El autor no sabía si su reporte era real.** Las reglas ya aceptaban el veredicto de un gestor, pero la app no tenía cómo darlo. Ahora, en el detalle, bajo «Gestión», quien gestiona el reporte ve **«Es real»** y **«Es falso»** (falso pide el motivo), y el autor recibe el aviso en la campana con los puntos de confianza que ganó o perdió.
+
+### Cómo funciona la protección de la foto
+
+```
+Teléfono                                   servicio-privacidad (Render, gratis)
+  foto de 1024 px ── POST /v1/proteger ──▶  comprueba el token de sesión de Firebase
+  (token de sesión)                         difumina rostros y personas (mismos modelos y umbrales)
+                   ◀── foto protegida ────  calcula el vector MobileNet de la foto protegida
+                       + privacidad + vector  no guarda nada
+```
+
+- La URL está en `modulos/reportes/parametros.ts` (`PARAMETROS_PRIVACIDAD.url`), con el tiempo máximo (90 s) y cuándo avisar que tarda (6 s).
+- El plan gratuito **duerme el servicio** tras 15 minutos sin uso; despertar tarda entre 30 y 60 s. Por eso la app lo despierta al abrir «Crear un reporte», avisa «Despertando el servicio de privacidad…» y deja cancelar (la foto se quita y el reporte puede ir sin ella).
+- La foto sin proteger **nunca se publica**: si el servicio falla, se ofrece «Reintentar» o «Quitar». Las reglas siguen exigiendo `foto.privacidad.aplicada == true`.
+- No hace falta la clave de cuenta de servicio ni ningún secreto en Render: el token se verifica con las claves públicas de Google.
+- Los modelos `coco-ssd` y `face-detection` pasaron de `src/assets/models` a `servicio-privacidad/modelos`: el APK quedó ~19 MB más liviano.
+
+Todo el detalle del servicio (cómo probarlo en el computador, errores, variables y límites) está en `servicio-privacidad/LEEME.md`.
+
+### Instalar
+
+En la carpeta del repositorio (`Proyecto_Capstone`), en `cmd`:
+
+```cmd
+:: 1. Deja main-mobile igual que en GitHub
+git switch main-mobile
+git pull origin main-mobile
+git status
+
+:: 2. Aplica los commits (pon la ruta donde guardaste el archivo)
+git am "C:\ruta\privacidad-nube-veredicto.mbox"
+git log --oneline -8
+
+:: 3. Pruebas del servicio (la primera vez tarda: instala TensorFlow y sharp)
+cd servicio-privacidad
+npm install
+npm test
+cd ..\comun
+npm test
+cd ..\ciudad-alerta-app
+
+:: 4. Pruebas y diagnóstico de la app
+npm run test:una-vez
+npm run diagnostico
+
+:: 5. Sube (Render lee render.yaml de main-mobile)
+git push origin main-mobile
+```
+
+Si `git am` se detiene a mitad, deja todo como estaba con `git am --abort`.
+
+### Publicar el servicio en Render (una vez)
+
+1. Entra a [render.com](https://render.com) con la cuenta de GitHub que ve el repositorio. No pide tarjeta.
+2. **New → Blueprint**, elige `Proyecto_Capstone` y la rama `main-mobile`, y pulsa **Apply**. Render lee `render.yaml` y crea `ciudad-alerta-privacidad` en el plan gratuito.
+3. Espera el primer despliegue (5 a 10 minutos) y abre `https://ciudad-alerta-privacidad.onrender.com/salud`. Debe decir `"listo": true`.
+4. Si Render le dio otra URL, cámbiala en `ciudad-alerta-app/src/app/modulos/reportes/parametros.ts`, haz commit y push.
+5. Genera el APK con `npm run apk:demo`: ahora revisa que la URL responda en vez de revisar los modelos.
+
+Desde ahí, cada push a `main-mobile` que toque `servicio-privacidad/`, `comun/src/` o `render.yaml` lo vuelve a desplegar solo.
+
+**Opcional.** La app ya no usa los paquetes de TensorFlow; siguen en `package.json` para no tocarlo, pero no entran al APK. Para quitarlos:
+
+```cmd
+npm uninstall @tensorflow/tfjs-core @tensorflow/tfjs-converter @tensorflow/tfjs-backend-cpu @tensorflow/tfjs-backend-webgl @tensorflow-models/coco-ssd @tensorflow-models/face-detection @tensorflow-models/mobilenet @mediapipe/face_detection
+```
+
+No hay reglas ni índices nuevos que desplegar.
+
+### Commits
+
+1. `servicio-privacidad`: el servidor, sus pruebas, el Dockerfile y `render.yaml`.
+2. La cámara entrega la foto ya achicada a 1024 px.
+3. La foto se protege en la nube; TensorFlow sale del teléfono.
+4. Los modelos de privacidad salen del APK.
+5. `comun`: efecto de un veredicto en la confianza del autor.
+6. Veredicto «Es real / Es falso» en el bloque Gestión (módulo confianza).
+7. Aviso al autor cuando su reporte es verificado.
+8. Guías y plan de pruebas (CP-PRI y CP-VER).
