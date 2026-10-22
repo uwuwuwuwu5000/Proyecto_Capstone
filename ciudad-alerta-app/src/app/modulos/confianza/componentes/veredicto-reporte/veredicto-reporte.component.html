@@ -1,0 +1,63 @@
+@if (permiso(); as p) {
+  @if (p.gestiona) {
+    <section class="veredicto" aria-label="Veredicto del reporte">
+      <h2>Veredicto</h2>
+
+      @if (veredicto() === 'real') {
+        <p class="veredicto__resultado veredicto__resultado--real">
+          <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+          Verificado como real · {{ textoPuntos(puntos()) }} al autor
+        </p>
+        @if (motivo(); as comentario) {
+          <p class="veredicto__nota">Comentario: {{ comentario }}</p>
+        }
+      } @else if (veredicto() === 'falso') {
+        <p class="veredicto__resultado veredicto__resultado--falso">
+          <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+          Marcado como falso · {{ textoPuntos(puntos()) }} al autor
+        </p>
+        @if (motivo(); as comentario) {
+          <p class="veredicto__nota">Motivo: {{ comentario }}</p>
+        }
+      } @else if (p.motivo) {
+        <p class="veredicto__nota">{{ p.motivo }}</p>
+      } @else {
+        <p class="veredicto__nota">
+          Cuando hayas revisado el lugar, indica si el reporte es real. El autor recibe un aviso:
+          +{{ real }} puntos de confianza si es real, −{{ falso }} si es falso.
+        </p>
+
+        <div class="veredicto__acciones">
+          <ion-button
+            fill="outline"
+            size="small"
+            color="success"
+            [disabled]="guardando() !== null || !p.puede"
+            (click)="pedir('real')"
+          >
+            @if (guardando() === 'real') {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+            } @else {
+              <ion-icon slot="start" name="checkmark-circle-outline" aria-hidden="true"></ion-icon>
+            }
+            Es real
+          </ion-button>
+          <ion-button
+            fill="outline"
+            size="small"
+            color="danger"
+            [disabled]="guardando() !== null || !p.puede"
+            (click)="pedir('falso')"
+          >
+            @if (guardando() === 'falso') {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+            } @else {
+              <ion-icon slot="start" name="close-circle-outline" aria-hidden="true"></ion-icon>
+            }
+            Es falso
+          </ion-button>
+        </div>
+      }
+    </section>
+  }
+}

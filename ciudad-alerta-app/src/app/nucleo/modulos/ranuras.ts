@@ -19,10 +19,11 @@ export const RANURAS = {
   detalleReporteVerificacion: 'detalle-reporte.verificacion',
 
   /**
-   * Detalle de un reporte, al final: bloque de gestión (cambio de estado).
+   * Detalle de un reporte, al final: bloque de gestión (cambio de estado y,
+   * con el sistema de confianza, el veredicto real o falso).
    * Entradas: `reporte: Report`, `alCambiar: (reporte: Report) => void`: la
-   * pieza la llama tras cambiar el estado con el reporte actualizado, para que
-   * el detalle lo muestre y recargue el seguimiento.
+   * pieza la llama tras cambiar el estado o dar el veredicto con el reporte
+   * actualizado, para que el detalle lo muestre y recargue el seguimiento.
    */
   detalleReporteGestion: 'detalle-reporte.gestion',
 

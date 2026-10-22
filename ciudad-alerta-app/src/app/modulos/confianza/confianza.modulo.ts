@@ -8,7 +8,12 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
  *
  * No agrega botones al inicio: aparece dentro de otras pantallas mediante
  * ranuras. Al desactivarlo, el detalle vuelve a la confirmación simple, las
- * tarjetas pierden la insignia y el inicio pierde la tarjeta de nivel.
+ * tarjetas pierden la insignia, el inicio pierde la tarjeta de nivel y nadie
+ * puede dar veredictos.
+ *
+ * El veredicto (sección 4.4) lo da quien gestiona el reporte, en el bloque
+ * «Gestión» del detalle: componentes/veredicto-reporte y
+ * datos/veredicto.service.ts.
  *
  * Los números del sistema están en `comun/src/confianza/parametros.ts` (paquete
  * compartido con el portal) y deben coincidir
@@ -17,7 +22,7 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
 export const MODULO_CONFIANZA: ModuloApp = {
   id: 'confianza',
   nombre: 'Sistema de confianza',
-  descripcion: 'Niveles de usuario, confirmaciones con peso, validación comunitaria y pantalla «Mi nivel».',
+  descripcion: 'Niveles de usuario, confirmaciones con peso, validación comunitaria, veredicto del gestor y pantalla «Mi nivel».',
   // Confirma reportes y «Mi nivel» enlaza a ellos.
   requiere: ['reportes'],
   rutas: [
@@ -33,6 +38,15 @@ export const MODULO_CONFIANZA: ModuloApp = {
       cargar: () =>
         import('./componentes/verificacion-reporte/verificacion-reporte.component').then(
           (m) => m.VerificacionReporteComponent,
+        ),
+    },
+    {
+      // Veredicto «Es real / Es falso», bajo el cambio de estado.
+      ranura: RANURAS.detalleReporteGestion,
+      orden: 10,
+      cargar: () =>
+        import('./componentes/veredicto-reporte/veredicto-reporte.component').then(
+          (m) => m.VeredictoReporteComponent,
         ),
     },
     {

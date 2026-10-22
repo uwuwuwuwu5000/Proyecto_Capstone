@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+
+.veredicto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.veredicto__nota,
+.veredicto__resultado {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.veredicto__nota {
+  color: var(--ca-muted);
+}
+
+.veredicto__resultado {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+
+  ion-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.veredicto__resultado--real ion-icon {
+  color: var(--ca-signal);
+}
+
+.veredicto__resultado--falso ion-icon {
+  color: var(--ca-danger);
+}
+
+.veredicto__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  ion-button {
+    --border-radius: 8px;
+    text-transform: none;
+    margin: 0;
+  }
+}
