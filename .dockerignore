@@ -1,0 +1,11 @@
+# Contexto de Docker para servicio-privacidad/Dockerfile (se construye desde la
+# raíz del repositorio). Solo entra lo que el servicio necesita.
+*
+!comun/src
+!servicio-privacidad/package.json
+!servicio-privacidad/package-lock.json
+!servicio-privacidad/.npmrc
+!servicio-privacidad/src
+!servicio-privacidad/scripts
+!ciudad-alerta-app/src/assets/models/coco-ssd
+!ciudad-alerta-app/src/assets/models/face-detection

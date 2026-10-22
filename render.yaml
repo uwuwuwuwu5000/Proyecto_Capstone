@@ -1,0 +1,29 @@
+# Render Blueprint del servicio de privacidad de Ciudad Alerta (plan gratuito).
+# En Render: New → Blueprint → este repositorio, rama main-mobile.
+# Guía completa: servicio-privacidad/LEEME.md
+services:
+  - type: web
+    name: ciudad-alerta-privacidad
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main-mobile
+    dockerfilePath: ./servicio-privacidad/Dockerfile
+    dockerContext: .
+    healthCheckPath: /salud
+    autoDeploy: true
+    buildFilter:
+      paths:
+        - servicio-privacidad/**
+        - comun/src/**
+        - ciudad-alerta-app/src/assets/models/**
+        - render.yaml
+    envVars:
+      - key: FIREBASE_PROJECT_ID
+        value: ciudadalerta
+      # Orígenes extra separados por coma, por ejemplo la URL del portal web.
+      # La app de Android (https://localhost) y ionic serve ya están incluidos.
+      - key: ORIGENES
+        value: ""
+      - key: MOBILENET
+        value: remoto
