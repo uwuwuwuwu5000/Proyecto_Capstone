@@ -16,7 +16,6 @@ import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
 import { CapturedPhoto } from './camera.service';
 import { ComunaDetectada, ComunaService } from '../../../services/comuna.service';
-import { ImageSimilarityService } from './image-similarity.service';
 import { RoutingService } from '../../../services/routing.service';
 import { PHOTO_STORAGE } from './photo-storage.service';
 import { INTERVALO_MINIMO_REPORTE_MS } from '../../../models/user-profile.model';
@@ -34,8 +33,8 @@ export interface NuevoReporte {
   ubicacion: GeoPoint;
   foto: CapturedPhoto | null;
   /**
-   * Vector visual ya calculado durante la detección de coincidencias. Si no
-   * viene, el servicio lo calcula antes de guardar para no perder la señal.
+   * Vector visual de la foto. Si no viene, se usa el que devolvió el servicio
+   * de privacidad junto con la foto protegida (`foto.embedding`).
    */
   embedding?: number[] | null;
   /**
@@ -57,7 +56,6 @@ export class ReportService {
   private readonly firestore = inject<Firestore>(FIRESTORE);
   private readonly authService = inject(AuthService);
   private readonly photoStorage = inject(PHOTO_STORAGE);
-  private readonly similarityService = inject(ImageSimilarityService);
   private readonly routingService = inject(RoutingService);
   private readonly comunaService = inject(ComunaService);
 
@@ -114,18 +112,15 @@ export class ReportService {
     const referencia = doc(collection(this.firestore, 'reports'));
     const reportId = referencia.id;
 
-
-    // Reutiliza el vector calculado en la detección de duplicados; solo lo
-    // vuelve a calcular si no llegó.
+    // El vector lo calcula el servicio de privacidad con la foto ya protegida.
+    // Si no llegó (MobileNet no disponible en el servidor), el reporte se
+    // guarda sin él: la detección de duplicados sigue con ubicación,
+    // categoría y tiempo.
     // BUG 18 · Sin fotografía no hay vector posible: guardar uno dejaría el
     // documento en un estado incoherente y contaminaría las comparaciones.
-    let embedding: number[] | null = null;
-
-    if (datos.foto) {
-      embedding =
-        datos.embedding ??
-        (await this.similarityService.computeEmbedding(datos.foto.dataUrl));
-    }
+    const embedding: number[] | null = datos.foto
+      ? (datos.embedding ?? datos.foto.embedding ?? null)
+      : null;
 
     const reporte: Omit<Report, 'id'> = {
       uid: usuario.uid,

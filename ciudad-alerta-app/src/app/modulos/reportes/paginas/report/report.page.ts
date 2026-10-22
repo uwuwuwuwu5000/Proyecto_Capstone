@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
@@ -26,6 +26,7 @@ import {
 import { addIcons } from 'ionicons';
 import {
   cameraOutline,
+  closeOutline,
   imagesOutline,
   locateOutline,
   refreshOutline,
@@ -38,7 +39,6 @@ import { MapViewComponent } from '../../../../compartido/mapa';
 import { SimilarReportsComponent } from '../../componentes/similar-reports/similar-reports.component';
 import { ComunaDetectada, ComunaService } from '../../../../services/comuna.service';
 import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
-import { ImageSimilarityService } from '../../datos/image-similarity.service';
 import { CameraService, CapturedPhoto, PhotoError } from '../../datos/camera.service';
 import { PrivacidadError, PrivacidadService } from '../../datos/privacidad.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
@@ -76,17 +76,18 @@ import { MatchCandidate } from '../../modelo/coincidencias';
     IonNote,
   ],
 })
-export class ReportPage {
+export class ReportPage implements OnDestroy {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly cameraService = inject(CameraService);
   private readonly geolocationService = inject(GeolocationService);
   private readonly duplicateDetection = inject(DuplicateDetectionService);
-  private readonly similarityService = inject(ImageSimilarityService);
   private readonly comunaService = inject(ComunaService);
   private readonly privacidadService = inject(PrivacidadService);
 
   /** Causa técnica de un fallo de la protección, visible en pantalla. */
   readonly errorTecnico = this.privacidadService.ultimoErrorTecnico;
+  /** 'despertando' cuando el servicio tarda: el plan gratuito lo duerme. */
+  readonly estadoProteccion = this.privacidadService.estado;
   private readonly reportService = inject(ReportService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
@@ -112,6 +113,7 @@ export class ReportPage {
   readonly enviando = signal(false);
   /** Vector visual de la foto actual, reutilizado al guardar el reporte. */
   private embedding: number[] | null = null;
+  private destruida = false;
 
   readonly formulario = this.fb.group({
     // Tipado explícito: con la sintaxis de array, TypeScript infiere `string`
@@ -127,8 +129,10 @@ export class ReportPage {
     ],
   });
 
-  /** El reporte solo se envía con ubicación confirmada y formulario válido. */
-  /** Mientras se difuminan rostros y personas de la foto recién tomada. */
+  /**
+   * Mientras se difuminan rostros y personas de la foto recién tomada. Ocurre
+   * en la nube: el formulario sigue disponible mientras tanto.
+   */
   readonly protegiendo = signal(false);
 
   /**
@@ -138,13 +142,38 @@ export class ReportPage {
    */
   readonly fotoSinProteger = signal<CapturedPhoto | null>(null);
 
+  /** El reporte solo se envía con ubicación confirmada y la foto protegida (o sin foto). */
   readonly puedeEnviar = computed(
     () => this.ubicacion() !== null && !this.protegiendo() && this.fotoSinProteger() === null,
   );
 
+  /** Por qué no se puede enviar todavía, para decírselo al usuario. */
+  readonly motivoBloqueo = computed<{ icono: string; texto: string } | null>(() => {
+    if (this.protegiendo()) {
+      return {
+        icono: 'shield-outline',
+        texto: 'Estamos protegiendo la foto. Puedes esperar o cancelarla para enviar sin foto.',
+      };
+    }
+    if (this.fotoSinProteger()) {
+      return {
+        icono: 'shield-outline',
+        texto: 'Reintenta la protección de la foto o quítala para enviar el reporte.',
+      };
+    }
+    if (!this.ubicacion()) {
+      return {
+        icono: 'locate-outline',
+        texto: 'Falta la ubicación. Pulsa "Usar mi ubicación actual" para poder enviar el reporte.',
+      };
+    }
+    return null;
+  });
+
   constructor() {
     addIcons({
       cameraOutline,
+      closeOutline,
       imagesOutline,
       locateOutline,
       refreshOutline,
@@ -152,6 +181,22 @@ export class ReportPage {
       shieldOutline,
       trashOutline,
     });
+  }
+
+  /**
+   * Despierta el servicio de privacidad apenas se abre la página: si estaba
+   * dormido, aprovecha el tiempo que el usuario tarda en tomar la foto.
+   */
+  ionViewWillEnter(): void {
+    this.privacidadService.despertar();
+  }
+
+  /** Si el usuario sale con una foto en proceso, no tiene sentido esperarla. */
+  ngOnDestroy(): void {
+    this.destruida = true;
+    if (this.protegiendo()) {
+      this.privacidadService.cancelar();
+    }
   }
 
   get descripcionControl() {
@@ -359,20 +404,29 @@ export class ReportPage {
     this.fotoSinProteger.set(null);
   }
 
+  /** Deja de esperar al servicio; la foto se descarta y el reporte puede ir sin ella. */
+  cancelarProteccion(): void {
+    this.privacidadService.cancelar();
+  }
+
   /**
    * Difumina rostros y personas antes de mostrar la vista previa.
    *
    * Ocurre antes de la vista previa, no al enviar, para que el usuario vea
-   * exactamente la imagen que se publicará. El vector para la detección de
-   * duplicados se calcula también sobre la imagen protegida.
+   * exactamente la imagen que se publicará. El servicio devuelve también el
+   * vector de la imagen protegida para la detección de duplicados.
    */
   private async proteger(original: CapturedPhoto): Promise<void> {
     this.protegiendo.set(true);
 
     try {
       const protegida = await this.privacidadService.anonimizar(original);
+      if (this.destruida) {
+        return;
+      }
       this.foto.set(protegida);
       this.fotoSinProteger.set(null);
+      this.embedding = protegida.embedding ?? null;
 
       const { rostros, personas } = protegida.privacidad!;
       const total = rostros + personas;
@@ -387,6 +441,17 @@ export class ReportPage {
       }
     } catch (error) {
       this.foto.set(null);
+
+      if (this.destruida) {
+        return;
+      }
+
+      if (error instanceof PrivacidadError && error.code === 'cancelado') {
+        this.fotoSinProteger.set(null);
+        await this.toast('Quitamos la foto. Puedes tomar otra o enviar el reporte sin foto.', 'warning');
+        return;
+      }
+
       this.fotoSinProteger.set(original);
 
       const mensaje =
@@ -399,15 +464,9 @@ export class ReportPage {
       this.protegiendo.set(false);
     }
 
-    try {
-      // El vector se calcula una vez y se reutiliza en la detección y al guardar.
-      this.embedding = await this.similarityService.computeEmbedding(this.foto()!.dataUrl);
-      await this.detectarCoincidencias();
-    } catch {
-      // El vector es una señal auxiliar: sin él, la detección de duplicados
-      // sigue funcionando con ubicación, categoría y tiempo.
-      this.embedding = null;
-    }
+    // Sin vector (MobileNet no disponible en el servidor) la detección de
+    // duplicados sigue funcionando con ubicación, categoría y tiempo.
+    await this.detectarCoincidencias();
   }
 
   private limpiar(): void {

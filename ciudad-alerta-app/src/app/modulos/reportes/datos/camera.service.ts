@@ -15,6 +15,11 @@ export interface CapturedPhoto {
   height: number;
   /** Presente cuando la imagen ya pasó por el difuminado de personas. */
   privacidad?: InfoPrivacidad;
+  /**
+   * Vector de la foto protegida para comparar con otros reportes (lo calcula
+   * el servicio de privacidad). Null si no estuvo disponible.
+   */
+  embedding?: number[] | null;
 }
 
 export class PhotoError extends Error {

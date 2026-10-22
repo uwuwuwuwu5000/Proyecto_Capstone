@@ -55,7 +55,7 @@ Queda en `http://localhost:8080`. Abre `http://localhost:8080/salud`: debe decir
 1. Crea una cuenta en [render.com](https://render.com) con GitHub. No pide tarjeta.
 2. **New → Blueprint** y elige el repositorio `Proyecto_Capstone`, rama `main-mobile`. Render lee `render.yaml` de la raíz y crea el servicio `ciudad-alerta-privacidad` con Docker, en el plan gratuito.
 3. Espera el primer despliegue (5 a 10 minutos). Al final, abre `https://<tu-servicio>.onrender.com/salud`.
-4. Si la URL no es `https://ciudad-alerta-privacidad.onrender.com`, cámbiala en la app: `ciudad-alerta-app/src/app/modulos/reportes/parametros.ts`, constante `URL_SERVICIO_PRIVACIDAD`.
+4. Si la URL no es `https://ciudad-alerta-privacidad.onrender.com`, cámbiala en la app: `ciudad-alerta-app/src/app/modulos/reportes/parametros.ts`, campo `url` de `PARAMETROS_PRIVACIDAD`.
 5. Opcional: si el portal web también lo va a usar, agrega su URL en **Environment → ORIGENES**.
 
 Cada push a `main-mobile` que toque `servicio-privacidad/`, `comun/src/` o `render.yaml` lo vuelve a desplegar.

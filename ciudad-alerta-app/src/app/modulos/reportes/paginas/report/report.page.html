@@ -20,7 +20,22 @@
       @if (protegiendo()) {
         <div class="privacidad privacidad--proceso" role="status">
           <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
-          <span>Protegiendo la privacidad de las personas en la foto…</span>
+          @if (estadoProteccion() === 'despertando') {
+            <span>
+              <strong>Despertando el servicio de privacidad…</strong><br />
+              Si nadie lo usó en un rato, tarda hasta un minuto. Mientras tanto, puedes seguir
+              llenando el reporte.
+            </span>
+          } @else {
+            <span>Protegiendo la privacidad de las personas en la foto…</span>
+          }
+        </div>
+
+        <div class="acciones-foto">
+          <ion-button fill="clear" size="small" color="medium" type="button" (click)="cancelarProteccion()">
+            <ion-icon slot="start" name="close-outline" aria-hidden="true"></ion-icon>
+            Cancelar
+          </ion-button>
         </div>
       } @else if (fotoSinProteger(); as pendiente) {
         <div class="privacidad privacidad--error" role="alert">
@@ -197,10 +212,10 @@
       (confirmado)="alConfirmarCoincidencia()"
     ></app-similar-reports>
 
-    @if (!puedeEnviar()) {
+    @if (motivoBloqueo(); as motivo) {
       <ion-note class="aviso-bloqueo" role="alert">
-        <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
-        Falta la ubicación. Pulsa "Usar mi ubicación actual" para poder enviar el reporte.
+        <ion-icon [name]="motivo.icono" aria-hidden="true"></ion-icon>
+        {{ motivo.texto }}
       </ion-note>
     }
 
