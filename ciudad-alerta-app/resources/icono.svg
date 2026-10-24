@@ -1,0 +1,20 @@
+<!--
+  Ícono de Ciudad Alerta: el pin con el signo de alerta, el mismo de la
+  pantalla de arranque (src/index.html). Fondo #111827 → #1a2433, pin #1ca9c9.
+  Los PNG de android/app/src/main/res salen de aquí (ícono clásico, redondo,
+  capa delantera del adaptativo sobre #111827, y el arranque nativo).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#111827"/>
+      <stop offset="1" stop-color="#1a2433"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#g)"/>
+  <g transform="translate(19 18) scale(0.97)">
+    <path d="M32 59s19-17.8 19-33a19 19 0 1 0-38 0c0 15.2 19 33 19 33z" fill="#1ca9c9"/>
+    <rect x="29" y="13.5" width="6" height="15.5" rx="3" fill="#111827"/>
+    <circle cx="32" cy="36" r="3.4" fill="#111827"/>
+  </g>
+</svg>
