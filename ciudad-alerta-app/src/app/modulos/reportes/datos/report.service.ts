@@ -28,6 +28,11 @@ import {
 } from '../../../models/report.model';
 
 export interface NuevoReporte {
+  /**
+   * Id del reporte, si ya se eligió (borrador sin conexión). Si no viene, se
+   * crea uno nuevo.
+   */
+  id?: string;
   descripcion: string;
   categoria: ReportCategory;
   ubicacion: GeoPoint;
@@ -45,7 +50,11 @@ export interface NuevoReporte {
 }
 
 export class ReportError extends Error {
-  constructor(override readonly message: string) {
+  /** `red`: no hubo conexión, el reporte puede guardarse para después. */
+  constructor(
+    override readonly message: string,
+    readonly code: 'red' | 'otro' = 'otro',
+  ) {
     super(message);
     this.name = 'ReportError';
   }
@@ -109,7 +118,9 @@ export class ReportService {
     const organismo = await this.routingService.resolveOrganismo(datos.categoria, comuna);
     const operadorId = await this.routingService.resolveOperador(organismo.id);
 
-    const referencia = doc(collection(this.firestore, 'reports'));
+    const referencia = datos.id
+      ? doc(this.firestore, 'reports', datos.id)
+      : doc(collection(this.firestore, 'reports'));
     const reportId = referencia.id;
 
     // El vector lo calcula el servicio de privacidad con la foto ya protegida.
@@ -172,7 +183,7 @@ export class ReportService {
         try {
           foto = await this.photoStorage.upload(reportId, usuario.uid, datos.foto);
         } catch (error) {
-          throw new ReportError(this.mensajeDeSubida(error));
+          throw new ReportError(this.mensajeDeSubida(error), esFallaDeRed(error) ? 'red' : 'otro');
         }
 
         try {
@@ -198,7 +209,7 @@ export class ReportService {
         throw error;
       }
 
-      throw new ReportError(this.mensajeDeEscritura(error));
+      throw new ReportError(this.mensajeDeEscritura(error), esFallaDeRed(error) ? 'red' : 'otro');
     }
   }
 
@@ -293,4 +304,12 @@ export class ReportService {
 
     return 'No se pudo guardar el reporte. Intenta nuevamente.';
   }
+}
+
+/** Falta de conexión, no un rechazo de las reglas ni un dato inválido. */
+function esFallaDeRed(error: unknown): boolean {
+  return (
+    error instanceof FirebaseError &&
+    ['unavailable', 'deadline-exceeded', 'storage/retry-limit-exceeded'].includes(error.code)
+  );
 }

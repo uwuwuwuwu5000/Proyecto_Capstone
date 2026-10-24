@@ -234,3 +234,13 @@ ion-note {
   outline: 2px solid var(--ca-signal);
   outline-offset: 2px;
 }
+
+/* Sin señal: informa, no bloquea. */
+.aviso-sin-senal {
+  border-left-color: var(--ca-signal);
+  background: var(--ca-surface);
+
+  ion-icon {
+    color: var(--ca-signal);
+  }
+}

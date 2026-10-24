@@ -1,11 +1,13 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
 import { vi } from 'vitest';
 
 import { ReportPage } from './report.page';
 import { usarEntornoDePrueba } from '../../../../../testing';
 import { CameraService, CapturedPhoto } from '../../datos/camera.service';
+import { BorradorService } from '../../datos/borrador.service';
 import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
 import { PrivacidadError, PrivacidadService } from '../../datos/privacidad.service';
 
@@ -157,5 +159,84 @@ describe('ReportPage', () => {
     await enCurso;
 
     expect(privacidad.cancelar).toHaveBeenCalled();
+  });
+});
+
+describe('ReportPage sin señal', () => {
+  let component: ReportPage;
+  let fixture: ComponentFixture<ReportPage>;
+  let privacidad: ReturnType<typeof privacidadFalsa>;
+  let borrador: { enLinea: ReturnType<typeof signal<boolean>>; guardar: ReturnType<typeof vi.fn> };
+  let toasts: string[];
+
+  beforeEach(() => {
+    privacidad = privacidadFalsa();
+    borrador = { enLinea: signal(false), guardar: vi.fn(() => 'ok') };
+    toasts = [];
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PrivacidadService, useValue: privacidad },
+        { provide: DuplicateDetectionService, useValue: { findSimilar: vi.fn(async () => []) } },
+        { provide: CameraService, useValue: { takePhoto: vi.fn(async () => ORIGINAL), pickFromGallery: vi.fn() } },
+        { provide: BorradorService, useValue: borrador },
+        {
+          provide: ToastController,
+          useValue: {
+            create: vi.fn(async ({ message }: { message: string }) => {
+              toasts.push(message);
+              return { present: async () => undefined };
+            }),
+          },
+        },
+      ],
+    });
+
+    fixture = TestBed.createComponent(ReportPage);
+    component = fixture.componentInstance;
+    component.ubicacion.set({ lat: -33.45, lng: -70.66, accuracy: 10 });
+    component.formulario.setValue({ categoria: 'calle_deteriorada', descripcion: 'Bache grande frente al paradero' });
+    fixture.detectChanges();
+  });
+
+  const texto = () => (fixture.nativeElement as HTMLElement).textContent ?? '';
+
+  it('avisa que el reporte se guardará y cambia el botón', () => {
+    expect(texto()).toContain('Sin señal. Al enviar, el reporte se guarda en este teléfono');
+    expect(texto()).toContain('Guardar y enviar con señal');
+  });
+
+  it('una foto que no se pudo proteger por falta de señal no bloquea: se guarda con el borrador', async () => {
+    const enCurso = component.tomarFotografia();
+    await vi.waitFor(() => expect(privacidad.anonimizar).toHaveBeenCalled());
+    privacidad.fallar(new PrivacidadError('No pudimos conectar con el servicio de privacidad.', 'red'));
+    await enCurso;
+    fixture.detectChanges();
+
+    expect(component.puedeEnviar()).toBe(true);
+    expect(component.motivoBloqueo()).toBeNull();
+    expect(texto()).toContain('la foto se protege antes de subirla');
+    expect(texto()).not.toContain('Reintentar');
+
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    await component.enviar();
+
+    expect(borrador.guardar).toHaveBeenCalledWith(
+      expect.objectContaining({ categoria: 'calle_deteriorada', descripcion: 'Bache grande frente al paradero', foto: null }),
+      ORIGINAL,
+    );
+    expect(toasts).toContain('Sin señal: guardamos tu reporte y lo enviaremos solo cuando vuelva la conexión.');
+    expect(navegar).toHaveBeenCalledWith('/home', { replaceUrl: true });
+  });
+
+  it('si ya hay un reporte esperando, no guarda otro y deja el formulario como está', async () => {
+    borrador.guardar.mockReturnValue('ocupado');
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+
+    await component.enviar();
+
+    expect(toasts[0]).toContain('Ya tienes un reporte esperando señal');
+    expect(component.formulario.controls.descripcion.value).toBe('Bache grande frente al paradero');
+    expect(navegar).not.toHaveBeenCalled();
   });
 });

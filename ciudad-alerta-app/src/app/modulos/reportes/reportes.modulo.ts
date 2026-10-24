@@ -1,3 +1,4 @@
+import { DestroyRef, EnvironmentInjector, inject, provideEnvironmentInitializer } from '@angular/core';
 import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 
 import { authGuard } from '../../guards/auth-guard';
@@ -16,22 +17,38 @@ import { RUTAS_REPORTES } from './rutas';
  *  - componentes/similar-reports
  *  - datos/                  crear reportes (report.service), cámara, fotos
  *                            (photo-storage + providers), privacidad, similitud
- *                            de imágenes (TensorFlow), confirmaciones y duplicados
+ *                            de imágenes (TensorFlow), confirmaciones y duplicados,
+ *                            borrador sin conexión y lo que el autor hace con
+ *                            su reporte (mi-reporte)
  *  - resolucion.ts           textos de tiempo de respuesta y resolución (F12)
  *
  * El detalle deja las ranuras `detalle-reporte.verificacion` (la llena el
  * sistema de confianza) y `detalle-reporte.gestion` (la llena gestión de
  * reportes); las tarjetas, `tarjeta-reporte.insignias`. Pone «Tus reportes»
- * en la ranura `inicio.resumen` del inicio.
+ * en la ranura `inicio.resumen` del inicio, y antes «Reporte por enviar» si
+ * hay uno guardado sin señal.
  *
- * Registra PHOTO_STORAGE (dónde se guardan las fotos, según environment.ts).
+ * Registra PHOTO_STORAGE (dónde se guardan las fotos, según environment.ts) y
+ * arranca BorradorService con la app, para enviar el borrador apenas vuelva
+ * la señal aunque nadie abra el inicio.
  */
 export const MODULO_REPORTES: ModuloApp = {
   id: 'reportes',
   nombre: 'Reportes',
   descripcion: 'Crear un reporte con foto y ubicación, ver mis reportes y el detalle de cualquier reporte.',
   opcionales: ['confianza', 'gestion-reportes'],
-  proveedores: [providePhotoStorage()],
+  proveedores: [
+    providePhotoStorage(),
+    // Carga diferida: el borrador y lo que usa no entran al paquete inicial.
+    provideEnvironmentInitializer(() => {
+      const injector = inject(EnvironmentInjector);
+      let vivo = true;
+      inject(DestroyRef).onDestroy(() => (vivo = false));
+      void import('./datos/borrador.service')
+        .then((m) => vivo && injector.get(m.BorradorService))
+        .catch((error) => console.error('No se pudo iniciar el borrador sin conexión.', error));
+    }),
+  ],
   rutas: [
     {
       path: 'report-new',
@@ -64,6 +81,15 @@ export const MODULO_REPORTES: ModuloApp = {
   ],
   iconos: { 'add-circle-outline': addCircleOutline, 'document-text-outline': documentTextOutline },
   ranuras: [
+    {
+      // 1.0 · El reporte guardado sin señal, antes que todo lo demás.
+      ranura: RANURAS.inicioResumen,
+      orden: -10,
+      cargar: () =>
+        import('./componentes/borrador-pendiente/borrador-pendiente.component').then(
+          (m) => m.BorradorPendienteComponent,
+        ),
+    },
     {
       // «Tus reportes» en el inicio: conteos y último movimiento.
       ranura: RANURAS.inicioResumen,

@@ -28,6 +28,7 @@ import { addIcons } from 'ionicons';
 import {
   cameraOutline,
   closeOutline,
+  cloudOfflineOutline,
   imagesOutline,
   locateOutline,
   refreshOutline,
@@ -44,7 +45,8 @@ import { DuplicateDetectionService } from '../../datos/duplicate-detection.servi
 import { CameraService, CapturedPhoto, PhotoError } from '../../datos/camera.service';
 import { PrivacidadError, PrivacidadService } from '../../datos/privacidad.service';
 import { GeolocationService, LocationError } from '../../../../services/geolocation.service';
-import { ReportService } from '../../datos/report.service';
+import { ReportError, ReportService } from '../../datos/report.service';
+import { BorradorService } from '../../datos/borrador.service';
 import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
@@ -92,6 +94,7 @@ export class ReportPage implements OnDestroy {
   /** 'despertando' cuando el servicio tarda: el plan gratuito lo duerme. */
   readonly estadoProteccion = this.privacidadService.estado;
   private readonly reportService = inject(ReportService);
+  private readonly borrador = inject(BorradorService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
   private readonly toastCtrl = inject(ToastController);
@@ -143,6 +146,9 @@ export class ReportPage implements OnDestroy {
    */
   readonly protegiendo = signal(false);
 
+  /** Sin señal, «Enviar» guarda el reporte en el teléfono (BorradorService). */
+  readonly enLinea = this.borrador.enLinea;
+
   /**
    * Foto que no pudo protegerse. Se muestra con un aviso y bloquea el envío:
    * sin la protección no hay garantía de que no aparezcan rostros. El usuario
@@ -150,9 +156,16 @@ export class ReportPage implements OnDestroy {
    */
   readonly fotoSinProteger = signal<CapturedPhoto | null>(null);
 
-  /** El reporte solo se envía con ubicación confirmada y la foto protegida (o sin foto). */
+  /**
+   * El reporte solo se envía con ubicación confirmada y la foto protegida (o
+   * sin foto). Sin señal, la foto sin proteger se guarda con el borrador y se
+   * protege antes de subirla.
+   */
   readonly puedeEnviar = computed(
-    () => this.ubicacion() !== null && !this.protegiendo() && this.fotoSinProteger() === null,
+    () =>
+      this.ubicacion() !== null &&
+      !this.protegiendo() &&
+      (this.fotoSinProteger() === null || !this.enLinea()),
   );
 
   /** Por qué no se puede enviar todavía, para decírselo al usuario. */
@@ -163,7 +176,7 @@ export class ReportPage implements OnDestroy {
         texto: 'Estamos protegiendo la foto. Puedes esperar o cancelarla para enviar sin foto.',
       };
     }
-    if (this.fotoSinProteger()) {
+    if (this.fotoSinProteger() && this.enLinea()) {
       return {
         icono: 'shield-outline',
         texto: 'Reintenta la protección de la foto o quítala para enviar el reporte.',
@@ -182,6 +195,7 @@ export class ReportPage implements OnDestroy {
     addIcons({
       cameraOutline,
       closeOutline,
+      cloudOfflineOutline,
       imagesOutline,
       locateOutline,
       refreshOutline,
@@ -287,6 +301,12 @@ export class ReportPage implements OnDestroy {
       return;
     }
 
+    // Sin señal ni se intenta: se guarda y se envía cuando vuelva.
+    if (!this.enLinea()) {
+      await this.guardarParaDespues();
+      return;
+    }
+
     this.enviando.set(true);
 
     const loading = await this.loadingCtrl.create({
@@ -314,11 +334,53 @@ export class ReportPage implements OnDestroy {
       await this.router.navigateByUrl('/home', { replaceUrl: true });
     } catch (error) {
       await loading.dismiss();
+      if (error instanceof ReportError && error.code === 'red') {
+        await this.guardarParaDespues();
+        return;
+      }
       const mensaje =
         error instanceof Error ? error.message : 'No se pudo enviar el reporte.';
       await this.toast(mensaje, 'danger');
     } finally {
       this.enviando.set(false);
+    }
+  }
+
+  /**
+   * 1.0 · Guarda el reporte en el teléfono para enviarlo cuando vuelva la
+   * señal. La tarjeta «Reporte por enviar» del inicio muestra cómo va.
+   */
+  private async guardarParaDespues(): Promise<void> {
+    const coordenadas = this.ubicacion();
+    if (!coordenadas) return;
+
+    const { categoria, descripcion } = this.formulario.getRawValue();
+    const resultado = this.borrador.guardar(
+      {
+        descripcion,
+        categoria,
+        ubicacion: coordenadas,
+        foto: this.foto(),
+        embedding: this.embedding,
+        comuna: this.comuna(),
+      },
+      this.fotoSinProteger(),
+    );
+
+    switch (resultado) {
+      case 'ok':
+        await this.toast('Sin señal: guardamos tu reporte y lo enviaremos solo cuando vuelva la conexión.', 'success');
+        this.limpiar();
+        await this.router.navigateByUrl('/home', { replaceUrl: true });
+        return;
+      case 'ocupado':
+        await this.toast('Ya tienes un reporte esperando señal. Cuando se envíe podrás guardar otro.', 'warning');
+        return;
+      case 'sin_espacio':
+        await this.toast('No hay espacio en el teléfono para guardar la foto. Quítala o envía el reporte con señal.', 'danger');
+        return;
+      case 'sin_sesion':
+        await this.toast('Tu sesión expiró. Vuelve a iniciar sesión para reportar.', 'danger');
     }
   }
 

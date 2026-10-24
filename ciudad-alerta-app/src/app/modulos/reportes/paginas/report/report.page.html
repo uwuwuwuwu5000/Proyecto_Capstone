@@ -38,11 +38,21 @@
           </ion-button>
         </div>
       } @else if (fotoSinProteger(); as pendiente) {
-        <div class="privacidad privacidad--error" role="alert">
-          <ion-icon name="shield-outline" aria-hidden="true"></ion-icon>
+        <div
+          class="privacidad"
+          [class.privacidad--error]="enLinea()"
+          [class.privacidad--proceso]="!enLinea()"
+          [attr.role]="enLinea() ? 'alert' : 'status'"
+        >
+          <ion-icon [name]="enLinea() ? 'shield-outline' : 'cloud-offline-outline'" aria-hidden="true"></ion-icon>
           <span>
-            No pudimos difuminar los rostros de esta foto, así que no se publicará. Reintenta con
-            conexión o quítala para enviar el reporte sin foto.
+            @if (enLinea()) {
+              No pudimos difuminar los rostros de esta foto, así que no se publicará. Reintenta con
+              conexión o quítala para enviar el reporte sin foto.
+            } @else {
+              Sin señal todavía no podemos difuminar los rostros. Si envías ahora, el reporte queda guardado
+              en este teléfono y la foto se protege antes de subirla, cuando vuelva la conexión.
+            }
           </span>
         </div>
 
@@ -54,10 +64,13 @@
         }
 
         <div class="acciones-foto">
-          <ion-button fill="outline" size="small" type="button" (click)="reintentarProteccion()">
-            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
-            Reintentar
-          </ion-button>
+          <!-- Sin señal no tiene sentido reintentar: se protege al enviar el borrador. -->
+          @if (enLinea()) {
+            <ion-button fill="outline" size="small" type="button" (click)="reintentarProteccion()">
+              <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+              Reintentar
+            </ion-button>
+          }
           <ion-button
             fill="clear"
             size="small"
@@ -215,6 +228,13 @@
       (confirmado)="alConfirmarCoincidencia()"
     ></app-similar-reports>
 
+    @if (!enLinea()) {
+      <ion-note class="aviso-bloqueo aviso-sin-senal" role="status">
+        <ion-icon name="cloud-offline-outline" aria-hidden="true"></ion-icon>
+        Sin señal. Al enviar, el reporte se guarda en este teléfono y se envía solo cuando vuelva la conexión.
+      </ion-note>
+    }
+
     @if (motivoBloqueo(); as motivo) {
       <ion-note class="aviso-bloqueo" role="alert">
         <ion-icon [name]="motivo.icono" aria-hidden="true"></ion-icon>
@@ -228,7 +248,7 @@
       expand="block"
       [disabled]="formulario.invalid || !puedeEnviar() || enviando()"
     >
-      {{ enviando() ? 'Enviando…' : 'Enviar reporte' }}
+      {{ enviando() ? 'Enviando…' : enLinea() ? 'Enviar reporte' : 'Guardar y enviar con señal' }}
     </ion-button>
   </form>
 </ion-content>
