@@ -3,6 +3,8 @@
 > **Fase 3.** La lógica que debe dar lo mismo en la app y en el portal está en un paquete compartido, `comun/`. El cambio de estado pasa al módulo de gestión, hay un módulo «Mi perfil», los servicios de un solo módulo viven en ese módulo y la app tiene pruebas automáticas (`npm run test:una-vez`). La rama `main-web` no se tocó.
 >
 > **Octubre.** El difuminado de rostros corre en la nube (`servicio-privacidad/`) y el teléfono ya no carga TensorFlow; quien gestiona un reporte puede marcarlo como real o falso, y el autor recibe el aviso. Ver la sección 11.
+>
+> **Hacia la 1.0.** El inicio carga en segundo plano y aparece entero, de arriba abajo, y hay una pantalla de Configuración. Ver la sección 12; lo que falta para la entrega final está en `PLAN_V1.md`.
 
 La app está dividida en **módulos**: cada funcionalidad (mapa, confianza, soporte…) declara en un solo archivo sus pantallas, sus botones del inicio y lo que agrega a otras pantallas. Un único archivo, `src/app/modulos.config.ts`, decide cuáles están encendidos.
 
@@ -50,11 +52,12 @@ Proyecto_Capstone/
         ├── app.routes.ts          ← solo login, home y '**'; el resto lo suman los módulos
         ├── pages/                 ← solo el esqueleto: login y home
         ├── nucleo/modulos/        ← la mecánica (no se toca para agregar funcionalidades)
+        ├── nucleo/carga/          ← pantalla de arranque y EsperaDePantalla (mostrar todo junto)
         ├── compartido/            ← mapa, tema, sesion (Cerrar sesión), version-demo
         ├── core/                  ← Firebase y la lista de administradores
         ├── services/              ← lo que usan varios módulos:
         │   auth, report-query, routing (asignación e historial), historial,
-        │   comuna, catalogo-comunas, geolocation, theme
+        │   comuna, catalogo-comunas, geolocation, theme, preferencias (Configuración)
         ├── models/                ← report.model (tipos de un reporte), organismo.model,
         │                            user-profile.model
         ├── guards/auth-guard.ts   ← con guion
@@ -71,6 +74,7 @@ Proyecto_Capstone/
             ├── soporte/           paginas/{support, support-new, support-chat, support-inbox} · datos/ · modelo/
             ├── gestion-reportes/  paginas/admin-reports · componentes/gestion-reporte · datos/cambio-estado.service.ts
             ├── municipalidades/   paginas/admin-organismos · datos/organismos.service.ts
+            ├── configuracion/     paginas/configuracion · componentes/boton-configuracion (el engranaje)
             └── perfil/            paginas/mi-perfil · componentes/{verificacion-correo, aviso-verificacion}
                                    datos/perfil.service.ts · modelo.ts
 ```
@@ -167,7 +171,7 @@ La pantalla **no importa al módulo**. Si nadie llena la ranura, muestra lo que 
 | `tarjeta-reporte.insignias` | Mis reportes, Cerca de mí, Gestión | `reporte` | confianza: «Validado», «Verificación 45 %» |
 | `inicio.resumen` | Inicio, bajo el saludo | `perfil` | perfil: «Verifica tu correo» (orden −10) · reportes: «Tus reportes» (0) · gestión: «Por atender» (5, solo staff) · confianza: nivel (10) |
 | `perfil.resumen` | Mi perfil | `perfil` | confianza: tarjeta de nivel |
-| `cabecera.acciones` | Barra superior | (ninguna) | avisos: la campana |
+| `cabecera.acciones` | Barra superior | (ninguna) | avisos: la campana (orden 0) · configuración: el engranaje (10) |
 
 Las tarjetas del inicio usan `compartido/tarjeta-resumen` (ícono, título, detalle, nota y enlace) para verse todas igual.
 
@@ -247,6 +251,14 @@ Crea el manifiesto, `index.ts` y una pantalla, y lo agrega activo. Así se creó
 ### Mostrar algo de mi módulo en una pantalla de otro
 
 Usa una ranura existente o crea una en `nucleo/modulos/ranuras.ts` (con su contrato) y ponla en la pantalla con `<app-ranura>`.
+
+Si tu pieza va en `inicio.resumen` y lee datos, regístrala en la espera del inicio para que no aparezca después que el resto (sección 12):
+
+```ts
+private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('Mi tarjeta');
+// … al terminar de leer, haya salido bien o mal:
+this.carga?.listo();
+```
 
 ### Usar código de otro módulo
 
@@ -545,3 +557,58 @@ No hay reglas ni índices nuevos que desplegar.
 6. Veredicto «Es real / Es falso» en el bloque Gestión (módulo confianza).
 7. Aviso al autor cuando su reporte es verificado.
 8. Guías y plan de pruebas (CP-PRI y CP-VER).
+
+---
+
+## 12. Carga sin saltos y Configuración (hacia la 1.0)
+
+### El inicio aparece entero
+
+Antes, al abrir la app se veía un fondo vacío y después cada tarjeta del inicio aparecía cuando le llegaban sus datos: la pantalla saltaba. Ahora:
+
+1. **Pantalla de arranque** (`index.html`): la marca de Ciudad Alerta y una barra, en el tema guardado, desde que se abre la app. La quita `ArranqueService` con un fundido: el inicio cuando tiene todo, o AppComponent si la app abre en otra pantalla (el login). Si algo falla, se quita sola a los 8 s.
+2. **EsperaDePantalla** (`nucleo/carga`): el inicio la declara en sus `providers` y se arma oculto, con «Preparando tu inicio…», hasta que el perfil, cada ranura (mientras descarga sus piezas) y cada tarjeta («Tus reportes», «Por atender», el nivel) avisan que tienen sus datos. Si algo tarda más de 2,5 s (sin red), se muestra igual y lo que falte llega en su lugar.
+3. **Aparición escalonada** (`.ca-escalonado` en `theme/variables.scss`): el saludo, las tarjetas y los grupos de botones entran de arriba abajo, uno tras otro (460 ms cada uno, 60 ms entre partes). Configuración usa la misma clase. Sin animación si el teléfono pide reducir el movimiento o si la persona eligió «Animaciones: No».
+
+Al volver al inicio no se oculta nada: las tarjetas se actualizan en su lugar.
+
+### Configuración
+
+Módulo `configuracion` (creado con `npm run modulo -- nuevo configuracion`). Se abre con el engranaje de la barra superior o desde «Tu cuenta» en el inicio. Todo queda en el teléfono (`services/preferencias.service.ts`, en `localStorage`); no hay reglas nuevas.
+
+| Sección | Qué cambia | Quién la ve |
+|---|---|---|
+| Apariencia | Tema, tamaño del texto (normal, grande, muy grande) y animaciones | Todos |
+| Al abrir la app | Inicio o cualquier botón del inicio de esa cuenta (por ejemplo, «Crear un reporte») | Todos |
+| Fotos y datos móviles | Ahorro de datos: fotos de 800 px y calidad 0,5 en vez de 1024 px y 0,6 | Todos |
+| Protección de las fotos | «Comprobar y despertar» el servicio de privacidad; el equipo ve además el tiempo de respuesta, el motor y la dirección | Todos (si reportes está activo) |
+| Este teléfono | Copiar datos para soporte (sin el correo), borrar datos guardados (no cierra la sesión), restablecer | Todos |
+| Para el equipo | Versión, compilación y proyecto de Firebase; el administrador ve los módulos y si están activos | Operador y administrador |
+
+El tamaño del texto y las animaciones se aplican también desde `index.html`, antes de que arranque Angular, para que no se vea un salto.
+
+### Instalar
+
+En la carpeta del repositorio, en `cmd`:
+
+```cmd
+git switch main-mobile
+git pull origin main-mobile
+git am "C:\ruta\carga-y-configuracion.mbox"
+git log --oneline -5
+cd ciudad-alerta-app
+npm run test:una-vez
+npm run diagnostico
+ionic serve
+git push origin main-mobile
+```
+
+No hay reglas, índices ni dependencias nuevas. El servicio de privacidad no cambia.
+
+### Commits
+
+1. `nucleo`: pantalla de arranque y espera de pantalla.
+2. El inicio carga en segundo plano y aparece de arriba abajo.
+3. Preferencias de la app en el teléfono (texto, animaciones, ahorro de datos, pantalla al abrir).
+4. Pantalla de Configuración y engranaje en la barra.
+5. Plan de la 1.0, guías y plan de pruebas (CP-CAR y CP-CFG).

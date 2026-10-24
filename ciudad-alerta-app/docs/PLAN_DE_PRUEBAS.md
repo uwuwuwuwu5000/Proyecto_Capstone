@@ -460,6 +460,37 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-PER-13 | Cuenta admin | Abrir el inicio | «Por atender» con los conteos de todo el sistema; lleva a la bandeja | B | F |
 | CP-PER-14 | U1 ciudadano | Revisar los botones del inicio | «Crear un reporte» destacado; grupos «Explorar» y «Tu cuenta»; sin «Gestión» ni espacio vacío | B | UX |
 
+### Carga del inicio
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-CAR-01 | E3, sesión iniciada, app cerrada | Abrir la app | Pantalla de arranque con la marca y la barra, sin fondo vacío; después el inicio entero | A | NF |
+| CP-CAR-02 | CP-CAR-01 | Mirar cómo aparece el inicio | Saludo, tarjetas y botones entran de arriba abajo; ninguna tarjeta aparece después de las demás | A | UX |
+| CP-CAR-03 | Modo avión, sesión iniciada | Abrir la app | A los 2,5 s aparece el inicio, sin las tarjetas que necesitan red | B | NF |
+| CP-CAR-04 | CP-CAR-02 | Ir a Mis reportes y volver | El inicio no se vuelve a ocultar; las tarjetas se actualizan en su lugar | B | UX |
+| CP-CAR-05 | Android con «Quitar animaciones» activado | Abrir la app | El inicio aparece sin movimiento | B | UX |
+| CP-CAR-06 | Sin sesión | Abrir la app | La pantalla de arranque da paso al login | B | F |
+| CP-CAR-07 | U1 en el inicio | Cerrar sesión e ingresar como U2 | El inicio vuelve a esperar y saluda a U2 | C | F |
+
+### Configuración
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-CFG-01 | U1 | Tocar el engranaje de la barra del inicio; volver y tocar «Configuración» en «Tu cuenta» | Las dos llevan a Configuración | A | F |
+| CP-CFG-02 | U1 | Tamaño del texto «Muy grande», cerrar y abrir la app | Los textos crecen en todas las pantallas y siguen así al abrir, sin salto | A | F |
+| CP-CFG-03 | CP-CFG-02 | Recorrer el inicio, Crear un reporte y el detalle | Nada se corta ni se superpone | B | UX |
+| CP-CFG-04 | U1 | Animaciones «No» y abrir la app | El inicio aparece sin movimiento | B | F |
+| CP-CFG-05 | U1 | Al abrir la app: «Crear un reporte»; cerrar y abrir la app | Abre Crear un reporte; «atrás» vuelve al inicio | A | F |
+| CP-CFG-06 | Admin eligió «Todas las incidencias» | Entrar como U1 en el mismo teléfono | Se queda en el inicio | B | S |
+| CP-CFG-07 | Ahorro de datos activado | Tomar una foto | El pie de la vista previa dice 800 px de lado mayor y pesa menos | A | F |
+| CP-CFG-08 | Servicio de fotos dormido | «Comprobar y despertar» | «Despertando…» y luego «Estaba dormido y ya despertó (tardó N s)» | B | F |
+| CP-CFG-09 | Modo avión | «Comprobar y despertar» | «No responde. Revisa tu conexión…» | B | F |
+| CP-CFG-10 | U1 | «Copiar datos para soporte» y pegar en un mensaje | Versión, módulos y estado del servicio, sin el correo | B | F |
+| CP-CFG-11 | U1 con «Mi nivel» ya visitado | «Borrar datos guardados» | La sesión y la configuración siguen igual; Mi nivel vuelve a mostrar la explicación inicial | B | F |
+| CP-CFG-12 | U1 ciudadano | Abrir Configuración | No aparece «Para el equipo» | A | S |
+| CP-CFG-13 | U3 operador; luego admin | Abrir Configuración | El operador ve «Para el equipo» sin la lista de módulos; el admin la ve | B | F |
+| CP-CFG-14 | Varias opciones cambiadas | «Restablecer configuración» | Texto normal, animaciones del teléfono, sin ahorro de datos, abre en el inicio | C | F |
+
 ---
 
 ## 17. Comportamiento en dispositivo Android
@@ -507,24 +538,26 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 |---|---|---|
 | 1 | CP-REG-01 | Registrar una cuenta nueva |
 | 2 | CP-LOG-01 | Iniciar sesión |
-| 3 | CP-SES-01 | Verificar el bloqueo de rutas privadas |
-| 4 | CP-SES-06 | Persistencia tras cerrar la app |
-| 5 | CP-PRI-15 | El servicio de privacidad responde |
-| 6 | CP-FOT-01 | Adjuntar fotografía |
-| 7 | CP-PRI-01 | La foto vuelve con el rostro difuminado |
-| 8 | CP-UBI-02 | Obtener ubicación |
-| 9 | CP-DES-08 | Enviar un reporte completo |
-| 10 | CP-DUP-01 | Detectar una coincidencia |
-| 11 | CP-CON-01 | Confirmar un reporte ajeno |
-| 12 | CP-INC-01 | Ver el mapa de incidencias |
-| 13 | CP-DET-03 | Abrir el detalle y ver la fotografía |
-| 14 | CP-HIS-01 | Revisar el historial propio |
-| 15 | CP-EST-04 | Cambiar un estado como operador |
-| 16 | CP-EST-14 | Resolver un reporte y ver su tiempo de resolución |
-| 17 | CP-VER-04 | Dar un veredicto real como operador |
-| 18 | CP-VER-12 | El autor ve el aviso del veredicto |
-| 19 | CP-PER-01 | Abrir Mi perfil |
-| 20 | CP-SES-07 | Cerrar sesión |
+| 3 | CP-CAR-01 | Pantalla de arranque y el inicio entero |
+| 4 | CP-SES-01 | Verificar el bloqueo de rutas privadas |
+| 5 | CP-SES-06 | Persistencia tras cerrar la app |
+| 6 | CP-PRI-15 | El servicio de privacidad responde |
+| 7 | CP-FOT-01 | Adjuntar fotografía |
+| 8 | CP-PRI-01 | La foto vuelve con el rostro difuminado |
+| 9 | CP-UBI-02 | Obtener ubicación |
+| 10 | CP-DES-08 | Enviar un reporte completo |
+| 11 | CP-DUP-01 | Detectar una coincidencia |
+| 12 | CP-CON-01 | Confirmar un reporte ajeno |
+| 13 | CP-INC-01 | Ver el mapa de incidencias |
+| 14 | CP-DET-03 | Abrir el detalle y ver la fotografía |
+| 15 | CP-HIS-01 | Revisar el historial propio |
+| 16 | CP-EST-04 | Cambiar un estado como operador |
+| 17 | CP-EST-14 | Resolver un reporte y ver su tiempo de resolución |
+| 18 | CP-VER-04 | Dar un veredicto real como operador |
+| 19 | CP-VER-12 | El autor ve el aviso del veredicto |
+| 20 | CP-PER-01 | Abrir Mi perfil |
+| 21 | CP-CFG-01 | Abrir Configuración |
+| 22 | CP-SES-07 | Cerrar sesión |
 
 ---
 
@@ -554,8 +587,10 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | F12 Tiempo de resolución | CP-EST-14 a CP-EST-19 |
 | Veredicto y aviso (confianza 4.4) | CP-VER-01 a CP-VER-17 |
 | Mi perfil e inicio (feedback Sprint 5) | CP-PER-01 a CP-PER-14 |
+| Carga del inicio | CP-CAR-01 a CP-CAR-07 |
+| Configuración | CP-CFG-01 a CP-CFG-14 |
 
-**Total: 315 casos** — 199 de prioridad A, 97 de prioridad B y 19 de prioridad C.
+**Total: 336 casos** — 206 de prioridad A, 109 de prioridad B y 21 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -604,7 +639,10 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
 - la protección de la foto en la nube con `fetch` simulado: respuesta correcta, sesión vencida,
   límite, foto ilegible, sin red, tiempo máximo, cancelar y el aviso de «despertando»;
 - el veredicto (qué campos escribe en cada documento, comparados con las reglas) y su aviso
-  en la campana.
+  en la campana;
+- la espera del inicio (oculto hasta que cada tarjeta avisa, y visible igual a los 2,5 s), la
+  pantalla de arranque, las preferencias (valores dañados, ahorro de datos, pantalla al abrir) y
+  la pantalla de Configuración por rol.
 
 Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`, y empieza
 con `usarEntornoDePrueba()`.
