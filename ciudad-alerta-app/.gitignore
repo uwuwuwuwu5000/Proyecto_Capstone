@@ -78,5 +78,6 @@ scripts/respaldos/
 keystore.properties
 *.jks
 apk-demo/
+apk-final/
 scripts/respaldos/
 *firebase-adminsdk*.json

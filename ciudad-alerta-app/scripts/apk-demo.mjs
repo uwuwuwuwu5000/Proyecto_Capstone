@@ -6,6 +6,7 @@
  *   node scripts/apk-demo.mjs                  # verifica, sube la versión y compila
  *   node scripts/apk-demo.mjs --solo-verificar # solo revisa que todo esté listo
  *   node scripts/apk-demo.mjs --sin-subir      # recompila sin cambiar versionCode
+ *   node scripts/apk-demo.mjs --final          # versión de entrega: 1.0.0, sin aviso de prueba
  *
  * Pasos:
  *   1. Verifica configuración de producción, servicio de privacidad, límites
@@ -33,6 +34,12 @@ const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ES_WINDOWS = process.platform === 'win32';
 const SOLO_VERIFICAR = process.argv.includes('--solo-verificar');
 const SIN_SUBIR = process.argv.includes('--sin-subir');
+/**
+ * Versión de entrega: nombre VERSION_FINAL (no el de package.json) y sin el
+ * aviso «Versión de prueba» del login. El APK queda en apk-final/.
+ */
+const FINAL = process.argv.includes('--final');
+const VERSION_FINAL = '1.0.0';
 
 const ruta = (...partes) => join(RAIZ, ...partes);
 const leer = (p) => readFileSync(p, 'utf8');
@@ -43,7 +50,7 @@ const ok = (texto) => console.log(`  ✓ ${texto}`);
 const mal = (texto) => { problemas.push(texto); console.log(`  ✖ ${texto}`); };
 const ojo = (texto) => { avisos.push(texto); console.log(`  ⚠ ${texto}`); };
 
-console.log('\nCiudad Alerta · APK de demostración\n');
+console.log(FINAL ? '\nCiudad Alerta · APK de entrega (versión final)\n' : '\nCiudad Alerta · APK de demostración\n');
 
 // ── 1. Configuración de producción ──────────────────────────────────────────
 console.log('Configuración de Firebase (environment.prod.ts)');
@@ -255,7 +262,11 @@ if (SOLO_VERIFICAR) {
 
 // ── 2. Versión ──────────────────────────────────────────────────────────────
 const paquete = JSON.parse(leer(ruta('package.json')));
-const versionName = paquete.version && paquete.version !== '0.0.1' ? paquete.version : versionNameActual ?? '0.1.0';
+const versionName = FINAL
+  ? VERSION_FINAL
+  : paquete.version && paquete.version !== '0.0.1'
+    ? paquete.version
+    : versionNameActual ?? '0.1.0';
 const versionCode = SIN_SUBIR ? versionCodeActual : versionCodeActual + 1;
 const fecha = new Date().toISOString();
 
@@ -284,7 +295,7 @@ writeFileSync(
     `  nombre: '${versionName}',\n` +
     `  codigo: ${versionCode},\n` +
     `  fecha: '${fecha}' as string | null,\n` +
-    `  demo: true,\n` +
+    `  demo: ${!FINAL},\n` +
     `};\n`,
 );
 console.log(`Versión ${versionName} (${versionCode})\n`);
@@ -327,8 +338,9 @@ if (!existsSync(apk)) {
   restaurar();
   process.exit(1);
 }
-mkdirSync(ruta('apk-demo'), { recursive: true });
-const destino = ruta('apk-demo', `CiudadAlerta-${versionName}-${versionCode}.apk`);
+const carpetaApk = FINAL ? 'apk-final' : 'apk-demo';
+mkdirSync(ruta(carpetaApk), { recursive: true });
+const destino = ruta(carpetaApk, `CiudadAlerta-${versionName}-${versionCode}.apk`);
 copyFileSync(apk, destino);
 const bytes = readFileSync(destino);
 const sha = createHash('sha256').update(bytes).digest('hex');
@@ -337,4 +349,6 @@ console.log(`\n✓ APK listo: ${destino}`);
 console.log(`  Tamaño: ${(bytes.length / 1024 / 1024).toFixed(1)} MB`);
 console.log(`  SHA-256: ${sha}`);
 if (avisos.length) console.log(`  Avisos: ${avisos.length} (revisa arriba)`);
-console.log('\nRecuerda hacer commit de android/app/build.gradle para que el siguiente build parta de esta versión.\n');
+console.log('\nRecuerda hacer commit de android/app/build.gradle para que el siguiente build parta de esta versión.');
+if (FINAL) console.log('Para volver a los APK de prueba: npm run apk:demo (vuelve a marcar demo: true).');
+console.log('');
