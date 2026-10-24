@@ -71,7 +71,6 @@ export class BienvenidaPage {
     inject(ModulosService).activo('confianza') ? CONFIANZA : SIN_CONFIANZA,
   ];
   readonly indice = signal(0);
-  readonly paso = computed(() => this.pasos[this.indice()]);
   readonly ultimo = computed(() => this.indice() === this.pasos.length - 1);
 
   constructor() {

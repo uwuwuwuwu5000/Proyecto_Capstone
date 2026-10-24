@@ -2,18 +2,23 @@
   <div class="shell">
     <button type="button" class="saltar" (click)="terminar()">Saltar</button>
 
-    @for (p of [paso()]; track indice()) {
-      <article class="paso ca-escalonado" aria-live="polite">
-        <ion-icon class="paso__icono" [name]="p.icono" aria-hidden="true"></ion-icon>
-        <h1>{{ p.titulo }}</h1>
-        <p class="paso__texto">{{ p.texto }}</p>
-        <ul>
-          @for (punto of p.puntos; track punto) {
-            <li>{{ punto }}</li>
-          }
-        </ul>
-      </article>
-    }
+    <!-- Solo el paso actual existe: al cambiar, se crea otra vez y vuelve a entrar con la animación. -->
+    <div class="pasos" aria-live="polite">
+      @for (p of pasos; track $index) {
+        @if ($index === indice()) {
+          <article class="paso ca-escalonado">
+            <ion-icon class="paso__icono" [name]="p.icono" aria-hidden="true"></ion-icon>
+            <h1>{{ p.titulo }}</h1>
+            <p class="paso__texto">{{ p.texto }}</p>
+            <ul>
+              @for (punto of p.puntos; track $index) {
+                <li>{{ punto }}</li>
+              }
+            </ul>
+          </article>
+        }
+      }
+    </div>
 
     <div class="pie">
       <div class="puntos" role="tablist" [attr.aria-label]="'Paso ' + (indice() + 1) + ' de ' + pasos.length">
