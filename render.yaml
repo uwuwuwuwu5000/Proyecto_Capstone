@@ -26,3 +26,7 @@ services:
         value: ""
       - key: MOBILENET
         value: remoto
+      # Correo para pedir eliminar una cuenta sin la app (página
+      # /eliminar-cuenta). Se escribe en Render (Environment), no aquí.
+      - key: CORREO_CONTACTO
+        sync: false

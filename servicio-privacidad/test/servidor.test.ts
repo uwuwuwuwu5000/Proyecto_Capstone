@@ -19,8 +19,14 @@ describe('servidor HTTP', () => {
   let servidor: Server;
   let base: string;
 
-  async function iniciar(opciones: { procesar?: (foto: Buffer) => Promise<FotoProtegida>; fotos?: number } = {}) {
-    const config = { ...leerConfiguracion({}), fotosPorVentana: opciones.fotos ?? 30, bytesMaximos: 1000 };
+  async function iniciar(
+    opciones: { procesar?: (foto: Buffer) => Promise<FotoProtegida>; fotos?: number; correo?: string } = {},
+  ) {
+    const config = {
+      ...leerConfiguracion({ CORREO_CONTACTO: opciones.correo }),
+      fotosPorVentana: opciones.fotos ?? 30,
+      bytesMaximos: 1000,
+    };
     servidor = crearServidor({
       config,
       verificar: async (encabezado) => {
@@ -42,6 +48,36 @@ describe('servidor HTTP', () => {
     });
 
   afterEach(() => new Promise<void>((listo) => servidor.close(() => listo())));
+
+  it('/privacidad publica la política y los términos de la app, sin sesión', async () => {
+    await iniciar();
+    const respuesta = await fetch(`${base}/privacidad`);
+    const html = await respuesta.text();
+
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.headers.get('content-type')).toContain('text/html');
+    expect(html).toContain('Política de privacidad');
+    expect(html).toContain('Términos de uso');
+    expect(html).toContain('Render');
+    expect(html).toContain('href="/eliminar-cuenta"');
+  });
+
+  it('/eliminar-cuenta explica cómo y ofrece el correo si está configurado', async () => {
+    await iniciar({ correo: 'equipo@ciudadalerta.cl' });
+    const html = await (await fetch(`${base}/eliminar-cuenta`)).text();
+
+    expect(html).toContain('Eliminar tu cuenta de Ciudad Alerta');
+    expect(html).toContain('Mi perfil');
+    expect(html).toContain('mailto:equipo@ciudadalerta.cl');
+  });
+
+  it('/eliminar-cuenta sin correo configurado indica la app', async () => {
+    await iniciar();
+    const html = await (await fetch(`${base}/eliminar-cuenta`)).text();
+
+    expect(html).not.toContain('mailto:');
+    expect(html).toContain('Instálala de nuevo');
+  });
 
   it('/salud responde aunque no haya sesión (la app lo usa para despertarlo)', async () => {
     await iniciar();

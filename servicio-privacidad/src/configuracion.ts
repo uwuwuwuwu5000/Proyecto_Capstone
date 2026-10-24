@@ -27,6 +27,11 @@ export interface Configuracion {
    * otro valor es una carpeta local con model.json.
    */
   mobilenet: string;
+  /**
+   * Correo al que se puede pedir eliminar una cuenta sin la app (página
+   * /eliminar-cuenta, que pide Google Play). Se pone en Render, no aquí.
+   */
+  correoContacto: string | null;
 }
 
 const ORIGENES_POR_DEFECTO = [
@@ -57,5 +62,6 @@ export function leerConfiguracion(entorno: NodeJS.ProcessEnv = process.env): Con
     ventanaMs: numero(entorno['VENTANA_MS'], 10 * 60_000),
     carpetaModelos: entorno['CARPETA_MODELOS'] || fileURLToPath(new URL('../modelos', import.meta.url)),
     mobilenet: entorno['MOBILENET'] || 'remoto',
+    correoContacto: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entorno['CORREO_CONTACTO'] ?? '') ? entorno['CORREO_CONTACTO']! : null,
   };
 }

@@ -4,6 +4,7 @@ import { SesionInvalida, VerificadorSesion } from './autenticacion';
 import { Configuracion } from './configuracion';
 import { FotoProtegida, ImagenInvalida } from './difuminar';
 import { LimitePorUsuario } from './limite';
+import { paginaEliminarCuenta, paginaPrivacidad } from './paginas';
 
 export const VERSION = '1.0.0';
 
@@ -29,6 +30,12 @@ class ErrorHttp extends Error {
   ) {
     super(message);
   }
+}
+
+/** Páginas públicas: se pueden guardar en caché una hora. */
+function html(respuesta: ServerResponse, cuerpo: string): void {
+  respuesta.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+  respuesta.end(cuerpo);
 }
 
 function leerCuerpo(peticion: IncomingMessage, maximo: number): Promise<Buffer> {
@@ -142,6 +149,10 @@ export function crearServidor(dep: Dependencias): Server {
           respuesta.writeHead(204).end();
         } else if (peticion.method === 'GET' && (ruta === '/salud' || ruta === '/')) {
           json(respuesta, 200, { ok: true, servicio: 'ciudad-alerta-privacidad', version: VERSION, ...dep.estado() });
+        } else if (peticion.method === 'GET' && ruta === '/privacidad') {
+          html(respuesta, paginaPrivacidad());
+        } else if (peticion.method === 'GET' && ruta === '/eliminar-cuenta') {
+          html(respuesta, paginaEliminarCuenta(dep.config.correoContacto));
         } else if (peticion.method === 'POST' && ruta === '/v1/proteger') {
           json(respuesta, 200, await proteger(peticion));
         } else {

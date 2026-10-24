@@ -34,6 +34,8 @@ Servicio (Render)
 
 `GET /salud` responde sin sesión. La app lo llama al abrir «Crear un reporte» para despertar el servicio mientras el usuario toma la foto.
 
+`GET /privacidad` y `GET /eliminar-cuenta` son páginas públicas, sin sesión: la política de privacidad y los términos, y cómo eliminar la cuenta. Google Play pide las dos direcciones al publicar la app. El texto sale de `comun/src/legal/terminos.ts`, el mismo de la app.
+
 ## Probar en tu computador
 
 Requiere Node 20 o superior y la carpeta `comun/` al lado (como en el repositorio).
@@ -77,6 +79,7 @@ Cada push a `main-mobile` que toque `servicio-privacidad/`, `comun/src/` o `rend
 | `CARPETA_MODELOS` | (la del repositorio) | Carpeta con `coco-ssd/` y `face-detection/`. |
 | `BYTES_MAXIMOS` | 6291456 | Tamaño máximo de la foto recibida. |
 | `FOTOS_POR_VENTANA` / `VENTANA_MS` | 30 / 600000 | Límite por usuario. |
+| `CORREO_CONTACTO` | (vacío) | Correo para pedir eliminar una cuenta sin la app; aparece en `/eliminar-cuenta`. Se escribe en Render, no en el repositorio. |
 
 ## Respuestas de error
 
@@ -99,5 +102,6 @@ Cada push a `main-mobile` que toque `servicio-privacidad/`, `comun/src/` o `rend
 | `src/autenticacion.ts` | Verificación del token de Firebase (sin secretos) |
 | `src/modelos.ts` | TensorFlow.js con WASM y los tres modelos |
 | `src/difuminar.ts` | Decodificación, pixelado con `sharp` y vector |
+| `src/paginas.ts` | Páginas públicas `/privacidad` y `/eliminar-cuenta` |
 | `Dockerfile` | Imagen para Render; se construye desde la raíz del repositorio |
 | `../render.yaml` | Blueprint de Render |
