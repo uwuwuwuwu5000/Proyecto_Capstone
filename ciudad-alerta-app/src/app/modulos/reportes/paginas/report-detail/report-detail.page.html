@@ -65,6 +65,10 @@
       </dl>
 
       <section class="bloque">
+        <app-contacto-organismo [reporte]="item" />
+      </section>
+
+      <section class="bloque">
         <h2>Ubicación</h2>
         <app-map-view
           [latitude]="item.ubicacion.lat"

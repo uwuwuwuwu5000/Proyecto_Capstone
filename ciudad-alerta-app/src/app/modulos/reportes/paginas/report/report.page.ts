@@ -1,4 +1,5 @@
 import { Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   NonNullableFormBuilder,
   ReactiveFormsModule,
@@ -37,6 +38,7 @@ import {
 
 import { MapViewComponent } from '../../../../compartido/mapa';
 import { SimilarReportsComponent } from '../../componentes/similar-reports/similar-reports.component';
+import { AvisoEmergenciaComponent } from '../../componentes/aviso-emergencia/aviso-emergencia.component';
 import { ComunaDetectada, ComunaService } from '../../../../services/comuna.service';
 import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
 import { CameraService, CapturedPhoto, PhotoError } from '../../datos/camera.service';
@@ -61,6 +63,7 @@ import { MatchCandidate } from '../../modelo/coincidencias';
     ReactiveFormsModule,
     MapViewComponent,
     SimilarReportsComponent,
+    AvisoEmergenciaComponent,
     IonHeader,
     IonToolbar,
     IonTitle,
@@ -127,6 +130,11 @@ export class ReportPage implements OnDestroy {
         Validators.maxLength(DESCRIPCION_MAX),
       ],
     ],
+  });
+
+  /** Categoría elegida, para el aviso de emergencia. */
+  readonly categoriaActual = toSignal(this.formulario.controls.categoria.valueChanges, {
+    initialValue: this.formulario.controls.categoria.value,
   });
 
   /**

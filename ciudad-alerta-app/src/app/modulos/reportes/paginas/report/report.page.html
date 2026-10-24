@@ -185,6 +185,9 @@
         }
       </ion-select>
 
+      <!-- Árbol, cables, socavón: si hay peligro ahora, hay que llamar. -->
+      <app-aviso-emergencia [categoria]="categoriaActual()" />
+
       <ion-textarea
         formControlName="descripcion"
         label="¿Qué está pasando?"
