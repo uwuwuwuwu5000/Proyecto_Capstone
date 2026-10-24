@@ -177,6 +177,9 @@
           Mi perfil
         </ion-button>
       }
+      @if (conBienvenida) {
+        <ion-button fill="clear" size="small" routerLink="/bienvenida">Ver la introducción</ion-button>
+      }
       <ion-button fill="clear" size="small" routerLink="/terminos">Términos y privacidad</ion-button>
       <app-cerrar-sesion />
       <app-version-demo />

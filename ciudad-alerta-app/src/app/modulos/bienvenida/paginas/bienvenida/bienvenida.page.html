@@ -1,0 +1,32 @@
+<ion-content class="contenido" [fullscreen]="true">
+  <div class="shell">
+    <button type="button" class="saltar" (click)="terminar()">Saltar</button>
+
+    @for (p of [paso()]; track indice()) {
+      <article class="paso ca-escalonado" aria-live="polite">
+        <ion-icon class="paso__icono" [name]="p.icono" aria-hidden="true"></ion-icon>
+        <h1>{{ p.titulo }}</h1>
+        <p class="paso__texto">{{ p.texto }}</p>
+        <ul>
+          @for (punto of p.puntos; track punto) {
+            <li>{{ punto }}</li>
+          }
+        </ul>
+      </article>
+    }
+
+    <div class="pie">
+      <div class="puntos" role="tablist" [attr.aria-label]="'Paso ' + (indice() + 1) + ' de ' + pasos.length">
+        @for (p of pasos; track $index) {
+          <span class="punto" [class.punto--actual]="$index === indice()"></span>
+        }
+      </div>
+      <div class="acciones">
+        @if (indice() > 0) {
+          <ion-button fill="clear" (click)="atras()">Atrás</ion-button>
+        }
+        <ion-button class="acciones__principal" (click)="siguiente()">{{ ultimo() ? 'Empezar' : 'Siguiente' }}</ion-button>
+      </div>
+    </div>
+  </div>
+</ion-content>

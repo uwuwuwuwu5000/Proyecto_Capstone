@@ -10,6 +10,7 @@ import { MODULO_REPORTES } from './modulos/reportes/reportes.modulo';
 import { MODULO_SOPORTE } from './modulos/soporte/soporte.modulo';
 import { MODULO_PERFIL } from './modulos/perfil/perfil.modulo';
 import { MODULO_CONFIGURACION } from './modulos/configuracion/configuracion.modulo';
+import { MODULO_BIENVENIDA } from './modulos/bienvenida/bienvenida.modulo';
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
@@ -42,4 +43,5 @@ export const CONFIG_MODULOS: readonly EntradaModulo[] = [
   { modulo: MODULO_MUNICIPALIDADES, activo: true },
   { modulo: MODULO_PERFIL, activo: true },
   { modulo: MODULO_CONFIGURACION, activo: true },
+  { modulo: MODULO_BIENVENIDA, activo: true },
 ];

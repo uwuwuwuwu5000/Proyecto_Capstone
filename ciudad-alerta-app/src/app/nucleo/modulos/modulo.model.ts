@@ -1,7 +1,7 @@
 import { EnvironmentProviders, Provider, Type } from '@angular/core';
 import { Routes } from '@angular/router';
 
-import { UserRole } from '../../models/user-profile.model';
+import { UserProfile, UserRole } from '../../models/user-profile.model';
 import { NombreRanura } from './ranuras';
 
 /**
@@ -64,6 +64,16 @@ export interface ModuloApp {
    * para que un servicio empiece a escuchar apenas arranca la app.
    */
   readonly proveedores?: ReadonlyArray<Provider | EnvironmentProviders>;
+
+  /**
+   * Pantalla que el módulo quiere abrir al entrar al inicio, por ejemplo la
+   * bienvenida la primera vez. Recibe el perfil de quien entra (null si no
+   * se pudo leer) y devuelve la ruta, o null si no corresponde. Corre en un
+   * contexto de inyección (puede usar `inject`). El inicio la consulta
+   * después de pedir los términos; gana la primera que devuelva una ruta, en
+   * el orden de modulos.config.ts.
+   */
+  readonly alEntrarAlInicio?: (perfil: UserProfile | null) => string | null;
 }
 
 /**

@@ -41,6 +41,31 @@ describe('HomePage', () => {
       getUserProfile: vi.fn(),
     };
     TestBed.configureTestingModule({ providers: [{ provide: AuthService, useValue: auth }] });
+    // La bienvenida ya vista: estas pruebas son del inicio.
+    localStorage.setItem('ca.bienvenida.vista', '1');
+  });
+
+  afterEach(() => localStorage.removeItem('ca.bienvenida.vista'));
+
+  it('la primera vez abre la bienvenida, antes que la pantalla elegida', async () => {
+    localStorage.removeItem('ca.bienvenida.vista');
+    localStorage.setItem('ciudad-alerta.preferencias', JSON.stringify({ abrirEn: '/report-new' }));
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    await entrar({ displayName: 'Rodrigo', role: 'ciudadano' });
+
+    expect(navegar).toHaveBeenCalledTimes(1);
+    expect(navegar).toHaveBeenCalledWith('/bienvenida');
+    localStorage.removeItem('ciudad-alerta.preferencias');
+  });
+
+  it('una cuenta operador no ve la bienvenida', async () => {
+    localStorage.removeItem('ca.bienvenida.vista');
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    await entrar({ displayName: 'Operadora', role: 'operador' });
+
+    expect(navegar).not.toHaveBeenCalled();
   });
 
   it('saluda por el nombre y ya no muestra los datos técnicos de la cuenta', async () => {

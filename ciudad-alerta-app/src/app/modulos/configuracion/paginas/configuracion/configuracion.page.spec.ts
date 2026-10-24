@@ -71,6 +71,8 @@ describe('ConfiguracionPage', () => {
     expect(texto()).toContain('Ahorro de datos');
     expect(texto()).toContain('Protección de las fotos');
     expect(texto()).not.toContain('Para el equipo');
+    expect(texto()).toContain('Ver la introducción');
+    expect(texto()).toContain('Términos y privacidad');
   });
 
   it('los cambios llegan a las preferencias', async () => {

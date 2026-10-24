@@ -1,4 +1,5 @@
 import {
+  EnvironmentInjector,
   EnvironmentProviders,
   InjectionToken,
   Injectable,
@@ -7,11 +8,12 @@ import {
   isDevMode,
   makeEnvironmentProviders,
   provideEnvironmentInitializer,
+  runInInjectionContext,
 } from '@angular/core';
 import { addIcons } from 'ionicons';
 
 import { CONFIG_MODULOS } from '../../modulos.config';
-import { UserRole } from '../../models/user-profile.model';
+import { UserProfile, UserRole } from '../../models/user-profile.model';
 import { AccesoInicio, EntradaModulo, GrupoInicio } from './modulo.model';
 import { NombreRanura } from './ranuras';
 import {
@@ -43,9 +45,28 @@ export const CONFIGURACION_MODULOS = new InjectionToken<readonly EntradaModulo[]
 @Injectable({ providedIn: 'root' })
 export class ModulosService {
   private readonly config = inject(CONFIGURACION_MODULOS);
+  private readonly injector = inject(EnvironmentInjector);
   private readonly activos = new Set(modulosActivos(this.config).map((m) => m.id));
   /** Una descarga por ranura, compartida por todas sus apariciones. */
   private readonly ranuras = new Map<NombreRanura, Promise<Type<unknown>[]>>();
+
+  /**
+   * La pantalla que algún módulo activo quiere abrir al entrar al inicio
+   * (ModuloApp.alEntrarAlInicio), o null. Si una falla, se ignora.
+   */
+  pantallaAlEntrarAlInicio(perfil: UserProfile | null): string | null {
+    for (const modulo of modulosActivos(this.config)) {
+      const decidir = modulo.alEntrarAlInicio;
+      if (!decidir) continue;
+      try {
+        const ruta = runInInjectionContext(this.injector, () => decidir(perfil));
+        if (ruta) return ruta;
+      } catch (error) {
+        console.error(`El módulo ${modulo.id} falló al decidir su pantalla de entrada.`, error);
+      }
+    }
+    return null;
+  }
 
   activo(id: string): boolean {
     return this.activos.has(id);

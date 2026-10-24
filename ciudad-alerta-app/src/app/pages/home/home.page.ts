@@ -151,6 +151,13 @@ export class HomePage {
       return;
     }
 
+    // Lo que un módulo quiera mostrar al entrar (la bienvenida, la primera vez).
+    const deModulo = this.modulos.pantallaAlEntrarAlInicio(this.perfil());
+    if (deModulo) {
+      void this.router.navigateByUrl(deModulo).catch(() => undefined);
+      return;
+    }
+
     this.abrirPantallaElegida();
   }
 

@@ -47,6 +47,28 @@ describe('ModulosService', () => {
     await expect(modulos.componentesDeRanura(RANURAS.cabeceraAcciones)).resolves.toEqual([]);
   });
 
+  it('pantallaAlEntrarAlInicio: gana el primer módulo activo que pide una, con el perfil de quien entra', () => {
+    const recibido: unknown[] = [];
+    const modulos = servicio([
+      entrada(moduloDePrueba('apagado', { alEntrarAlInicio: () => '/apagado' }), false),
+      entrada(moduloDePrueba('nada', { alEntrarAlInicio: (perfil) => (recibido.push(perfil), null) })),
+      entrada(moduloDePrueba('falla', { alEntrarAlInicio: () => { throw new Error('roto'); } })),
+      entrada(moduloDePrueba('bienvenida', { alEntrarAlInicio: () => '/bienvenida' })),
+      entrada(moduloDePrueba('despues', { alEntrarAlInicio: () => '/despues' })),
+    ]);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const perfil = { uid: 'u1', role: 'ciudadano' } as never;
+
+    expect(modulos.pantallaAlEntrarAlInicio(perfil)).toBe('/bienvenida');
+    expect(recibido).toEqual([perfil]);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining('falla'), expect.any(Error));
+    error.mockRestore();
+  });
+
+  it('pantallaAlEntrarAlInicio: sin módulos que pidan una, null', () => {
+    expect(servicio([entrada(moduloDePrueba('a'))]).pantallaAlEntrarAlInicio(null)).toBeNull();
+  });
+
   it('sin reemplazo usa modulos.config.ts', () => {
     TestBed.configureTestingModule({});
     expect(TestBed.inject(ModulosService).activo('reportes')).toBe(true);

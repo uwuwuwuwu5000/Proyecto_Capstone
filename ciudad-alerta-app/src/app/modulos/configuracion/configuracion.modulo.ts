@@ -21,8 +21,8 @@ export const MODULO_CONFIGURACION: ModuloApp = {
   id: 'configuracion',
   nombre: 'Configuración',
   descripcion: 'Tema, texto, animaciones, pantalla al abrir, ahorro de datos y estado del servicio de fotos; datos técnicos para el equipo.',
-  // Estado del servicio de fotos (reportes) y enlace a Mi perfil, si están activos.
-  opcionales: ['reportes', 'perfil'],
+  // Estado del servicio de fotos (reportes), enlace a Mi perfil y a la bienvenida, si están activos.
+  opcionales: ['reportes', 'perfil', 'bienvenida'],
   rutas: [
     {
       path: 'configuracion',

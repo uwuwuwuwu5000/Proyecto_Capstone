@@ -106,6 +106,8 @@ export class ConfiguracionPage {
   readonly estadoServicio = signal<EstadoServicioPrivacidad | null>(null);
 
   readonly conPerfil = this.modulos.activo('perfil');
+  /** «Ver la introducción» abre otra vez las pantallas de bienvenida. */
+  readonly conBienvenida = this.modulos.activo('bienvenida');
   readonly fotoNormal = FOTO_NORMAL.lado;
   readonly fotoAhorro = FOTO_AHORRO.lado;
 
