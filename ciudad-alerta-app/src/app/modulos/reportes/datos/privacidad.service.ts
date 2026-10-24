@@ -17,6 +17,21 @@ export class PrivacidadError extends Error {
   }
 }
 
+/** Lo que dice GET /salud del servicio de privacidad (Configuración). */
+export interface EstadoServicioPrivacidad {
+  /** Respondió a tiempo. */
+  responde: boolean;
+  /** Tiene los modelos cargados y puede proteger fotos. */
+  listo: boolean;
+  /** Compara fotos para los duplicados (MobileNet). */
+  similitud: boolean;
+  backend: string | null;
+  version: string | null;
+  /** Lo que tardó en responder, incluido despertar. */
+  ms: number;
+  error: string | null;
+}
+
 /** Lo que devuelve POST /v1/proteger del servicio de privacidad. */
 interface RespuestaServicio {
   imagen: string;
@@ -65,6 +80,52 @@ export class PrivacidadService {
    */
   despertar(): void {
     void fetch(`${PARAMETROS_PRIVACIDAD.url}/salud`, { cache: 'no-store' }).catch(() => undefined);
+  }
+
+  /**
+   * Pregunta al servicio cómo está, esperando hasta el tiempo máximo (si
+   * estaba dormido, esto lo despierta). No lanza errores.
+   */
+  async consultarEstado(): Promise<EstadoServicioPrivacidad> {
+    const inicio = Date.now();
+    const controlador = new AbortController();
+    const limite = setTimeout(() => controlador.abort(), PARAMETROS_PRIVACIDAD.tiempoMaximoMs);
+
+    try {
+      const respuesta = await fetch(`${PARAMETROS_PRIVACIDAD.url}/salud`, {
+        cache: 'no-store',
+        signal: controlador.signal,
+      });
+      const salud = (await respuesta.json().catch(() => ({}))) as Partial<{
+        listo: boolean;
+        similitud: boolean;
+        backend: string;
+        version: string;
+        error: string | null;
+      }>;
+
+      return {
+        responde: respuesta.ok,
+        listo: salud.listo === true,
+        similitud: salud.similitud === true,
+        backend: salud.backend ?? null,
+        version: salud.version ?? null,
+        ms: Date.now() - inicio,
+        error: respuesta.ok ? (salud.error ?? null) : `HTTP ${respuesta.status}`,
+      };
+    } catch (error) {
+      return {
+        responde: false,
+        listo: false,
+        similitud: false,
+        backend: null,
+        version: null,
+        ms: Date.now() - inicio,
+        error: controlador.signal.aborted ? 'Sin respuesta en 90 s' : describir(error),
+      };
+    } finally {
+      clearTimeout(limite);
+    }
   }
 
   /** Cancela la foto que se está protegiendo. */

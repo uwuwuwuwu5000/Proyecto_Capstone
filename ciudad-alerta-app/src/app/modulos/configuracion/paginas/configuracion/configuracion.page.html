@@ -1,0 +1,184 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Configuración</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="contenido" [fullscreen]="true">
+  <div class="shell ca-escalonado">
+    <p class="intro">Se guarda en este teléfono. En otro teléfono puedes elegir distinto.</p>
+
+    <section class="bloque" aria-labelledby="titulo-apariencia">
+      <h2 id="titulo-apariencia">Apariencia</h2>
+
+      <div class="opcion">
+        <span class="opcion__titulo" id="op-tema">Tema</span>
+        <ion-segment [value]="tema()" (ionChange)="cambiarTema($event.detail.value)" aria-labelledby="op-tema">
+          <ion-segment-button value="oscuro">Oscuro</ion-segment-button>
+          <ion-segment-button value="claro">Claro</ion-segment-button>
+        </ion-segment>
+      </div>
+
+      <div class="opcion">
+        <span class="opcion__titulo" id="op-texto">Tamaño del texto</span>
+        <ion-segment [value]="prefs().texto" (ionChange)="cambiar('texto', $event.detail.value)" aria-labelledby="op-texto">
+          <ion-segment-button value="normal">Normal</ion-segment-button>
+          <ion-segment-button value="grande">Grande</ion-segment-button>
+          <ion-segment-button value="muy-grande">Muy grande</ion-segment-button>
+        </ion-segment>
+      </div>
+
+      <div class="opcion">
+        <span class="opcion__titulo" id="op-animaciones">Animaciones</span>
+        <ion-segment
+          [value]="prefs().animaciones"
+          (ionChange)="cambiar('animaciones', $event.detail.value)"
+          aria-labelledby="op-animaciones"
+        >
+          <ion-segment-button value="sistema">Como el teléfono</ion-segment-button>
+          <ion-segment-button value="si">Sí</ion-segment-button>
+          <ion-segment-button value="no">No</ion-segment-button>
+        </ion-segment>
+        <p class="nota">Por ejemplo, cómo aparece el inicio al abrir la app.</p>
+      </div>
+    </section>
+
+    <section class="bloque" aria-labelledby="titulo-abrir">
+      <h2 id="titulo-abrir">Al abrir la app</h2>
+      <ion-select
+        label="Ir a"
+        labelPlacement="start"
+        interface="action-sheet"
+        cancelText="Cancelar"
+        [value]="prefs().abrirEn ?? ''"
+        (ionChange)="cambiarPantalla($event.detail.value)"
+      >
+        <ion-select-option value="">Inicio</ion-select-option>
+        @for (pantalla of pantallas(); track pantalla.ruta) {
+          <ion-select-option [value]="pantalla.ruta">{{ pantalla.texto }}</ion-select-option>
+        }
+      </ion-select>
+      <p class="nota">
+        Si casi siempre abres la app para reportar, elige «Crear un reporte». Con «atrás» vuelves al inicio.
+      </p>
+    </section>
+
+    <section class="bloque" aria-labelledby="titulo-datos">
+      <h2 id="titulo-datos">Fotos y datos móviles</h2>
+      <ion-toggle
+        justify="space-between"
+        [checked]="prefs().ahorroDatos"
+        (ionChange)="cambiar('ahorroDatos', $event.detail.checked)"
+      >
+        Ahorro de datos
+      </ion-toggle>
+      <p class="nota">
+        Las fotos se envían de {{ fotoAhorro }} px en vez de {{ fotoNormal }} px y pesan cerca de la mitad. Se siguen
+        viendo bien para revisar el problema.
+      </p>
+    </section>
+
+    @if (conServicioDeFotos) {
+      <section class="bloque" aria-labelledby="titulo-servicio">
+        <h2 id="titulo-servicio">Protección de las fotos</h2>
+        <p class="nota">
+          Las caras se difuminan en un servicio en la nube que se duerme si nadie lo usa en 15 minutos. Si vas a
+          tomar una foto, puedes despertarlo antes.
+        </p>
+
+        @if (estadoServicio(); as estado) {
+          <p class="estado" [class.estado--mal]="!estado.responde || !estado.listo" role="status">
+            <ion-icon
+              [name]="estado.responde && estado.listo ? 'checkmark-circle-outline' : 'cloud-offline-outline'"
+              aria-hidden="true"
+            ></ion-icon>
+            {{ textoServicio(estado) }}
+          </p>
+        }
+
+        <ion-button fill="outline" size="small" [disabled]="comprobando()" (click)="comprobarServicio()">
+          @if (comprobando()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+            Despertando… (hasta un minuto)
+          } @else {
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Comprobar y despertar
+          }
+        </ion-button>
+
+        @if (esStaff() && estadoServicio(); as estado) {
+          <dl class="datos">
+            <div class="datos__fila"><dt>Respuesta</dt><dd>{{ estado.ms }} ms</dd></div>
+            <div class="datos__fila"><dt>Rostros y personas</dt><dd>{{ estado.listo ? 'Listo' : 'No' }}</dd></div>
+            <div class="datos__fila"><dt>Comparar fotos</dt><dd>{{ estado.similitud ? 'Sí' : 'No' }}</dd></div>
+            <div class="datos__fila"><dt>Motor · versión</dt><dd>{{ estado.backend ?? '—' }} · {{ estado.version ?? '—' }}</dd></div>
+            @if (estado.error; as error) {
+              <div class="datos__fila"><dt>Detalle</dt><dd>{{ error }}</dd></div>
+            }
+            <div class="datos__fila datos__fila--tecnica"><dt>Dirección</dt><dd>{{ urlServicio }}</dd></div>
+          </dl>
+        }
+      </section>
+    }
+
+    <section class="bloque" aria-labelledby="titulo-telefono">
+      <h2 id="titulo-telefono">Este teléfono</h2>
+      <div class="acciones">
+        <ion-button fill="outline" size="small" (click)="copiarDiagnostico()">
+          <ion-icon slot="start" name="copy-outline" aria-hidden="true"></ion-icon>
+          Copiar datos para soporte
+        </ion-button>
+        <ion-button fill="outline" size="small" color="danger" (click)="borrarDatos()">
+          <ion-icon slot="start" name="trash-outline" aria-hidden="true"></ion-icon>
+          Borrar datos guardados
+        </ion-button>
+        <ion-button fill="clear" size="small" (click)="restablecer()">Restablecer configuración</ion-button>
+      </div>
+      <p class="nota">
+        «Copiar datos para soporte» copia la versión y el estado de la app, sin tu correo, para pegarlos en un mensaje.
+      </p>
+    </section>
+
+    @if (esStaff()) {
+      <section class="bloque" aria-labelledby="titulo-equipo">
+        <h2 id="titulo-equipo">Para el equipo</h2>
+        <dl class="datos">
+          <div class="datos__fila">
+            <dt>Versión</dt>
+            <dd>{{ version.nombre }} (código {{ version.codigo }}){{ version.demo ? ' · prueba' : '' }}</dd>
+          </div>
+          <div class="datos__fila"><dt>Compilación</dt><dd>{{ produccion ? 'Producción' : 'Desarrollo' }}</dd></div>
+          <div class="datos__fila"><dt>Proyecto de Firebase</dt><dd>{{ proyecto }}</dd></div>
+        </dl>
+
+        @if (esAdmin()) {
+          <h3>Módulos de esta versión</h3>
+          <ul class="modulos">
+            @for (modulo of listaModulos; track modulo.id) {
+              <li [class.modulos__apagado]="!modulo.activo">
+                <strong>{{ modulo.nombre }}</strong>
+                <span class="modulos__estado">{{ modulo.activo ? 'Activo' : 'Apagado' }}</span>
+                <span class="modulos__descripcion">{{ modulo.descripcion }}</span>
+              </li>
+            }
+          </ul>
+          <p class="nota">Se encienden y apagan en <code>src/app/modulos.config.ts</code> (<code>npm run modulo</code>).</p>
+        }
+      </section>
+    }
+
+    <section class="bloque cuenta">
+      @if (conPerfil) {
+        <ion-button fill="clear" size="small" routerLink="/perfil">
+          <ion-icon slot="start" name="person-circle-outline" aria-hidden="true"></ion-icon>
+          Mi perfil
+        </ion-button>
+      }
+      <app-cerrar-sesion />
+      <app-version-demo />
+    </section>
+  </div>
+</ion-content>

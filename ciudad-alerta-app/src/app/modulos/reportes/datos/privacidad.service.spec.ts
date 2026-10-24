@@ -187,6 +187,24 @@ describe('PrivacidadService', () => {
     expect(error.message).toContain('a tiempo');
   });
 
+  it('consultarEstado() cuenta lo que dice /salud y cuánto tardó', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => respuesta({ listo: true, similitud: false, backend: 'wasm', version: '1.0.0', error: null })),
+    );
+
+    const estado = await service.consultarEstado();
+
+    expect(estado).toMatchObject({ responde: true, listo: true, similitud: false, backend: 'wasm', version: '1.0.0', error: null });
+    expect(estado.ms).toBeGreaterThanOrEqual(0);
+  });
+
+  it('consultarEstado() sin red no lanza: dice que no responde', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+
+    expect(await service.consultarEstado()).toMatchObject({ responde: false, listo: false, error: 'TypeError: Failed to fetch' });
+  });
+
   it('despertar() consulta /salud y no falla si no hay red', async () => {
     const fetchFalso = vi.fn(async () => Promise.reject(new TypeError('Failed to fetch')));
     vi.stubGlobal('fetch', fetchFalso);
