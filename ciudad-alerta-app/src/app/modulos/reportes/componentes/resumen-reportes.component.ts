@@ -3,6 +3,7 @@ import { addIcons } from 'ionicons';
 import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 
 import { TarjetaResumenComponent } from '../../../compartido/tarjeta-resumen';
+import { EsperaDePantalla } from '../../../nucleo/carga';
 import { UserProfile } from '../../../models/user-profile.model';
 import { ReportQueryService } from '../../../services/report-query.service';
 import { ResumenMisReportes, resumenDeMisReportes, textoConteos, textoUltimo } from '../resumen';
@@ -53,6 +54,8 @@ export class ResumenReportesComponent {
   protected readonly ultimo = textoUltimo;
   /** null mientras carga, si falla o si no corresponde mostrarla. */
   protected readonly resumen = signal<ResumenMisReportes | null>(null);
+  /** El inicio espera a esta tarjeta para mostrarse entero. */
+  private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('Tus reportes');
 
   constructor() {
     addIcons({ addCircleOutline, documentTextOutline });
@@ -60,8 +63,15 @@ export class ResumenReportesComponent {
     effect(() => {
       const perfil = this.perfil();
 
-      if (!perfil || perfil.role === 'operador') {
+      if (!perfil) {
+        // Hasta que llegue el perfil no se sabe si corresponde.
         this.resumen.set(null);
+        return;
+      }
+
+      if (perfil.role === 'operador') {
+        this.resumen.set(null);
+        this.carga?.listo();
         return;
       }
 
@@ -70,12 +80,15 @@ export class ResumenReportesComponent {
   }
 
   private async cargar(): Promise<void> {
+    this.carga?.pendiente();
     try {
       const { reportes, cursor } = await this.queryService.getMyReports(REPORTES_LEIDOS);
       this.resumen.set(resumenDeMisReportes(reportes, cursor !== null));
     } catch {
       // Sin red el inicio sigue igual, solo sin esta tarjeta.
       this.resumen.set(null);
+    } finally {
+      this.carga?.listo();
     }
   }
 }

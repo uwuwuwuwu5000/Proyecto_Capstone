@@ -1,7 +1,11 @@
-import { signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { afterEach, vi } from 'vitest';
 
 import { UserProfile } from '../../models/user-profile.model';
+import { ESPERA_MAXIMA_MS, EsperaDePantalla } from '../../nucleo/carga';
+import { CONFIGURACION_MODULOS, RANURAS } from '../../nucleo/modulos';
+import { entrada, moduloDePrueba } from '../../../testing/modulos-de-prueba';
 import { AuthService } from '../../services/auth.service';
 import { HomePage } from './home.page';
 import { usarEntornoDePrueba } from '../../../testing';
@@ -80,5 +84,98 @@ describe('HomePage', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Hola, rodrigo');
+  });
+});
+
+/** Pieza del resumen que se registra y nunca termina (sin red). */
+@Component({ selector: 'app-pieza-lenta', standalone: true, template: `<span class="lenta">lenta</span>` })
+class PiezaLentaComponent {
+  readonly perfil = input<unknown>(null);
+  constructor() {
+    inject(EsperaDePantalla, { optional: true })?.registrar('pieza lenta');
+  }
+}
+
+describe('HomePage · carga en segundo plano', () => {
+  let fixture: ComponentFixture<HomePage>;
+  const shell = () => fixture.nativeElement.querySelector('.inicio-shell') as HTMLElement;
+  const texto = () => fixture.nativeElement.textContent as string;
+
+  function preparar(config: ReturnType<typeof entrada>[] = []): void {
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CONFIGURACION_MODULOS, useValue: config },
+        {
+          provide: AuthService,
+          useValue: {
+            user: { uid: 'u1' },
+            currentUser: signal({ uid: 'u1', email: 'rodrigo@prueba.cl', emailVerified: true }),
+            asegurarPerfil: vi.fn().mockResolvedValue(undefined),
+            getUserProfile: vi.fn().mockResolvedValue({ displayName: 'Rodrigo', role: 'ciudadano' }),
+          },
+        },
+      ],
+    });
+    fixture = TestBed.createComponent(HomePage);
+    fixture.detectChanges();
+  }
+
+  afterEach(() => {
+    document.getElementById('arranque')?.remove();
+    vi.useRealTimers();
+  });
+
+  it('se arma oculto y aparece entero, de arriba abajo, cuando tiene el perfil', async () => {
+    preparar();
+    expect(texto()).toContain('Preparando tu inicio');
+    expect(shell().classList).toContain('inicio-shell--oculto');
+
+    await fixture.componentInstance.ionViewWillEnter();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(texto()).not.toContain('Preparando tu inicio');
+    expect(shell().classList).not.toContain('inicio-shell--oculto');
+    expect(shell().classList).toContain('ca-escalonado');
+  });
+
+  it('al mostrarse, quita la pantalla de arranque', async () => {
+    const arranque = document.createElement('div');
+    arranque.id = 'arranque';
+    document.body.appendChild(arranque);
+    preparar();
+
+    await fixture.componentInstance.ionViewWillEnter();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(arranque.classList).toContain('arranque--fuera');
+  });
+
+  it('si una tarjeta no responde, el inicio se muestra igual al agotarse el tiempo', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    preparar([
+      entrada(
+        moduloDePrueba('lento', {
+          ranuras: [{ ranura: RANURAS.inicioResumen, cargar: () => Promise.resolve(PiezaLentaComponent) }],
+        }),
+      ),
+    ]);
+
+    await fixture.componentInstance.ionViewWillEnter();
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+    await vi.advanceTimersByTimeAsync(0);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.lenta')).not.toBeNull();
+    expect(shell().classList).toContain('inicio-shell--oculto');
+
+    await vi.advanceTimersByTimeAsync(ESPERA_MAXIMA_MS);
+    fixture.detectChanges();
+    expect(shell().classList).toContain('ca-escalonado');
   });
 });

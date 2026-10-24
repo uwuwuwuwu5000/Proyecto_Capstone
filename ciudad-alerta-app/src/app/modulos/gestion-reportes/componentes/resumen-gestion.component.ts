@@ -4,6 +4,7 @@ import { albumsOutline, checkmarkDoneOutline } from 'ionicons/icons';
 
 import { TarjetaResumenComponent } from '../../../compartido/tarjeta-resumen';
 import { UserProfile } from '../../../models/user-profile.model';
+import { EsperaDePantalla } from '../../../nucleo/carga';
 import { ResumenGestion, ResumenGestionService } from '../datos/resumen-gestion.service';
 
 /**
@@ -34,6 +35,8 @@ export class ResumenGestionComponent {
   readonly perfil = input<UserProfile | null>(null);
 
   protected readonly resumen = signal<ResumenGestion | null>(null);
+  /** El inicio espera a esta tarjeta para mostrarse entero. */
+  private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('Por atender');
   protected readonly titulo = computed(() =>
     this.perfil()?.role === 'operador' ? 'Por atender en tu organismo' : 'Por atender',
   );
@@ -43,6 +46,11 @@ export class ResumenGestionComponent {
 
     effect(() => {
       const perfil = this.perfil();
+      // Hasta que llegue el perfil no se sabe si corresponde.
+      if (!perfil) {
+        this.resumen.set(null);
+        return;
+      }
       void this.cargar(perfil);
     });
   }
@@ -53,7 +61,8 @@ export class ResumenGestionComponent {
     return r.sinRevisar > 0 ? `${abiertos} · ${r.sinRevisar} sin revisar` : abiertos;
   }
 
-  private async cargar(perfil: UserProfile | null): Promise<void> {
+  private async cargar(perfil: UserProfile): Promise<void> {
+    this.carga?.pendiente();
     try {
       if (perfil?.role === 'admin') {
         this.resumen.set(await this.servicio.deAdministrador());
@@ -65,6 +74,8 @@ export class ResumenGestionComponent {
     } catch {
       // Sin red el inicio sigue igual, solo sin esta tarjeta.
       this.resumen.set(null);
+    } finally {
+      this.carga?.listo();
     }
   }
 }

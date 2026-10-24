@@ -207,3 +207,44 @@ ion-action-sheet .action-sheet-button.action-sheet-cancel,
 ion-alert .alert-button.alert-button-role-cancel {
   color: var(--ion-color-danger);
 }
+
+/*
+ * Aparición escalonada: los hijos directos de `.ca-escalonado` entran de
+ * arriba abajo, uno tras otro. El inicio la activa cuando ya tiene todo
+ * (EsperaDePantalla), para que no se vea cada parte llegando por su cuenta.
+ *
+ * El orden es la posición del hijo; se puede fijar con `--ca-orden` en el
+ * hijo, y desplazar todo un grupo con `--ca-orden-base` en el contenedor. Un
+ * `.ca-escalonado` dentro de otro no se anima: lo hacen sus hijos.
+ */
+@keyframes ca-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ca-escalonado > * {
+  animation: ca-aparecer 460ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc((var(--ca-orden-base, 0) + var(--ca-orden, var(--ca-indice, 0))) * 60ms);
+}
+
+.ca-escalonado > .ca-escalonado {
+  animation: none;
+}
+
+@for $i from 1 through 16 {
+  .ca-escalonado > :nth-child(#{$i}) {
+    --ca-indice: #{$i - 1};
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ca-escalonado > * {
+    animation: none;
+  }
+}

@@ -5,6 +5,7 @@ import { addIcons } from 'ionicons';
 import { chevronForwardOutline, ribbonOutline } from 'ionicons/icons';
 
 import { UserProfile } from '../../../models/user-profile.model';
+import { EsperaDePantalla } from '../../../nucleo/carga';
 import { ConfianzaService } from '../datos/confianza.service';
 import { ProgresoNivel, progresoDeNivel } from '@ciudad-alerta/comun';
 
@@ -84,6 +85,8 @@ export class ResumenConfianzaComponent {
   readonly perfil = input<UserProfile | null>(null);
 
   protected readonly progreso = signal<ProgresoNivel | null>(null);
+  /** El inicio espera a esta tarjeta para mostrarse entero. */
+  private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('Nivel de confianza');
 
   constructor() {
     addIcons({ chevronForwardOutline, ribbonOutline });
@@ -91,8 +94,15 @@ export class ResumenConfianzaComponent {
     effect(() => {
       const perfil = this.perfil();
 
-      if (!perfil || perfil.role === 'operador') {
+      if (!perfil) {
+        // Hasta que llegue el perfil no se sabe si corresponde.
         this.progreso.set(null);
+        return;
+      }
+
+      if (perfil.role === 'operador') {
+        this.progreso.set(null);
+        this.carga?.listo();
         return;
       }
 
@@ -103,10 +113,13 @@ export class ResumenConfianzaComponent {
   }
 
   private async cargar(): Promise<void> {
+    this.carga?.pendiente();
     try {
       const estado = await this.confianza.miConfianza();
       const progreso = progresoDeNivel(estado.puntos);
       this.progreso.set(progreso);
+      // Ya se puede mostrar; el aviso de nivel nuevo no hace esperar.
+      this.carga?.listo();
 
       if (this.confianza.subioDeNivel(progreso.nivel)) {
         const toast = await this.toastCtrl.create({
@@ -119,6 +132,8 @@ export class ResumenConfianzaComponent {
       }
     } catch {
       this.progreso.set(null);
+    } finally {
+      this.carga?.listo();
     }
   }
 }

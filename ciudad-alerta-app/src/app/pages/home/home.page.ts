@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, Injector, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   IonButton,
@@ -16,6 +16,7 @@ import { CerrarSesionComponent } from '../../compartido/sesion';
 import { ThemeToggleComponent } from '../../compartido/tema';
 import { VersionDemoComponent } from '../../compartido/version-demo';
 import { UserProfile } from '../../models/user-profile.model';
+import { ArranqueService, EsperaDePantalla } from '../../nucleo/carga';
 import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 import { AuthService } from '../../services/auth.service';
 
@@ -28,12 +29,19 @@ import { AuthService } from '../../services/auth.service';
  * Los datos de la cuenta y la verificación del correo están en «Mi perfil»
  * (feedback Sprint 5). Aquí queda lo mínimo para que el inicio funcione con
  * cualquier combinación de módulos, incluido «Cerrar sesión».
+ *
+ * Carga: el inicio se arma oculto y aparece entero, de arriba abajo, cuando
+ * el perfil, las ranuras y cada tarjeta tienen sus datos (EsperaDePantalla,
+ * con un máximo de 2,5 s). Antes cada parte aparecía cuando le llegaba lo
+ * suyo y la pantalla saltaba. Al abrir la app, hasta ese momento se ve la
+ * pantalla de arranque (ArranqueService).
  */
 @Component({
   selector: 'app-home',
   standalone: true,
   templateUrl: './home.page.html',
   styleUrls: ['./home.page.scss'],
+  providers: [EsperaDePantalla],
   imports: [
     CerrarSesionComponent,
     RanuraComponent,
@@ -52,6 +60,13 @@ import { AuthService } from '../../services/auth.service';
 export class HomePage {
   private readonly authService = inject(AuthService);
   protected readonly modulos = inject(ModulosService);
+  private readonly injector = inject(Injector);
+
+  /** Espera a que todo tenga sus datos para mostrar el inicio entero. */
+  protected readonly espera = inject(EsperaDePantalla);
+  private readonly carga = this.espera.registrar('perfil');
+  /** Cuenta cuyo inicio ya se mostró, para volver a esperar si cambia. */
+  private uidMostrado: string | null = null;
 
   /** Usuario autenticado expuesto como señal por el servicio. */
   readonly usuario = this.authService.currentUser;
@@ -73,6 +88,11 @@ export class HomePage {
   constructor() {
     // Los íconos de los botones de cada módulo los registra provideModulos().
     addIcons({ personCircleOutline });
+
+    const arranque = inject(ArranqueService);
+    effect(() => {
+      if (this.espera.lista()) arranque.terminar();
+    });
   }
 
   /**
@@ -90,7 +110,14 @@ export class HomePage {
 
     if (!actual) {
       this.perfil.set(null);
+      this.carga.listo();
       return;
+    }
+
+    // Otra cuenta en la misma instancia (BUG 31): se vuelve a esperar.
+    if (this.uidMostrado !== null && this.uidMostrado !== actual.uid) {
+      this.espera.reiniciar();
+      this.carga.pendiente();
     }
 
     try {
@@ -100,6 +127,11 @@ export class HomePage {
       this.perfil.set(await this.authService.getUserProfile(actual.uid));
     } catch {
       this.perfil.set(null);
+    } finally {
+      this.uidMostrado = actual.uid;
+      // Después de dibujar con el perfil: las tarjetas ya pidieron sus datos
+      // y se registraron como pendientes.
+      afterNextRender(() => this.carga.listo(), { injector: this.injector });
     }
   }
 }
