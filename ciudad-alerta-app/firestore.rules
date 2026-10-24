@@ -25,7 +25,10 @@ service cloud.firestore {
      * actualizar ambos archivos y volver a desplegar.
      */
     function esCorreoAdministrador() {
+      // DIAG-2 · Solo con el correo verificado: si no, quien registrara
+      // primero un correo de la lista (sin ser su dueño) nacería admin.
       return estaAutenticado()
+        && request.auth.token.email_verified == true
         && request.auth.token.email in [
              'es.ibarra@duocuc.cl',
              'cla.torres@duocuc.cl',
@@ -307,6 +310,9 @@ service cloud.firestore {
     function camposProtegidosIntactos() {
       return request.resource.data.trustLevel == resource.data.trustLevel
         && request.resource.data.validatedReports == resource.data.validatedReports
+        // DIAG-1 · El operadorId lo asigna un admin al crear la cuenta: si el
+        // operador pudiera cambiárselo, gestionaría reportes de otra comuna.
+        && request.resource.data.get('operadorId', null) == resource.data.get('operadorId', null)
         && (
              request.resource.data.role == resource.data.role
              // Única promoción de rol admitida: una cuenta de la lista de
@@ -756,6 +762,9 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.estado == 'reportado'
         && request.resource.data.confirmaciones == 0
+        // La fecha la pone el servidor: sin esto se podían crear reportes
+        // con fecha falsa (y saltarse los tiempos de respuesta).
+        && request.resource.data.createdAt == request.time
         && descripcionValida()
         && categoriaValida()
         && ubicacionValida()

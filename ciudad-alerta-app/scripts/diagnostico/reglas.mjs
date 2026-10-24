@@ -460,32 +460,28 @@ bloqueo('Confianza: un veredicto falso exige comentario', () =>
 bloqueo('Confianza: el operador de Maipú no da veredicto a un reporte de Pudahuel', () =>
   darVeredicto(como('opmaipu'), 'opmaipu', 'r_luis', 'luis'));
 
-// BRECHA: huecos conocidos de las reglas actuales
-brecha(
-  'Un operador no cambia su propio operadorId',
-  () => updateDoc(doc(como('opmaipu'), 'users/opmaipu'), { operadorId: 'op_pudahuel' }),
-  "En camposProtegidosIntactos(): && request.resource.data.get('operadorId', null) == resource.data.get('operadorId', null)",
-);
+// Brechas cerradas para la 1.0 (antes figuraban como BRECHA).
+bloqueo('Un operador no cambia su propio operadorId', () =>
+  updateDoc(doc(como('opmaipu'), 'users/opmaipu'), { operadorId: 'op_pudahuel' }));
 if (correosAdmin.length) {
   const correo = correosAdmin.at(-1);
-  brecha(
-    `Un correo de la lista sin verificar (${correo}) no nace admin`,
-    () =>
-      setDoc(doc(entorno.authenticatedContext('intruso', { email: correo, email_verified: false }).firestore(), 'users/intruso'), {
-        ...perfil('intruso', 'Intruso', 'admin'), email: correo, emailVerified: false,
-      }),
-    'En esCorreoAdministrador(): && request.auth.token.email_verified == true',
-  );
+  bloqueo(`Un correo de la lista sin verificar (${correo}) no nace admin`, () =>
+    setDoc(doc(entorno.authenticatedContext('intruso', { email: correo, email_verified: false }).firestore(), 'users/intruso'), {
+      ...perfil('intruso', 'Intruso', 'admin'), email: correo, emailVerified: false, createdAt: serverTimestamp(),
+    }));
+  control(`Un correo de la lista ya verificado (${correo}) sí nace admin`, () =>
+    setDoc(doc(entorno.authenticatedContext('jefa', { email: correo, email_verified: true }).firestore(), 'users/jefa'), {
+      ...perfil('jefa', 'Jefa', 'admin'), email: correo, emailVerified: true, createdAt: serverTimestamp(),
+    }));
 }
+bloqueo('Un reporte no se crea con fecha falsa', () =>
+  setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { createdAt: Timestamp.fromDate(new Date('2020-01-01')) })));
+
+// BRECHA: huecos conocidos de las reglas actuales
 brecha(
   'Un reporte no acepta campos extra (validadoComunidad: true)',
   () => setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { validadoComunidad: true })),
   'En la creación de reports: && request.resource.data.keys().hasOnly([...campos que escribe la app...])',
-);
-brecha(
-  'Un reporte no se crea con fecha falsa',
-  () => setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { createdAt: Timestamp.fromDate(new Date('2020-01-01')) })),
-  'En la creación de reports: && request.resource.data.createdAt == request.time',
 );
 brecha(
   'No se suben fotos sin reporte',
