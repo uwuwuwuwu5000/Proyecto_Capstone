@@ -49,8 +49,8 @@ Proyecto_Capstone/
     ├── test-setup.ts              registra esas ayudas para todas las pruebas
     └── app/
         ├── modulos.config.ts      ← EL INTERRUPTOR: qué módulos están activos
-        ├── app.routes.ts          ← solo login, home y '**'; el resto lo suman los módulos
-        ├── pages/                 ← solo el esqueleto: login y home
+        ├── app.routes.ts          ← solo login, home, terminos y '**'; el resto lo suman los módulos
+        ├── pages/                 ← solo el esqueleto: login, home y terminos (términos y privacidad)
         ├── nucleo/modulos/        ← la mecánica (no se toca para agregar funcionalidades)
         ├── nucleo/carga/          ← pantalla de arranque y EsperaDePantalla (mostrar todo junto)
         ├── compartido/            ← mapa, tema, sesion (Cerrar sesión), version-demo
@@ -62,10 +62,12 @@ Proyecto_Capstone/
         │                            user-profile.model
         ├── guards/auth-guard.ts   ← con guion
         └── modulos/
-            ├── reportes/          paginas/{report, my-reports, report-detail} · componentes/similar-reports
+            ├── reportes/          paginas/{report, my-reports, report-detail}
+            │                      componentes/ (similar-reports, contacto-organismo, aviso-emergencia,
+            │                      acciones-autor, borrador-pendiente)
             │                      datos/ (report, camera, photo-storage, privacidad → nube, image-similarity,
-            │                      confirmation, duplicate-detection) · modelo/ · parametros.ts (URL del servicio)
-            │                      · rutas.ts · resolucion.ts
+            │                      confirmation, duplicate-detection, contacto-organismo, mi-reporte, borrador)
+            │                      · modelo/ · parametros.ts (URL del servicio) · rutas.ts · resolucion.ts
             ├── mapa-incidencias/  paginas/mapa · datos/regiones.service.ts · parametros.ts
             ├── cercanos/          paginas/nearby · parametros.ts
             ├── confianza/         datos/ (confianza, veredicto) · componentes/ (… veredicto-reporte)
@@ -75,8 +77,9 @@ Proyecto_Capstone/
             ├── gestion-reportes/  paginas/admin-reports · componentes/gestion-reporte · datos/cambio-estado.service.ts
             ├── municipalidades/   paginas/admin-organismos · datos/organismos.service.ts
             ├── configuracion/     paginas/configuracion · componentes/boton-configuracion (el engranaje)
-            └── perfil/            paginas/mi-perfil · componentes/{verificacion-correo, aviso-verificacion}
-                                   datos/perfil.service.ts · modelo.ts
+            ├── perfil/            paginas/mi-perfil · componentes/{verificacion-correo, aviso-verificacion}
+            │                      datos/ (perfil, eliminar-cuenta) · modelo.ts
+            └── bienvenida/        paginas/bienvenida · datos/bienvenida.service.ts (1.0)
 ```
 
 **Dentro de un módulo** siempre las mismas carpetas, solo las que necesite: `paginas/` (pantallas con ruta), `componentes/` (piezas sin ruta), `datos/` (servicios que leen o escriben Firestore, o que usan la cámara o un servicio externo), `modelo/` (tipos propios), `parametros.ts` (números ajustables), el manifiesto `<id>.modulo.ts` y su `index.ts`. Las reglas puras que también necesita el portal ya no van en `dominio/`: van en `comun/`.
@@ -116,7 +119,8 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
 | `rutas` | Sus pantallas. Siempre con `loadComponent` (carga diferida). |
 | `accesos` | Botones del inicio: `roles` (quién los ve), `orden`, `estilo` (`principal`, `gestion`), `seccion` (`explorar`, `cuenta`, `gestion`) y `textoSegunRol`. |
 | `ranuras` | Lo que pone en pantallas de otros módulos (ver 3.3), con `orden` si hay varios. |
-| `proveedores` | Lo que debe existir en toda la app: los avisos arrancan con ella; reportes registra `PHOTO_STORAGE`. |
+| `proveedores` | Lo que debe existir en toda la app: los avisos arrancan con ella; reportes registra `PHOTO_STORAGE` y arranca el borrador sin conexión. |
+| `alEntrarAlInicio` | Una pantalla que el módulo quiere abrir al entrar al inicio. Recibe el perfil y devuelve la ruta o `null`. El inicio la consulta después de los términos y antes de la pantalla elegida en Configuración; gana el primer módulo activo, en el orden de `modulos.config.ts`. La usa la bienvenida. |
 
 **Orden de los botones:** 10–50 ciudadano, 60–90 nuevos para ciudadano (Mi perfil es 90), 100–199 staff.
 
@@ -169,7 +173,7 @@ La pantalla **no importa al módulo**. Si nadie llena la ranura, muestra lo que 
 | `detalle-reporte.verificacion` | Detalle del reporte | `reporte`, `esAutor`, `alConfirmar` | confianza: barra y confirmación con peso |
 | `detalle-reporte.gestion` | Detalle del reporte, al final | `reporte`, `alCambiar` | gestión: botones de estado, motivo para otro operador, «Reportado por» (orden 0) · confianza: veredicto «Es real / Es falso» (10) |
 | `tarjeta-reporte.insignias` | Mis reportes, Cerca de mí, Gestión | `reporte` | confianza: «Validado», «Verificación 45 %» |
-| `inicio.resumen` | Inicio, bajo el saludo | `perfil` | perfil: «Verifica tu correo» (orden −10) · reportes: «Tus reportes» (0) · gestión: «Por atender» (5, solo staff) · confianza: nivel (10) |
+| `inicio.resumen` | Inicio, bajo el saludo | `perfil` | reportes: «Reporte por enviar» (orden −10, solo si hay uno guardado sin señal) · perfil: «Verifica tu correo» (−10) · reportes: «Tus reportes» (0) · gestión: «Por atender» (5, solo staff) · confianza: nivel (10) |
 | `perfil.resumen` | Mi perfil | `perfil` | confianza: tarjeta de nivel |
 | `cabecera.acciones` | Barra superior | (ninguna) | avisos: la campana (orden 0) · configuración: el engranaje (10) |
 
@@ -612,3 +616,85 @@ No hay reglas, índices ni dependencias nuevas. El servicio de privacidad no cam
 3. Preferencias de la app en el teléfono (texto, animaciones, ahorro de datos, pantalla al abrir).
 4. Pantalla de Configuración y engranaje en la barra.
 5. Plan de la 1.0, guías y plan de pruebas (CP-CAR y CP-CFG).
+
+---
+
+## 13. Versión 1.0
+
+Lo imprescindible del plan (`docs/PLAN_V1.md`, sección 1) y lo rápido de la sección 2. Sin dependencias nuevas.
+
+### Qué trae
+
+| Qué | Dónde | Notas |
+|---|---|---|
+| **Versión 1.0.0** sin el aviso de prueba | `npm run apk:final` | Escribe `nombre: '1.0.0'`, `demo: false` y el `versionName` de Gradle; deja el APK en `apk-final/`. `npm run apk:demo` sigue igual. |
+| **Ícono y arranque nativo** propios | `android/app/src/main/res/`, `resources/icono.svg` | El pin con «!» de la pantalla de arranque, sobre `#111827`. `allowBackup="false"`: la sesión no se copia a otro teléfono con el respaldo de Google. |
+| **Reglas:** brechas cerradas | `firestore.rules` | El operador ya no cambia su `operadorId`; la lista de administradores exige correo verificado; `createdAt == request.time` al crear un reporte. |
+| **Contactar al organismo** | Detalle del reporte | «Llamar» (`tel:`) y «Escribir» (`mailto:` con el asunto y el código del reporte) con el teléfono y el correo del operador asignado. Sin operador, lo dice. Los datos salen de `operadores/{id}`: `telefonoContacto`, `correoContacto`, `direccionContacto`. |
+| **Emergencias** | Crear un reporte | En árbol peligroso, luminaria, fuga de agua y calle deteriorada: «Si hay peligro ahora, llama» con 133, 132 y 131 (`comun/src/reportes/contacto.ts`). |
+| **Términos y privacidad** | `pages/terminos`, `comun/src/legal/terminos.ts` | Casilla obligatoria al registrarse; una cuenta que no aceptó la versión vigente la acepta al entrar. Se guarda `terminosVersion` y `terminosAceptadosAt` (hora del servidor). En Configuración, «Términos y privacidad». |
+| **Páginas públicas** | `servicio-privacidad`: `/privacidad` y `/eliminar-cuenta` | Las dos direcciones que pide Google Play. El correo de contacto sale de `CORREO_CONTACTO` en Render. |
+| **Eliminar mi cuenta** | Mi perfil → «Eliminar mi cuenta» | Pide la contraseña. Los reportes quedan como «Cuenta eliminada»; el perfil queda sin correo ni nombre; se borra la cuenta de Authentication. |
+| **Corregir o retirar** un reporte propio | Detalle → «Tu reporte» | Solo mientras siga «Reportado». Retirar lo deja «Cerrado», con `retiradoPorAutor` y una entrada en el historial firmada «Quien lo reportó». |
+| **Borrador sin conexión** | Crear un reporte, tarjeta «Reporte por enviar» del inicio | Sin señal, «Guardar y enviar con señal». Se envía solo al volver la conexión. La foto sin proteger queda solo en el teléfono y se difumina antes de subirla. |
+| **Bienvenida** | Módulo `bienvenida` | Tres pantallas la primera vez (las cuentas operador no la ven). «Ver la introducción» en Configuración. |
+
+### Instalar
+
+En la carpeta del repositorio, en `cmd`:
+
+```cmd
+git switch main-mobile
+git pull origin main-mobile
+git am "C:\ruta\version-1.0.mbox"
+git log --oneline -15
+
+cd comun
+npm test
+cd ..\servicio-privacidad
+npm test
+cd ..\ciudad-alerta-app
+npm run test:una-vez
+npm run diagnostico
+npm run diagnostico:reglas
+```
+
+`diagnostico:reglas` necesita el emulador de Firestore (Java). Debe terminar sin controles ni bloqueos fallidos; quedan 3 brechas conocidas. Después:
+
+```cmd
+firebase deploy --only firestore:rules
+git push origin main-mobile
+```
+
+**Hay que desplegar las reglas.** Sin ellas, la app nueva no puede guardar la aceptación de los términos, anonimizar los reportes al eliminar la cuenta, ni corregir o retirar un reporte (las reglas viejas lo rechazan con «permiso denegado»).
+
+**En Render**, en el servicio `ciudad-alerta-privacidad` → **Environment**, agrega `CORREO_CONTACTO` con el correo del equipo para solicitudes de privacidad. Render vuelve a desplegar solo. Sin esa variable, `/eliminar-cuenta` explica cómo eliminarla desde la app, pero no muestra un correo.
+
+### Antes de publicar
+
+1. **Revisar el texto legal** de `comun/src/legal/terminos.ts` con el profesor guía. Es un borrador escrito para el proyecto; no es asesoría legal. Si cambia algo de fondo, sube `VERSION_TERMINOS` y todas las cuentas lo vuelven a aceptar al entrar.
+2. **Llenar el contacto de cada operador** (`telefonoContacto`, `correoContacto` y, si atiende en persona, `direccionContacto`) desde el portal o la consola de Firebase. Sin esos datos, el detalle dice que el organismo aún no publicó cómo contactarlo.
+3. **Administradores:** si alguien de la lista de administradores tiene el correo sin verificar, deja de ser administrador hasta verificarlo. Los que ya tienen el rol guardado no cambian.
+4. `npm run apk:final` y probar la actualización encima de la versión de prueba (sección 19 del plan de pruebas).
+
+Google Play pide la política de privacidad y la página para eliminar la cuenta:
+
+- `https://ciudad-alerta-privacidad.onrender.com/privacidad`
+- `https://ciudad-alerta-privacidad.onrender.com/eliminar-cuenta`
+
+### Commits
+
+1. Reglas: cierra las dos brechas y la fecha falsa de los reportes.
+2. `npm run apk:final`: versión de entrega 1.0.0.
+3. Android: ícono y arranque nativo propios.
+4. `comun`: números de emergencia y enlaces de contacto.
+5. Reportes: contactar al organismo y aviso de emergencia.
+6. `comun`: términos de uso, privacidad y cómo eliminar la cuenta.
+7. Términos: pantalla y aceptación al registrarse o al entrar.
+8. Servicio de privacidad: páginas públicas `/privacidad` y `/eliminar-cuenta`.
+9. Perfil: eliminar mi cuenta, con los reportes anónimos.
+10. Android: sin respaldo automático de la sesión.
+11. Reportes: el autor corrige o retira su reporte sin revisar.
+12. Reportes: borrador sin conexión.
+13. Bienvenida: tres pantallas la primera vez.
+14. Plan de la 1.0, guías y plan de pruebas.

@@ -83,7 +83,7 @@ Lee cada colección una vez; con los datos del piloto son pocos miles de lectura
 
 ## 3. Reglas — `npm run diagnostico:reglas`
 
-Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 80 casos y lo apaga. **Nunca toca el proyecto real.**
+Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 96 casos y lo apaga. **Nunca toca el proyecto real.**
 
 Requisitos:
 
@@ -97,10 +97,10 @@ La versión de `@firebase/rules-unit-testing` depende de la de `firebase`: 13.x 
 
 Tres tipos de caso:
 
-- **Control (20):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Si alguno falla, una regla está bloqueando a usuarios legítimos.
-- **Bloqueo (54):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Si alguno pasa, es una brecha.
+- **Control (26):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Desde la 1.0 también aceptar los términos, dejar anónimos los reportes al eliminar la cuenta, y que el autor corrija o retire su reporte sin revisar. Si alguno falla, una regla está bloqueando a usuarios legítimos.
+- **Bloqueo (67):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Desde la 1.0, además: cambiarse el `operadorId`, ser admin con el correo sin verificar, fechar un reporte en el pasado, anonimizar o retirar el reporte de otro, corregir uno que ya está en revisión y anotar un retiro en el historial sin cerrar el reporte. Si alguno pasa, es una brecha.
 - **Sistema de confianza** (25 de los anteriores, con el prefijo «Confianza:»): confirmación con peso, voto de peso 0 por correo sin verificar o cuenta nueva, validación al llegar a 100 puntos y 3 votos, contador del día, pausa de 20 s, límite diario, suspensión, puntos inventados, veredictos real y falso, y veredicto de un operador de otra comuna.
-- **Brecha (6):** huecos conocidos de las reglas actuales. **Hoy fallan a propósito** y se ponen en verde cuando se corrigen.
+- **Brecha (3):** huecos conocidos de las reglas actuales: campos extra al crear un reporte, fotos sin reporte y mensajes en tickets inexistentes. **Hoy fallan a propósito** y se ponen en verde cuando se corrigen. Las otras tres (el `operadorId`, el correo sin verificar y la fecha falsa) se cerraron en la 1.0 y ahora son bloqueos.
 
 Si fallan casos de control, revisa primero si cambió el formato de los documentos. Las funciones `perfil()` y `reporte()` del script imitan lo que escribe la app.
 
@@ -110,7 +110,7 @@ Si fallan casos de control, revisa primero si cambió el formato de los document
 
 `codigo.mjs` sobre la copia del código que tengo (sin `node_modules` ni `android/`):
 
-**Brechas en las reglas.** `reglas.mjs` las confirma con casos concretos.
+**Brechas en las reglas.** `reglas.mjs` las confirma con casos concretos. **Las dos, y la fecha falsa, quedaron cerradas en la versión 1.0** (GUIA_MODULOS, sección 13); se dejan aquí como registro.
 
 1. **Un operador puede cambiar su propio `operadorId`** y pasar a gestionar los reportes de otra municipalidad. La lista blanca de `users` incluye `operadorId`, pero `camposProtegidosIntactos()` no lo protege.
 2. **`esCorreoAdministrador()` no exige correo verificado.** Quien registre primero un correo de la lista se crea como admin. `datos.mjs` dice si algún correo de la lista todavía no tiene cuenta, que es cuando el riesgo es real.
@@ -118,7 +118,7 @@ Si fallan casos de control, revisa primero si cambió el formato de los document
 **Advertencias en las reglas:**
 
 - La creación de `reports`, `users`, `confirmations`, `statusHistory`, `reportPhotos`, `supportTickets` y `messages` no limita los campos. Un cliente modificado puede agregar, por ejemplo, `validadoComunidad: true`.
-- Un reporte puede crearse con `createdAt` falso.
+- Un reporte podía crearse con `createdAt` falso (cerrado en la 1.0: `createdAt == request.time`).
 - Se pueden subir fotos sin reporte (hasta 950 KB cada una) y mensajes en tickets inexistentes. Ambos se corrigen con `existsAfter()` / `getAfter()`, que sí ven el resultado del lote.
 
 **Código de la app:** sin imports rotos, sin etiquetas sin importar, sin íconos sin registrar, sin rutas inexistentes, sin colecciones sin regla, sin consultas sin índice y con los catálogos sincronizados con las reglas.

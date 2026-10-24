@@ -2,7 +2,8 @@
 
 Batería de casos de prueba para el prototipo funcional. Cubre autenticación, seguridad,
 reporte ciudadano, mapa, detección de coincidencias, confirmación comunitaria, seguimiento,
-enrutamiento y comportamiento en dispositivo.
+enrutamiento y comportamiento en dispositivo, y lo nuevo de la versión 1.0 (final de la
+sección 16).
 
 ---
 
@@ -160,6 +161,14 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-SEC-31 | Crear foto en `reportPhotos` con `ownerUid` ajeno | Denegada | A | S |
 | CP-SEC-32 | Crear foto con `mimeType: application/pdf` | Denegada | A | S |
 | CP-SEC-33 | Escribir en una colección no declarada | Denegada | A | S |
+| CP-SEC-34 | U3 operador cambia su propio `operadorId` | Denegada | A | S |
+| CP-SEC-35 | Cuenta de la lista de administradores con el correo sin verificar intenta actuar como admin | Denegada | A | S |
+| CP-SEC-36 | Crear un reporte con `createdAt` distinto de la hora del servidor | Denegada | A | S |
+| CP-SEC-37 | U1 cambia `autorNombre` de su reporte a «Cuenta eliminada» y nada más | Permitida | A | S |
+| CP-SEC-38 | U2 cambia `autorNombre` del reporte de U1, o U1 lo cambia a otro nombre | Denegada | A | S |
+| CP-SEC-39 | U1 corrige la descripción de su reporte en «Reportado»; luego, en «En revisión» | Permitida; luego denegada | A | S |
+| CP-SEC-40 | U1 retira su reporte (pasa a «Cerrado» con `retiradoPorAutor`) y escribe la entrada del historial | Permitida | A | S |
+| CP-SEC-41 | U2 retira el reporte de U1; U1 lo deja en «Resuelto» al retirarlo, o anota un retiro en el historial sin cerrar el reporte | Denegada | A | S |
 
 ---
 
@@ -491,6 +500,88 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-CFG-13 | U3 operador; luego admin | Abrir Configuración | El operador ve «Para el equipo» sin la lista de módulos; el admin la ve | B | F |
 | CP-CFG-14 | Varias opciones cambiadas | «Restablecer configuración» | Texto normal, animaciones del teléfono, sin ahorro de datos, abre en el inicio | C | F |
 
+### Versión 1.0: entrega y arranque
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-APK-01 | APK de `npm run apk:final` | Instalar y abrir | El login y Configuración no dicen «Versión de prueba»; la versión es 1.0.0 | A | F |
+| CP-APK-02 | Versión de prueba instalada con sesión iniciada | Instalar el APK final encima | Se actualiza sin desinstalar y la sesión sigue | A | I |
+| CP-APK-03 | E3 | Mirar el ícono en el escritorio y abrir la app | Pin con «!» sobre fondo oscuro, no la «X» de Capacitor; el arranque nativo usa el mismo fondo | A | UX |
+| CP-APK-04 | E3 con respaldo de Google activo | Revisar «Respaldo» de la app en Ajustes | La app no se respalda (`allowBackup="false"`) | B | S |
+
+### Versión 1.0: contactar al organismo y emergencias
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-CTO-01 | Reporte con operador que tiene teléfono y correo | Abrir el detalle | «Contactar al organismo» con «Llamar» y «Escribir» | A | F |
+| CP-CTO-02 | CP-CTO-01, E3 | Tocar «Llamar» | Abre el marcador con el número, sin llamar solo | A | I |
+| CP-CTO-03 | CP-CTO-01, E3 | Tocar «Escribir» | Abre el correo con el asunto (categoría y comuna) y el código del reporte | A | I |
+| CP-CTO-04 | Reporte sin operador | Abrir el detalle | Dice que el organismo aún no tiene a alguien asignado | B | F |
+| CP-CTO-05 | Operador sin teléfono ni correo | Abrir el detalle | «Aún no publicó un teléfono ni un correo»; muestra la dirección si la tiene | B | F |
+| CP-CTO-06 | Modo avión | Abrir un detalle ya visto | «No pudimos cargar los datos de contacto», sin bloquear la pantalla | C | F |
+| CP-EMG-01 | Crear un reporte | Elegir «Árbol peligroso» | «Si hay peligro ahora, llama» con 133, 132 y 131 | A | F |
+| CP-EMG-02 | CP-EMG-01 | Cambiar a luminaria, fuga de agua y calle deteriorada | El aviso sigue, con el riesgo de cada categoría | B | F |
+| CP-EMG-03 | Crear un reporte | Elegir «Microbasural» u «Otro» | Sin aviso de emergencia | B | F |
+| CP-EMG-04 | CP-EMG-01, E3 | Tocar «133» | Abre el marcador con 133 | A | I |
+
+### Versión 1.0: términos, privacidad y eliminar la cuenta
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-TER-01 | Sin sesión | Registrarse sin marcar «Acepto los términos de uso y la política de privacidad» | No deja crear la cuenta | A | F |
+| CP-TER-02 | CP-TER-01 | Tocar «Leerlos» | Abre «Términos y privacidad» sin sesión; atrás vuelve al registro | A | F |
+| CP-TER-03 | Registro con la casilla marcada | Revisar `users/{uid}` en la consola (E4) | `terminosVersion` vigente y `terminosAceptadosAt` con la hora del servidor | A | S |
+| CP-TER-04 | Cuenta creada antes de la 1.0 | Iniciar sesión | Pide aceptar los términos antes del inicio | A | F |
+| CP-TER-05 | CP-TER-04 | Aceptar | Llega al inicio y no lo vuelve a pedir | A | F |
+| CP-TER-06 | U1 | Configuración → «Términos y privacidad» | Se leen sin pedir aceptar otra vez | B | F |
+| CP-TER-07 | Navegador | Abrir `/privacidad` y `/eliminar-cuenta` del servicio | Las dos páginas cargan sin sesión; la segunda muestra el correo de `CORREO_CONTACTO` | A | I |
+| CP-ELI-01 | U1 | Mi perfil → «Eliminar mi cuenta» con una contraseña equivocada | «La contraseña no es correcta»; la cuenta sigue | A | S |
+| CP-ELI-02 | U1 con reportes | Eliminar con la contraseña correcta | Mensaje de cuenta eliminada y vuelve al login | A | F |
+| CP-ELI-03 | CP-ELI-02 | Iniciar sesión con la cuenta eliminada | No existe | A | S |
+| CP-ELI-04 | CP-ELI-02, otra cuenta | Abrir un reporte de U1 | Sigue publicado, firmado «Cuenta eliminada» | A | F |
+| CP-ELI-05 | CP-ELI-02, consola (E4) | Revisar `users/{uid}` | Sin correo y con nombre «Cuenta eliminada» | A | S |
+| CP-ELI-06 | Modo avión | Intentar eliminar | Mensaje de conexión; la cuenta no se elimina | B | F |
+| CP-ELI-07 | CP-ELI-02 | Registrarse otra vez con el mismo correo | Se crea una cuenta nueva, sin los reportes ni el nivel de antes | C | F |
+
+### Versión 1.0: corregir o retirar un reporte propio
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-AUT-01 | U1 con un reporte en «Reportado» | Abrir su detalle | Bloque «Tu reporte» con «Corregir descripción» y «Retirar reporte» | A | F |
+| CP-AUT-02 | CP-AUT-01 | Corregir con un texto válido | «Descripción corregida»; el detalle muestra el texto nuevo y «Descripción corregida por quien lo reportó» | A | F |
+| CP-AUT-03 | CP-AUT-01 | Corregir con menos de 10 caracteres | La ventana no se cierra y pide el largo correcto | B | F |
+| CP-AUT-04 | CP-AUT-01 | Retirar con un motivo | «Cerrado»; el historial dice «Retirado por quien lo reportó: <motivo>», sin el nombre de U1 | A | F |
+| CP-AUT-05 | Reporte de U1 en «En revisión» | Abrir su detalle | Sin el bloque «Tu reporte» | A | S |
+| CP-AUT-06 | U2 | Abrir el reporte de U1 en «Reportado» | Sin el bloque «Tu reporte» | A | S |
+| CP-AUT-07 | U1 con el detalle abierto; U3 lo pasa a «En revisión» | U1 intenta retirar | «El organismo ya empezó a revisar este reporte…»; no cambia | B | F |
+| CP-AUT-08 | CP-AUT-04 | U3 abre el reporte desde su bandeja | «Cerrado», con «Quien lo reportó lo retiró antes de que lo revisaran» y la entrada en el historial | B | I |
+
+### Versión 1.0: borrador sin conexión
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-BOR-01 | E3 en modo avión | Abrir «Crear un reporte» | Aviso «Sin señal…» y el botón dice «Guardar y enviar con señal» | A | F |
+| CP-BOR-02 | CP-BOR-01, con ubicación | Tomar una foto | No se puede difuminar sin señal, pero no bloquea el envío | A | F |
+| CP-BOR-03 | CP-BOR-02 | Guardar | Vuelve al inicio con «Reporte por enviar» | A | F |
+| CP-BOR-04 | CP-BOR-03 | Quitar el modo avión, sin tocar nada | En unos segundos «Enviamos el reporte que guardaste sin señal»; la tarjeta desaparece | A | F |
+| CP-BOR-05 | CP-BOR-04 | Abrir el reporte en Mis reportes | La foto tiene las caras difuminadas y el reporte está asignado al organismo de la comuna | A | S |
+| CP-BOR-06 | CP-BOR-03 | Cerrar la app, quitar el modo avión y abrirla | Se envía al abrir | A | F |
+| CP-BOR-07 | CP-BOR-03 | Intentar guardar un segundo reporte sin señal | «Ya tienes un reporte esperando señal»; el formulario queda como estaba | B | F |
+| CP-BOR-08 | CP-BOR-03 | «Descartar» y confirmar | La tarjeta desaparece y no se envía nada | B | F |
+| CP-BOR-09 | CP-BOR-03 | Cerrar sesión e ingresar con U2 | U2 no ve el borrador de U1; al volver U1, sigue ahí | B | S |
+| CP-BOR-10 | Señal débil (el envío falla por conexión) | Enviar un reporte | Se guarda como borrador en vez de perderse, y se envía una sola vez | B | F |
+
+### Versión 1.0: bienvenida
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-BIE-01 | App recién instalada | Iniciar sesión | Tres pantallas: reportar, seguir el reporte y la confianza | A | F |
+| CP-BIE-02 | CP-BIE-01 | «Siguiente», «Atrás» y «Empezar» | Recorre los pasos y termina en el inicio; no se vuelve a mostrar | A | F |
+| CP-BIE-03 | App recién instalada | «Saltar» | Va al inicio y no se vuelve a mostrar | B | F |
+| CP-BIE-04 | U1 | Configuración → «Ver la introducción» | Muestra las tres pantallas otra vez | C | F |
+| CP-BIE-05 | U3 operador en un teléfono nuevo | Iniciar sesión | No aparece la bienvenida | B | F |
+| CP-BIE-06 | «Al abrir la app: Crear un reporte» | Primera entrada | Primero la bienvenida; en la entrada siguiente, Crear un reporte | C | F |
+
 ---
 
 ## 17. Comportamiento en dispositivo Android
@@ -557,7 +648,13 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | 19 | CP-VER-12 | El autor ve el aviso del veredicto |
 | 20 | CP-PER-01 | Abrir Mi perfil |
 | 21 | CP-CFG-01 | Abrir Configuración |
-| 22 | CP-SES-07 | Cerrar sesión |
+| 22 | CP-APK-01 | Versión 1.0.0 sin el aviso de prueba |
+| 23 | CP-TER-04 | Una cuenta antigua acepta los términos |
+| 24 | CP-CTO-01 | Contactar al organismo desde el detalle |
+| 25 | CP-AUT-04 | Retirar un reporte propio |
+| 26 | CP-BOR-04 | Un reporte guardado sin señal se envía al volver la conexión |
+| 27 | CP-ELI-02 | Eliminar una cuenta de prueba |
+| 28 | CP-SES-07 | Cerrar sesión |
 
 ---
 
@@ -571,7 +668,7 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | CA-50 Control de acceso | CP-SES-01 a CP-SES-12 |
 | CA-75 Recuperación | CP-REC-01 a CP-REC-10 |
 | CA-77 Cierre de sesión | CP-SES-07 a CP-SES-09 |
-| CA-79 Reglas | CP-SEC-01 a CP-SEC-33 |
+| CA-79 Reglas | CP-SEC-01 a CP-SEC-41 |
 | CA-51 Mapa | CP-MAP-01 a CP-MAP-12 |
 | CA-52 Geolocalización | CP-UBI-01 a CP-UBI-12 |
 | Fotografía | CP-FOT-01 a CP-FOT-18 |
@@ -589,8 +686,15 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | Mi perfil e inicio (feedback Sprint 5) | CP-PER-01 a CP-PER-14 |
 | Carga del inicio | CP-CAR-01 a CP-CAR-07 |
 | Configuración | CP-CFG-01 a CP-CFG-14 |
+| 1.0 · Versión, ícono y respaldo | CP-APK-01 a CP-APK-04 |
+| 1.0 · Contactar al organismo y emergencias | CP-CTO-01 a CP-CTO-06, CP-EMG-01 a CP-EMG-04 |
+| 1.0 · Términos, privacidad y eliminar la cuenta | CP-TER-01 a CP-TER-07, CP-ELI-01 a CP-ELI-07, CP-SEC-37, CP-SEC-38 |
+| 1.0 · Brechas cerradas | CP-SEC-34 a CP-SEC-36 |
+| 1.0 · Corregir o retirar un reporte | CP-AUT-01 a CP-AUT-08, CP-SEC-39 a CP-SEC-41 |
+| 1.0 · Borrador sin conexión | CP-BOR-01 a CP-BOR-10 |
+| 1.0 · Bienvenida | CP-BIE-01 a CP-BIE-06 |
 
-**Total: 336 casos** — 206 de prioridad A, 109 de prioridad B y 21 de prioridad C.
+**Total: 396 casos** — 246 de prioridad A, 125 de prioridad B y 25 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -617,7 +721,7 @@ npm test
 | `npm run test:comun` | Reglas compartidas con el portal: estados, transiciones, confianza, tiempos, territorio, privacidad | `../comun/test/` (antes, una vez: `cd ..\comun` y `npm install`) |
 | `npm run diagnostico` | Estructura, imports, rutas, catálogos y módulos contra las reglas | `scripts/diagnostico/` |
 | `npm test` en `servicio-privacidad` | El difuminado con los modelos reales y una foto de dominio público, el token de sesión, los límites y las respuestas del servidor | `servicio-privacidad/test/` (antes, una vez: `npm install`) |
-| `npm run diagnostico:reglas` | Las reglas en el emulador: 20 controles, 54 bloqueos y 6 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
+| `npm run diagnostico:reglas` | Las reglas en el emulador: 26 controles, 67 bloqueos y 3 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
 
 `npm test` deja Vitest mirando los cambios mientras se programa.
 
@@ -643,6 +747,11 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
 - la espera del inicio (oculto hasta que cada tarjeta avisa, y visible igual a los 2,5 s), la
   pantalla de arranque, las preferencias (valores dañados, ahorro de datos, pantalla al abrir) y
   la pantalla de Configuración por rol.
+- 1.0: contacto con el organismo y aviso de emergencia, términos (aceptación y quién debe
+  aceptarlos), eliminar la cuenta (errores de contraseña y de red), corregir y retirar un
+  reporte (qué campos escribe y qué pasa si ya lo están revisando), el borrador sin conexión
+  (guardar, foto sin proteger, sin duplicar, envío al volver la señal y al abrir la app) y la
+  bienvenida (pasos, saltar, operadores y el orden con la pantalla elegida).
 
 Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`, y empieza
 con `usarEntornoDePrueba()`.
