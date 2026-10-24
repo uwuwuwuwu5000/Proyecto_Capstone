@@ -29,3 +29,6 @@ export * from './geo/distancia';
 // Privacidad de las fotos
 export * from './privacidad/parametros';
 export * from './privacidad/geometria';
+
+// Términos, privacidad y eliminación de cuenta
+export * from './legal/terminos';
