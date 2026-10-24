@@ -329,6 +329,19 @@ service cloud.firestore {
      * campo no cambia, la condición no interviene, para no bloquear otras
      * actualizaciones del perfil.
      */
+    /**
+     * 1.0 · Aceptación de los términos y la privacidad: la versión es un texto
+     * corto y la fecha, la del servidor. Si no cambian, no intervienen.
+     */
+    function aceptacionDeTerminosValida() {
+      let cambios = request.resource.data.diff(resource.data).affectedKeys();
+      return (!cambios.hasAny(['terminosVersion'])
+              || (request.resource.data.terminosVersion is string
+                  && request.resource.data.terminosVersion.size() <= 20))
+        && (!cambios.hasAny(['terminosAceptadosAt'])
+            || request.resource.data.terminosAceptadosAt == request.time);
+    }
+
     function verificacionCoherente() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified'])
         || request.resource.data.emailVerified == request.auth.token.email_verified;
@@ -389,10 +402,12 @@ service cloud.firestore {
             || (resource.data.get('createdAt', null) == null
                 && request.resource.data.createdAt == request.time))
         && verificacionCoherente()
+        && aceptacionDeTerminosValida()
         && request.resource.data.keys().hasOnly([
              'uid', 'email', 'displayName', 'role', 'trustLevel',
              'validatedReports', 'emailVerified', 'ultimoReporteAt',
-             'operadorId', 'createdAt', 'updatedAt'
+             'operadorId', 'terminosVersion', 'terminosAceptadosAt',
+             'createdAt', 'updatedAt'
            ]))
         // Veredicto de un gestor: el espejo de nivel y reportes validados.
         || espejoDeConfianzaValido(userId);

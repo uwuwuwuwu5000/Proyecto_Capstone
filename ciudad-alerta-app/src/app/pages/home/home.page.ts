@@ -20,6 +20,7 @@ import { ArranqueService, EsperaDePantalla } from '../../nucleo/carga';
 import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 import { AuthService } from '../../services/auth.service';
 import { PreferenciasService } from '../../services/preferencias.service';
+import { TerminosService } from '../../services/terminos.service';
 
 /**
  * Inicio: saludo, lo que los módulos ponen en `inicio.resumen` (recordatorio
@@ -65,6 +66,7 @@ export class HomePage {
   private readonly router = inject(Router);
   private readonly preferencias = inject(PreferenciasService);
   private readonly arranque = inject(ArranqueService);
+  private readonly terminos = inject(TerminosService);
 
   /** Espera a que todo tenga sus datos para mostrar el inicio entero. */
   protected readonly espera = inject(EsperaDePantalla);
@@ -140,7 +142,16 @@ export class HomePage {
       if (!this.destruida) afterNextRender(() => this.carga.listo(), { injector: this.injector });
     }
 
-    if (!this.destruida) this.abrirPantallaElegida();
+    if (this.destruida) return;
+
+    // 1.0 · Una cuenta que no aceptó la versión vigente de los términos los
+    // acepta antes de seguir (pages/terminos).
+    if (this.terminos.necesitaAceptar(this.perfil())) {
+      void this.router.navigate(['/terminos'], { queryParams: { aceptar: 1 } }).catch(() => undefined);
+      return;
+    }
+
+    this.abrirPantallaElegida();
   }
 
   /**

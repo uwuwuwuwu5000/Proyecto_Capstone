@@ -460,6 +460,12 @@ bloqueo('Confianza: un veredicto falso exige comentario', () =>
 bloqueo('Confianza: el operador de Maipú no da veredicto a un reporte de Pudahuel', () =>
   darVeredicto(como('opmaipu'), 'opmaipu', 'r_luis', 'luis'));
 
+// 1.0 · Aceptación de los términos y la privacidad.
+control('Un vecino acepta los términos (versión y hora del servidor)', () =>
+  updateDoc(doc(como('ana'), 'users/ana'), { terminosVersion: '2026-11', terminosAceptadosAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+bloqueo('La aceptación de los términos no lleva una fecha inventada', () =>
+  updateDoc(doc(como('ana'), 'users/ana'), { terminosVersion: '2026-11', terminosAceptadosAt: Timestamp.fromDate(new Date('2020-01-01')) }));
+
 // Brechas cerradas para la 1.0 (antes figuraban como BRECHA).
 bloqueo('Un operador no cambia su propio operadorId', () =>
   updateDoc(doc(como('opmaipu'), 'users/opmaipu'), { operadorId: 'op_pudahuel' }));

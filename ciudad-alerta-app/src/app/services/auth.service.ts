@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore';
 import { FirebaseError } from 'firebase/app';
 import { Observable, ReplaySubject, map } from 'rxjs';
+import { VERSION_TERMINOS } from '@ciudad-alerta/comun';
 
 import { FIREBASE_AUTH, FIRESTORE } from '../core/firebase.providers';
 import { esCorreoAdministrador } from '../core/admin-emails';
@@ -122,7 +123,7 @@ export class AuthService {
     }
 
     try {
-      await this.createUserDocument(credential.user, nombre);
+      await this.createUserDocument(credential.user, nombre, true);
     } catch (error) {
       await this.revertirCuenta(credential.user);
       throw new AuthFailure(
@@ -347,7 +348,7 @@ export class AuthService {
   }
 
   /** Documento base del ciudadano; los campos de confianza quedan sembrados en 0. */
-  private async createUserDocument(user: User, displayName: string): Promise<void> {
+  private async createUserDocument(user: User, displayName: string, conTerminos = false): Promise<void> {
     const perfil: UserProfile = {
       uid: user.uid,
       email: user.email ?? '',
@@ -359,6 +360,9 @@ export class AuthService {
       trustLevel: 0,
       validatedReports: 0,
       emailVerified: user.emailVerified,
+      // Quien se registra acepta los términos en el formulario. Al reparar un
+      // perfil que faltaba no se sabe: la app los pide al entrar.
+      ...(conTerminos ? { terminosVersion: VERSION_TERMINOS, terminosAceptadosAt: serverTimestamp() } : {}),
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };

@@ -146,6 +146,13 @@
           <ion-note color="danger">Las contraseñas no coinciden.</ion-note>
         }
 
+        <div class="terminos">
+          <ion-checkbox formControlName="aceptaTerminos" labelPlacement="end" justify="start">
+            Acepto los términos de uso y la política de privacidad
+          </ion-checkbox>
+          <a routerLink="/terminos">Leerlos</a>
+        </div>
+
         <ion-button
           class="accion-principal"
           type="submit"
@@ -163,6 +170,8 @@
         Tu correo se usa solo para identificarte dentro de la plataforma y recuperar tu acceso.
       </ion-text>
     </p>
+
+    <a class="enlace-terminos" routerLink="/terminos">Términos de uso y privacidad</a>
 
     <app-version-demo [conAviso]="true" />
   </div>

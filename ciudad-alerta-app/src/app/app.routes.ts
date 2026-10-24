@@ -5,7 +5,7 @@ import { authGuard, guestGuard } from './guards/auth-guard';
 import { rutasDeModulos } from './nucleo/modulos/registro';
 
 /**
- * Rutas de la app. Solo las del esqueleto viven aquí; las de cada
+ * Rutas de la app. Solo las del esqueleto (login, inicio y términos) viven aquí; las de cada
  * funcionalidad las declara su módulo (`modulos/<id>/<id>.modulo.ts`) y se
  * suman solas si el módulo está activo en `modulos.config.ts`.
  *
@@ -24,6 +24,11 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () => import('./pages/login/login.page').then((m) => m.LoginPage),
+  },
+  {
+    // Términos de uso y privacidad: sin guard, se leen antes de registrarse.
+    path: 'terminos',
+    loadComponent: () => import('./pages/terminos/terminos.page').then((m) => m.TerminosPage),
   },
   {
     // CA-50 · Ruta privada protegida por el guard de autenticación.

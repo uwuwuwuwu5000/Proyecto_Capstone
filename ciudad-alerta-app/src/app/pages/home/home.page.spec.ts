@@ -7,6 +7,7 @@ import { UserProfile } from '../../models/user-profile.model';
 import { ESPERA_MAXIMA_MS, EsperaDePantalla } from '../../nucleo/carga';
 import { CONFIGURACION_MODULOS, RANURAS } from '../../nucleo/modulos';
 import { entrada, moduloDePrueba } from '../../../testing/modulos-de-prueba';
+import { VERSION_TERMINOS } from '@ciudad-alerta/comun';
 import { AuthService } from '../../services/auth.service';
 import { HomePage } from './home.page';
 import { usarEntornoDePrueba } from '../../../testing';
@@ -23,7 +24,7 @@ describe('HomePage', () => {
   };
 
   async function entrar(perfil: Partial<UserProfile> | null): Promise<string[]> {
-    auth.getUserProfile.mockResolvedValue(perfil);
+    auth.getUserProfile.mockResolvedValue(perfil && { terminosVersion: VERSION_TERMINOS, ...perfil });
     fixture = TestBed.createComponent(HomePage);
     await fixture.componentInstance.ionViewWillEnter();
     fixture.detectChanges();
@@ -101,6 +102,15 @@ describe('HomePage', () => {
     localStorage.removeItem('ciudad-alerta.preferencias');
   });
 
+  it('una cuenta que no aceptó los términos vigentes va a aceptarlos', async () => {
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    auth.getUserProfile.mockResolvedValue({ displayName: 'Rodrigo', role: 'ciudadano', terminosVersion: '2020-01' });
+    fixture = TestBed.createComponent(HomePage);
+    await fixture.componentInstance.ionViewWillEnter();
+
+    expect(navegar).toHaveBeenCalledWith(['/terminos'], { queryParams: { aceptar: 1 } });
+  });
+
   it('sin perfil (sin red) igual saluda con el correo', async () => {
     auth.getUserProfile.mockRejectedValue(new Error('sin red'));
     fixture = TestBed.createComponent(HomePage);
@@ -135,7 +145,7 @@ describe('HomePage · carga en segundo plano', () => {
             user: { uid: 'u1' },
             currentUser: signal({ uid: 'u1', email: 'rodrigo@prueba.cl', emailVerified: true }),
             asegurarPerfil: vi.fn().mockResolvedValue(undefined),
-            getUserProfile: vi.fn().mockResolvedValue({ displayName: 'Rodrigo', role: 'ciudadano' }),
+            getUserProfile: vi.fn().mockResolvedValue({ displayName: 'Rodrigo', role: 'ciudadano', terminosVersion: VERSION_TERMINOS }),
           },
         },
       ],

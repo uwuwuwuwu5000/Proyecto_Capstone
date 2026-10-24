@@ -23,6 +23,13 @@ export interface UserProfile {
    * envíos (BUG 60). Ausente en los perfiles creados antes de esta versión.
    */
   ultimoReporteAt?: Timestamp | FieldValue | null;
+  /**
+   * Versión de los términos y la política de privacidad que aceptó
+   * (VERSION_TERMINOS en comun/src/legal) y cuándo. Ausente en cuentas
+   * creadas antes de la 1.0: la app se los pide al entrar.
+   */
+  terminosVersion?: string;
+  terminosAceptadosAt?: Timestamp | FieldValue;
   createdAt: Timestamp | FieldValue;
   updatedAt: Timestamp | FieldValue;
 }

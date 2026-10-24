@@ -1,0 +1,80 @@
+.cabecera ion-toolbar {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+  --border-color: var(--ca-line);
+}
+
+.contenido {
+  --background: var(--ca-base);
+  --color: var(--ca-ink);
+}
+
+.shell {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem 2.5rem;
+}
+
+.aviso {
+  margin: 0 0 1rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 3px solid var(--ca-signal);
+  border-radius: 8px;
+  background: var(--ca-surface);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.indice {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  button {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--ca-line);
+    border-radius: 999px;
+    background: none;
+    color: var(--ca-ink);
+    font: inherit;
+    font-size: 0.8rem;
+  }
+}
+
+.documento {
+  scroll-margin-top: 1rem;
+
+  h1 {
+    margin: 1.5rem 0 0.25rem;
+    font-size: 1.25rem;
+  }
+
+  h2 {
+    margin: 1.1rem 0 0.35rem;
+    font-size: 0.98rem;
+  }
+
+  p {
+    margin: 0 0 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--ca-ink);
+  }
+}
+
+.fecha {
+  margin-top: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.pie {
+  background: var(--ca-base);
+  border-top: 1px solid var(--ca-line);
+}
+
+.pie__acciones {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0.6rem 1.25rem calc(0.6rem + env(safe-area-inset-bottom));
+}

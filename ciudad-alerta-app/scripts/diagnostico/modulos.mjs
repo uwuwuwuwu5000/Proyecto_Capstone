@@ -396,8 +396,9 @@ export function revisarModulos({ informe, SRC, codigo, componentes, rel }) {
   }
 
   // 5 · Estructura: las pantallas viven en un módulo. En src/app/pages quedan
-  // solo las del esqueleto (acceso e inicio) y src/app/components ya no existe.
-  const ESQUELETO = new Set(['login', 'home']);
+  // solo las del esqueleto (acceso, inicio y los términos, que se aceptan al
+  // registrarse y no se pueden apagar) y src/app/components ya no existe.
+  const ESQUELETO = new Set(['login', 'home', 'terminos']);
   const carpetaPaginas = join(SRC, 'app', 'pages');
   if (existsSync(carpetaPaginas)) {
     for (const entrada of readdirSync(carpetaPaginas, { withFileTypes: true })) {

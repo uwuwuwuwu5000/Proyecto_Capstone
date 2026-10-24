@@ -6,10 +6,11 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   AlertController,
   IonButton,
+  IonCheckbox,
   IonContent,
   IonIcon,
   IonInput,
@@ -44,6 +45,7 @@ function passwordsIguales(group: AbstractControl): ValidationErrors | null {
   styleUrls: ['./login.page.scss'],
   imports: [
     ReactiveFormsModule,
+    RouterLink,
     ThemeToggleComponent,
     VersionDemoComponent,
     IonContent,
@@ -52,6 +54,7 @@ function passwordsIguales(group: AbstractControl): ValidationErrors | null {
     IonInput,
     IonInputPasswordToggle,
     IonButton,
+    IonCheckbox,
     IonIcon,
     IonNote,
     IonText,
@@ -81,6 +84,8 @@ export class LoginPage {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
+      // Términos de uso y política de privacidad (pages/terminos).
+      aceptaTerminos: [false, [Validators.requiredTrue]],
     },
     { validators: passwordsIguales },
   );

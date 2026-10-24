@@ -1,0 +1,56 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    @if (!pidiendoAceptar()) {
+      <ion-buttons slot="start">
+        <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+      </ion-buttons>
+    }
+    <ion-title>Términos y privacidad</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="contenido" [fullscreen]="true">
+  <div class="shell">
+    @if (pidiendoAceptar()) {
+      <p class="aviso" role="note">
+        Para seguir usando Ciudad Alerta, lee y acepta los términos de uso y la política de privacidad.
+      </p>
+    }
+
+    <nav class="indice" aria-label="Secciones">
+      @for (documento of documentos; track documento.id) {
+        <button type="button" (click)="irA(documento.id)">{{ documento.titulo }}</button>
+      }
+    </nav>
+
+    @for (documento of documentos; track documento.id) {
+      <article class="documento" [id]="'legal-' + documento.id">
+        <h1>{{ documento.titulo }}</h1>
+        @for (seccion of documento.secciones; track seccion.titulo) {
+          <section>
+            <h2>{{ seccion.titulo }}</h2>
+            @for (parrafo of seccion.parrafos; track $index) {
+              <p>{{ parrafo }}</p>
+            }
+          </section>
+        }
+      </article>
+    }
+
+    <p class="fecha">Vigentes desde {{ fecha }}.</p>
+  </div>
+</ion-content>
+
+@if (pidiendoAceptar()) {
+  <ion-footer class="pie">
+    <div class="pie__acciones">
+      <ion-button expand="block" [disabled]="guardando()" (click)="aceptarTerminos()">
+        @if (guardando()) {
+          <ion-spinner name="crescent" slot="start"></ion-spinner>
+        }
+        Acepto
+      </ion-button>
+      <ion-button expand="block" fill="clear" color="medium" (click)="cerrarSesion()">Cerrar sesión</ion-button>
+    </div>
+  </ion-footer>
+}
