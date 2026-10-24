@@ -466,6 +466,18 @@ control('Un vecino acepta los términos (versión y hora del servidor)', () =>
 bloqueo('La aceptación de los términos no lleva una fecha inventada', () =>
   updateDoc(doc(como('ana'), 'users/ana'), { terminosVersion: '2026-11', terminosAceptadosAt: Timestamp.fromDate(new Date('2020-01-01')) }));
 
+// 1.0 · Eliminar la cuenta: los reportes quedan anónimos y el perfil sin datos.
+control('Al eliminar su cuenta, un vecino deja anónimos sus reportes', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Cuenta eliminada' }));
+control('Al eliminar su cuenta, el perfil queda sin correo ni nombre', () =>
+  updateDoc(doc(como('ana'), 'users/ana'), { displayName: 'Cuenta eliminada', email: '', updatedAt: serverTimestamp() }));
+bloqueo('Un vecino no deja anónimos los reportes de otro', () =>
+  updateDoc(doc(como('luis'), 'reports/r_ana'), { autorNombre: 'Cuenta eliminada' }));
+bloqueo('El autor no cambia su nombre en el reporte por otro', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Otra persona' }));
+bloqueo('Al anonimizar no se cambia nada más del reporte', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Cuenta eliminada', estado: 'resuelto' }));
+
 // Brechas cerradas para la 1.0 (antes figuraban como BRECHA).
 bloqueo('Un operador no cambia su propio operadorId', () =>
   updateDoc(doc(como('opmaipu'), 'users/opmaipu'), { operadorId: 'op_pudahuel' }));

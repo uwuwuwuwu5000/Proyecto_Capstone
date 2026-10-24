@@ -6,7 +6,8 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
 
 /**
  * Mi perfil: datos de la cuenta, verificación del correo y cierre de sesión
- * (feedback Sprint 5). Para todos los roles.
+ * (feedback Sprint 5), y eliminar la cuenta (1.0, datos/eliminar-cuenta.service.ts).
+ * Para todos los roles.
  *
  * Contenido: paginas/mi-perfil, componentes/verificacion-correo,
  * componentes/aviso-verificacion (recordatorio en el inicio, ranura
@@ -20,7 +21,7 @@ import { RANURAS } from '../../nucleo/modulos/ranuras';
 export const MODULO_PERFIL: ModuloApp = {
   id: 'perfil',
   nombre: 'Mi perfil',
-  descripcion: 'Datos de la cuenta, verificación del correo y cierre de sesión.',
+  descripcion: 'Datos de la cuenta, verificación del correo, cierre de sesión y eliminar la cuenta.',
   rutas: [
     {
       path: 'perfil',

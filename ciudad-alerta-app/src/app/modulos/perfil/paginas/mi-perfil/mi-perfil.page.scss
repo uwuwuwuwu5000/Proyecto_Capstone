@@ -102,3 +102,26 @@
   font-family: ui-monospace, monospace;
   font-size: 0.74rem;
 }
+
+.eliminar {
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ca-velo-fuerte);
+}
+
+.eliminar__acciones {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  ion-button {
+    margin: 0;
+    text-transform: none;
+  }
+
+  a {
+    font-size: 0.8rem;
+    color: var(--ca-muted);
+  }
+}

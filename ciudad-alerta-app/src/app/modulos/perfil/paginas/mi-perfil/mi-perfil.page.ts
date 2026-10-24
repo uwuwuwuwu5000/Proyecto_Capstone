@@ -1,13 +1,18 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Timestamp } from 'firebase/firestore';
+import { Router, RouterLink } from '@angular/router';
 import {
+  AlertController,
   IonBackButton,
+  IonButton,
   IonButtons,
   IonContent,
   IonHeader,
   IonIcon,
+  IonSpinner,
   IonTitle,
   IonToolbar,
+  ToastController,
 } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { personCircleOutline } from 'ionicons/icons';
@@ -19,6 +24,7 @@ import { RanuraComponent } from '../../../../nucleo/modulos';
 import { AuthService } from '../../../../services/auth.service';
 import { VerificacionCorreoComponent } from '../../componentes/verificacion-correo/verificacion-correo.component';
 import { PerfilService } from '../../datos/perfil.service';
+import { EliminarCuentaError, EliminarCuentaService } from '../../datos/eliminar-cuenta.service';
 import { ETIQUETAS_ROL } from '../../modelo';
 
 type Estado = 'cargando' | 'listo' | 'error';
@@ -39,6 +45,7 @@ type Estado = 'cargando' | 'listo' | 'error';
   imports: [
     CerrarSesionComponent,
     RanuraComponent,
+    RouterLink,
     ThemeToggleComponent,
     VerificacionCorreoComponent,
     IonHeader,
@@ -48,11 +55,19 @@ type Estado = 'cargando' | 'listo' | 'error';
     IonBackButton,
     IonContent,
     IonIcon,
+    IonButton,
+    IonSpinner,
   ],
 })
 export class MiPerfilPage {
   private readonly authService = inject(AuthService);
   private readonly perfilService = inject(PerfilService);
+  private readonly eliminarCuenta = inject(EliminarCuentaService);
+  private readonly alertCtrl = inject(AlertController);
+  private readonly toastCtrl = inject(ToastController);
+  private readonly router = inject(Router);
+
+  readonly eliminando = signal(false);
 
   readonly usuario = this.authService.currentUser;
   readonly perfil = signal<UserProfile | null>(null);
@@ -112,5 +127,51 @@ export class MiPerfilPage {
   alVerificar(): void {
     this.correoVerificado.set(true);
     this.perfil.update((actual) => (actual ? { ...actual, emailVerified: true } : actual));
+  }
+
+  /** Pide la contraseña y elimina la cuenta (EliminarCuentaService). */
+  async pedirEliminacion(): Promise<void> {
+    const alerta = await this.alertCtrl.create({
+      header: '¿Eliminar tu cuenta?',
+      message: 'Escribe tu contraseña para confirmar. Tus reportes quedarán como «Cuenta eliminada». No se puede deshacer.',
+      inputs: [{ name: 'contrasena', type: 'password', placeholder: 'Contraseña', attributes: { autocomplete: 'current-password' } }],
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        {
+          text: 'Eliminar',
+          role: 'destructive',
+          handler: (datos: { contrasena?: string }) => {
+            const contrasena = datos.contrasena ?? '';
+            if (contrasena.length === 0) return false;
+            void this.eliminar(contrasena);
+            return true;
+          },
+        },
+      ],
+    });
+    await alerta.present();
+  }
+
+  async eliminar(contrasena: string): Promise<void> {
+    if (this.eliminando()) return;
+    this.eliminando.set(true);
+
+    try {
+      await this.eliminarCuenta.eliminar(contrasena);
+      await this.avisar('Tu cuenta fue eliminada.', 'success');
+      await this.router.navigateByUrl('/login', { replaceUrl: true });
+    } catch (error) {
+      await this.avisar(
+        error instanceof EliminarCuentaError ? error.message : 'No pudimos eliminar tu cuenta. Vuelve a intentar.',
+        'danger',
+      );
+    } finally {
+      this.eliminando.set(false);
+    }
+  }
+
+  private async avisar(message: string, color: 'success' | 'danger'): Promise<void> {
+    const toast = await this.toastCtrl.create({ message, duration: 3500, color, position: 'bottom' });
+    await toast.present();
   }
 }

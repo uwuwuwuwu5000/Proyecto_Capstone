@@ -1,10 +1,13 @@
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
+import { ToastController } from '@ionic/angular';
 import { Timestamp } from 'firebase/firestore';
 
 import { UserProfile } from '../../../../models/user-profile.model';
 import { AuthService } from '../../../../services/auth.service';
 import { PerfilService } from '../../datos/perfil.service';
+import { EliminarCuentaError, EliminarCuentaService } from '../../datos/eliminar-cuenta.service';
 import { MiPerfilPage } from './mi-perfil.page';
 import { usarEntornoDePrueba } from '../../../../../testing';
 
@@ -35,6 +38,8 @@ describe('MiPerfilPage', () => {
     getUserProfile: ReturnType<typeof vi.fn>;
   };
   let perfilService: { organismoDeOperador: ReturnType<typeof vi.fn> };
+  let eliminar: { eliminar: ReturnType<typeof vi.fn> };
+  let toasts: string[];
 
   async function entrar(): Promise<string> {
     fixture = TestBed.createComponent(MiPerfilPage);
@@ -46,10 +51,22 @@ describe('MiPerfilPage', () => {
   beforeEach(() => {
     auth = { user: USUARIO, currentUser: signal(USUARIO), getUserProfile: vi.fn() };
     perfilService = { organismoDeOperador: vi.fn().mockResolvedValue('Municipalidad de Maipú') };
+    eliminar = { eliminar: vi.fn().mockResolvedValue({ reportesAnonimos: 2 }) };
+    toasts = [];
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthService, useValue: auth },
         { provide: PerfilService, useValue: perfilService },
+        { provide: EliminarCuentaService, useValue: eliminar },
+        {
+          provide: ToastController,
+          useValue: {
+            create: async ({ message }: { message: string }) => {
+              toasts.push(message);
+              return { present: async () => undefined };
+            },
+          },
+        },
       ],
     });
   });
@@ -94,5 +111,36 @@ describe('MiPerfilPage', () => {
     expect(texto).toContain('No pudimos leer tu perfil');
     expect(texto).toContain('vecina@prueba.cl');
     expect(texto).toContain('Cerrar sesión');
+  });
+
+  it('explica qué pasa al eliminar la cuenta', async () => {
+    auth.getUserProfile.mockResolvedValue(perfil({}));
+    const texto = await entrar();
+    expect(texto).toContain('Eliminar mi cuenta');
+    expect(texto).toContain('«Cuenta eliminada»');
+  });
+
+  it('al eliminarla, avisa y vuelve al login', async () => {
+    auth.getUserProfile.mockResolvedValue(perfil({}));
+    await entrar();
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    await fixture.componentInstance.eliminar('secreta');
+
+    expect(eliminar.eliminar).toHaveBeenCalledWith('secreta');
+    expect(toasts).toContain('Tu cuenta fue eliminada.');
+    expect(navegar).toHaveBeenCalledWith('/login', { replaceUrl: true });
+  });
+
+  it('con la contraseña incorrecta lo dice y no sale', async () => {
+    auth.getUserProfile.mockResolvedValue(perfil({}));
+    await entrar();
+    eliminar.eliminar.mockRejectedValue(new EliminarCuentaError('La contraseña no es correcta.', 'contrasena'));
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl');
+
+    await fixture.componentInstance.eliminar('mala');
+
+    expect(toasts).toContain('La contraseña no es correcta.');
+    expect(navegar).not.toHaveBeenCalled();
   });
 });

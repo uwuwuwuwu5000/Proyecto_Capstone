@@ -832,7 +832,20 @@ service cloud.firestore {
         // Sistema de confianza: veredicto de un gestor.
         || (puedeGestionarReporte(resource.data) && veredictoValido(reportId))
         // Sistema de confianza: un vecino suma su confirmación.
-        || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId));
+        || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId))
+        // 1.0 · Al eliminar su cuenta, el autor deja anónimos sus reportes.
+        || anonimizacionDelAutorValida();
+
+      /**
+       * 1.0 · Eliminar la cuenta: el autor cambia su nombre por «Cuenta
+       * eliminada» en sus reportes, y nada más. El reporte se conserva.
+       */
+      function anonimizacionDelAutorValida() {
+        return estaAutenticado()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autorNombre'])
+          && request.resource.data.autorNombre == 'Cuenta eliminada';
+      }
 
       // Solo un admin elimina, desde el panel "Administrar reportes". El
       // panel borra en el mismo lote la foto y las subcolecciones, para no

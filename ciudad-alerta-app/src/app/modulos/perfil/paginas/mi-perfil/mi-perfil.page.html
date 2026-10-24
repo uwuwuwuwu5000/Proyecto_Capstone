@@ -81,6 +81,23 @@
       </section>
 
       <app-cerrar-sesion />
+
+      <section class="bloque eliminar" aria-labelledby="titulo-eliminar">
+        <h2 id="titulo-eliminar">Eliminar mi cuenta</h2>
+        <p class="nota">
+          Se borran tu correo, tu nombre y tu acceso. Tus reportes se conservan como «Cuenta eliminada», porque son
+          parte del historial del barrio. No se puede deshacer.
+        </p>
+        <div class="eliminar__acciones">
+          <ion-button fill="outline" color="danger" size="small" [disabled]="eliminando()" (click)="pedirEliminacion()">
+            @if (eliminando()) {
+              <ion-spinner name="crescent" slot="start"></ion-spinner>
+            }
+            Eliminar mi cuenta
+          </ion-button>
+          <a routerLink="/terminos">Privacidad</a>
+        </div>
+      </section>
     }
   </div>
 </ion-content>
