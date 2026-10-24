@@ -98,6 +98,9 @@ try {
   process.exit(2);
 }
 const fs = await import('firebase/firestore');
+// Cada bloqueo hace que el SDK escriba «PERMISSION_DENIED» en la consola. Es lo
+// esperado, pero tapa el informe, que ya dice el resultado de cada caso.
+fs.setLogLevel('silent');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = rut;
 const { doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, writeBatch, serverTimestamp, Timestamp } = fs;
 

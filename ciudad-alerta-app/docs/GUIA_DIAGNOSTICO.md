@@ -17,7 +17,7 @@ Severidades:
 | ⚠ Advertencia | Bug probable o riesgo a futuro. |
 | ℹ Información | Dato útil, sin acción inmediata. |
 
-Los scripts terminan con código 1 si hay errores o brechas, así que sirven también en GitHub Actions.
+Los scripts terminan con código 1 si hay errores o brechas, así que sirven también en GitHub Actions. Mientras sigan las 3 brechas conocidas de las reglas, `npm run diagnostico:reglas` termina con código 1 aunque todos los controles y bloqueos estén en verde.
 
 ---
 

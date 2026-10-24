@@ -659,7 +659,7 @@ npm run diagnostico
 npm run diagnostico:reglas
 ```
 
-`diagnostico:reglas` necesita el emulador de Firestore (Java). Debe terminar sin controles ni bloqueos fallidos; quedan 3 brechas conocidas. Después:
+`diagnostico:reglas` necesita el emulador de Firestore (Java). Debe terminar sin controles ni bloqueos fallidos; quedan 3 brechas conocidas y, por ellas, el comando termina con «exited with code 1»: es lo esperado. Después:
 
 ```cmd
 firebase deploy --only firestore:rules
