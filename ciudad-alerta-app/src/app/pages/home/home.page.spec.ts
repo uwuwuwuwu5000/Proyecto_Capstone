@@ -1,5 +1,6 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import { afterEach, vi } from 'vitest';
 
 import { UserProfile } from '../../models/user-profile.model';
@@ -75,6 +76,29 @@ describe('HomePage', () => {
   it('un operador ve su bandeja con el texto de su rol', async () => {
     const botones = await entrar({ displayName: 'Operadora', role: 'operador' });
     expect(botones).toContain('Reportes asignados');
+  });
+
+  it('abre la pantalla elegida en Configuración una sola vez por arranque', async () => {
+    localStorage.setItem('ciudad-alerta.preferencias', JSON.stringify({ abrirEn: '/report-new' }));
+    const router = TestBed.inject(Router);
+    const navegar = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    await entrar({ displayName: 'Rodrigo', role: 'ciudadano' });
+    await fixture.componentInstance.ionViewWillEnter();
+
+    expect(navegar).toHaveBeenCalledTimes(1);
+    expect(navegar).toHaveBeenCalledWith('/report-new');
+    localStorage.removeItem('ciudad-alerta.preferencias');
+  });
+
+  it('no abre una pantalla que la cuenta no tiene en su inicio', async () => {
+    localStorage.setItem('ciudad-alerta.preferencias', JSON.stringify({ abrirEn: '/admin-reports' }));
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    await entrar({ displayName: 'Rodrigo', role: 'ciudadano' });
+
+    expect(navegar).not.toHaveBeenCalled();
+    localStorage.removeItem('ciudad-alerta.preferencias');
   });
 
   it('sin perfil (sin red) igual saluda con el correo', async () => {

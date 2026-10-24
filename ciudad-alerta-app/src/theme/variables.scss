@@ -243,8 +243,29 @@ ion-alert .alert-button.alert-button-role-cancel {
   }
 }
 
+/*
+ * Configuración → Animaciones. «No» las quita aunque el sistema las permita;
+ * «Sí» las deja aunque el sistema pida reducir el movimiento; sin elegir, se
+ * sigue al sistema.
+ */
+html.ca-sin-animaciones .ca-escalonado > * {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ca-escalonado > * {
+  html:not(.ca-con-animaciones) .ca-escalonado > * {
     animation: none;
   }
+}
+
+/*
+ * Configuración → Tamaño del texto. La app y los componentes de Ionic miden
+ * el texto en rem, así que basta con cambiar el tamaño base.
+ */
+html.ca-texto-grande {
+  font-size: 112.5%;
+}
+
+html.ca-texto-muy-grande {
+  font-size: 125%;
 }

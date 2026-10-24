@@ -1,5 +1,5 @@
 import { Component, Injector, afterNextRender, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   IonButton,
   IonButtons,
@@ -19,6 +19,7 @@ import { UserProfile } from '../../models/user-profile.model';
 import { ArranqueService, EsperaDePantalla } from '../../nucleo/carga';
 import { ModulosService, RanuraComponent } from '../../nucleo/modulos';
 import { AuthService } from '../../services/auth.service';
+import { PreferenciasService } from '../../services/preferencias.service';
 
 /**
  * Inicio: saludo, lo que los módulos ponen en `inicio.resumen` (recordatorio
@@ -61,6 +62,9 @@ export class HomePage {
   private readonly authService = inject(AuthService);
   protected readonly modulos = inject(ModulosService);
   private readonly injector = inject(Injector);
+  private readonly router = inject(Router);
+  private readonly preferencias = inject(PreferenciasService);
+  private readonly arranque = inject(ArranqueService);
 
   /** Espera a que todo tenga sus datos para mostrar el inicio entero. */
   protected readonly espera = inject(EsperaDePantalla);
@@ -89,9 +93,8 @@ export class HomePage {
     // Los íconos de los botones de cada módulo los registra provideModulos().
     addIcons({ personCircleOutline });
 
-    const arranque = inject(ArranqueService);
     effect(() => {
-      if (this.espera.lista()) arranque.terminar();
+      if (this.espera.lista()) this.arranque.terminar();
     });
   }
 
@@ -133,5 +136,24 @@ export class HomePage {
       // y se registraron como pendientes.
       afterNextRender(() => this.carga.listo(), { injector: this.injector });
     }
+
+    this.abrirPantallaElegida();
+  }
+
+  /**
+   * Configuración → «Al abrir la app»: la primera vez que se entra al inicio,
+   * va directo a esa pantalla (atrás vuelve al inicio). Solo si es uno de los
+   * botones que esta cuenta tiene en el inicio: si el módulo se apagó o el rol
+   * cambió, se queda aquí.
+   */
+  private abrirPantallaElegida(): void {
+    const destino = this.preferencias.tomarPantallaInicial();
+    const permitido = this.grupos().some((grupo) => grupo.accesos.some((acceso) => acceso.ruta === destino));
+
+    if (!destino || !permitido) return;
+
+    void this.router.navigateByUrl(destino).then(() =>
+      afterNextRender(() => this.arranque.terminar(), { injector: this.injector }),
+    );
   }
 }

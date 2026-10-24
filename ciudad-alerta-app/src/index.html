@@ -43,6 +43,19 @@
           var meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', '#f8fafc');
         }
+
+        // Preferencias de Configuración que cambian cómo se ve la app (tamaño
+        // del texto y animaciones), por la misma razón. Replica aplicar() en
+        // services/preferencias.service.ts.
+        var preferencias = {};
+        try {
+          preferencias = JSON.parse(localStorage.getItem('ciudad-alerta.preferencias') || '{}') || {};
+        } catch (e) {}
+        var raiz = document.documentElement.classList;
+        if (preferencias.animaciones === 'no') raiz.add('ca-sin-animaciones');
+        if (preferencias.animaciones === 'si') raiz.add('ca-con-animaciones');
+        if (preferencias.texto === 'grande') raiz.add('ca-texto-grande');
+        if (preferencias.texto === 'muy-grande') raiz.add('ca-texto-muy-grande');
       })();
     </script>
 
@@ -117,8 +130,13 @@
           transform: translateX(260%);
         }
       }
+      html.ca-sin-animaciones .arranque__barra::after {
+        animation: none;
+        width: 100%;
+        opacity: 0.5;
+      }
       @media (prefers-reduced-motion: reduce) {
-        .arranque__barra::after {
+        html:not(.ca-con-animaciones) .arranque__barra::after {
           animation: none;
           width: 100%;
           opacity: 0.5;

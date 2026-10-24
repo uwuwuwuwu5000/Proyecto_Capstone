@@ -163,3 +163,7 @@
     animation: none;
   }
 }
+
+:host-context(.ca-sin-animaciones) .inicio-cargando__marca {
+  animation: none;
+}

@@ -3,6 +3,7 @@ import { NavigationEnd, NavigationError, Router } from '@angular/router';
 import { IonApp, IonRouterOutlet } from '@ionic/angular';
 
 import { ArranqueService } from './nucleo/carga';
+import { PreferenciasService } from './services/preferencias.service';
 import { ThemeService } from './services/theme.service';
 
 @Component({
@@ -17,10 +18,12 @@ import { ThemeService } from './services/theme.service';
 })
 export class AppComponent {
   /**
-   * Inyectar el servicio aquí fuerza su creación al arrancar la aplicación, de
-   * modo que el tema guardado se aplica antes de la primera pantalla.
+   * Inyectar los servicios aquí fuerza su creación al arrancar la aplicación,
+   * de modo que el tema y las preferencias guardadas se aplican antes de la
+   * primera pantalla.
    */
   private readonly themeService = inject(ThemeService);
+  private readonly preferencias = inject(PreferenciasService);
 
   // El servicio de avisos ya no se crea aquí: lo arranca el módulo de avisos
   // (modulos/avisos/avisos.modulo.ts) solo si está activo.

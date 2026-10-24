@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 import { InfoPrivacidad } from '../../../models/report.model';
+import { CalidadDeFoto, PreferenciasService } from '../../../services/preferencias.service';
 
 /** Imagen ya validada y comprimida, lista para subir. */
 export interface CapturedPhoto {
@@ -35,14 +36,15 @@ export class PhotoError extends Error {
 /** Formatos aceptados. Cualquier otro se rechaza antes de subir. */
 const FORMATOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
-/** Lado mayor tras la compresión, en píxeles. */
-const LADO_MAXIMO = 1024;
-
-/** Calidad JPEG de salida. 0.6 deja fotos de ~100-150 KB, suficientes para verificar. */
-const CALIDAD_SALIDA = 0.6;
+/*
+ * Lado mayor y calidad JPEG: 1024 px y 0,6 (fotos de ~100-150 KB, suficientes
+ * para verificar), o 800 px y 0,5 con «Ahorro de datos» en Configuración. Los
+ * valores están en services/preferencias.service.ts.
+ */
 
 @Injectable({ providedIn: 'root' })
 export class CameraService {
+  private readonly preferencias = inject(PreferenciasService);
   /** Toma una fotografía con la cámara del dispositivo. */
   takePhoto(): Promise<CapturedPhoto> {
     return this.obtener(CameraSource.Camera);
@@ -55,6 +57,7 @@ export class CameraService {
 
   private async obtener(source: CameraSource): Promise<CapturedPhoto> {
     let dataUrl: string;
+    const calidad = this.preferencias.foto();
 
     try {
       const foto = await Camera.getPhoto({
@@ -64,8 +67,8 @@ export class CameraService {
         // La cámara entrega la foto ya achicada. Antes llegaba en resolución
         // completa (12 a 48 MP) como texto base64 y se achicaba después: en
         // teléfonos viejos eso agotaba la memoria y congelaba la app.
-        width: LADO_MAXIMO,
-        height: LADO_MAXIMO,
+        width: calidad.lado,
+        height: calidad.lado,
         allowEditing: false,
         correctOrientation: true,
         promptLabelHeader: 'Evidencia del reporte',
@@ -84,7 +87,7 @@ export class CameraService {
     }
 
     this.validarFormato(dataUrl);
-    return this.comprimir(dataUrl);
+    return this.comprimir(dataUrl, calidad);
   }
 
   /** Verifica que el data URL corresponda a un formato de imagen permitido. */
@@ -101,17 +104,17 @@ export class CameraService {
   }
 
   /**
-   * Redimensiona a un máximo de 1024 px por lado y reencodifica como JPEG.
+   * Redimensiona al lado máximo y reencodifica como JPEG.
    * Sin esto una foto de celular pesa varios MB y no cabe en un documento de
    * Firestore ni conviene subirla por datos móviles.
    */
-  private comprimir(dataUrl: string): Promise<CapturedPhoto> {
+  private comprimir(dataUrl: string, { lado, calidad }: CalidadDeFoto): Promise<CapturedPhoto> {
     return new Promise((resolve, reject) => {
       const imagen = new Image();
 
       imagen.onload = () => {
         try {
-          const escala = Math.min(1, LADO_MAXIMO / Math.max(imagen.width, imagen.height));
+          const escala = Math.min(1, lado / Math.max(imagen.width, imagen.height));
           const width = Math.round(imagen.width * escala);
           const height = Math.round(imagen.height * escala);
 
@@ -127,7 +130,7 @@ export class CameraService {
 
           contexto.drawImage(imagen, 0, 0, width, height);
           // Una sola codificación JPEG: el blob sale del mismo data URL.
-          const comprimido = canvas.toDataURL('image/jpeg', CALIDAD_SALIDA);
+          const comprimido = canvas.toDataURL('image/jpeg', calidad);
           const blob = blobDesdeDataUrl(comprimido);
 
           resolve({
