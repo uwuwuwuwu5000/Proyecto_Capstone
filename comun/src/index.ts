@@ -13,6 +13,7 @@ export * from './reportes/categorias';
 export * from './reportes/descripcion';
 export * from './reportes/tiempos';
 export * from './reportes/gestion';
+export * from './reportes/contacto';
 
 // Sistema de confianza
 export * from './confianza/parametros';
