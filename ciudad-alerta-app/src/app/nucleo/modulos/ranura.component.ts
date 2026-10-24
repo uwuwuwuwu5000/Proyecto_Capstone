@@ -1,6 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
-import { Component, Type, effect, inject, input, signal } from '@angular/core';
+import { Component, Injector, Type, afterNextRender, effect, inject, input, signal } from '@angular/core';
 
+import { EsperaDePantalla } from '../carga/espera-de-pantalla';
 import { ModulosService } from './modulos.service';
 import { NombreRanura } from './ranuras';
 
@@ -40,19 +41,30 @@ export class RanuraComponent {
   /** null mientras se descargan; lista vacía si nadie aporta. */
   protected readonly componentes = signal<Type<unknown>[] | null>(null);
 
+  private readonly injector = inject(Injector);
+  /**
+   * Si la pantalla espera a tener todo (EsperaDePantalla), la ranura cuenta
+   * como pendiente mientras descarga sus piezas. Avisa que terminó después de
+   * dibujarlas, cuando cada pieza ya se registró con lo suyo.
+   */
+  private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('ranura');
+
   constructor() {
     effect(() => {
       const nombre = this.nombre();
       this.componentes.set(null);
+      this.carga?.pendiente();
+
+      const mostrar = (lista: Type<unknown>[]): void => {
+        if (this.nombre() !== nombre) return;
+        this.componentes.set(lista);
+        afterNextRender(() => this.carga?.listo(), { injector: this.injector });
+      };
 
       this.modulos
         .componentesDeRanura(nombre)
-        .then((lista) => {
-          if (this.nombre() === nombre) this.componentes.set(lista);
-        })
-        .catch(() => {
-          if (this.nombre() === nombre) this.componentes.set([]);
-        });
+        .then(mostrar)
+        .catch(() => mostrar([]));
     });
   }
 }

@@ -2,6 +2,7 @@ import { Component, input } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { PiezaDePruebaComponent, entrada, moduloDePrueba } from '../../../testing/modulos-de-prueba';
+import { EsperaDePantalla } from '../carga/espera-de-pantalla';
 import { EntradaModulo } from './modulo.model';
 import { CONFIGURACION_MODULOS } from './modulos.service';
 import { RanuraComponent } from './ranura.component';
@@ -86,5 +87,38 @@ describe('RanuraComponent', () => {
       entrada(moduloDePrueba('a', { ranuras: [{ ranura: RANURAS.inicioResumen, cargar: () => Promise.reject(new Error('sin red')) }] })),
     ]);
     expect(html.querySelector('.respaldo')).not.toBeNull();
+  });
+
+  it('si la pantalla espera, la ranura cuenta como pendiente hasta dibujar sus piezas', async () => {
+    let descargar: (pieza: typeof PiezaDePruebaComponent) => void = () => undefined;
+    const config = [
+      entrada(
+        moduloDePrueba('a', {
+          ranuras: [
+            {
+              ranura: RANURAS.inicioResumen,
+              cargar: () => new Promise<typeof PiezaDePruebaComponent>((resolver) => (descargar = resolver)),
+            },
+          ],
+        }),
+      ),
+    ];
+    TestBed.configureTestingModule({
+      providers: [{ provide: CONFIGURACION_MODULOS, useValue: config }, EsperaDePantalla],
+    });
+    const espera = TestBed.inject(EsperaDePantalla);
+    const fixture = TestBed.createComponent(PantallaDePruebaComponent);
+    fixture.detectChanges();
+
+    expect(espera.faltan()).toEqual(['ranura']);
+
+    descargar(PiezaDePruebaComponent);
+    await new Promise((listo) => setTimeout(listo));
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(espera.lista()).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('.pieza')).not.toBeNull();
+    espera.ngOnDestroy();
   });
 });
