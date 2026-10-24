@@ -24,6 +24,7 @@ import {
 
 import { MapViewComponent } from '../../../../compartido/mapa';
 import { ContactoOrganismoComponent } from '../../componentes/contacto-organismo/contacto-organismo.component';
+import { AccionesAutorComponent } from '../../componentes/acciones-autor/acciones-autor.component';
 import { ConfirmationError, ConfirmationService } from '../../datos/confirmation.service';
 import { ReportQueryService } from '../../../../services/report-query.service';
 import { ReportService } from '../../datos/report.service';
@@ -48,6 +49,7 @@ import {
   imports: [
     MapViewComponent,
     ContactoOrganismoComponent,
+    AccionesAutorComponent,
     RanuraComponent,
     IonHeader,
     IonToolbar,

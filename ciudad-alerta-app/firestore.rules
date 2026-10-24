@@ -834,7 +834,10 @@ service cloud.firestore {
         // Sistema de confianza: un vecino suma su confirmación.
         || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId))
         // 1.0 · Al eliminar su cuenta, el autor deja anónimos sus reportes.
-        || anonimizacionDelAutorValida();
+        || anonimizacionDelAutorValida()
+        // 1.0 · Mientras nadie lo revise, el autor corrige la descripción o lo retira.
+        || edicionDelAutorValida()
+        || retiroDelAutorValido();
 
       /**
        * 1.0 · Eliminar la cuenta: el autor cambia su nombre por «Cuenta
@@ -845,6 +848,37 @@ service cloud.firestore {
           && resource.data.uid == request.auth.uid
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autorNombre'])
           && request.resource.data.autorNombre == 'Cuenta eliminada';
+      }
+
+      /** El autor, mientras el reporte siga en «reportado». */
+      function esAutorSinRevisar() {
+        return estaAutenticado()
+          && resource.data.uid == request.auth.uid
+          && resource.data.estado == 'reportado';
+      }
+
+      /** 1.0 · Corregir la descripción: solo ese campo, con su largo y la hora del servidor. */
+      function edicionDelAutorValida() {
+        return esAutorSinRevisar()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['descripcion', 'updatedAt', 'editadoAt'])
+          && descripcionValida()
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.editadoAt == request.time;
+      }
+
+      /**
+       * 1.0 · Retirar: pasa a «cerrado» con la hora del servidor y la marca
+       * retiradoPorAutor. La entrada del historial la valida statusHistory.
+       */
+      function retiroDelAutorValido() {
+        return esAutorSinRevisar()
+          && request.resource.data.estado == 'cerrado'
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['estado', 'updatedAt', 'cerradoSinResolverAt', 'retiradoPorAutor'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.cerradoSinResolverAt == request.time
+          && request.resource.data.retiradoPorAutor == true;
       }
 
       // Solo un admin elimina, desde el panel "Administrar reportes". El
@@ -896,12 +930,21 @@ service cloud.firestore {
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
-          && puedeGestionarReporte(datosReporte(reportId))
           && request.resource.data.desde == datosReporte(reportId).estado
-          && transicionValida(request.resource.data.desde, request.resource.data.hacia)
           && request.resource.data.comentario is string
           && request.resource.data.comentario.size() <= 512
-          && firmaHistorialValida();
+          && firmaHistorialValida()
+          && (
+               (puedeGestionarReporte(datosReporte(reportId))
+                 && transicionValida(request.resource.data.desde, request.resource.data.hacia))
+               // 1.0 · El autor retira su reporte mientras nadie lo ha revisado,
+               // en el mismo lote que lo cierra (getAfter ve el resultado).
+               || (datosReporte(reportId).uid == request.auth.uid
+                 && request.resource.data.desde == 'reportado'
+                 && request.resource.data.hacia == 'cerrado'
+                 && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.estado == 'cerrado'
+                 && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.get('retiradoPorAutor', false) == true)
+             );
 
         allow update: if false;
         // Solo al eliminar el reporte completo desde el panel de admin.

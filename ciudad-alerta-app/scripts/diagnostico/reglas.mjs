@@ -478,6 +478,43 @@ bloqueo('El autor no cambia su nombre en el reporte por otro', () =>
 bloqueo('Al anonimizar no se cambia nada más del reporte', () =>
   updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Cuenta eliminada', estado: 'resuelto' }));
 
+// 1.0 · El autor corrige o retira su reporte mientras nadie lo revisa.
+const retirar = (db, uid, reportId, extra = {}) => {
+  const lote = writeBatch(db);
+  lote.set(doc(db, `reports/${reportId}/statusHistory/retiro`), {
+    reportId, desde: 'reportado', hacia: 'cerrado', autorUid: uid, autorNombre: 'Quien lo reportó',
+    comentario: 'Retirado por quien lo reportó.', createdAt: serverTimestamp(),
+  });
+  lote.update(doc(db, `reports/${reportId}`), {
+    estado: 'cerrado', updatedAt: serverTimestamp(), cerradoSinResolverAt: serverTimestamp(), retiradoPorAutor: true, ...extra,
+  });
+  return lote.commit();
+};
+control('El autor corrige la descripción de su reporte sin revisar', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), {
+    descripcion: 'El bache está frente al paradero 3', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
+  }));
+control('El autor retira su reporte sin revisar (con su entrada en el historial)', () => retirar(como('ana'), 'ana', 'r_ana'));
+bloqueo('Otro vecino no corrige la descripción de un reporte ajeno', () =>
+  updateDoc(doc(como('luis'), 'reports/r_ana'), {
+    descripcion: 'Texto cambiado por otra persona', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
+  }));
+bloqueo('El autor no corrige un reporte que ya está en revisión', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), {
+    descripcion: 'El bache está frente al paradero 3', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
+  }), (db) => updateDoc(doc(db, 'reports/r_ana'), { estado: 'en_revision' }));
+bloqueo('Al corregir, el autor no cambia la categoría', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), {
+    descripcion: 'El bache está frente al paradero 3', categoria: 'otro', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
+  }));
+bloqueo('Otro vecino no retira un reporte ajeno', () => retirar(como('luis'), 'luis', 'r_ana'));
+bloqueo('El autor no marca su reporte como resuelto al retirarlo', () => retirar(como('ana'), 'ana', 'r_ana', { estado: 'resuelto' }));
+bloqueo('El autor no anota un retiro en el historial sin cerrar el reporte', () =>
+  setDoc(doc(como('ana'), 'reports/r_ana/statusHistory/falso'), {
+    reportId: 'r_ana', desde: 'reportado', hacia: 'cerrado', autorUid: 'ana', autorNombre: 'Quien lo reportó',
+    comentario: 'Retirado por quien lo reportó.', createdAt: serverTimestamp(),
+  }));
+
 // Brechas cerradas para la 1.0 (antes figuraban como BRECHA).
 bloqueo('Un operador no cambia su propio operadorId', () =>
   updateDoc(doc(como('opmaipu'), 'users/opmaipu'), { operadorId: 'op_pudahuel' }));

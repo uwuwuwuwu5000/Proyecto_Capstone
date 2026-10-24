@@ -26,6 +26,11 @@
       </header>
 
       <p class="descripcion">{{ item.descripcion }}</p>
+      @if (item.retiradoPorAutor) {
+        <p class="estado-autor">Quien lo reportó lo retiró antes de que lo revisaran.</p>
+      } @else if (item.editadoAt) {
+        <p class="estado-autor">Descripción corregida por quien lo reportó.</p>
+      }
 
       <dl class="datos">
         <div class="datos__fila">
@@ -63,6 +68,12 @@
           </dd>
         </div>
       </dl>
+
+      @if (esAutor() && item.estado === 'reportado') {
+        <section class="bloque">
+          <app-acciones-autor [reporte]="item" [alCambiar]="alCambiarEstado" />
+        </section>
+      }
 
       <section class="bloque">
         <app-contacto-organismo [reporte]="item" />

@@ -150,6 +150,13 @@ export interface Report {
   cerradoSinResolverAt?: Timestamp | FieldValue | null;
   createdAt: Timestamp | FieldValue;
   updatedAt: Timestamp | FieldValue;
+  /**
+   * 1.0 · Cuándo el autor corrigió la descripción (solo mientras el reporte
+   * seguía en «reportado»). Ausente si nunca la corrigió.
+   */
+  editadoAt?: Timestamp | FieldValue;
+  /** 1.0 · El autor lo retiró antes de que alguien lo revisara (quedó «cerrado»). */
+  retiradoPorAutor?: boolean;
 }
 
 /** Registro de un cambio de estado, en `reports/{id}/statusHistory`. */
