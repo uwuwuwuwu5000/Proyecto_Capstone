@@ -1,4 +1,4 @@
-import { Component, Injector, afterNextRender, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, Injector, afterNextRender, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
   IonButton,
@@ -71,6 +71,8 @@ export class HomePage {
   private readonly carga = this.espera.registrar('perfil');
   /** Cuenta cuyo inicio ya se mostró, para volver a esperar si cambia. */
   private uidMostrado: string | null = null;
+  /** Si la página se cerró mientras se leía el perfil, no se programa nada más. */
+  private destruida = false;
 
   /** Usuario autenticado expuesto como señal por el servicio. */
   readonly usuario = this.authService.currentUser;
@@ -92,6 +94,7 @@ export class HomePage {
   constructor() {
     // Los íconos de los botones de cada módulo los registra provideModulos().
     addIcons({ personCircleOutline });
+    inject(DestroyRef).onDestroy(() => (this.destruida = true));
 
     effect(() => {
       if (this.espera.lista()) this.arranque.terminar();
@@ -134,10 +137,10 @@ export class HomePage {
       this.uidMostrado = actual.uid;
       // Después de dibujar con el perfil: las tarjetas ya pidieron sus datos
       // y se registraron como pendientes.
-      afterNextRender(() => this.carga.listo(), { injector: this.injector });
+      if (!this.destruida) afterNextRender(() => this.carga.listo(), { injector: this.injector });
     }
 
-    this.abrirPantallaElegida();
+    if (!this.destruida) this.abrirPantallaElegida();
   }
 
   /**
@@ -152,8 +155,9 @@ export class HomePage {
 
     if (!destino || !permitido) return;
 
-    void this.router.navigateByUrl(destino).then(() =>
-      afterNextRender(() => this.arranque.terminar(), { injector: this.injector }),
-    );
+    void this.router.navigateByUrl(destino).then(() => {
+      if (this.destruida) this.arranque.terminar();
+      else afterNextRender(() => this.arranque.terminar(), { injector: this.injector });
+    });
   }
 }

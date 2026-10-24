@@ -121,4 +121,35 @@ describe('RanuraComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('.pieza')).not.toBeNull();
     espera.ngOnDestroy();
   });
+
+  it('si la pantalla se cierra antes de que lleguen las piezas, no dibuja ni falla', async () => {
+    let descargar: (pieza: typeof PiezaDePruebaComponent) => void = () => undefined;
+    const config = [
+      entrada(
+        moduloDePrueba('a', {
+          ranuras: [
+            {
+              ranura: RANURAS.inicioResumen,
+              cargar: () => new Promise<typeof PiezaDePruebaComponent>((resolver) => (descargar = resolver)),
+            },
+          ],
+        }),
+      ),
+    ];
+    TestBed.configureTestingModule({
+      providers: [{ provide: CONFIGURACION_MODULOS, useValue: config }, EsperaDePantalla],
+    });
+    const espera = TestBed.inject(EsperaDePantalla);
+    const fixture = TestBed.createComponent(PantallaDePruebaComponent);
+    fixture.detectChanges();
+
+    fixture.destroy();
+    descargar(PiezaDePruebaComponent);
+    // Si mostrar() fallara, la promesa rechazada haría fallar la prueba
+    // («Unhandled Rejection»).
+    await new Promise((listo) => setTimeout(listo));
+
+    expect(espera.faltan()).toEqual(['ranura']);
+    espera.ngOnDestroy();
+  });
 });

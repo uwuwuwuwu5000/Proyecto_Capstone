@@ -29,7 +29,7 @@ describe('TarjetaResumenComponent', () => {
   });
 
   it('sin detalle ni nota, no deja líneas vacías', () => {
-    const html = crear({ icono: 'x', titulo: 'Solo título', enlace: '/x' });
+    const html = crear({ icono: 'document-text-outline', titulo: 'Solo título', enlace: '/x' });
     expect(html.querySelector('.tarjeta__detalle')).toBeNull();
     expect(html.querySelector('.tarjeta__nota')).toBeNull();
   });

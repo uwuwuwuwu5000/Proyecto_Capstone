@@ -1,5 +1,5 @@
 import { NgComponentOutlet } from '@angular/common';
-import { Component, Injector, Type, afterNextRender, effect, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, Injector, Type, afterNextRender, effect, inject, input, signal } from '@angular/core';
 
 import { EsperaDePantalla } from '../carga/espera-de-pantalla';
 import { ModulosService } from './modulos.service';
@@ -49,22 +49,30 @@ export class RanuraComponent {
    */
   private readonly carga = inject(EsperaDePantalla, { optional: true })?.registrar('ranura');
 
+  /**
+   * La pantalla puede cerrarse antes de que lleguen las piezas (al volver
+   * atrás enseguida, o al terminar una prueba). Entonces no se dibuja nada:
+   * su injector ya no existe y afterNextRender fallaría (NG0205).
+   */
+  private destruida = false;
+
   constructor() {
+    inject(DestroyRef).onDestroy(() => (this.destruida = true));
+
     effect(() => {
       const nombre = this.nombre();
       this.componentes.set(null);
       this.carga?.pendiente();
 
       const mostrar = (lista: Type<unknown>[]): void => {
-        if (this.nombre() !== nombre) return;
+        if (this.destruida || this.nombre() !== nombre) return;
         this.componentes.set(lista);
         afterNextRender(() => this.carga?.listo(), { injector: this.injector });
       };
 
-      this.modulos
-        .componentesDeRanura(nombre)
-        .then(mostrar)
-        .catch(() => mostrar([]));
+      // Dos argumentos, no .catch(): un error al mostrar no debe volver a
+      // intentar mostrar la lista vacía.
+      this.modulos.componentesDeRanura(nombre).then(mostrar, () => mostrar([]));
     });
   }
 }
