@@ -173,7 +173,7 @@ async function sembrar() {
         updatedAt: ahora,
       },
       'supportTickets/t_luis': {
-        uid: 'luis', tipo: 'queja', estado: 'abierto', asignadoA: null,
+        uid: 'luis', autorNombre: 'Luis Soto', autorEmail: 'luis@prueba.cl', tipo: 'queja', estado: 'abierto', asignadoA: null,
         asunto: 'La app se cierra', lastMessagePreview: 'Al abrir el mapa', createdAt: ahora, lastMessageAt: ahora,
       },
       'supportTickets/t_luis/messages/m1': {
@@ -480,6 +480,14 @@ bloqueo('El autor no cambia su nombre en el reporte por otro', () =>
   updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Otra persona' }));
 bloqueo('Al anonimizar no se cambia nada más del reporte', () =>
   updateDoc(doc(como('ana'), 'reports/r_ana'), { autorNombre: 'Cuenta eliminada', estado: 'resuelto' }));
+control('Al eliminar su cuenta, sus tickets de soporte quedan sin datos de contacto', () =>
+  updateDoc(doc(como('luis'), 'supportTickets/t_luis'), { autorNombre: 'Cuenta eliminada', autorEmail: '' }));
+bloqueo('Un vecino no borra los datos de contacto del ticket de otro', () =>
+  updateDoc(doc(como('ana'), 'supportTickets/t_luis'), { autorNombre: 'Cuenta eliminada', autorEmail: '' }));
+bloqueo('Al anonimizar un ticket no se cambia nada más', () =>
+  updateDoc(doc(como('luis'), 'supportTickets/t_luis'), { autorNombre: 'Cuenta eliminada', autorEmail: '', asunto: 'Otro asunto' }));
+bloqueo('Un ticket no se firma con otro nombre al anonimizarlo', () =>
+  updateDoc(doc(como('luis'), 'supportTickets/t_luis'), { autorNombre: 'Ana Pérez', autorEmail: '' }));
 
 // 1.0 · El autor corrige o retira su reporte mientras nadie lo revisa.
 const retirar = (db, uid, reportId, extra = {}) => {

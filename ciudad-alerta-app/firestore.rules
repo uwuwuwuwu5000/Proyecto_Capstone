@@ -1129,6 +1129,19 @@ service cloud.firestore {
         && request.resource.data.asunto == resource.data.asunto;
     }
 
+    /**
+     * 1.0 · Eliminar la cuenta: el autor deja sus tickets sin datos de
+     * contacto («Cuenta eliminada», sin correo), como promete la página
+     * /eliminar-cuenta. Nada más del ticket cambia.
+     */
+    function anonimizacionDeTicketValida() {
+      return estaAutenticado()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autorNombre', 'autorEmail'])
+        && request.resource.data.autorNombre == 'Cuenta eliminada'
+        && request.resource.data.autorEmail == '';
+    }
+
     function transicionTicketValida(desde, hacia) {
       return (desde == 'abierto' && hacia in ['en_atencion', 'cerrado'])
         || (desde == 'en_atencion' && hacia == 'cerrado')
@@ -1152,16 +1165,19 @@ service cloud.firestore {
 
       // El autor solo mueve la actividad al escribir; el estado lo cambia el
       // equipo de soporte.
-      allow update: if actualizacionDeActividad()
-        && transicionTicketValida(resource.data.estado, request.resource.data.estado)
-        && (
-             esGestor()
-             || (
-                  resource.data.uid == request.auth.uid
-                  && request.resource.data.estado == resource.data.estado
-                  && request.resource.data.asignadoA == resource.data.asignadoA
+      allow update: if (
+             actualizacionDeActividad()
+             && transicionTicketValida(resource.data.estado, request.resource.data.estado)
+             && (
+                  esGestor()
+                  || (
+                       resource.data.uid == request.auth.uid
+                       && request.resource.data.estado == resource.data.estado
+                       && request.resource.data.asignadoA == resource.data.asignadoA
+                     )
                 )
-           );
+           )
+        || anonimizacionDeTicketValida();
 
       // Las conversaciones no se borran: son evidencia de la atención prestada.
       allow delete: if false;

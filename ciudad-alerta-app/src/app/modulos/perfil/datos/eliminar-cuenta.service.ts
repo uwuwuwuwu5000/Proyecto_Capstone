@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { FirebaseError } from 'firebase/app';
-import { EmailAuthProvider, deleteUser, reauthenticateWithCredential } from 'firebase/auth';
+import { EmailAuthProvider, User, deleteUser, reauthenticateWithCredential } from 'firebase/auth';
 import {
+  DocumentReference,
   Firestore,
   collection,
   doc,
@@ -41,11 +42,13 @@ const POR_LOTE = 400;
  *
  *  1. Pide la contraseña otra vez (Firebase la exige para borrar la cuenta).
  *  2. Cambia el autor de cada reporte propio a «Cuenta eliminada».
- *  3. Deja el perfil sin correo ni nombre. El documento se conserva (sin
+ *  3. Deja sus tickets de soporte sin datos de contacto (nombre y correo),
+ *     como promete la página /eliminar-cuenta.
+ *  4. Deja el perfil sin correo ni nombre. El documento se conserva (sin
  *     datos personales) para que nadie pueda saltarse el intervalo entre
  *     reportes borrándolo y creándolo de nuevo.
- *  4. Borra la cuenta de Firebase Authentication: ya no se puede entrar.
- *  5. Borra lo que la app guardó en el teléfono.
+ *  5. Borra la cuenta de Firebase Authentication: ya no se puede entrar.
+ *  6. Borra lo que la app guardó en el teléfono.
  *
  * Si algo falla a mitad, se puede volver a intentar: lo ya hecho no se repite.
  */
@@ -63,36 +66,66 @@ export class EliminarCuentaService {
     }
 
     try {
-      await reauthenticateWithCredential(usuario, EmailAuthProvider.credential(usuario.email, contrasena));
+      await this.reautenticar(usuario, usuario.email, contrasena);
     } catch (error) {
       throw this.traducir(error);
     }
 
     try {
-      const propios = await getDocs(query(collection(this.firestore, 'reports'), where('uid', '==', usuario.uid)));
-      const pendientes = propios.docs.filter((d) => d.data()['autorNombre'] !== AUTOR_CUENTA_ELIMINADA);
+      const reportes = (await this.propios('reports', usuario.uid)).filter(
+        (d) => d.datos['autorNombre'] !== AUTOR_CUENTA_ELIMINADA,
+      );
+      await this.actualizarEnLotes(reportes.map((d) => d.ref), { autorNombre: AUTOR_CUENTA_ELIMINADA });
 
-      for (let i = 0; i < pendientes.length; i += POR_LOTE) {
-        const lote = writeBatch(this.firestore);
-        for (const reporte of pendientes.slice(i, i + POR_LOTE)) {
-          lote.update(reporte.ref, { autorNombre: AUTOR_CUENTA_ELIMINADA });
-        }
-        await lote.commit();
-      }
+      // Antes quedaban con el nombre y el correo, aunque la página pública
+      // dice que los mensajes a soporte quedan sin datos de contacto.
+      const tickets = (await this.propios('supportTickets', usuario.uid)).filter(
+        (d) => d.datos['autorNombre'] !== AUTOR_CUENTA_ELIMINADA || d.datos['autorEmail'] !== '',
+      );
+      await this.actualizarEnLotes(tickets.map((d) => d.ref), { autorNombre: AUTOR_CUENTA_ELIMINADA, autorEmail: '' });
 
-      await updateDoc(doc(this.firestore, 'users', usuario.uid), {
-        displayName: AUTOR_CUENTA_ELIMINADA,
-        email: '',
-        updatedAt: serverTimestamp(),
-      });
-
-      await deleteUser(usuario);
+      await this.vaciarPerfil(usuario.uid);
+      await this.borrarCuenta(usuario);
       this.preferencias.borrarDatosLocales();
 
-      return { reportesAnonimos: pendientes.length };
+      return { reportesAnonimos: reportes.length };
     } catch (error) {
       throw this.traducir(error);
     }
+  }
+
+  // Cada paso con Firebase, aparte para poder probar el orden sin red.
+
+  protected reautenticar(usuario: User, correo: string, contrasena: string): Promise<unknown> {
+    return reauthenticateWithCredential(usuario, EmailAuthProvider.credential(correo, contrasena));
+  }
+
+  protected async propios(
+    coleccion: 'reports' | 'supportTickets',
+    uid: string,
+  ): Promise<{ ref: DocumentReference; datos: Record<string, unknown> }[]> {
+    const snapshot = await getDocs(query(collection(this.firestore, coleccion), where('uid', '==', uid)));
+    return snapshot.docs.map((d) => ({ ref: d.ref, datos: d.data() }));
+  }
+
+  protected async actualizarEnLotes(refs: DocumentReference[], cambios: Record<string, string>): Promise<void> {
+    for (let i = 0; i < refs.length; i += POR_LOTE) {
+      const lote = writeBatch(this.firestore);
+      for (const ref of refs.slice(i, i + POR_LOTE)) lote.update(ref, cambios);
+      await lote.commit();
+    }
+  }
+
+  protected vaciarPerfil(uid: string): Promise<void> {
+    return updateDoc(doc(this.firestore, 'users', uid), {
+      displayName: AUTOR_CUENTA_ELIMINADA,
+      email: '',
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  protected borrarCuenta(usuario: User): Promise<void> {
+    return deleteUser(usuario);
   }
 
   private traducir(error: unknown): EliminarCuentaError {
