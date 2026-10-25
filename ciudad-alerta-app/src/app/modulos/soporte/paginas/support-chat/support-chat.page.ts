@@ -89,6 +89,9 @@ export class SupportChatPage implements OnDestroy {
 
   private readonly contenido = viewChild<IonContent>(IonContent);
   private suscripcion: Subscription | null = null;
+  /** Cada carga tiene su número: una que termina tarde no pisa a la siguiente. */
+  private carga = 0;
+  private destruida = false;
 
   /** El ciudadano no puede escribir en un ticket cerrado; el staff sí. */
   readonly puedeEscribir = computed(() => {
@@ -119,7 +122,9 @@ export class SupportChatPage implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.destruida = true;
     this.suscripcion?.unsubscribe();
+    this.suscripcion = null;
   }
 
   esPropio(mensaje: SupportMessage): boolean {
@@ -206,19 +211,28 @@ export class SupportChatPage implements OnDestroy {
   }
 
   private async cargar(ticketId: string): Promise<void> {
+    const carga = ++this.carga;
+    // Si salió de la pantalla o pidió otro ticket mientras se leía, esta carga
+    // ya no corresponde. Antes abría igual la escucha en tiempo real, que
+    // quedaba viva para siempre (o mostraba los mensajes de otro ticket).
+    const vigente = () => carga === this.carga && !this.destruida;
+
     this.estado.set('cargando');
     this.mensajes.set([]);
     this.suscripcion?.unsubscribe();
+    this.suscripcion = null;
 
     const usuario = this.authService.user;
 
     if (usuario) {
       const perfil = await this.authService.getUserProfile(usuario.uid).catch(() => null);
+      if (!vigente()) return;
       this.esStaff.set(perfil?.role === 'operador' || perfil?.role === 'admin');
     }
 
     try {
       const ticket = await this.supportService.obtenerTicket(ticketId);
+      if (!vigente()) return;
 
       if (!ticket) {
         this.estado.set('no_encontrado');
@@ -228,14 +242,16 @@ export class SupportChatPage implements OnDestroy {
       this.ticket.set(ticket);
       this.estado.set('listo');
     } catch {
-      this.estado.set('error');
+      if (vigente()) this.estado.set('error');
       return;
     }
 
     this.suscripcion = this.supportService.escucharMensajes(ticketId).subscribe({
       next: (mensajes) => {
         this.mensajes.set(mensajes);
-        setTimeout(() => void this.contenido()?.scrollToBottom(200), 80);
+        setTimeout(() => {
+          if (!this.destruida) void this.contenido()?.scrollToBottom(200);
+        }, 80);
       },
       error: () => this.estado.set('error'),
     });
