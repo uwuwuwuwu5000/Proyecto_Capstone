@@ -183,9 +183,10 @@ export class ReportDetailPage {
     this.fotoError.set(false);
 
     try {
-      this.fotoUrl.set(await this.reportService.resolvePhotoUrl(reporte));
+      const url = await this.reportService.resolvePhotoUrl(reporte);
+      if (this.reporte()?.id === reporte.id) this.fotoUrl.set(url);
     } catch {
-      this.fotoError.set(true);
+      if (this.reporte()?.id === reporte.id) this.fotoError.set(true);
     } finally {
       this.cargandoFoto.set(false);
     }
@@ -245,14 +246,19 @@ export class ReportDetailPage {
     this.reiniciarEstado();
 
     let reporte: Report | null;
+    // Si se abrió otro reporte mientras se leía este, esta carga no corresponde.
+    const vigente = () => this.id() === reportId;
 
     try {
       reporte = await this.queryService.getById(reportId);
     } catch {
+      if (!vigente()) return;
       this.cargando.set(false);
       this.noEncontrado.set(true);
       return;
     }
+
+    if (!vigente()) return;
 
     if (!reporte) {
       this.cargando.set(false);
@@ -264,16 +270,21 @@ export class ReportDetailPage {
     this.cargando.set(false);
 
     // Datos complementarios: cada uno falla por su cuenta sin afectar la vista.
+    // Los datos complementarios de un reporte anterior no se escriben en el
+    // actual (antes, al pasar rápido de un detalle a otro, podían mezclarse).
+    const delActual = () => this.reporte()?.id === reportId;
+
     void this.confirmationService
       .countConfirmations(reporte.id)
-      .then((total) => this.confirmaciones.set(total))
-      .catch(() => this.confirmaciones.set(null));
+      .then((total) => delActual() && this.confirmaciones.set(total))
+      .catch(() => delActual() && this.confirmaciones.set(null));
 
     // Se consulta aunque el módulo de confianza llene la ranura: si su pieza no
     // llega a descargarse (sin red), el bloque simple de respaldo ya sabe qué mostrar.
     void this.confirmationService
       .hasConfirmed(reporte.id)
       .then((confirmado) => {
+        if (!delActual()) return;
         if (confirmado === null) {
           this.estadoConfirmacion.set('error');
           return;
@@ -281,7 +292,7 @@ export class ReportDetailPage {
 
         this.estadoConfirmacion.set(confirmado ? 'confirmado' : 'disponible');
       })
-      .catch(() => this.estadoConfirmacion.set('error'));
+      .catch(() => delActual() && this.estadoConfirmacion.set('error'));
 
     void this.cargarHistorial(reporte.id);
   }
