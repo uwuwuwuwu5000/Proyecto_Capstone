@@ -11,6 +11,7 @@ import {
   where,
 } from 'firebase/firestore';
 
+import { esFallaDeRed } from '../core/fallas-de-red';
 import { FIRESTORE } from '../core/firebase.providers';
 import { ComunaDetectada } from './comuna.service';
 import { ReportCategory, StatusChange } from '../models/report.model';
@@ -87,16 +88,7 @@ export class RoutingService {
     }
 
     try {
-      // Dos igualdades sin orderBy: Firestore las resuelve combinando los
-      // índices automáticos de cada campo, sin índice compuesto.
-      const snapshot = await getDocs(
-        query(
-          collection(this.firestore, 'operadores'),
-          where('organismoId', '==', organismoId),
-          where('activo', '==', true),
-          limit(10),
-        ),
-      );
+      const snapshot = await this.consultarOperadores(organismoId);
 
       const ids = snapshot.docs
         .map((d) => (d.data() as OperadorDoc).id ?? d.id)
@@ -105,10 +97,33 @@ export class RoutingService {
       const operadorId = ids[0] ?? null;
       this.cacheOperadores.set(organismoId, operadorId);
       return operadorId;
-    } catch {
-      // Sin conexión no se cachea, para reintentar en el próximo reporte.
+    } catch (error) {
+      // Sin conexión no se sabe quién atiende: quien crea el reporte decide
+      // (guardarlo para después). Antes se devolvía null y el reporte quedaba
+      // sin operador aunque el organismo tuviera uno.
+      if (esFallaDeRed(error)) throw error;
       return null;
     }
+  }
+
+  /**
+   * Las dos lecturas de Firestore de la asignación, aparte para poder probar
+   * el servicio sin red. Dos igualdades sin orderBy: Firestore las resuelve
+   * con los índices automáticos de cada campo, sin índice compuesto.
+   */
+  protected consultarOperadores(organismoId: string) {
+    return getDocs(
+      query(
+        collection(this.firestore, 'operadores'),
+        where('organismoId', '==', organismoId),
+        where('activo', '==', true),
+        limit(10),
+      ),
+    );
+  }
+
+  protected leerOrganismo(organismoId: string) {
+    return getDoc(doc(this.firestore, 'organismos', organismoId));
   }
 
   private async leerMunicipio(organismoId: string): Promise<Organismo | null> {
@@ -117,7 +132,7 @@ export class RoutingService {
     }
 
     try {
-      const snapshot = await getDoc(doc(this.firestore, 'organismos', organismoId));
+      const snapshot = await this.leerOrganismo(organismoId);
 
       if (!snapshot.exists()) {
         this.cacheMunicipios.set(organismoId, null);
@@ -142,8 +157,12 @@ export class RoutingService {
 
       this.cacheMunicipios.set(organismoId, organismo);
       return organismo;
-    } catch {
-      // Sin conexión no se cachea el fallo, para reintentar en el próximo reporte.
+    } catch (error) {
+      // Sin conexión no se sabe si la municipalidad está activa. Antes se
+      // devolvía null y el reporte se derivaba a la OIRS genérica aunque la
+      // comuna tuviera municipalidad: ahora se avisa, y la creación del
+      // reporte lo guarda para enviarlo con señal.
+      if (esFallaDeRed(error)) throw error;
       return null;
     }
   }

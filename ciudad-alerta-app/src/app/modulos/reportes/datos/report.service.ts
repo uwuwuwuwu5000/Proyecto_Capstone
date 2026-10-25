@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import {
+  DocumentReference,
   Firestore,
   Timestamp,
   collection,
@@ -12,6 +13,7 @@ import {
 import { FirebaseError } from 'firebase/app';
 import { geohashForLocation } from 'geofire-common';
 
+import { esFallaDeRed } from '../../../core/fallas-de-red';
 import { FIRESTORE } from '../../../core/firebase.providers';
 import { AuthService } from '../../../services/auth.service';
 import { CapturedPhoto } from './camera.service';
@@ -94,9 +96,11 @@ export class ReportService {
     this.validarDescripcion(descripcion);
     this.validarUbicacion(datos.ubicacion);
 
-    // El perfil se lee una sola vez: aporta el control de frecuencia y el
-    // nombre del autor.
-    const perfil = await this.authService.getUserProfile(usuario.uid).catch(() => null);
+    // Lo que hay que leer antes de escribir: el perfil (control de frecuencia
+    // y nombre del autor), la comuna y a quién se deriva. Si falta la
+    // conexión en cualquiera de esas lecturas, no se escribe nada: un reporte
+    // derivado con datos a medias quedaría con el organismo equivocado.
+    const { perfil, comuna, organismo, operadorId } = await this.leerAntesDeEscribir(usuario.uid, datos);
     this.validarFrecuencia(perfil?.ultimoReporteAt);
 
     /**
@@ -110,13 +114,6 @@ export class ReportService {
       usuario.email?.split('@')[0] ||
       'Vecino'
     ).slice(0, 60);
-
-    const comuna = datos.comuna ?? (await this.comunaService.detectar(datos.ubicacion));
-
-    // 1. Organismo: la municipalidad de la comuna donde se hizo el reporte.
-    // 2. Operador: el operador activo de ese organismo, si existe.
-    const organismo = await this.routingService.resolveOrganismo(datos.categoria, comuna);
-    const operadorId = await this.routingService.resolveOperador(organismo.id);
 
     const referencia = datos.id
       ? doc(this.firestore, 'reports', datos.id)
@@ -187,21 +184,18 @@ export class ReportService {
         }
 
         try {
-          await setDoc(referencia, { ...reporte, foto });
+          await this.guardarDocumento(referencia, { ...reporte, foto });
         } catch (error) {
           await this.photoStorage.remove(foto).catch(() => undefined);
           throw error;
         }
       } else {
-        await setDoc(referencia, reporte);
+        await this.guardarDocumento(referencia, reporte);
       }
 
       // Registra el envío para el control de frecuencia. Si falla, el reporte
       // ya está creado y no tiene sentido revertirlo por esto.
-      void updateDoc(doc(this.firestore, 'users', usuario.uid), {
-        ultimoReporteAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      }).catch(() => undefined);
+      void this.marcarUltimoReporte(usuario.uid).catch(() => undefined);
 
       return reportId;
     } catch (error) {
@@ -210,6 +204,40 @@ export class ReportService {
       }
 
       throw new ReportError(this.mensajeDeEscritura(error), esFallaDeRed(error) ? 'red' : 'otro');
+    }
+  }
+
+  protected marcarUltimoReporte(uid: string): Promise<void> {
+    return updateDoc(doc(this.firestore, 'users', uid), {
+      ultimoReporteAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+
+  /** La escritura del reporte sin lote, aparte para poder probar el servicio sin red. */
+  protected guardarDocumento(referencia: DocumentReference, documento: Omit<Report, 'id'>): Promise<void> {
+    return setDoc(referencia, documento);
+  }
+
+  private async leerAntesDeEscribir(uid: string, datos: NuevoReporte) {
+    try {
+      // Un perfil ilegible por otra causa no detiene el reporte: las reglas
+      // vuelven a comprobar el nombre y el intervalo.
+      const perfil = await this.authService.getUserProfile(uid).catch((error: unknown) => {
+        if (esFallaDeRed(error)) throw error;
+        return null;
+      });
+      const comuna = datos.comuna ?? (await this.comunaService.detectar(datos.ubicacion));
+      // 1. Organismo: la municipalidad de la comuna donde se hizo el reporte.
+      // 2. Operador: el operador activo de ese organismo, si existe.
+      const organismo = await this.routingService.resolveOrganismo(datos.categoria, comuna);
+      const operadorId = await this.routingService.resolveOperador(organismo.id);
+      return { perfil, comuna, organismo, operadorId };
+    } catch (error) {
+      if (esFallaDeRed(error)) {
+        throw new ReportError('Sin conexión con el servidor. Tu reporte no se guardó, inténtalo nuevamente.', 'red');
+      }
+      throw error;
     }
   }
 
@@ -304,12 +332,4 @@ export class ReportService {
 
     return 'No se pudo guardar el reporte. Intenta nuevamente.';
   }
-}
-
-/** Falta de conexión, no un rechazo de las reglas ni un dato inválido. */
-function esFallaDeRed(error: unknown): boolean {
-  return (
-    error instanceof FirebaseError &&
-    ['unavailable', 'deadline-exceeded', 'storage/retry-limit-exceeded'].includes(error.code)
-  );
 }
