@@ -382,6 +382,34 @@ for (const c of componentes) {
 if (!etiquetasMal) informe.ok(`${componentes.length} componentes: etiquetas <app-*> e <ion-*> importadas`);
 if (!iconosMal) informe.ok('Todos los íconos usados están registrados');
 
+// Los colores del tema (--ca-*) se definen solo en src/theme/variables.scss,
+// una vez para el tema oscuro y otra para el claro. Un componente que los
+// redefine queda con una paleta fija: así el login mostró letras claras sobre
+// el fondo claro con el teléfono en tema claro.
+{
+  let fijos = 0;
+  for (const c of componentes) {
+    const hojas = c.estilos
+      .map((e) => resolve(dirname(c.archivo), e))
+      .filter((f) => existsSync(f))
+      .map((f) => [f, leer(f)]);
+    const enLinea = c.texto.match(/styles:\s*`([\s\S]*?)`/)?.[1];
+    if (enLinea) hojas.push([c.archivo, enLinea]);
+
+    for (const [archivo, css] of hojas) {
+      for (const m of sinComentarios(css).matchAll(/(--ca-[a-z0-9-]+)\s*:/g)) {
+        fijos++;
+        informe.agregar('error', `${c.clase} redefine ${m[1]}: deja de seguir el tema claro u oscuro`, {
+          archivo: rel(archivo),
+          linea: lineaDe(sinComentarios(css), m.index),
+          solucion: 'Usa var(--ca-…) sin redefinirla. Si falta un color, agrégalo en src/theme/variables.scss para los dos temas.',
+        });
+      }
+    }
+  }
+  if (!fijos) informe.ok('Los componentes usan los colores del tema sin redefinirlos (claro y oscuro)');
+}
+
 // ═══ 3. Navegación ══════════════════════════════════════════════════════════
 informe.seccion('Rutas y navegación');
 
@@ -1023,14 +1051,33 @@ if (pendientes) informe.agregar('info', `${pendientes} marcas TODO/FIXME/HACK en
 informe.seccion('Pruebas automáticas (npm run test:una-vez)');
 {
   const specs = listar(SRC, (n) => n.endsWith('.spec.ts'));
-  const sinEntorno = specs.filter((f) => !/usarEntornoDePrueba\s*\(/.test(sinComentarios(leer(f))));
+  // Solo las que usan TestBed necesitan el entorno; una prueba de funciones
+  // puras no lo necesita.
+  const sinEntorno = specs.filter((f) => {
+    const texto = sinComentarios(leer(f));
+    return /\bTestBed\b/.test(texto) && !/usarEntornoDePrueba\s*\(/.test(texto);
+  });
   if (sinEntorno.length) {
     informe.agregar('advertencia', `${sinEntorno.length} pruebas no llaman a usarEntornoDePrueba()`, {
       detalle: `${sinEntorno.map(rel).join(', ')}. Sin eso no tienen Firebase de prueba, Ionic ni router: en Windows fallan con «No provider found for InjectionToken FIRESTORE».`,
       solucion: "Al comienzo del archivo: import { usarEntornoDePrueba } from '<ruta>/testing'; y usarEntornoDePrueba(); antes del describe.",
     });
   } else if (specs.length) {
-    informe.ok(`${specs.length} archivos de prueba preparan su entorno con usarEntornoDePrueba()`);
+    informe.ok(`${specs.length} archivos de prueba; los que usan TestBed preparan su entorno con usarEntornoDePrueba()`);
+  }
+
+  // Pruebas que solo comprueban que el componente se crea: no detectan casi
+  // nada. Es la lista de lo que conviene probar de verdad.
+  const soloCrear = specs.filter((f) => {
+    const texto = sinComentarios(leer(f));
+    const pruebas = [...texto.matchAll(/\bit(?:\.each\([^)]*\))?\s*\(/g)].length;
+    return pruebas === 1 && /\bit\s*\(\s*['"]should (?:create|be created)['"]/.test(texto);
+  });
+  if (soloCrear.length) {
+    informe.agregar('info', `${soloCrear.length} archivos de prueba solo comprueban que algo se crea`, {
+      detalle: soloCrear.map(rel).join(', '),
+      solucion: 'Reemplaza «should create» por pruebas de lo que hace la pantalla o el servicio (ver GUIA_PRUEBAS.md).',
+    });
   }
 
   // En Windows, el builder carga test-setup.ts fuera del paquete de pruebas
