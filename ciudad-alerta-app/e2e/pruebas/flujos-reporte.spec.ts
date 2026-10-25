@@ -144,6 +144,27 @@ test.describe('Crear un reporte', () => {
   });
 });
 
+test.describe('Versión web sin señal', () => {
+  test('una pantalla que todavía no se abrió avisa que falta la señal, en vez de quedarse sin responder', async ({ page, context }) => {
+    await abrir(page, '/home', { como: 'ana' });
+    // En la web el código de cada pantalla se descarga al abrirla.
+    await context.setOffline(true);
+    await vista(page).getByText('Crear un reporte').first().click();
+
+    await expect(aviso(page, 'Sin señal no pudimos abrir esa pantalla')).toBeVisible();
+    await expect(page).toHaveURL(/\/home$/);
+    await expect(vista(page).getByText('Hola, Ana')).toBeVisible();
+
+    // Con señal, el mismo botón funciona. El navegador recuerda la descarga
+    // fallida y no la reintenta: la app se recarga directo en esa pantalla.
+    await context.setOffline(false);
+    await vista(page).getByText('Crear un reporte').first().click();
+    await expect(page).toHaveURL(/\/report-new$/);
+    await esperarPantalla(page);
+    await expect(vista(page).getByText('Evidencia')).toBeVisible();
+  });
+});
+
 test.describe('Un reporte propio', () => {
   test('la autora corrige la descripción y luego lo retira', async ({ page }) => {
     await abrir(page, '/report/r_ana_nuevo', { como: 'ana' });

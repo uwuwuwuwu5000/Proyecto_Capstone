@@ -7,13 +7,14 @@
  * pruebas de e2e/pruebas con Playwright. No forma parte de la app.
  */
 import { bootstrapApplication } from '@angular/platform-browser';
-import { NoPreloading, RouteReuseStrategy, provideRouter, withComponentInputBinding, withPreloading } from '@angular/router';
+import { RouteReuseStrategy, provideRouter } from '@angular/router';
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 import { initializeApp } from 'firebase/app';
 import { disableNetwork, initializeFirestore } from 'firebase/firestore';
 
 import { routes } from '../../src/app/app.routes';
 import { AppComponent } from '../../src/app/app.component';
+import { OPCIONES_DEL_ENRUTADOR } from '../../src/app/core/enrutador';
 import { FIREBASE_APP, FIREBASE_AUTH, FIREBASE_STORAGE, FIRESTORE } from '../../src/app/core/firebase.providers';
 import { provideModulos } from '../../src/app/nucleo/modulos';
 import { AuthService } from '../../src/app/services/auth.service';
@@ -67,7 +68,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideIonicAngular({ mode: 'md' }),
-    provideRouter(routes, withPreloading(NoPreloading), withComponentInputBinding()),
+    provideRouter(routes, ...OPCIONES_DEL_ENRUTADOR),
 
     // Firebase sin red: lo usan solo para armar referencias (ids de documentos).
     { provide: FIREBASE_APP, useValue: app },
