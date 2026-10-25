@@ -11,7 +11,11 @@ import { CapturedPhoto } from './camera.service';
 import { PrivacidadError, PrivacidadService } from './privacidad.service';
 import { NuevoReporte, ReportError, ReportService } from './report.service';
 
-/** Clave en localStorage. «Borrar datos guardados» de Configuración la borra. */
+/**
+ * Clave en localStorage. «Borrar datos guardados» de Configuración la
+ * conserva (es un reporte sin terminar, no una copia); eliminar la cuenta la
+ * borra (PreferenciasService.borrarDatosLocales).
+ */
 export const CLAVE_BORRADOR = 'ca.reportes.borrador';
 
 /** La foto tal como queda guardada en el teléfono. */

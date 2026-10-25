@@ -86,7 +86,8 @@ export class EliminarCuentaService {
 
       await this.vaciarPerfil(usuario.uid);
       await this.borrarCuenta(usuario);
-      this.preferencias.borrarDatosLocales();
+      // También el reporte que esperaba señal: ya no hay cuenta que lo envíe.
+      this.preferencias.borrarDatosLocales({ tambienLoPendiente: true });
 
       return { reportesAnonimos: reportes.length };
     } catch (error) {

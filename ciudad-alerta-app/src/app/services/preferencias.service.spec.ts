@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 
 import { FOTO_AHORRO, FOTO_NORMAL, PREFERENCIAS_INICIALES, PreferenciasService } from './preferencias.service';
+import { CLAVE_BORRADOR } from '../modulos/reportes/datos/borrador.service';
 import { usarEntornoDePrueba } from '../../testing';
 
 usarEntornoDePrueba();
@@ -82,5 +83,25 @@ describe('PreferenciasService', () => {
     expect(localStorage.getItem('ciudad-alerta.tema')).toBe('claro');
     expect(localStorage.getItem('firebase:authUser:clave')).toBe('sesion');
     expect(localStorage.getItem(CLAVE)).not.toBeNull();
+  });
+
+  it('borrar los datos locales no pierde el reporte que espera señal', () => {
+    localStorage.setItem('ca.confianza.copia.u1', '{}');
+    localStorage.setItem(CLAVE_BORRADOR, '{"id":"r1"}');
+    const servicio = TestBed.inject(PreferenciasService);
+
+    expect(servicio.borrarDatosLocales()).toBe(1);
+    expect(localStorage.getItem(CLAVE_BORRADOR)).toBe('{"id":"r1"}');
+  });
+
+  it('al eliminar la cuenta, borra también el reporte que esperaba señal', () => {
+    localStorage.setItem('ca.confianza.copia.u1', '{}');
+    localStorage.setItem(CLAVE_BORRADOR, '{"id":"r1"}');
+    localStorage.setItem('ciudad-alerta.tema', 'claro');
+    const servicio = TestBed.inject(PreferenciasService);
+
+    expect(servicio.borrarDatosLocales({ tambienLoPendiente: true })).toBe(2);
+    expect(localStorage.getItem(CLAVE_BORRADOR)).toBeNull();
+    expect(localStorage.getItem('ciudad-alerta.tema')).toBe('claro');
   });
 });

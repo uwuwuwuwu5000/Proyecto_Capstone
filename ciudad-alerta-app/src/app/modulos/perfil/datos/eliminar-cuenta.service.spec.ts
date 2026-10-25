@@ -83,6 +83,8 @@ describe('EliminarCuentaService · el orden de los pasos', () => {
       'cuenta',
       'teléfono',
     ]);
+    // En el teléfono no queda ni el reporte que esperaba señal: ya no hay cuenta que lo envíe.
+    expect(borrarLocal).toHaveBeenCalledWith({ tambienLoPendiente: true });
   });
 
   it('con la contraseña equivocada no toca nada', async () => {

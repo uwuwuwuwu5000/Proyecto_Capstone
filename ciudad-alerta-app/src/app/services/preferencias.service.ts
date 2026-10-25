@@ -49,6 +49,13 @@ const PREFIJOS_LOCALES = ['ca.', 'ciudad-alerta.'];
 const CLAVES_QUE_SE_CONSERVAN = [CLAVE, 'ciudad-alerta.tema'];
 
 /**
+ * Lo que la persona todavía no termina: el reporte guardado sin señal
+ * (CLAVE_BORRADOR de modulos/reportes/datos/borrador.service.ts). No es una
+ * copia que se pueda volver a bajar; se descarta desde su tarjeta del inicio.
+ */
+const CLAVES_PENDIENTES = ['ca.reportes.borrador'];
+
+/**
  * Preferencias de Configuración, compartidas por toda la app.
  *
  * Las que cambian cómo se ve (texto y animaciones) se aplican con clases en
@@ -99,8 +106,13 @@ export class PreferenciasService {
    * Borra lo que la app guardó en este teléfono (copia del nivel de
    * confianza, ayudas ya vistas). No cierra la sesión ni cambia la
    * configuración. Devuelve cuántos datos borró.
+   *
+   * El reporte que espera señal se conserva: antes se perdía sin aviso, con
+   * su foto, aunque el diálogo no lo mencionaba. Solo al eliminar la cuenta
+   * (`tambienLoPendiente`) se va también, porque ya no hay quién lo envíe.
    */
-  borrarDatosLocales(): number {
+  borrarDatosLocales(opciones: { tambienLoPendiente?: boolean } = {}): number {
+    const conservar = opciones.tambienLoPendiente ? CLAVES_QUE_SE_CONSERVAN : [...CLAVES_QUE_SE_CONSERVAN, ...CLAVES_PENDIENTES];
     try {
       const claves: string[] = [];
       for (let i = 0; i < localStorage.length; i += 1) {
@@ -108,7 +120,7 @@ export class PreferenciasService {
         if (
           clave &&
           PREFIJOS_LOCALES.some((prefijo) => clave.startsWith(prefijo)) &&
-          !CLAVES_QUE_SE_CONSERVAN.includes(clave)
+          !conservar.includes(clave)
         ) {
           claves.push(clave);
         }
