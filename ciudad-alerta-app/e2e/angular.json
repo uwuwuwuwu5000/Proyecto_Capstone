@@ -1,0 +1,42 @@
+{
+  "$schema": "../node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "cli": {
+    "analytics": false
+  },
+  "projects": {
+    "maqueta": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "maqueta",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": {
+              "base": ".compilado",
+              "browser": ""
+            },
+            "index": "../src/index.html",
+            "browser": "maqueta/main.ts",
+            "polyfills": [],
+            "tsConfig": "tsconfig.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [],
+            "styles": [
+              "../src/global.scss",
+              "../src/theme/variables.scss",
+              "../node_modules/leaflet/dist/leaflet.css"
+            ],
+            "scripts": [],
+            "optimization": false,
+            "extractLicenses": false,
+            "sourceMap": true,
+            "namedChunks": true
+          }
+        }
+      }
+    }
+  }
+}

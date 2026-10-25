@@ -1,0 +1,10 @@
+/* La maqueta de las pruebas de punta a punta usa la configuración de la app. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../out-tsc/e2e-maqueta",
+    "types": []
+  },
+  "files": ["maqueta/main.ts"],
+  "include": ["../src/**/*.d.ts"]
+}

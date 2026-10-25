@@ -1,0 +1,15 @@
+{
+  "//": "Solo para revisar los tipos de las pruebas de Playwright (npm run e2e:compilar) y para el editor; Playwright las ejecuta sin compilar.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  },
+  "include": ["*.ts", "../playwright.config.ts"]
+}
