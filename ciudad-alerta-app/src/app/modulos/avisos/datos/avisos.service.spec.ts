@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { Timestamp } from 'firebase/firestore';
-import { vi } from 'vitest';
+import { Subject } from 'rxjs';
+import { afterEach, vi } from 'vitest';
 
 import { Report } from '../../../models/report.model';
 import { AvisoSinVisto } from '../modelo/aviso.model';
+import { AuthService } from '../../../services/auth.service';
 import { AvisosService } from './avisos.service';
 import { usarEntornoDePrueba } from '../../../../testing';
 
@@ -118,5 +120,82 @@ describe('AvisosService', () => {
     ]);
 
     expect(service.avisos().map((a) => a.id)).toEqual(['r1_veredicto', 'r1_c1']);
+  });
+});
+
+describe('AvisosService · al cambiar de cuenta', () => {
+  type ConEscucha = {
+    leerEstado: (uid: string) => Promise<unknown>;
+    escuchar: (uid: string, alCambiar: (r: Report[]) => void, alFallar: (e: unknown) => void) => () => void;
+  };
+
+  let sesion: Subject<{ uid: string } | null>;
+  let lecturas: Map<string, (estado: unknown) => void>;
+  let escuchas: string[];
+  let cortadas: string[];
+  let fallar: Map<string, (error: unknown) => void>;
+  let service: AvisosService;
+
+  beforeEach(() => {
+    sesion = new Subject();
+    lecturas = new Map();
+    escuchas = [];
+    cortadas = [];
+    fallar = new Map();
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: { authState$: sesion.asObservable(), user: null } }],
+    });
+
+    // Se reemplazan antes de crear el servicio: la escucha arranca en el constructor.
+    const proto = AvisosService.prototype as unknown as ConEscucha;
+    vi.spyOn(proto, 'leerEstado').mockImplementation(
+      (uid: string) => new Promise((resolver) => lecturas.set(uid, resolver)),
+    );
+    vi.spyOn(proto, 'escuchar').mockImplementation((uid, _alCambiar, alFallar) => {
+      escuchas.push(uid);
+      fallar.set(uid, alFallar);
+      return () => cortadas.push(uid);
+    });
+    service = TestBed.inject(AvisosService);
+  });
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('si cierra sesión mientras se lee el estado, no queda escuchando a nadie', async () => {
+    sesion.next({ uid: 'ana' });
+    sesion.next(null);
+    lecturas.get('ana')!({ vistos: ['r1_x'] });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(escuchas).toEqual([]);
+    expect(service.avisos()).toEqual([]);
+  });
+
+  it('si entra otra cuenta a mitad de camino, solo escucha a la nueva y no mezcla lo visto', async () => {
+    sesion.next({ uid: 'ana' });
+    sesion.next({ uid: 'luis' });
+    lecturas.get('luis')!({ vistos: [] });
+    await vi.waitFor(() => expect(escuchas).toEqual(['luis']));
+
+    // Llega tarde lo de Ana: no se aplica ni abre otra escucha.
+    lecturas.get('ana')!({ vistos: ['de_ana'] });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(escuchas).toEqual(['luis']);
+  });
+
+  it('al cerrar sesión corta la escucha, y un error tardío no muestra un aviso falso', async () => {
+    sesion.next({ uid: 'ana' });
+    lecturas.get('ana')!(undefined);
+    await vi.waitFor(() => expect(escuchas).toEqual(['ana']));
+
+    sesion.next(null);
+    expect(cortadas).toEqual(['ana']);
+
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    fallar.get('ana')!(new Error('permission-denied tras cerrar sesión'));
+    expect(service.error()).toBeNull();
   });
 });

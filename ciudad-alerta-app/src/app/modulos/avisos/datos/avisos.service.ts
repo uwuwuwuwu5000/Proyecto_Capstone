@@ -166,31 +166,56 @@ export class AvisosService {
 
     await this.cargarEstado(uid);
 
+    // Si cerró sesión, o entró otra cuenta, mientras se leía el estado, no se
+    // escucha nada: antes quedaba abierta la escucha de la cuenta anterior.
+    if (this.uid !== uid) {
+      return;
+    }
+
+    this.escucha = this.escuchar(
+      uid,
+      (reportes) => {
+        this.error.set(null);
+        void this.procesar(uid, reportes);
+      },
+      (error) => {
+        if (this.uid !== uid) return;
+        // Antes este error se descartaba y la campana quedaba vacía sin
+        // explicación. El mensaje de Firestore incluye, si falta un índice,
+        // el enlace para crearlo.
+        console.error('Avisos: no se pudo escuchar los reportes propios.', error);
+        this.error.set('No se pudieron cargar tus avisos. Revisa tu conexión.');
+        this.cargando.set(false);
+      },
+    );
+  }
+
+  /** La escucha de Firestore, aparte para poder probar el servicio sin red. */
+  protected escuchar(
+    uid: string,
+    alCambiar: (reportes: Report[]) => void,
+    alFallar: (error: unknown) => void,
+  ): Unsubscribe {
     const consulta = query(
       collection(this.firestore, 'reports'),
       where('uid', '==', uid),
       limit(REPORTES_VIGILADOS),
     );
 
-    this.escucha = onSnapshot(
+    return onSnapshot(
       consulta,
       (snapshot) => {
         const reportes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Report);
-        this.zone.run(() => {
-          this.error.set(null);
-          void this.procesar(uid, reportes);
-        });
+        this.zone.run(() => alCambiar(reportes));
       },
-      (error) =>
-        this.zone.run(() => {
-          // Antes este error se descartaba y la campana quedaba vacía sin
-          // explicación. El mensaje de Firestore incluye, si falta un índice,
-          // el enlace para crearlo.
-          console.error('Avisos: no se pudo escuchar los reportes propios.', error);
-          this.error.set('No se pudieron cargar tus avisos. Revisa tu conexión.');
-          this.cargando.set(false);
-        }),
+      (error) => this.zone.run(() => alFallar(error)),
     );
+  }
+
+  /** El estado guardado (qué avisos vio), aparte para probar sin red. */
+  protected async leerEstado(uid: string): Promise<EstadoAvisos | undefined> {
+    const snapshot = await getDoc(this.refEstado(uid));
+    return snapshot.data() as EstadoAvisos | undefined;
   }
 
   private detener(): void {
@@ -316,14 +341,16 @@ export class AvisosService {
 
   private async cargarEstado(uid: string): Promise<void> {
     try {
-      const snapshot = await getDoc(this.refEstado(uid));
-      const datos = snapshot.data() as EstadoAvisos | undefined;
+      const datos = await this.leerEstado(uid);
+      // Lo de una cuenta que ya salió no se aplica a la que entró.
+      if (this.uid !== uid) return;
 
       this.vistos.set(new Set(datos?.vistos ?? []));
       this.vistosHasta.set(
         datos?.vistosHasta instanceof Timestamp ? datos.vistosHasta.toDate() : null,
       );
     } catch {
+      if (this.uid !== uid) return;
       this.vistos.set(new Set());
       this.vistosHasta.set(null);
     }
