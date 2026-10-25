@@ -124,31 +124,33 @@ $pasos-claro: (
 /* Se invierten base y tinta, y se oscurecen los acentos: el cian de     */
 /* marca sobre blanco da 2,6:1, insuficiente para texto. Como color de   */
 /* texto y bordes se usa una variante más oscura del mismo tono, que     */
-/* supera 4,5:1. El cian original se conserva como fondo de los botones, */
-/* donde el texto encima es negro y el contraste sí es suficiente.       */
+/* supera 4,5:1 también sobre las tarjetas y franjas sombreadas (las     */
+/* pruebas de punta a punta lo revisan: e2e/pruebas/legibilidad.ts).     */
 /* -------------------------------------------------------------------- */
 html.tema-claro {
   --ca-base: var(--ca-white);
   --ca-surface: #ffffff;
   --ca-line: var(--ca-fog);
   --ca-ink: var(--ca-black);
-  --ca-muted: var(--ca-slate);
-  --ca-signal: #0e7490;
-  --ca-signal-dark: #0b5f76;
+  /* Más oscuro que --ca-slate: sobre las franjas sombreadas (#dde3ea) el */
+  /* gris anterior daba 4,4:1, bajo el mínimo de 4,5:1.                  */
+  --ca-muted: #4b5568;
+  --ca-signal: #0b6178;
+  --ca-signal-dark: #094c5f;
   --ca-danger: #b4232b;
 
   --ca-fondo-fin: #e8eef4;
   --ca-velo: rgba(17, 24, 39, 0.05);
   --ca-velo-fuerte: rgba(17, 24, 39, 0.08);
-  --ca-insignia: #0e7490;
+  --ca-insignia: #0b6178;
   --ca-atribucion: rgba(248, 250, 252, 0.9);
 
-  --ion-color-primary: #0e7490;
-  --ion-color-primary-rgb: 14, 116, 144;
+  --ion-color-primary: #0b6178;
+  --ion-color-primary-rgb: 11, 97, 120;
   --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #0b5f76;
-  --ion-color-primary-tint: #26829b;
+  --ion-color-primary-shade: #094c5f;
+  --ion-color-primary-tint: #237186;
 
   --ion-color-danger: #b4232b;
   --ion-color-danger-rgb: 180, 35, 43;
@@ -268,4 +270,14 @@ html.ca-texto-grande {
 
 html.ca-texto-muy-grande {
   font-size: 125%;
+}
+
+/*
+ * Pestañas (ion-segment): Ionic pinta las no elegidas con el texto al 60 %,
+ * que en el tema claro queda bajo 4,5:1 sobre las franjas sombreadas. Se usan
+ * los colores del tema, que sí alcanzan en los dos temas.
+ */
+ion-segment-button {
+  --color: var(--ca-muted);
+  --color-checked: var(--ca-signal);
 }

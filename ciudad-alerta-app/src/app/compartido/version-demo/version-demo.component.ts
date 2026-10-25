@@ -40,14 +40,15 @@ import { VERSION_APP } from '../../../environments/version';
       border-radius: 8px;
       font-size: 0.85rem;
       line-height: 1.4;
-      color: var(--ion-color-step-800, var(--ion-text-color));
-      background: var(--ion-color-step-50, rgba(127, 127, 127, 0.08));
+      color: var(--ca-ink);
+      background: var(--ca-velo-fuerte);
       text-align: left;
     }
     .version {
       margin: 0;
       font-size: 0.75rem;
-      color: var(--ion-color-medium);
+      /* Antes --ion-color-medium: 2,7:1 sobre el fondo oscuro. */
+      color: var(--ca-muted);
       font-variant-numeric: tabular-nums;
     }
   `,

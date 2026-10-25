@@ -15,9 +15,11 @@
     <div class="filtros">
       <!--
         ion-select no actualiza el texto de la opción elegida si cambia después:
-        se vuelve a crear cuando se conoce la región del usuario.
+        se vuelve a crear cuando se conoce la región del usuario. Se sigue por
+        «'region:' + clave» y no por la clave sola: así Angular no avisa
+        (NG0956) de que recrea la lista, que es justo lo que se busca.
       -->
-      @for (clave of [regionActual()?.codigo ?? 'sin-region']; track clave) {
+      @for (clave of [regionActual()?.codigo ?? 'sin-region']; track 'region:' + clave) {
         <ion-select
           class="filtros__region"
           label="Región"

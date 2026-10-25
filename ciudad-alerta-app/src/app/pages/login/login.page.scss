@@ -155,9 +155,17 @@ ion-note {
   gap: 0.75rem;
   font-size: 0.84rem;
 
+  /* En un teléfono de 360 px, «Leerlos» quedaba fuera de la pantalla y la
+     frase del checkbox se cortaba con «…»: ahora la frase baja de línea. */
   ion-checkbox {
     --size: 20px;
     flex: 1;
+    min-width: 0;
+  }
+
+  ion-checkbox::part(label) {
+    white-space: normal;
+    overflow: visible;
   }
 
   a {
