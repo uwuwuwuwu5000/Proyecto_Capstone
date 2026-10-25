@@ -82,23 +82,29 @@ export class GeolocationService {
   }
 
   private traducirError(error: unknown): LocationError {
-    const mensaje = error instanceof Error ? error.message.toLowerCase() : '';
+    // En Android llega un Error de Capacitor; en el navegador (ionic serve),
+    // un GeolocationPositionError, que no es Error pero trae message y code
+    // (1 permiso, 2 sin señal, 3 tiempo). Antes ese caso caía siempre en
+    // «No pudimos obtener tu ubicación», aunque fuera un permiso denegado.
+    const datos = (typeof error === 'object' && error !== null ? error : {}) as { message?: unknown; code?: unknown };
+    const mensaje = typeof datos.message === 'string' ? datos.message.toLowerCase() : '';
+    const codigo = typeof datos.code === 'number' ? datos.code : null;
 
-    if (mensaje.includes('denied') || mensaje.includes('permission')) {
+    if (codigo === 1 || mensaje.includes('denied') || mensaje.includes('permission')) {
       return new LocationError(
         'El permiso de ubicación está denegado. Actívalo en los ajustes del teléfono para continuar.',
         'denegado',
       );
     }
 
-    if (mensaje.includes('timeout')) {
+    if (codigo === 3 || mensaje.includes('timeout')) {
       return new LocationError(
         'La señal GPS está tardando demasiado. Muévete a un lugar despejado e intenta otra vez.',
         'timeout',
       );
     }
 
-    if (mensaje.includes('unavailable') || mensaje.includes('disabled')) {
+    if (codigo === 2 || mensaje.includes('unavailable') || mensaje.includes('disabled')) {
       return new LocationError(
         'El servicio de ubicación no está disponible. Revisa que el GPS esté encendido.',
         'no_disponible',
