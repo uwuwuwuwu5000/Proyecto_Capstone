@@ -26,6 +26,7 @@ responsable y evidencia (captura o registro de consola).
 | E2 | Emulador Android, APK debug |
 | E3 | Dispositivo físico Android, APK debug |
 | E4 | Consola de Firebase (Authentication, Firestore, Rules Playground) |
+| E5 | Pruebas de punta a punta: la app compilada con la maqueta en Chromium de 360 px (`npm run e2e`, `docs/GUIA_PRUEBAS.md`) |
 
 ### Datos de prueba
 
@@ -169,6 +170,8 @@ Ejecutar en el Rules Playground de la consola (E4).
 | CP-SEC-39 | U1 corrige la descripción de su reporte en «Reportado»; luego, en «En revisión» | Permitida; luego denegada | A | S |
 | CP-SEC-40 | U1 retira su reporte (pasa a «Cerrado» con `retiradoPorAutor`) y escribe la entrada del historial | Permitida | A | S |
 | CP-SEC-41 | U2 retira el reporte de U1; U1 lo deja en «Resuelto» al retirarlo, o anota un retiro en el historial sin cerrar el reporte | Denegada | A | S |
+| CP-SEC-42 | U1 deja sus tickets de soporte con `autorNombre` «Cuenta eliminada» y `autorEmail` vacío, y nada más | Permitida | A | S |
+| CP-SEC-43 | U2 lo hace en el ticket de U1; U1 cambia también el asunto, o pone otro nombre | Denegada | A | S |
 
 ---
 
@@ -237,6 +240,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-UBI-10 | Reporte enviado | Revisar Firestore | El campo `geohash` existe y no está vacío | A | I |
 | CP-UBI-11 | E2 con ubicación simulada | Cambiarla en el emulador y reintentar | Las coordenadas cambian acordes | B | F |
 | CP-UBI-12 | Sin ubicación registrada | Intentar enviar el reporte | El botón permanece deshabilitado | A | F |
+| CP-UBI-13 | E1 con el permiso de ubicación bloqueado en el navegador | «Usar mi ubicación actual» | «El permiso de ubicación está denegado…», no un error genérico | B | F |
 
 ---
 
@@ -327,6 +331,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-CON-10 | Desde la tarjeta de coincidencia | Confirmar | Se registra y vuelve a Inicio | A | F |
 | CP-CON-11 | Sin sesión, vía consola | Intentar crear confirmación | Rechazada por las reglas | A | S |
 | CP-CON-12 | Confirmación existente | Intentar modificarla desde la consola | Rechazada | A | S |
+| CP-CON-13 | U2, reporte de U1 resuelto, cerrado o retirado | Abrir el detalle | No ofrece confirmar: «Este reporte ya está cerrado» (o que quien lo reportó lo retiró) | A | F |
 
 ---
 
@@ -380,6 +385,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-DET-10 | Reporte con confirmaciones | Abrir el detalle | El contador coincide con la subcolección | A | I |
 | CP-DET-11 | Reporte con historial | Abrir el detalle | Se muestra la sección Seguimiento | B | F |
 | CP-DET-12 | Descripción de 500 caracteres | Abrir el detalle | Se muestra completa y legible | C | UX |
+| CP-DET-13 | Dos avisos de reportes distintos | Abrir uno y, sin esperar, volver y abrir el otro | El detalle muestra solo el segundo, con su foto y sus confirmaciones | B | F |
 
 ---
 
@@ -499,6 +505,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-CFG-12 | U1 ciudadano | Abrir Configuración | No aparece «Para el equipo» | A | S |
 | CP-CFG-13 | U3 operador; luego admin | Abrir Configuración | El operador ve «Para el equipo» sin la lista de módulos; el admin la ve | B | F |
 | CP-CFG-14 | Varias opciones cambiadas | «Restablecer configuración» | Texto normal, animaciones del teléfono, sin ahorro de datos, abre en el inicio | C | F |
+| CP-CFG-15 | Un reporte esperando señal (CP-BOR-03) | «Borrar datos guardados» y volver al inicio | La tarjeta «Reporte por enviar» sigue y el reporte se envía al volver la señal | A | F |
 
 ### Versión 1.0: entrega y arranque
 
@@ -542,6 +549,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-ELI-05 | CP-ELI-02, consola (E4) | Revisar `users/{uid}` | Sin correo y con nombre «Cuenta eliminada» | A | S |
 | CP-ELI-06 | Modo avión | Intentar eliminar | Mensaje de conexión; la cuenta no se elimina | B | F |
 | CP-ELI-07 | CP-ELI-02 | Registrarse otra vez con el mismo correo | Se crea una cuenta nueva, sin los reportes ni el nivel de antes | C | F |
+| CP-ELI-08 | CP-ELI-02, U1 con conversaciones de soporte, consola (E4) | Revisar sus `supportTickets` | Nombre «Cuenta eliminada» y sin correo, como promete `/eliminar-cuenta` | A | S |
 
 ### Versión 1.0: corregir o retirar un reporte propio
 
@@ -570,6 +578,7 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-BOR-08 | CP-BOR-03 | «Descartar» y confirmar | La tarjeta desaparece y no se envía nada | B | F |
 | CP-BOR-09 | CP-BOR-03 | Cerrar sesión e ingresar con U2 | U2 no ve el borrador de U1; al volver U1, sigue ahí | B | S |
 | CP-BOR-10 | Señal débil (el envío falla por conexión) | Enviar un reporte | Se guarda como borrador en vez de perderse, y se envía una sola vez | B | F |
+| CP-BOR-11 | E1 (versión web) con sesión, sin haber abierto «Crear un reporte» | Cortar la red (DevTools → Offline) y tocar «Crear un reporte»; luego reconectar y tocarlo otra vez | Primero «Sin señal no pudimos abrir esa pantalla…» y sigue en el inicio; con señal se abre | B | F |
 
 ### Versión 1.0: bienvenida
 
@@ -617,13 +626,15 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-ACC-08 | Área táctil de los botones | Suficiente para uso con el pulgar | B | UX |
 | CP-ACC-09 | Información transmitida solo por color | No existe; hay etiqueta de estado además del color | A | UX |
 | CP-ACC-10 | Consistencia de la paleta | Todas las pantallas usan las variables del tema | C | UX |
+| CP-ACC-11 | Nombres para el lector de pantalla | TalkBack anuncia cada botón, enlace y campo con su nombre (los de solo ícono también) | B | UX |
 
 ---
 
 ## 19. Regresión mínima antes de cada entrega
 
-Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run test:comun` y
-`npm run diagnostico`. Luego, en este orden; si alguno falla, la entrega se detiene.
+Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run test:comun`,
+`npm run diagnostico`, `npm run diagnostico:reglas` y `npm run e2e`. Luego, en este orden; si
+alguno falla, la entrega se detiene.
 
 | Orden | Caso | Descripción breve |
 |---|---|---|
@@ -668,33 +679,33 @@ Primero las pruebas automáticas (sección 21): `npm run test:una-vez`, `npm run
 | CA-50 Control de acceso | CP-SES-01 a CP-SES-12 |
 | CA-75 Recuperación | CP-REC-01 a CP-REC-10 |
 | CA-77 Cierre de sesión | CP-SES-07 a CP-SES-09 |
-| CA-79 Reglas | CP-SEC-01 a CP-SEC-41 |
+| CA-79 Reglas | CP-SEC-01 a CP-SEC-43 |
 | CA-51 Mapa | CP-MAP-01 a CP-MAP-12 |
-| CA-52 Geolocalización | CP-UBI-01 a CP-UBI-12 |
+| CA-52 Geolocalización | CP-UBI-01 a CP-UBI-13 |
 | Fotografía | CP-FOT-01 a CP-FOT-18 |
 | Privacidad en la nube | CP-PRI-01 a CP-PRI-15 |
 | Descripción | CP-DES-01 a CP-DES-20 |
 | Validación inicial | CP-SEC-11 a CP-SEC-18, CP-DES-09, CP-DES-10 |
 | HU-20 Coincidencias | CP-DUP-01 a CP-DUP-18 |
-| HU-21/22 Confirmación | CP-CON-01 a CP-CON-12 |
+| HU-21/22 Confirmación | CP-CON-01 a CP-CON-13 |
 | HU-25 Mapa de incidencias | CP-INC-01 a CP-INC-27 (MS8 = CP-INC-19, MS9 = CP-INC-20) |
-| HU-26 Detalle | CP-DET-01 a CP-DET-12 |
+| HU-26 Detalle | CP-DET-01 a CP-DET-13 |
 | HU-27 Historial | CP-HIS-01 a CP-HIS-11 |
 | HU-28 Enrutamiento y estados | CP-EST-01 a CP-EST-13, CP-EST-20 |
 | F12 Tiempo de resolución | CP-EST-14 a CP-EST-19 |
 | Veredicto y aviso (confianza 4.4) | CP-VER-01 a CP-VER-17 |
 | Mi perfil e inicio (feedback Sprint 5) | CP-PER-01 a CP-PER-14 |
 | Carga del inicio | CP-CAR-01 a CP-CAR-07 |
-| Configuración | CP-CFG-01 a CP-CFG-14 |
+| Configuración | CP-CFG-01 a CP-CFG-15 |
 | 1.0 · Versión, ícono y respaldo | CP-APK-01 a CP-APK-04 |
 | 1.0 · Contactar al organismo y emergencias | CP-CTO-01 a CP-CTO-06, CP-EMG-01 a CP-EMG-04 |
-| 1.0 · Términos, privacidad y eliminar la cuenta | CP-TER-01 a CP-TER-07, CP-ELI-01 a CP-ELI-07, CP-SEC-37, CP-SEC-38 |
+| 1.0 · Términos, privacidad y eliminar la cuenta | CP-TER-01 a CP-TER-07, CP-ELI-01 a CP-ELI-08, CP-SEC-37, CP-SEC-38, CP-SEC-42, CP-SEC-43 |
 | 1.0 · Brechas cerradas | CP-SEC-34 a CP-SEC-36 |
 | 1.0 · Corregir o retirar un reporte | CP-AUT-01 a CP-AUT-08, CP-SEC-39 a CP-SEC-41 |
-| 1.0 · Borrador sin conexión | CP-BOR-01 a CP-BOR-10 |
+| 1.0 · Borrador sin conexión | CP-BOR-01 a CP-BOR-11, CP-CFG-15 |
 | 1.0 · Bienvenida | CP-BIE-01 a CP-BIE-06 |
 
-**Total: 396 casos** — 246 de prioridad A, 125 de prioridad B y 25 de prioridad C.
+**Total: 405 casos** — 251 de prioridad A, 129 de prioridad B y 25 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -711,9 +722,13 @@ Además de los casos manuales, el repositorio trae pruebas que se ejecutan solas
 npm run test:una-vez
 npm run test:comun
 npm run diagnostico
+npm run e2e
 cd ..\servicio-privacidad
 npm test
 ```
+
+La primera vez, antes de `npm run e2e`: `npm run e2e:preparar` (descarga el Chromium de
+Playwright). Cómo escribir cada tipo de prueba: `docs/GUIA_PRUEBAS.md`.
 
 | Comando | Qué prueba | Dónde |
 |---|---|---|
@@ -721,13 +736,15 @@ npm test
 | `npm run test:comun` | Reglas compartidas con el portal: estados, transiciones, confianza, tiempos, territorio, privacidad | `../comun/test/` (antes, una vez: `cd ..\comun` y `npm install`) |
 | `npm run diagnostico` | Estructura, imports, rutas, catálogos y módulos contra las reglas | `scripts/diagnostico/` |
 | `npm test` en `servicio-privacidad` | El difuminado con los modelos reales y una foto de dominio público, el token de sesión, los límites y las respuestas del servidor | `servicio-privacidad/test/` (antes, una vez: `npm install`) |
-| `npm run diagnostico:reglas` | Las reglas en el emulador: 26 controles, 67 bloqueos y 3 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
+| `npm run diagnostico:reglas` | Las reglas en el emulador: 27 controles, 70 bloqueos y 3 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
+| `npm run e2e` | La app compilada en un teléfono simulado (E5): 26 pantallas en tema oscuro y claro y con texto «Muy grande» (contraste, desbordes, nombres accesibles, consola sin errores) y los flujos completos de reporte, cuenta, equipo y configuración, con y sin señal | `e2e/` (informe: `npm run e2e:informe`) |
 
 `npm test` deja Vitest mirando los cambios mientras se programa.
 
-**Cómo se preparan.** Cada `*.spec.ts` llama a `usarEntornoDePrueba()` (`src/testing`) antes del
-`describe`. No se hace en `src/test-setup.ts` porque en Windows lo que se configura ahí no llega a
-las pruebas.
+**Cómo se preparan.** Cada `*.spec.ts` que usa `TestBed` llama a `usarEntornoDePrueba()`
+(`src/testing`) antes del `describe`. No se hace en `src/test-setup.ts` porque en Windows lo que se
+configura ahí no llega a las pruebas. El Firestore de prueba nace sin red: toda lectura falla
+enseguida con `unavailable`, igual en Windows y en Linux.
 
 **Qué cubren.** Las pruebas de la app usan Firebase de prueba (`src/testing/firebase-de-prueba.ts`):
 Firestore y Storage reales de un proyecto `demo-*` que nunca se conectan, y una sesión
@@ -753,5 +770,20 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
   (guardar, foto sin proteger, sin duplicar, envío al volver la señal y al abrir la app) y la
   bienvenida (pasos, saltar, operadores y el orden con la pantalla elegida).
 
-Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`, y empieza
-con `usarEntornoDePrueba()`.
+- revisión de octubre: carreras al pasar rápido de un reporte a otro o al cambiar filtros
+  seguidos, escuchas que quedaban abiertas (campana y chat), la asignación con mala señal,
+  confirmar un reporte cerrado, el permiso de ubicación en el navegador, los tickets al eliminar
+  la cuenta, la navegación sin señal en la web y «Borrar datos guardados» con un reporte por
+  enviar. Cada arreglo trae la prueba que falla sin él (`GUIA_PRUEBAS.md`, sección 4).
+
+**De punta a punta (E5).** Corren la app compilada de verdad con Firebase reemplazado por una
+maqueta en memoria (`e2e/maqueta`), así que prueban lo que ve y hace la persona: lo que muestra
+cada pantalla, que se lea, que nada se salga de la pantalla en un teléfono de 360 px, y los flujos
+de punta a punta, incluido cortar la señal. Cubren de forma automática, entre otros, CP-ACC-01,
+CP-ACC-02, CP-ACC-11, CP-DES-08, CP-DUP-01, CP-BOR-01 a CP-BOR-04, CP-BOR-11, CP-TER-04,
+CP-TER-05, CP-ELI-01 a CP-ELI-03, CP-ELI-06, CP-ELI-08, CP-BIE-02, CP-CFG-02, CP-CFG-05,
+CP-CFG-15, CP-CTO-01 y CP-EMG-01. No reemplazan los casos en el
+teléfono (sección 17): la cámara, el GPS, los permisos de Android y Firebase real quedan fuera.
+
+Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`; si usa
+`TestBed`, empieza con `usarEntornoDePrueba()`.

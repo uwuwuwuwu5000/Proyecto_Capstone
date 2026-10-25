@@ -281,7 +281,7 @@ this.router.navigate(RUTAS_REPORTES.detalle(reporte.id));
 
 ### Escribir una prueba
 
-Junto al archivo, con el mismo nombre y `.spec.ts`, y **siempre** empezando con `usarEntornoDePrueba()`: registra Ionic, el router y Firebase sin red para cada prueba del archivo. Lo que lea datos se simula reemplazando el servicio:
+Junto al archivo, con el mismo nombre y `.spec.ts`. Si usa `TestBed`, empieza **siempre** con `usarEntornoDePrueba()`: registra Ionic, el router y Firebase sin red para cada prueba del archivo. Lo que lea datos se simula reemplazando el servicio:
 
 ```ts
 import { usarEntornoDePrueba } from '../../testing';
@@ -298,7 +298,7 @@ describe('MiPantalla', () => {
 });
 ```
 
-No se pone en `src/test-setup.ts`: en Windows, Angular carga ese archivo con otra copia de `TestBed` y los proveedores no llegan a las pruebas (fallaban 32 con «No provider found for InjectionToken FIRESTORE»). `test-setup.ts` queda solo para polyfills. El diagnóstico avisa si una prueba no llama a `usarEntornoDePrueba()`.
+No se pone en `src/test-setup.ts`: en Windows, Angular carga ese archivo con otra copia de `TestBed` y los proveedores no llegan a las pruebas (fallaban 32 con «No provider found for InjectionToken FIRESTORE»). `test-setup.ts` queda solo para polyfills. El diagnóstico avisa si una prueba con `TestBed` no llama a `usarEntornoDePrueba()`.
 
 Para el núcleo hay módulos ficticios en `src/testing/modulos-de-prueba.ts` y el token `CONFIGURACION_MODULOS`.
 
@@ -308,6 +308,8 @@ npm test
 ```
 
 `npm test` se queda mirando los cambios. Lo que Firestore acepta o rechaza no se prueba aquí: eso es `npm run diagnostico:reglas`, en el emulador.
+
+Si el módulo agrega una pantalla, súmala a `PANTALLAS` en `e2e/pruebas/pantallas.spec.ts`; si agrega un servicio que habla con Firebase, su simulación va en `e2e/maqueta/servicios.ts`. Costuras, carreras y pruebas de punta a punta: `GUIA_PRUEBAS.md`.
 
 ---
 
@@ -698,3 +700,86 @@ Google Play pide la política de privacidad y la página para eliminar la cuenta
 12. Reportes: borrador sin conexión.
 13. Bienvenida: tres pantallas la primera vez.
 14. Plan de la 1.0, guías y plan de pruebas.
+
+---
+
+## 14. Revisión y pruebas (octubre)
+
+Revisión del código completo, con una prueba para cada problema encontrado y una capa nueva de pruebas de punta a punta. El detalle de cada tipo de prueba y cómo escribirla está en `GUIA_PRUEBAS.md`.
+
+### Qué se arregló
+
+| Problema | Dónde |
+|---|---|
+| Con mala señal, el reporte quedaba en la OIRS genérica y sin operador | `services/routing.service.ts`, `reportes/datos/report.service.ts` |
+| La campana seguía escuchando la cuenta anterior al cambiar de cuenta | `avisos/datos/avisos.service.ts` |
+| El chat de soporte dejaba escuchas abiertas al salir | `soporte/paginas/support-chat` |
+| Se podía confirmar un reporte cerrado o retirado | `confianza/datos/confianza.service.ts` |
+| El detalle mezclaba datos al pasar rápido de un reporte a otro | `reportes/paginas/report-detail` |
+| Filtros cambiados seguidos mezclaban y repetían resultados | `nucleo/carga/ultima-carga.ts` en la bandeja, Cerca de mí, el mapa, soporte y Mis reportes |
+| En el navegador, un permiso de ubicación denegado se decía como error genérico | `services/geolocation.service.ts` |
+| Al eliminar la cuenta, los tickets de soporte conservaban nombre y correo | `perfil/datos/eliminar-cuenta.service.ts` y `firestore.rules` |
+| Contraste del tema claro, «Leerlos» fuera de la pantalla, pie de versión, «Obligatorio», NG0956 en el mapa | `theme/variables.scss` y estilos de cada pantalla |
+| Versión web sin señal: una pantalla nueva no abría nunca más | `core/enrutador.ts` (usado por `main.ts`) |
+| «Borrar datos guardados» borraba el reporte que esperaba señal | `services/preferencias.service.ts` |
+
+**Colores del tema claro.** El gris de los textos secundarios pasa a `#4b5568` y el cian de los acentos a `#0b6178` (también `ion-color-primary`), para llegar a 4,5:1 sobre tarjetas y franjas. El tema oscuro no cambia. Un componente ya no puede redefinir `--ca-*`: el diagnóstico lo marca como error.
+
+### Pruebas nuevas
+
+- **Unitarias:** de 298 a 430. Las que solo comprobaban «should create» en las pantallas con más lógica pasaron a probar lo que hacen. El Firestore de prueba nace sin red, igual en Windows y en Linux.
+- **Reglas:** 100 casos (27 controles, 70 bloqueos, 3 brechas conocidas).
+- **De punta a punta (`e2e/`):** 124 pruebas con Playwright. Revisan las 26 pantallas (contraste, desbordes, nombres accesibles, consola sin errores) y los flujos completos, con y sin señal.
+- **Diagnóstico:** paletas fijas en componentes y pruebas que no prueban nada.
+
+### Instalar
+
+En la carpeta del repositorio, en `cmd`:
+
+```cmd
+git switch main-mobile
+git pull origin main-mobile
+git am "C:\ruta\pruebas-y-correcciones.mbox"
+git log --oneline -20
+
+cd ciudad-alerta-app
+npm install
+npm run e2e:preparar
+npm run test:una-vez
+npm run lint
+npm run diagnostico
+npm run diagnostico:reglas
+npm run e2e
+```
+
+- `npm install` agrega `@playwright/test`.
+- `npm run e2e:preparar` descarga su Chromium, una sola vez por computador.
+- `npm run e2e` tarda unos 7 minutos. Si algo falla, `npm run e2e:informe` muestra la captura y la traza.
+
+`diagnostico:reglas` debe terminar sin controles ni bloqueos fallidos; las 3 brechas conocidas hacen que termine con «exited with code 1», como siempre. Después:
+
+```cmd
+firebase deploy --only firestore:rules
+git push origin main-mobile
+```
+
+**Hay que desplegar las reglas.** Sin ellas, al eliminar una cuenta los tickets de soporte no quedan anónimos: las reglas viejas lo rechazan y la eliminación se detiene con «No pudimos terminar de eliminar tu cuenta». La página pública `/eliminar-cuenta` promete que esos datos se borran.
+
+### Commits
+
+1. Reportes: con mala señal, el reporte no queda en la OIRS genérica.
+2. Avisos: al cambiar de cuenta no queda escuchando a la anterior.
+3. Soporte: el chat no deja escuchas abiertas al salir.
+4. Pruebas: Firestore sin red en las pruebas unitarias.
+5. Confianza: no se confirman reportes cerrados ni retirados.
+6. Reportes: el detalle no mezcla datos al pasar rápido de un reporte a otro.
+7. Con filtros cambiados seguidos, gana la última consulta.
+8. Diagnóstico: paletas fijas y pruebas que no prueban nada.
+9. Ubicación: en el navegador también explica un permiso denegado.
+10. Perfil y reglas: al eliminar la cuenta, los tickets de soporte quedan sin datos de contacto.
+11. Pruebas reales donde solo se comprobaba que algo se creaba.
+12. Interfaz: contraste y desbordes que encontraron las pruebas en el navegador.
+13. Pruebas de punta a punta con Playwright.
+14. Navegación: en la web, sin señal, una pantalla nueva avisa en vez de no responder.
+15. Configuración: «Borrar datos guardados» ya no pierde el reporte que espera señal.
+16. Guía de pruebas, plan de pruebas y guías.
