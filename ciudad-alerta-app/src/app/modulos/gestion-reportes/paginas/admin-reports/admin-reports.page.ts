@@ -33,6 +33,7 @@ import {
   ReportStatus,
 } from '../../../../models/report.model';
 import { RanuraComponent } from '../../../../nucleo/modulos';
+import { UltimaCarga } from '../../../../nucleo/carga';
 
 /**
  * Bandeja de gestión: todas las incidencias del sistema.
@@ -96,6 +97,12 @@ export class AdminReportsPage {
   readonly comunasConocidas = signal<string[]>([]);
 
   private cursor: QueryDocumentSnapshot | null = null;
+  /**
+   * Al cambiar dos filtros seguidos, las dos consultas agregaban sus
+   * resultados a la misma lista: quedaban mezclados y repetidos.
+   */
+  private readonly cargas = new UltimaCarga();
+  private cargandoMas = false;
 
   constructor() {
     addIcons({ imageOutline, refreshOutline });
@@ -139,14 +146,22 @@ export class AdminReportsPage {
   }
 
   async recargar(): Promise<void> {
+    const vigente = this.cargas.nueva();
     this.reportes.set([]);
     this.cursor = null;
     this.estado.set('cargando');
-    await this.cargarPagina();
+    await this.cargarPagina(vigente);
   }
 
+  /** «Ver más»: un toque a la vez, o se pedía dos veces la misma página. */
   async cargarMas(): Promise<void> {
-    await this.cargarPagina();
+    if (this.cargandoMas) return;
+    this.cargandoMas = true;
+    try {
+      await this.cargarPagina(this.cargas.actual());
+    } finally {
+      this.cargandoMas = false;
+    }
   }
 
   fecha(reporte: Report): string {
@@ -157,12 +172,13 @@ export class AdminReportsPage {
     void this.router.navigate(RUTAS_REPORTES.detalle(reportId));
   }
 
-  private async cargarPagina(): Promise<void> {
+  private async cargarPagina(vigente: () => boolean): Promise<void> {
     const operador = this.operadorId();
 
     if (operador) {
       try {
         const asignados = await this.queryService.reportesDeOperador(operador);
+        if (!vigente()) return;
         const { categoria, estado, comuna } = this.filtros();
 
         this.reportes.set(
@@ -179,7 +195,7 @@ export class AdminReportsPage {
         this.hayMas.set(false);
         this.estado.set('listo');
       } catch {
-        this.estado.set('error');
+        if (vigente()) this.estado.set('error');
       }
 
       return;
@@ -191,6 +207,7 @@ export class AdminReportsPage {
         20,
         this.cursor,
       );
+      if (!vigente()) return;
 
       this.reportes.update((actuales) => [...actuales, ...pagina.reportes]);
 
@@ -207,7 +224,7 @@ export class AdminReportsPage {
       this.hayMas.set(pagina.cursor !== null);
       this.estado.set('listo');
     } catch {
-      this.estado.set('error');
+      if (vigente()) this.estado.set('error');
     }
   }
 }

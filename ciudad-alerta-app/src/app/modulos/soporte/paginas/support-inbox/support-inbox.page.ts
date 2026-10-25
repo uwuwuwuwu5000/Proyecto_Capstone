@@ -25,6 +25,7 @@ import {
   SupportTicket,
   TipoTicket,
 } from '../../modelo/support.model';
+import { UltimaCarga } from '../../../../nucleo/carga';
 
 /**
  * Bandeja del equipo de soporte: todas las quejas y sugerencias recibidas.
@@ -53,6 +54,8 @@ import {
   ],
 })
 export class SupportInboxPage {
+  /** La última consulta pedida gana (ver nucleo/carga/ultima-carga.ts). */
+  private readonly cargas = new UltimaCarga();
   private readonly supportService = inject(SupportService);
   private readonly router = inject(Router);
 
@@ -91,13 +94,17 @@ export class SupportInboxPage {
   }
 
   async cargar(): Promise<void> {
+    // Con dos filtros cambiados seguidos, la respuesta más lenta ya no corresponde.
+    const vigente = this.cargas.nueva();
     this.estado.set('cargando');
 
     try {
-      this.tickets.set(await this.supportService.bandeja(this.filtros()));
+      const tickets = await this.supportService.bandeja(this.filtros());
+      if (!vigente()) return;
+      this.tickets.set(tickets);
       this.estado.set('listo');
     } catch {
-      this.estado.set('error');
+      if (vigente()) this.estado.set('error');
     }
   }
 

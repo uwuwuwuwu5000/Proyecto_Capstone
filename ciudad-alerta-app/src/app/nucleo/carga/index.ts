@@ -5,3 +5,4 @@
 export { ESPERA_MAXIMA_MS, EsperaDePantalla } from './espera-de-pantalla';
 export type { TareaDeCarga } from './espera-de-pantalla';
 export { ArranqueService } from './arranque';
+export { UltimaCarga } from './ultima-carga';

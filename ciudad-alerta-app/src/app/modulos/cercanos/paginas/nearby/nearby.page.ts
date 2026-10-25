@@ -38,6 +38,7 @@ import {
 } from '../../../../models/report.model';
 import { RADIOS_BUSQUEDA } from '../../parametros';
 import { RanuraComponent } from '../../../../nucleo/modulos';
+import { UltimaCarga } from '../../../../nucleo/carga';
 
 type EstadoVista =
   | 'sin_ubicacion'
@@ -77,6 +78,8 @@ type EstadoVista =
   ],
 })
 export class NearbyPage {
+  /** La última consulta pedida gana (ver nucleo/carga/ultima-carga.ts). */
+  private readonly cargas = new UltimaCarga();
   private readonly queryService = inject(ReportQueryService);
   private readonly geolocationService = inject(GeolocationService);
   private readonly historialService = inject(HistorialService);
@@ -193,16 +196,20 @@ export class NearbyPage {
       return;
     }
 
+    // Con el radio o la categoría cambiados dos veces seguidas, la respuesta
+    // más lenta ya no corresponde a lo elegido.
+    const vigente = this.cargas.nueva();
     this.estado.set('cargando');
 
     const filtros: FiltrosMapa = { categoria: this.categoria(), estado: 'todos' };
 
     try {
-      this.resultados.set(
-        await this.queryService.findNearby(centro, this.radio(), filtros),
-      );
+      const resultados = await this.queryService.findNearby(centro, this.radio(), filtros);
+      if (!vigente()) return;
+      this.resultados.set(resultados);
       this.estado.set('listo');
     } catch {
+      if (!vigente()) return;
       this.resultados.set([]);
       this.estado.set('error_datos');
       this.mensajeError.set('No se pudieron cargar los reportes cercanos.');

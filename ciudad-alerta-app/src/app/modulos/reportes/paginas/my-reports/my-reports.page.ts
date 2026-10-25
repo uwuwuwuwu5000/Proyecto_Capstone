@@ -33,6 +33,7 @@ import { RanuraComponent } from '../../../../nucleo/modulos';
 import { resolucionDe } from '../../resolucion';
 import { RUTAS_REPORTES } from '../../rutas';
 import { formatearDuracion } from '@ciudad-alerta/comun';
+import { UltimaCarga } from '../../../../nucleo/carga';
 
 /** HU-27 · Historial paginado de los reportes del usuario. */
 @Component({
@@ -54,6 +55,8 @@ import { formatearDuracion } from '@ciudad-alerta/comun';
   ],
 })
 export class MyReportsPage {
+  /** La última consulta pedida gana (ver nucleo/carga/ultima-carga.ts). */
+  private readonly cargas = new UltimaCarga();
   private readonly queryService = inject(ReportQueryService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly toastCtrl = inject(ToastController);
@@ -86,16 +89,18 @@ export class MyReportsPage {
   }
 
   async ionViewWillEnter(): Promise<void> {
+    // Al volver a la pantalla, una página pedida antes no se agrega a la lista nueva.
+    const vigente = this.cargas.nueva();
     this.reportes.set([]);
     this.confirmaciones.set(new Map());
     this.cursor = null;
     this.estado.set('cargando');
-    await this.cargarPagina();
+    await this.cargarPagina(vigente);
   }
 
   async reintentar(): Promise<void> {
     this.estado.set('cargando');
-    await this.cargarPagina();
+    await this.cargarPagina(this.cargas.actual());
   }
 
   fechaLegible(reporte: Report): string {
@@ -127,7 +132,7 @@ export class MyReportsPage {
   }
 
   async cargarMas(): Promise<void> {
-    await this.cargarPagina();
+    await this.cargarPagina(this.cargas.actual());
   }
 
   private async cargarConfirmaciones(reportIds: string[]): Promise<void> {
@@ -143,11 +148,12 @@ export class MyReportsPage {
     }
   }
 
-  private async cargarPagina(): Promise<void> {
+  private async cargarPagina(vigente: () => boolean): Promise<void> {
     this.cargando.set(true);
 
     try {
       const pagina = await this.queryService.getMyReports(10, this.cursor);
+      if (!vigente()) return;
       this.reportes.update((actuales) => [...actuales, ...pagina.reportes]);
       this.cursor = pagina.cursor;
       this.hayMas.set(pagina.cursor !== null);
@@ -157,6 +163,7 @@ export class MyReportsPage {
       // El conteo llega después para no retrasar la aparición del listado.
       void this.cargarConfirmaciones(pagina.reportes.map((r) => r.id));
     } catch (error) {
+      if (!vigente()) return;
       // BUG 45 · Distinguir falta de permisos de un problema de red.
       const mensaje =
         error instanceof Error && error.message.includes('permission')

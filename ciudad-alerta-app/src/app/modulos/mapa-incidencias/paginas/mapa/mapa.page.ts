@@ -34,6 +34,7 @@ import { HistorialService } from '../../../../services/historial.service';
 import { Region, RegionesService } from '../../datos/regiones.service';
 import { FiltrosMapa, ReportQueryService } from '../../../../services/report-query.service';
 import { PARAMETROS_MAPA } from '../../parametros';
+import { UltimaCarga } from '../../../../nucleo/carga';
 
 /**
  * Estados de la pantalla. Distinguirlos evita el mensaje engañoso de
@@ -83,6 +84,8 @@ type SeleccionRegion = 'actual' | string;
   ],
 })
 export class MapaPage {
+  /** La última consulta pedida gana (ver nucleo/carga/ultima-carga.ts). */
+  private readonly cargas = new UltimaCarga();
   private readonly queryService = inject(ReportQueryService);
   private readonly regionesService = inject(RegionesService);
   private readonly geolocationService = inject(GeolocationService);
@@ -271,6 +274,9 @@ export class MapaPage {
       return;
     }
 
+    // Con la región o un filtro cambiados dos veces seguidas, la respuesta
+    // más lenta ya no corresponde a lo elegido.
+    const vigente = this.cargas.nueva();
     this.estado.set('cargando');
 
     try {
@@ -278,10 +284,12 @@ export class MapaPage {
         maximo: PARAMETROS_MAPA.maximoPorRegion,
         incluirSinRegion: PARAMETROS_MAPA.incluirSinRegion,
       });
+      if (!vigente()) return;
       this.resultados.set(reportes);
       this.hayMas.set(hayMas);
       this.estado.set('listo');
     } catch {
+      if (!vigente()) return;
       this.resultados.set([]);
       this.hayMas.set(false);
       this.estado.set('error_datos');
