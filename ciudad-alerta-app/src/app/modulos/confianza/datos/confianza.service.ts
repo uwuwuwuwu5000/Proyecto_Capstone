@@ -53,6 +53,7 @@ export type MotivoBloqueo =
   | 'confirmado'
   | 'propio'
   | 'operador'
+  | 'cerrado'
   | 'revisado'
   | 'suspendido'
   | 'limite'
@@ -122,6 +123,35 @@ const MARGEN_RELOJ_MS = 2 * 60_000;
  * `comun/src/confianza/calculos.ts`, y la escritura va en una transacción: si dos vecinos
  * confirman a la vez, Firestore repite la segunda con la suma nueva.
  */
+/** Resuelto o cerrado (también retirado por quien lo reportó): ya no se confirma. */
+export function estaCerrado(estado: unknown): boolean {
+  return estado === 'resuelto' || estado === 'cerrado';
+}
+
+/**
+ * Por qué no puede confirmar, en orden de importancia, o null si puede.
+ * Es la misma decisión que repite la transacción al confirmar.
+ */
+export function motivoDeBloqueo(datos: {
+  propio: boolean;
+  operador: boolean;
+  estadoReporte: unknown;
+  conVeredicto: boolean;
+  suspendido: boolean;
+  restantesHoy: number;
+  pausaRestanteMs: number;
+}): MotivoBloqueo | null {
+  if (datos.propio) return 'propio';
+  if (datos.operador) return 'operador';
+  // 1.0 · Un reporte cerrado o retirado ya no necesita confirmaciones.
+  if (estaCerrado(datos.estadoReporte)) return 'cerrado';
+  if (datos.conVeredicto) return 'revisado';
+  if (datos.suspendido) return 'suspendido';
+  if (datos.restantesHoy <= 0) return 'limite';
+  if (datos.pausaRestanteMs > 0) return 'pausa';
+  return null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ConfianzaService {
   private readonly firestore = inject<Firestore>(FIRESTORE);
@@ -193,20 +223,15 @@ export class ConfianzaService {
       };
     }
 
-    const bloqueo: MotivoBloqueo | null =
-      reporte.uid === usuario.uid
-        ? 'propio'
-        : perfil.data()?.['role'] === 'operador'
-          ? 'operador'
-          : validacionCompleta(reporte.validacion).veredicto !== null
-            ? 'revisado'
-            : estado.suspendido
-              ? 'suspendido'
-              : cupo.restantes <= 0
-                ? 'limite'
-                : pausaRestanteMs > 0
-                  ? 'pausa'
-                  : null;
+    const bloqueo = motivoDeBloqueo({
+      propio: reporte.uid === usuario.uid,
+      operador: perfil.data()?.['role'] === 'operador',
+      estadoReporte: reporte.estado,
+      conVeredicto: validacionCompleta(reporte.validacion).veredicto !== null,
+      suspendido: estado.suspendido,
+      restantesHoy: cupo.restantes,
+      pausaRestanteMs,
+    });
 
     return { ...base, bloqueo, pesoAportado: null };
   }
@@ -304,6 +329,7 @@ export class ConfianzaService {
       if (!reporte.exists()) throw this.error('no_existe');
       if (reporte.data()['uid'] === uid) throw this.error('propio');
       if (voto.exists()) throw this.error('confirmado');
+      if (estaCerrado(reporte.data()['estado'])) throw this.error('cerrado');
 
       const datosReporte = reporte.data() as Partial<Report>;
       if (validacionCompleta(datosReporte.validacion).veredicto !== null) {
@@ -489,6 +515,7 @@ export class ConfianzaService {
       confirmado: 'Ya confirmaste este reporte.',
       propio: 'Este es tu reporte: lo confirman otros vecinos.',
       operador: 'Las cuentas de operador gestionan reportes; no los confirman.',
+      cerrado: 'Este reporte ya está cerrado: no hace falta confirmarlo.',
       revisado: 'Un operador ya revisó este reporte, así que no hace falta confirmarlo.',
       suspendido:
         'Tus confirmaciones están suspendidas por un administrador. Si crees que es un error, escríbenos en Quejas y sugerencias.',

@@ -61,6 +61,15 @@
             @case ('operador') {
               <p class="nota">Las cuentas de operador gestionan reportes; no los confirman.</p>
             }
+            @case ('cerrado') {
+              <p class="nota">
+                @if (reporte().retiradoPorAutor) {
+                  Quien lo reportó lo retiró: no hace falta confirmarlo.
+                } @else {
+                  Este reporte ya está cerrado: no hace falta confirmarlo.
+                }
+              </p>
+            }
             @case ('revisado') {
               <p class="nota">Un operador ya revisó este reporte: no hace falta confirmarlo.</p>
             }

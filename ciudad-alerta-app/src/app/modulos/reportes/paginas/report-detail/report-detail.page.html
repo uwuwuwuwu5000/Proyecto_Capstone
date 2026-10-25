@@ -126,6 +126,8 @@
         >
           @if (esAutor()) {
             <p class="estado">Este es tu reporte. No puedes confirmarlo tú mismo.</p>
+          } @else if (item.estado === 'resuelto' || item.estado === 'cerrado') {
+            <p class="estado">Este reporte ya está cerrado: no hace falta confirmarlo.</p>
           } @else {
             @switch (estadoConfirmacion()) {
               @case ('cargando') {
