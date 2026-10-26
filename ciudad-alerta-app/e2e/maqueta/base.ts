@@ -30,7 +30,7 @@ export interface ReportePlano {
   uid: string;
   descripcion: string;
   categoria: string;
-  ubicacion: { lat: number; lng: number; accuracy: number };
+  ubicacion: { lat: number; lng: number; accuracy: number; fuente?: 'gps' | 'mapa' };
   comuna: string | null;
   region: string | null;
   autorNombre: string;
@@ -131,6 +131,8 @@ function semilla(ahora: number): Base {
       op: { uid: 'op', email: 'operadora@maipu.cl', password: 'secreta1', displayName: 'Operadora Maipú', role: 'operador', operadorId: 'op_maipu', emailVerified: true, creadaMs: ahora - 90 * DIA, terminosVersion: 'vigente' },
       admin: { uid: 'admin', email: 'admin@prueba.cl', password: 'secreta1', displayName: 'Admin Ciudad Alerta', role: 'admin', emailVerified: true, creadaMs: ahora - 120 * DIA, terminosVersion: 'vigente' },
       antigua: { uid: 'antigua', email: 'antigua@prueba.cl', password: 'secreta1', displayName: 'Cuenta Antigua', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 400 * DIA },
+      // Creada hace 2 días: todavía no puede elegir en el mapa dónde marcar un reporte (pide 7).
+      nueva: { uid: 'nueva', email: 'nueva@prueba.cl', password: 'secreta1', displayName: 'Nora Nueva', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 2 * DIA, terminosVersion: 'vigente' },
     },
     reportes: {
       r_ana_nuevo: reporte({ id: 'r_ana_nuevo', uid: 'ana', descripcion: 'Luminaria apagada frente al paradero 3 de Av. Pajaritos', creadoMs: ahora - HORA, actualizadoMs: ahora - HORA }),

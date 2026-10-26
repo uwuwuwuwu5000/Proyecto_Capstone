@@ -4,7 +4,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 
 import { ProblemaDeLegibilidad, problemasDeLegibilidad } from './legibilidad';
 
-export type Cuenta = 'ana' | 'luis' | 'op' | 'admin' | 'antigua' | null;
+export type Cuenta = 'ana' | 'luis' | 'op' | 'admin' | 'antigua' | 'nueva' | null;
 
 export interface Apertura {
   /** Con quién empieza la sesión (null: sin sesión). */

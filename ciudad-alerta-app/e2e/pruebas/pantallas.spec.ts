@@ -37,6 +37,16 @@ export const PANTALLAS: Pantalla[] = [
   { nombre: 'Bienvenida', ruta: '/bienvenida', como: 'ana', muestra: /Reporta lo que ves/ },
   { nombre: 'Inicio de una vecina', ruta: '/home', como: 'ana', muestra: /Hola, Ana/ },
   { nombre: 'Crear un reporte', ruta: '/report-new', como: 'ana', muestra: /Evidencia/ },
+  {
+    nombre: 'Elegir el punto del reporte en el mapa',
+    ruta: '/report-new',
+    como: 'ana',
+    muestra: /Punto elegido/,
+    antes: async (page) => {
+      await vista(page).getByRole('button', { name: 'Elegir en el mapa' }).click();
+    },
+  },
+  { nombre: 'Crear un reporte con una cuenta nueva', ruta: '/report-new', como: 'nueva', muestra: /te faltan 5 días/ },
   { nombre: 'Mis reportes', ruta: '/my-reports', como: 'ana', muestra: /Luminaria apagada/ },
   { nombre: 'Detalle de un reporte propio', ruta: '/report/r_ana_nuevo', como: 'ana', muestra: /Tu reporte/ },
   { nombre: 'Detalle con seguimiento', ruta: '/report/r_ana_proceso', como: 'ana', muestra: /Cuadrilla programada/ },

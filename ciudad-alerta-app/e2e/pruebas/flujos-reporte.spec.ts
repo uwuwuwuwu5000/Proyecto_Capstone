@@ -144,6 +144,79 @@ test.describe('Crear un reporte', () => {
   });
 });
 
+/** El punto que muestra el selector del mapa («Punto elegido: lat, lng»). */
+async function puntoDelSelector(page: Page): Promise<{ lat: number; lng: number }> {
+  const texto = (await vista(page).locator('app-elegir-punto .coordenadas').textContent()) ?? '';
+  const [lat, lng] = (texto.match(/-?\d+\.\d+/g) ?? []).map(Number);
+  return { lat, lng };
+}
+
+/** Arrastra el mapa del selector con el dedo (aquí, el mouse). */
+async function arrastrarMapa(page: Page, dx: number, dy: number): Promise<void> {
+  const caja = (await vista(page).locator('app-elegir-punto .leaflet-container').boundingBox())!;
+  const x = caja.x + caja.width / 2;
+  const y = caja.y + caja.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + dx, y + dy, { steps: 8 });
+  await page.mouse.up();
+}
+
+test.describe('Dónde se marca el reporte', () => {
+  test('una cuenta con más de una semana puede marcarlo en otro punto del mapa, y así queda guardado', async ({ page }) => {
+    await abrir(page, '/report-new', { como: 'ana' });
+    await vista(page).getByRole('button', { name: 'Elegir en el mapa' }).click();
+
+    // El mapa empieza donde está el teléfono.
+    await expect(vista(page).locator('app-elegir-punto .coordenadas')).toHaveText('Punto elegido: -33.51060, -70.75720');
+
+    // La casa no es el problema: se mueve el mapa hasta la esquina de al lado.
+    await arrastrarMapa(page, -60, -40);
+    await expect(vista(page).locator('app-elegir-punto .coordenadas')).not.toHaveText('Punto elegido: -33.51060, -70.75720');
+    const punto = await puntoDelSelector(page);
+    expect(Math.abs(punto.lng - -70.7572)).toBeGreaterThan(0.0005);
+
+    await vista(page).getByRole('button', { name: 'Usar este punto' }).click();
+    await expect(vista(page).getByText('punto elegido en el mapa')).toBeVisible();
+    await expect(vista(page).getByText('Comuna:')).toContainText('Maipú');
+    await expect(vista(page).getByText('precisión aproximada')).toHaveCount(0);
+
+    await llenar(page, 'Microbasural', 'Bolsas de basura acumuladas en la esquina del pasaje');
+    await enviar(page).click();
+    await expect(aviso(page, 'Reporte enviado')).toBeVisible();
+
+    const nuevo = Object.values((await datos(page)).reportes).find((r) => r.descripcion.startsWith('Bolsas de basura acumuladas'))!;
+    expect(nuevo.ubicacion.fuente).toBe('mapa');
+    expect(nuevo.ubicacion.lat).toBeCloseTo(punto.lat, 5);
+    expect(nuevo.ubicacion.lng).toBeCloseTo(punto.lng, 5);
+    expect(nuevo).toMatchObject({ comuna: 'Maipú', operadorId: 'op_maipu' });
+
+    // En el detalle, quien atiende sabe que el punto no viene del GPS.
+    await page.goto(`/report/${nuevo.id}`);
+    await esperarPantalla(page);
+    await expect(vista(page).getByText('marcó este punto en el mapa')).toBeVisible();
+  });
+
+  test('una cuenta de menos de una semana solo puede usar su ubicación actual, y sabe cuánto le falta', async ({ page }) => {
+    await abrir(page, '/report-new', { como: 'nueva' });
+
+    await expect(vista(page).locator('ion-button', { hasText: 'Elegir en el mapa' })).toHaveAttribute('disabled', '');
+    await expect(vista(page).getByText('cuando tu cuenta cumpla 7 días (te faltan 5 días)')).toBeVisible();
+
+    await usarUbicacion(page);
+    await expect(vista(page).getByText('precisión aproximada de 12 m')).toBeVisible();
+    await expect(vista(page).locator('ion-button', { hasText: /Elegir en el mapa|Mover el punto/ })).toHaveCount(0);
+
+    await llenar(page, 'Microbasural', 'Escombros botados junto al contenedor de la plaza');
+    await enviar(page).click();
+    await expect(aviso(page, 'Reporte enviado')).toBeVisible();
+
+    const nuevo = Object.values((await datos(page)).reportes).find((r) => r.descripcion.startsWith('Escombros botados'))!;
+    expect(nuevo.ubicacion).toMatchObject({ fuente: 'gps', accuracy: 12 });
+    expect(nuevo.ubicacion.lat).toBeCloseTo(-33.5106, 4);
+  });
+});
+
 test.describe('Versión web sin señal', () => {
   test('una pantalla que todavía no se abrió avisa que falta la señal, en vez de quedarse sin responder', async ({ page, context }) => {
     await abrir(page, '/home', { como: 'ana' });

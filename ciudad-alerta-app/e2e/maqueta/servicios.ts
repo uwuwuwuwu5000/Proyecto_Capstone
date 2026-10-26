@@ -367,7 +367,12 @@ export class ReportesFalsos {
         uid: usuario.uid,
         descripcion: datos.descripcion.trim(),
         categoria: datos.categoria,
-        ubicacion: { lat: datos.ubicacion.lat, lng: datos.ubicacion.lng, accuracy: datos.ubicacion.accuracy },
+        ubicacion: {
+          lat: datos.ubicacion.lat,
+          lng: datos.ubicacion.lng,
+          accuracy: datos.ubicacion.accuracy,
+          ...(datos.ubicacion.fuente ? { fuente: datos.ubicacion.fuente } : {}),
+        },
         comuna: datos.comuna?.comuna ?? null,
         region: datos.comuna?.region ?? null,
         autorNombre: cuenta.displayName,
