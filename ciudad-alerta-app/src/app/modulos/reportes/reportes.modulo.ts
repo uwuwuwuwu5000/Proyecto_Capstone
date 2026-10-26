@@ -14,13 +14,14 @@ import { RUTAS_REPORTES } from './rutas';
  *  - paginas/report          crear un reporte (foto, ubicación, duplicados)
  *  - paginas/my-reports      historial propio
  *  - paginas/report-detail   detalle, confirmación y seguimiento
- *  - componentes/similar-reports
+ *  - componentes/similar-reports, elegir-punto (marcar el reporte en el mapa)
  *  - datos/                  crear reportes (report.service), cámara, fotos
  *                            (photo-storage + providers), privacidad, similitud
  *                            de imágenes (TensorFlow), confirmaciones y duplicados,
  *                            borrador sin conexión y lo que el autor hace con
  *                            su reporte (mi-reporte)
  *  - resolucion.ts           textos de tiempo de respuesta y resolución (F12)
+ *  - ubicacion.ts            quién puede elegir en el mapa dónde marcar el reporte
  *
  * El detalle deja las ranuras `detalle-reporte.verificacion` (la llena el
  * sistema de confianza) y `detalle-reporte.gestion` (la llena gestión de

@@ -31,6 +31,7 @@ import {
   cloudOfflineOutline,
   imagesOutline,
   locateOutline,
+  mapOutline,
   refreshOutline,
   shieldCheckmarkOutline,
   shieldOutline,
@@ -40,6 +41,8 @@ import {
 import { MapViewComponent } from '../../../../compartido/mapa';
 import { SimilarReportsComponent } from '../../componentes/similar-reports/similar-reports.component';
 import { AvisoEmergenciaComponent } from '../../componentes/aviso-emergencia/aviso-emergencia.component';
+import { ElegirPuntoComponent, PuntoElegido } from '../../componentes/elegir-punto/elegir-punto.component';
+import { AuthService } from '../../../../services/auth.service';
 import { ComunaDetectada, ComunaService } from '../../../../services/comuna.service';
 import { DuplicateDetectionService } from '../../datos/duplicate-detection.service';
 import { CameraService, CapturedPhoto, PhotoError } from '../../datos/camera.service';
@@ -55,6 +58,7 @@ import {
   ReportCategory,
 } from '../../../../models/report.model';
 import { MatchCandidate } from '../../modelo/coincidencias';
+import { creacionDeCuenta, permisoElegirEnMapa, textoEsperaElegirEnMapa } from '../../ubicacion';
 
 @Component({
   selector: 'app-report',
@@ -64,6 +68,7 @@ import { MatchCandidate } from '../../modelo/coincidencias';
   imports: [
     ReactiveFormsModule,
     MapViewComponent,
+    ElegirPuntoComponent,
     SimilarReportsComponent,
     AvisoEmergenciaComponent,
     IonHeader,
@@ -95,6 +100,7 @@ export class ReportPage implements OnDestroy {
   readonly estadoProteccion = this.privacidadService.estado;
   private readonly reportService = inject(ReportService);
   private readonly borrador = inject(BorradorService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly loadingCtrl = inject(LoadingController);
   private readonly toastCtrl = inject(ToastController);
@@ -107,6 +113,25 @@ export class ReportPage implements OnDestroy {
   readonly foto = signal<CapturedPhoto | null>(null);
   readonly ubicacion = signal<GeoPoint | null>(null);
   readonly buscandoUbicacion = signal(false);
+
+  /**
+   * Elegir el punto en el mapa, en vez de la ubicación actual: solo cuentas
+   * con al menos 7 días (ubicacion.ts). La hora se toma al entrar a la
+   * página, porque la antigüedad cambia con los días.
+   */
+  private readonly momento = signal(Date.now());
+  readonly permisoMapa = computed(() => {
+    // La señal llega un instante después de abrir; `user` ya está.
+    const usuario = this.authService.currentUser() ?? this.authService.user;
+    return permisoElegirEnMapa(creacionDeCuenta(usuario?.metadata.creationTime), this.momento());
+  });
+  readonly esperaMapa = computed(() => textoEsperaElegirEnMapa(this.permisoMapa()));
+  /** El selector del mapa está abierto. */
+  readonly eligiendoEnMapa = signal(false);
+  /** Mientras se busca dónde empezar el mapa (la ubicación actual). */
+  readonly preparandoMapa = signal(false);
+  /** Dónde empieza el mapa; null si no se pudo usar la ubicación actual. */
+  readonly inicioMapa = signal<PuntoElegido | null>(null);
 
   /** Comuna detectada para la ubicación actual. */
   readonly comuna = signal<ComunaDetectada | null>(null);
@@ -185,7 +210,11 @@ export class ReportPage implements OnDestroy {
     if (!this.ubicacion()) {
       return {
         icono: 'locate-outline',
-        texto: 'Falta la ubicación. Pulsa "Usar mi ubicación actual" para poder enviar el reporte.',
+        texto: this.eligiendoEnMapa()
+          ? 'Falta la ubicación. Mueve el mapa y pulsa "Usar este punto" para poder enviar el reporte.'
+          : this.permisoMapa().permitido
+            ? 'Falta la ubicación. Pulsa "Usar mi ubicación actual" o "Elegir en el mapa" para poder enviar el reporte.'
+            : 'Falta la ubicación. Pulsa "Usar mi ubicación actual" para poder enviar el reporte.',
       };
     }
     return null;
@@ -198,6 +227,7 @@ export class ReportPage implements OnDestroy {
       cloudOfflineOutline,
       imagesOutline,
       locateOutline,
+      mapOutline,
       refreshOutline,
       shieldCheckmarkOutline,
       shieldOutline,
@@ -211,6 +241,7 @@ export class ReportPage implements OnDestroy {
    */
   ionViewWillEnter(): void {
     this.privacidadService.despertar();
+    this.momento.set(Date.now());
   }
 
   /** Si el usuario sale con una foto en proceso, no tiene sentido esperarla. */
@@ -268,11 +299,7 @@ export class ReportPage implements OnDestroy {
 
     try {
       const coordenadas = await this.geolocationService.getCurrentPosition();
-      this.ubicacion.set(coordenadas);
-      await this.toast('Ubicación registrada.', 'success');
-
-      // Ambas consultas son independientes y corren en paralelo.
-      await Promise.all([this.detectarComuna(coordenadas), this.detectarCoincidencias()]);
+      await this.registrarUbicacion({ ...coordenadas, fuente: 'gps' }, 'Ubicación registrada.');
     } catch (error) {
       const mensaje =
         error instanceof LocationError
@@ -282,6 +309,60 @@ export class ReportPage implements OnDestroy {
     } finally {
       this.buscandoUbicacion.set(false);
     }
+  }
+
+  /**
+   * Abre el selector del mapa. Empieza en la ubicación ya registrada o, si no
+   * hay, en la actual del teléfono; sin ella, en el centro de Santiago.
+   */
+  async elegirEnMapa(): Promise<void> {
+    if (!this.permisoMapa().permitido || this.eligiendoEnMapa() || this.preparandoMapa()) {
+      return;
+    }
+
+    const registrada = this.ubicacion();
+
+    if (registrada) {
+      this.inicioMapa.set({ lat: registrada.lat, lng: registrada.lng });
+    } else {
+      this.preparandoMapa.set(true);
+      try {
+        const actual = await this.geolocationService.getCurrentPosition();
+        this.inicioMapa.set({ lat: actual.lat, lng: actual.lng });
+      } catch {
+        // Sin permiso o sin señal GPS igual se puede buscar el lugar a mano.
+        this.inicioMapa.set(null);
+      } finally {
+        this.preparandoMapa.set(false);
+      }
+    }
+
+    if (!this.destruida) {
+      this.eligiendoEnMapa.set(true);
+    }
+  }
+
+  /** El punto elegido pasa a ser la ubicación del reporte. */
+  async usarPuntoDelMapa(punto: PuntoElegido): Promise<void> {
+    if (!this.permisoMapa().permitido) {
+      return;
+    }
+
+    this.eligiendoEnMapa.set(false);
+    // Sin precisión de GPS: el punto lo eligió la persona.
+    await this.registrarUbicacion({ lat: punto.lat, lng: punto.lng, accuracy: 0, fuente: 'mapa' }, 'Punto del mapa registrado.');
+  }
+
+  /** Cierra el selector; la ubicación que hubiera sigue igual. */
+  cancelarMapa(): void {
+    this.eligiendoEnMapa.set(false);
+  }
+
+  /** La comuna y los reportes parecidos se buscan con el punto nuevo, en paralelo. */
+  private async registrarUbicacion(coordenadas: GeoPoint, aviso: string): Promise<void> {
+    this.ubicacion.set(coordenadas);
+    await this.toast(aviso, 'success');
+    await Promise.all([this.detectarComuna(coordenadas), this.detectarCoincidencias()]);
   }
 
   async enviar(): Promise<void> {
@@ -384,15 +465,23 @@ export class ReportPage implements OnDestroy {
     }
   }
 
-  /** Detecta la comuna de la ubicación. Si falla, el reporte se envía igual. */
+  /**
+   * Detecta la comuna de la ubicación. Si falla, el reporte se envía igual.
+   * Si la ubicación cambió mientras tanto (otro punto del mapa, por ejemplo),
+   * la respuesta ya no sirve y se descarta.
+   */
   private async detectarComuna(coordenadas: GeoPoint): Promise<void> {
     this.detectandoComuna.set(true);
+    let comuna: ComunaDetectada | null = null;
 
     try {
-      this.comuna.set(await this.comunaService.detectar(coordenadas));
+      comuna = await this.comunaService.detectar(coordenadas);
     } catch {
-      this.comuna.set(null);
-    } finally {
+      comuna = null;
+    }
+
+    if (this.ubicacion() === coordenadas) {
+      this.comuna.set(comuna);
       this.detectandoComuna.set(false);
     }
   }
@@ -414,18 +503,22 @@ export class ReportPage implements OnDestroy {
     // antiguos mientras llega la búsqueda nueva.
     this.coincidencias.set([]);
 
+    let encontrados: MatchCandidate[] = [];
+
     try {
-      const encontrados = await this.duplicateDetection.findSimilar({
+      encontrados = await this.duplicateDetection.findSimilar({
         ubicacion: coordenadas,
         categoria: this.formulario.controls.categoria.value,
         embedding: this.embedding,
       });
-
-      this.coincidencias.set(encontrados);
     } catch {
       // La detección es auxiliar: si falla, el usuario igual puede reportar.
-      this.coincidencias.set([]);
-    } finally {
+      encontrados = [];
+    }
+
+    // Los parecidos a un punto que ya no es el del reporte no sirven.
+    if (this.ubicacion() === coordenadas) {
+      this.coincidencias.set(encontrados);
       this.analizando.set(false);
     }
   }
@@ -547,6 +640,11 @@ export class ReportPage implements OnDestroy {
     this.coincidencias.set([]);
     this.embedding = null;
     this.comuna.set(null);
+    // Una búsqueda que siga en curso ya no los apagará: es de otro punto.
+    this.analizando.set(false);
+    this.detectandoComuna.set(false);
+    this.eligiendoEnMapa.set(false);
+    this.inicioMapa.set(null);
   }
 
   private async toast(

@@ -134,7 +134,13 @@
         }
       </h2>
 
-      @if (ubicacion(); as coords) {
+      @if (eligiendoEnMapa()) {
+        <app-elegir-punto
+          [inicio]="inicioMapa()"
+          (elegido)="usarPuntoDelMapa($event)"
+          (cancelado)="cancelarMapa()"
+        />
+      } @else if (ubicacion(); as coords) {
         <app-map-view
           [latitude]="coords.lat"
           [longitude]="coords.lng"
@@ -143,7 +149,11 @@
 
         <p class="coordenadas">
           {{ coords.lat.toFixed(5) }}, {{ coords.lng.toFixed(5) }}
-          <span>· precisión aproximada de {{ coords.accuracy }} m</span>
+          @if (coords.fuente === 'mapa') {
+            <span>· punto elegido en el mapa</span>
+          } @else {
+            <span>· precisión aproximada de {{ coords.accuracy }} m</span>
+          }
         </p>
 
         <p class="comuna-detectada">
@@ -158,26 +168,52 @@
           }
         </p>
 
-        <ion-button fill="clear" size="small" type="button" (click)="obtenerUbicacion()">
-          <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
-          Actualizar ubicación
-        </ion-button>
+        <div class="opciones-ubicacion">
+          <ion-button fill="clear" size="small" type="button" [disabled]="buscandoUbicacion()" (click)="obtenerUbicacion()">
+            <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+            {{ buscandoUbicacion() ? 'Buscando señal…' : coords.fuente === 'mapa' ? 'Usar mi ubicación actual' : 'Actualizar ubicación' }}
+          </ion-button>
+          @if (permisoMapa().permitido && enLinea()) {
+            <ion-button fill="clear" size="small" type="button" (click)="elegirEnMapa()">
+              <ion-icon slot="start" name="map-outline" aria-hidden="true"></ion-icon>
+              {{ coords.fuente === 'mapa' ? 'Mover el punto' : 'Elegir en el mapa' }}
+            </ion-button>
+          }
+        </div>
       } @else {
         <p class="bloque__ayuda">
-          Necesitamos tu ubicación para saber dónde ocurre el problema. Solo se solicita
-          al crear un reporte.
+          Necesitamos saber dónde ocurre el problema. Si no estás ahí, o reportas desde tu
+          casa y no quieres que aparezca en el mapa, elige el punto en el mapa.
         </p>
 
-        <ion-button
-          fill="outline"
-          expand="block"
-          type="button"
-          [disabled]="buscandoUbicacion()"
-          (click)="obtenerUbicacion()"
-        >
-          <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
-          {{ buscandoUbicacion() ? 'Buscando señal…' : 'Usar mi ubicación actual' }}
-        </ion-button>
+        <div class="opciones-ubicacion">
+          <ion-button
+            fill="outline"
+            expand="block"
+            type="button"
+            [disabled]="buscandoUbicacion() || preparandoMapa()"
+            (click)="obtenerUbicacion()"
+          >
+            <ion-icon slot="start" name="locate-outline" aria-hidden="true"></ion-icon>
+            {{ buscandoUbicacion() ? 'Buscando señal…' : 'Usar mi ubicación actual' }}
+          </ion-button>
+          <ion-button
+            fill="outline"
+            expand="block"
+            type="button"
+            [disabled]="!permisoMapa().permitido || !enLinea() || buscandoUbicacion() || preparandoMapa()"
+            (click)="elegirEnMapa()"
+          >
+            <ion-icon slot="start" name="map-outline" aria-hidden="true"></ion-icon>
+            {{ preparandoMapa() ? 'Abriendo el mapa…' : 'Elegir en el mapa' }}
+          </ion-button>
+        </div>
+
+        @if (esperaMapa(); as espera) {
+          <p class="bloque__ayuda nota-mapa">{{ espera }}</p>
+        } @else if (!enLinea()) {
+          <p class="bloque__ayuda nota-mapa">Sin señal no podemos cargar el mapa: usa tu ubicación actual.</p>
+        }
       }
     </section>
 

@@ -143,6 +143,17 @@ describe('BorradorService', () => {
     expect(servicio.pendiente()).toBeNull();
   });
 
+  it('un punto elegido en el mapa se guarda y se envía como tal', async () => {
+    await crear(false);
+    const enElMapa = { lat: -33.512, lng: -70.759, accuracy: 0, fuente: 'mapa' as const };
+    servicio.guardar({ ...DATOS, ubicacion: enElMapa });
+
+    expect(guardado()!.ubicacion).toEqual(enElMapa);
+
+    volverLaSenal();
+    await vi.waitFor(() => expect(reportes.createReport).toHaveBeenCalledWith(expect.objectContaining({ ubicacion: enElMapa })));
+  });
+
   it('al volver la señal, protege la foto, envía el reporte con su id y lo borra del teléfono', async () => {
     await crear(false);
     servicio.guardar(DATOS, ORIGINAL);

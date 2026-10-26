@@ -111,6 +111,17 @@ describe('ReportService.createReport', () => {
     expect(ruteo.resolveOperador).toHaveBeenCalledWith('muni_13119');
   });
 
+  it('guarda si el punto salió del GPS o se eligió en el mapa', async () => {
+    await servicio.createReport({ ...DATOS, ubicacion: { lat: -33.512, lng: -70.759, accuracy: 0, fuente: 'mapa' } });
+    await servicio.createReport({ ...DATOS, ubicacion: { ...DATOS.ubicacion, fuente: 'gps' } });
+
+    const ubicaciones = guardar.mock.calls.map(([, documento]) => (documento as Record<string, unknown>)['ubicacion']);
+    expect(ubicaciones).toEqual([
+      { lat: -33.512, lng: -70.759, accuracy: 0, fuente: 'mapa' },
+      { lat: -33.51, lng: -70.76, accuracy: 12, fuente: 'gps' },
+    ]);
+  });
+
   it('con un id elegido (borrador sin conexión), usa ese id', async () => {
     expect(await servicio.createReport({ ...DATOS, id: 'borrador123' })).toBe('borrador123');
   });

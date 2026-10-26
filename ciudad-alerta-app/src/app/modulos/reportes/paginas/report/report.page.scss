@@ -184,6 +184,21 @@
   }
 }
 
+/* «Usar mi ubicación actual» y «Elegir en el mapa». */
+.opciones-ubicacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+
+  ion-button {
+    margin: 0;
+  }
+
+  [expand='block'] {
+    flex-basis: 100%;
+  }
+}
+
 ion-select,
 ion-textarea {
   --background: var(--ca-surface);

@@ -18,3 +18,13 @@ export const PARAMETROS_PRIVACIDAD = {
   /** Desde cuándo se avisa que el servicio está despertando. */
   avisoLentoMs: 6_000,
 } as const;
+
+/** Dónde se marca el reporte (ver ubicacion.ts). */
+export const PARAMETROS_UBICACION = {
+  /**
+   * Días que debe tener la cuenta para elegir el punto del reporte en el mapa,
+   * en vez de usar su ubicación actual. Una cuenta recién creada no puede
+   * publicar al instante reportes en cualquier parte de la ciudad.
+   */
+  diasParaElegirEnMapa: 7,
+} as const;

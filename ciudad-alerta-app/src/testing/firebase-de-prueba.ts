@@ -32,6 +32,8 @@ export interface UsuarioDePrueba {
   email?: string;
   emailVerified?: boolean;
   displayName?: string;
+  /** Cuándo se creó la cuenta (`metadata.creationTime`). Sin esto, la fecha no se conoce. */
+  creadaMs?: number;
 }
 
 /** Auth falsa: solo lo que usa AuthService para conocer la sesión. */
@@ -42,7 +44,7 @@ export function authDePrueba(usuario: UsuarioDePrueba | null = null): Auth {
         email: usuario.email ?? `${usuario.uid}@prueba.cl`,
         emailVerified: usuario.emailVerified ?? true,
         displayName: usuario.displayName ?? null,
-        metadata: {},
+        metadata: usuario.creadaMs === undefined ? {} : { creationTime: new Date(usuario.creadaMs).toUTCString() },
         providerData: [],
         getIdToken: async () => 'token-de-prueba',
         reload: async () => undefined,

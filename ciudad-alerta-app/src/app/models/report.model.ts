@@ -38,11 +38,19 @@ export const REPORT_CATEGORIES: ReadonlyArray<{ id: ReportCategory; label: strin
   (c) => ({ id: c.id, label: c.etiqueta }),
 );
 
+/**
+ * Cómo se marcó el punto de un reporte: con el GPS del teléfono o eligiéndolo
+ * en el mapa (cuentas con al menos 7 días, ver modulos/reportes/ubicacion.ts).
+ */
+export type FuenteUbicacion = 'gps' | 'mapa';
+
 export interface GeoPoint {
   lat: number;
   lng: number;
-  /** Precisión en metros informada por el dispositivo. */
+  /** Precisión en metros informada por el dispositivo. 0 si el punto se eligió en el mapa. */
   accuracy: number;
+  /** Solo en reportes. Los anteriores a poder elegir en el mapa no lo tienen: son del GPS. */
+  fuente?: FuenteUbicacion;
 }
 
 /**

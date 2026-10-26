@@ -86,6 +86,10 @@
           [longitude]="item.ubicacion.lng"
           [interactive]="false"
         ></app-map-view>
+        @if (item.ubicacion.fuente === 'mapa') {
+          <!-- Para quien atiende: el punto no es donde estaba el teléfono. -->
+          <p class="estado">Quien reportó marcó este punto en el mapa; no viene del GPS de su teléfono.</p>
+        }
       </section>
 
       <section class="bloque">
