@@ -64,10 +64,11 @@ Proyecto_Capstone/
         └── modulos/
             ├── reportes/          paginas/{report, my-reports, report-detail}
             │                      componentes/ (similar-reports, contacto-organismo, aviso-emergencia,
-            │                      acciones-autor, borrador-pendiente)
+            │                      acciones-autor, borrador-pendiente, elegir-punto)
             │                      datos/ (report, camera, photo-storage, privacidad → nube, image-similarity,
             │                      confirmation, duplicate-detection, contacto-organismo, mi-reporte, borrador)
-            │                      · modelo/ · parametros.ts (URL del servicio) · rutas.ts · resolucion.ts
+            │                      · modelo/ · parametros.ts (URL del servicio, días para elegir en el mapa)
+            │                      · rutas.ts · resolucion.ts · ubicacion.ts
             ├── mapa-incidencias/  paginas/mapa · datos/regiones.service.ts · parametros.ts
             ├── cercanos/          paginas/nearby · parametros.ts
             ├── confianza/         datos/ (confianza, veredicto) · componentes/ (… veredicto-reporte)
@@ -783,3 +784,54 @@ git push origin main-mobile
 14. Navegación: en la web, sin señal, una pantalla nueva avisa en vez de no responder.
 15. Configuración: «Borrar datos guardados» ya no pierde el reporte que espera señal.
 16. Guía de pruebas, plan de pruebas y guías.
+
+---
+
+## 15. Elegir en el mapa dónde se marca el reporte (octubre)
+
+En «Crear un reporte», la ubicación tiene dos opciones:
+
+- **Usar mi ubicación actual:** el GPS del teléfono, como siempre.
+- **Elegir en el mapa:** la marca queda fija al centro y la persona mueve el mapa debajo hasta dejarla sobre el problema; «Usar este punto» la registra. Sirve cuando el problema está en otra calle, o cuando se reporta desde la casa y no se quiere que la casa quede en el mapa. El mapa empieza en la ubicación actual; sin permiso de ubicación, en el centro de Santiago.
+
+«Elegir en el mapa» es solo para cuentas con **7 días o más** (`PARAMETROS_UBICACION.diasParaElegirEnMapa`, en `modulos/reportes/parametros.ts`). A una cuenta más nueva el botón le aparece deshabilitado y la pantalla le dice cuántos días le faltan. La antigüedad sale de `metadata.creationTime` de Authentication (`modulos/reportes/ubicacion.ts`): llega con la sesión y la tienen todas las cuentas.
+
+Con el punto elegido se calculan la comuna, el organismo, el operador y los reportes parecidos. El reporte guarda `ubicacion.fuente`: `'gps'` o `'mapa'` (con `accuracy` 0). Los reportes anteriores no lo tienen y son del GPS. El detalle de un reporte marcado en el mapa lo dice, para quien lo atiende, y el borrador guardado sin señal conserva la fuente.
+
+**Hasta dónde llega.** La regla de los 7 días vive en la app. Las reglas de Firestore no pueden saber si unas coordenadas vinieron del GPS o del mapa: un programa que escriba directo en Firestore puede mandar cualquier punto, exista o no esta opción. Lo que frena es el abuso fácil desde la app (crear una cuenta y llenar el mapa de reportes en otros lugares). Del lado del servidor siguen el intervalo de 30 s entre reportes y, si se activa, App Check.
+
+**Sin reglas ni índices nuevos.** `ubicacion` no tiene lista blanca de campos, así que `fuente` se acepta sin desplegar nada. El portal web solo lee `lat` y `lng`.
+
+| Dónde | Qué |
+|---|---|
+| `modulos/reportes/componentes/elegir-punto/` | El selector. Usa `app-map-view` con `encuadre` y `areaCambiada`; el mapa compartido no cambió. |
+| `modulos/reportes/ubicacion.ts` | Si la cuenta puede elegir en el mapa y el aviso de cuánto falta. |
+| `modulos/reportes/paginas/report/` | Las dos opciones. Si el punto cambia mientras se busca la comuna o los parecidos, la respuesta del punto anterior se descarta. |
+| `models/report.model.ts` | `GeoPoint.fuente` (`FuenteUbicacion`). |
+
+Pruebas: 21 unitarias nuevas (451 en total) y 8 de punta a punta (132), con la cuenta `nueva` de la maqueta (creada hace 2 días). Casos manuales: CP-UBI-14 a CP-UBI-25.
+
+### Instalar
+
+En la carpeta del repositorio, en `cmd`:
+
+```cmd
+git switch main-mobile
+git pull origin main-mobile
+git am "C:\ruta\ubicacion-en-mapa.mbox"
+git log --oneline -5
+
+cd ciudad-alerta-app
+npm run test:una-vez
+npm run lint
+npm run diagnostico
+npm run e2e
+```
+
+Sin dependencias nuevas y sin reglas que desplegar. Después: `git push origin main-mobile`.
+
+### Commits
+
+1. Reportes: elegir en el mapa dónde se marca el reporte (cuentas con 7 días).
+2. Pruebas de punta a punta: marcar en el mapa y la cuenta nueva.
+3. Guías y plan de pruebas.

@@ -242,6 +242,27 @@ sin uso: para CP-PRI-04 hay que esperar ese tiempo sin tomar fotos.
 | CP-UBI-12 | Sin ubicación registrada | Intentar enviar el reporte | El botón permanece deshabilitado | A | F |
 | CP-UBI-13 | E1 con el permiso de ubicación bloqueado en el navegador | «Usar mi ubicación actual» | «El permiso de ubicación está denegado…», no un error genérico | B | F |
 
+### Elegir en el mapa dónde se marca el reporte
+
+Una cuenta con al menos 7 días puede marcar el reporte en un punto que elige en el mapa, en vez
+de su ubicación actual: cuando el problema está en otra parte o cuando reporta desde su casa.
+Las cuentas más nuevas solo usan la ubicación actual.
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-UBI-14 | Cuenta con 7 días o más, sin ubicación registrada | Observar la sección «Ubicación» | Dos opciones habilitadas: «Usar mi ubicación actual» y «Elegir en el mapa» | A | F |
+| CP-UBI-15 | CP-UBI-14 | Pulsar «Elegir en el mapa» | El mapa se abre en la ubicación actual, con la marca al centro y «Punto elegido: lat, lng» | A | F |
+| CP-UBI-16 | CP-UBI-15 | Mover el mapa con el dedo y pulsar «Usar este punto» | Las coordenadas cambian al mover; la ubicación queda en el punto elegido con «· punto elegido en el mapa» y la comuna de ese punto | A | F |
+| CP-UBI-17 | CP-UBI-16, reporte enviado | Revisar Firestore | `ubicacion.fuente` = `mapa`, `accuracy` 0, `lat` y `lng` del punto elegido, `geohash` del punto | A | I |
+| CP-UBI-18 | Reporte enviado con «Usar mi ubicación actual» | Revisar Firestore | `ubicacion.fuente` = `gps` | B | I |
+| CP-UBI-19 | Cuenta creada hace menos de 7 días | Abrir «Crear un reporte» | «Elegir en el mapa» deshabilitado y el aviso «…cuando tu cuenta cumpla 7 días (te faltan N días)…» | A | S |
+| CP-UBI-20 | CP-UBI-19, ubicación actual registrada | Observar | No aparece «Elegir en el mapa» ni «Mover el punto» | A | S |
+| CP-UBI-21 | Cuenta con 7 días o más, permiso de ubicación denegado | «Elegir en el mapa» | El mapa se abre igual, en el centro de Santiago, y pide buscar el lugar moviéndolo | B | F |
+| CP-UBI-22 | Ubicación registrada, selector abierto | «Cancelar» | Se cierra el mapa y la ubicación anterior sigue igual | B | F |
+| CP-UBI-23 | Cuenta con 7 días o más, sin señal | Abrir «Crear un reporte» | «Elegir en el mapa» deshabilitado con «Sin señal no podemos cargar el mapa…» | B | F |
+| CP-UBI-24 | Reporte marcado en el mapa | Abrir su detalle | «Quien reportó marcó este punto en el mapa; no viene del GPS de su teléfono.» | B | F |
+| CP-UBI-25 | Selector abierto | Elegir un punto en otra comuna y enviar | Comuna, organismo y reportes parecidos son los del punto elegido, no los de donde está el teléfono | A | I |
+
 ---
 
 ## 8. Descripción y creación del reporte
@@ -682,6 +703,7 @@ alguno falla, la entrega se detiene.
 | CA-79 Reglas | CP-SEC-01 a CP-SEC-43 |
 | CA-51 Mapa | CP-MAP-01 a CP-MAP-12 |
 | CA-52 Geolocalización | CP-UBI-01 a CP-UBI-13 |
+| Elegir en el mapa dónde se marca el reporte | CP-UBI-14 a CP-UBI-25 |
 | Fotografía | CP-FOT-01 a CP-FOT-18 |
 | Privacidad en la nube | CP-PRI-01 a CP-PRI-15 |
 | Descripción | CP-DES-01 a CP-DES-20 |
@@ -705,7 +727,7 @@ alguno falla, la entrega se detiene.
 | 1.0 · Borrador sin conexión | CP-BOR-01 a CP-BOR-11, CP-CFG-15 |
 | 1.0 · Bienvenida | CP-BIE-01 a CP-BIE-06 |
 
-**Total: 405 casos** — 251 de prioridad A, 129 de prioridad B y 25 de prioridad C.
+**Total: 415 casos** — 256 de prioridad A, 134 de prioridad B y 25 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -737,7 +759,7 @@ Playwright). Cómo escribir cada tipo de prueba: `docs/GUIA_PRUEBAS.md`.
 | `npm run diagnostico` | Estructura, imports, rutas, catálogos y módulos contra las reglas | `scripts/diagnostico/` |
 | `npm test` en `servicio-privacidad` | El difuminado con los modelos reales y una foto de dominio público, el token de sesión, los límites y las respuestas del servidor | `servicio-privacidad/test/` (antes, una vez: `npm install`) |
 | `npm run diagnostico:reglas` | Las reglas en el emulador: 27 controles, 70 bloqueos y 3 brechas conocidas | `scripts/diagnostico/reglas.mjs` |
-| `npm run e2e` | La app compilada en un teléfono simulado (E5): 26 pantallas en tema oscuro y claro y con texto «Muy grande» (contraste, desbordes, nombres accesibles, consola sin errores) y los flujos completos de reporte, cuenta, equipo y configuración, con y sin señal | `e2e/` (informe: `npm run e2e:informe`) |
+| `npm run e2e` | La app compilada en un teléfono simulado (E5): 28 pantallas en tema oscuro y claro y con texto «Muy grande» (contraste, desbordes, nombres accesibles, consola sin errores) y los flujos completos de reporte, cuenta, equipo y configuración, con y sin señal | `e2e/` (informe: `npm run e2e:informe`) |
 
 `npm test` deja Vitest mirando los cambios mientras se programa.
 
@@ -780,7 +802,7 @@ acepta: eso lo prueba `diagnostico:reglas` en el emulador. Entre otras cosas:
 maqueta en memoria (`e2e/maqueta`), así que prueban lo que ve y hace la persona: lo que muestra
 cada pantalla, que se lea, que nada se salga de la pantalla en un teléfono de 360 px, y los flujos
 de punta a punta, incluido cortar la señal. Cubren de forma automática, entre otros, CP-ACC-01,
-CP-ACC-02, CP-ACC-11, CP-DES-08, CP-DUP-01, CP-BOR-01 a CP-BOR-04, CP-BOR-11, CP-TER-04,
+CP-ACC-02, CP-ACC-11, CP-DES-08, CP-DUP-01, CP-UBI-14 a CP-UBI-17, CP-UBI-19, CP-UBI-20, CP-UBI-24, CP-BOR-01 a CP-BOR-04, CP-BOR-11, CP-TER-04,
 CP-TER-05, CP-ELI-01 a CP-ELI-03, CP-ELI-06, CP-ELI-08, CP-BIE-02, CP-CFG-02, CP-CFG-05,
 CP-CFG-15, CP-CTO-01 y CP-EMG-01. No reemplazan los casos en el
 teléfono (sección 17): la cámara, el GPS, los permisos de Android y Firebase real quedan fuera.
