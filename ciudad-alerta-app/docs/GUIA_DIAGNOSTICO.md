@@ -47,7 +47,7 @@ npm pkg set "scripts.diagnostico:servicio=node scripts/diagnostico/servicio-ataq
 npm pkg set "scripts.diagnostico:logica=node scripts/diagnostico/logica.mjs"
 ```
 
-La carpeta `scripts/diagnostico/simulador/` (6 archivos) acompaña a los scripts: es un intérprete de las reglas de Firestore que permite correr `reglas-ataques.mjs` (y, con `diagnostico:reglas-sim`, los 100 casos de `reglas.mjs`) sin Java ni el emulador. Es una aproximación: lo que encuentre conviene confirmarlo con `--emulador`.
+La carpeta `scripts/diagnostico/simulador/` (6 archivos) acompaña a los scripts: es un intérprete de las reglas de Firestore que permite correr `reglas-ataques.mjs` (y, con `diagnostico:reglas-sim`, los 125 casos de `reglas.mjs`) sin Java ni el emulador. Es una aproximación: lo que encuentre conviene confirmarlo con `--emulador`.
 
 ---
 
@@ -100,7 +100,7 @@ Lee cada colección una vez; con los datos del piloto son pocos miles de lectura
 
 ## 3. Reglas — `npm run diagnostico:reglas`
 
-Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 107 casos y lo apaga. Sin Java, `npm run diagnostico:reglas-sim` corre los mismos casos en el simulador. **Nunca toca el proyecto real.**
+Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 125 casos y lo apaga. Sin Java, `npm run diagnostico:reglas-sim` corre los mismos casos en el simulador. **Nunca toca el proyecto real.**
 
 Requisitos:
 
@@ -114,8 +114,8 @@ La versión de `@firebase/rules-unit-testing` depende de la de `firebase`: 13.x 
 
 Tres tipos de caso:
 
-- **Control (27):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Desde la 1.0 también aceptar los términos, dejar anónimos los reportes y los tickets de soporte al eliminar la cuenta, y que el autor corrija o retire su reporte sin revisar. Si alguno falla, una regla está bloqueando a usuarios legítimos.
-- **Bloqueo (80):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Desde la 1.0, además: cambiarse el `operadorId`, ser admin con el correo sin verificar, fechar un reporte en el pasado, anonimizar o retirar el reporte de otro, corregir uno que ya está en revisión y anotar un retiro en el historial sin cerrar el reporte. Y para los tickets: borrar los datos de contacto del ticket de otro, cambiar algo más al anonimizarlo o firmarlo con otro nombre. Si alguno pasa, es una brecha.
+- **Control (32):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Desde la 1.0 también aceptar los términos, dejar anónimos los reportes y los tickets de soporte al eliminar la cuenta, y que el autor corrija o retire su reporte sin revisar. Desde la 1.2, la cuenta de organismo: listar los validados de su municipalidad, abrir uno con su foto y su historial, aceptar los términos, que un admin la dé de alta y que un vecino siga viendo todos los reportes. Si alguno falla, una regla está bloqueando a usuarios legítimos.
+- **Bloqueo (93):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Desde la 1.0, además: cambiarse el `operadorId`, ser admin con el correo sin verificar, fechar un reporte en el pasado, anonimizar o retirar el reporte de otro, corregir uno que ya está en revisión y anotar un retiro en el historial sin cerrar el reporte. Y para los tickets: borrar los datos de contacto del ticket de otro, cambiar algo más al anonimizarlo o firmarlo con otro nombre. Desde la 1.2, que el organismo liste todos los reportes, los de su municipalidad sin el filtro de validados o los de otra; que abra un reporte sin validar (ni su foto ni su historial) o uno de otra municipalidad; que cree, confirme o gestione reportes; que se cambie de municipalidad; y que alguien se haga organismo solo. Si alguno pasa, es una brecha.
 - **Sistema de confianza** (25 de los anteriores, con el prefijo «Confianza:»): confirmación con peso, voto de peso 0 por correo sin verificar o cuenta nueva, validación al llegar a 100 puntos y 3 votos, contador del día, pausa de 20 s, límite diario, suspensión, puntos inventados, veredictos real y falso, y veredicto de un operador de otra comuna.
 - **Brecha (0):** huecos conocidos de las reglas. Los tres que quedaban (campos extra al crear un reporte, fotos sin reporte y mensajes en tickets inexistentes) se cerraron en la 1.1 y ahora son bloqueos, junto con siete casos nuevos de la 1.1: cambiarse el nombre por el de otra persona, apuntar a la foto de otro reporte, confirmar un reporte cerrado, anotar un cambio de estado que no se hizo, firmar un mensaje de soporte como el vecino, abrir un ticket con el correo de otra persona y corregir un reporte que ya tiene confirmaciones con peso. Antes, en la 1.0, se cerraron el `operadorId`, el correo sin verificar y la fecha falsa.
 
@@ -131,7 +131,7 @@ Estos cinco no comprueban que lo normal funcione, sino que intentan *romper* el 
 
 La contraparte agresiva de `reglas.mjs`. Corre sobre un **simulador de las reglas** escrito en `scripts/diagnostico/simulador/` (no necesita Java), y con `--emulador` sobre el emulador real. Secciones:
 
-- **A · Matriz de acceso.** Cada combinación de rol (anónimo, ciudadano, operador, admin) × colección × operación (get/list/create/update/delete) contra lo que *debería* poder. Marca tanto lo que permite de más (brecha) como lo que bloquea de menos (error).
+- **A · Matriz de acceso.** Cada combinación de rol (anónimo, ciudadano, operador, admin y, desde la 1.2, organismo) × colección × operación (get/list/create/update/delete) contra lo que *debería* poder. Marca tanto lo que permite de más (brecha) como lo que bloquea de menos (error).
 - **B · Ataques dirigidos.** Alrededor de 50 intentos concretos de brecha con su impacto y su arreglo: subirse el nivel, declararse admin, suplantar nombres, reusar la foto de otro reporte, confirmar reportes cerrados, fabricar bitácoras, firmar mensajes de soporte como staff, subir fotos sin reporte, etc.
 - **C · Mutaciones generadas.** Toma una escritura válida y le aplica variaciones automáticas (campo extra, cambio de tipo, texto gigante, fecha falsa). Cada una debe seguir rechazándose.
 - **D · Lecturas por operación.** Cuántos documentos lee cada regla, contra el límite de 10 por operación de Firestore (solo en el simulador).
@@ -141,7 +141,7 @@ La contraparte agresiva de `reglas.mjs`. Corre sobre un **simulador de las regla
 
 Solo cuenta como brecha lo que de verdad se escribe: si Firestore rechaza algo por otro motivo (por ejemplo, un documento de más de 1 MiB), el caso sale en verde con el motivo.
 
-El simulador se calibra con los 100 casos de `reglas.mjs` (todos dan el mismo resultado). Aun así es una aproximación: confirma los hallazgos con `--emulador`.
+El simulador se calibra con los 125 casos de `reglas.mjs` (todos dan el mismo resultado). Aun así es una aproximación: confirma los hallazgos con `--emulador`.
 
 ### 5. Contrato app ↔ reglas ↔ índices — `npm run diagnostico:contrato`
 
@@ -179,7 +179,7 @@ Empaqueta `comun` y ejercita sus funciones puras contra las reglas y contra inva
 - **Confianza.** `nivelDePuntos`, `pesoDeNivel` y `limiteDiario` comparados con las reglas en todo el rango, más monotonía y bordes exactos.
 - **Veredicto.** +10 / −15 y topes [0, 760].
 - **DST de Chile.** El `numeroDeDia` usa un desfase fijo UTC−3; en invierno Chile es UTC−4, así que el contador de confirmaciones se reinicia a las 23:00 locales (ver hallazgos).
-- **Unicode.** `.length` (lo que mide el formulario) vs puntos de código (lo que cuenta `size()` de las reglas): una descripción de emojis puede pasar el formulario y rechazarse en el servidor.
+- **Unicode.** `.length` (lo que mide el formulario) contra puntos de código. En el emulador real, `size()` cuenta unidades UTF-16, igual que `.length`, así que no hay desajuste (ver hallazgos); el caso queda para avisar si alguna vez cambia.
 - **Geografía** (distancia, geohash contra la regla, límites de coordenadas) y **transiciones** (invariantes del ciclo de vida).
 
 ---
@@ -232,6 +232,16 @@ Los flujos de la app **y del portal** (`main-web`, sin tocarlo) se prueban en la
 - **Comuna incoherente con el organismo:** advertencia de calidad de datos. La comuna es un nombre y el catálogo usa códigos CUT: exigirlo en las reglas bloquearía reportes por una tilde.
 - **Lecturas abiertas:** cualquier cuenta lee el uid del autor y la ubicación exacta de los reportes (el mapa lo necesita). Si se quisiera ocultar, iría en un documento aparte.
 - **DST de Chile:** `numeroDeDia()` usa UTC−3 fijo; en invierno el contador del día se reinicia a las 23:00 (155 días al año). Bajo impacto.
+
+### Cuenta de organismo (1.2)
+
+Las municipalidades tienen ahora una cuenta distinta del operador: `role: 'organismo'` con su `organismoId`. **Solo mira:** ve, en «Reportes validados», los reportes de su comuna que la comunidad ya validó (`validacion.validado`), y nada más. Las reglas lo garantizan, no la app:
+
+- `reports` (get y list), `confirmations`, `statusHistory` y `reportPhotos`: el organismo solo lee lo de un reporte con `organismo.id` igual a su `organismoId` y `validacion.validado == true`. Una consulta tiene que filtrar por esos dos campos (si no, Firestore la rechaza entera); la app lo hace en `ReportQueryService.validadosDeOrganismo`, con su índice compuesto en `firestore.indexes.json`.
+- No crea reportes ni confirmaciones, no gestiona estados, no se cambia el `organismoId` ni el `role` (están en `camposProtegidosIntactos()`), y nadie se registra solo como organismo: lo da de alta un admin (`creacionCuentaOrganismo`) o el script `crear-cuentas-municipales.mjs` con el Admin SDK.
+- Los demás roles no cambian: un vecino sigue viendo todos los reportes (el mapa lo necesita) y el operador sigue gestionando los de su municipalidad.
+
+`reglas.mjs` suma 18 casos (5 de control y 13 de bloqueo) y `reglas-ataques.mjs`, 10 celdas en la matriz, 2 flujos reales y 4 ataques dirigidos. Ninguno de los 107 casos anteriores cambió de resultado.
 
 **Avisos de higiene (`cliente.mjs`):** `.gitignore` no cubre `.env` ni una carpeta de claves; no hay Content-Security-Policy en `index.html`; un `console.error` registra el `uid`. **Sin secretos en el árbol ni en el historial de git.**
 

@@ -835,3 +835,93 @@ Sin dependencias nuevas y sin reglas que desplegar. Después: `git push origin m
 1. Reportes: elegir en el mapa dónde se marca el reporte (cuentas con 7 días).
 2. Pruebas de punta a punta: marcar en el mapa y la cuenta nueva.
 3. Guías y plan de pruebas.
+
+---
+
+## 16. Cuentas de organismo (1.2)
+
+Las municipalidades tienen una cuenta propia, **distinta del operador**:
+
+| | Operador (`role: 'operador'`) | Organismo (`role: 'organismo'`) |
+|---|---|---|
+| Qué ve | Todos los reportes; gestiona los de su municipalidad | Solo los reportes de su comuna **validados por la comunidad** (`validacion.validado`) |
+| Qué hace | Cambia estados, deriva, da veredictos | Nada: solo mira (no reporta, no confirma, no gestiona) |
+| Cómo se liga | `operadorId` → `operadores/{id}` | `organismoId` → `organismos/{id}` |
+
+### En la app
+
+Al entrar, el inicio de una cuenta de organismo ofrece **Reportes validados** (`/validados`), Quejas y sugerencias, Mi perfil y Configuración. No le aparecen Crear un reporte, Mis reportes, Mapa de incidencias, Cerca de mí ni el resumen «Tus reportes». «Reportes validados» muestra el mapa y la lista de los validados de su comuna, del más nuevo al más antiguo (hasta 500), y cada uno abre el detalle en modo lectura: el bloque de confirmación dice «Este reporte ya fue validado por la comunidad y llegó a tu organismo» y no hay botones de gestión. La campana queda vacía: el organismo no tiene reportes propios.
+
+Un acceso del inicio se muestra a un organismo solo si lo pide: `roles: ['organismo']` o `paraOrganismo: true` (`nucleo/modulos/modulo.model.ts`). Así, un módulo nuevo no le aparece por accidente a una cuenta que las reglas no dejarían usarlo.
+
+| Dónde | Qué |
+|---|---|
+| `modulos/mapa-incidencias/paginas/validados/` | La pantalla «Reportes validados». |
+| `services/report-query.service.ts` | `validadosDeOrganismo()`: filtra por `organismo.id` y `validacion.validado`, como exigen las reglas. Si falta el índice, avisa en la consola y ordena en el teléfono. |
+| `models/user-profile.model.ts` | El rol `organismo`, `organismoId`, `esCuentaDeOrganismo()` y `esCuentaInstitucional()` (operador u organismo: no reportan). |
+| `nucleo/modulos/registro.ts` | Qué accesos ve cada rol. |
+| `modulos/confianza/datos/confianza.service.ts` | El motivo de bloqueo `organismo` (no confirma). |
+| `modulos/avisos/datos/avisos.service.ts` | No escucha reportes propios de un organismo. |
+| `modulos/perfil/` | «Organismo» como rol y el nombre de su municipalidad en Mi perfil. |
+
+### Reglas e índice
+
+`firestore.rules` 1.2 hace que **la garantía esté en el servidor**: el organismo solo lee un reporte (y sus confirmaciones, historial y foto) si es de su `organismoId` y está validado; no crea reportes ni confirmaciones, no gestiona, y no se cambia el `organismoId` ni el `role`. Nadie se registra solo como organismo. Para los demás roles no cambia nada. Detalle y casos en `GUIA_DIAGNOSTICO.md` («Cuenta de organismo (1.2)»).
+
+Cada lectura de reportes lee también el perfil de quien consulta, para saber si es un organismo (una lectura más por consulta, no por documento).
+
+`firestore.indexes.json` suma `reports (organismo.id, validacion.validado, createdAt desc)`. Hay que desplegar las dos cosas:
+
+```cmd
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+### Crear las cuentas
+
+`scripts/crear-cuentas-municipales.mjs` crea por defecto las cuentas de organismo de Maipú (`muni_13119`), Cerrillos (`muni_13102`) y Pudahuel (`muni_13124`): `organismo.<comuna>@ciudadalerta.test`, con el nombre de la municipalidad, `role: 'organismo'` y su `organismoId`, y una contraseña al azar que se muestra una sola vez. Sin `--aplicar` solo muestra lo que haría. Con `--rol=operador` crea cuentas de operador, como antes. Las opciones están al principio del archivo.
+
+Si antes se corrió la versión que creaba operadores, el script avisa de esas cuentas (`operador.<comuna>@…`) pero no las borra: si no se usan, se borran en Firebase → Authentication y su perfil en `users/{uid}`.
+
+### Lo que falta en el portal web
+
+`main-web` **no se modificó**. A nadie más le cambia nada, pero si una cuenta de organismo entra al portal hoy, ve errores de permiso: el mapa escucha la colección `reports` completa y «Mis reportes» consulta por `uid`, y las reglas le niegan las dos cosas. Para que el portal la atienda (archivos de `portal-web/src`):
+
+1. **`context/AuthContext.tsx`:** leer `organismoId` del perfil, igual que `operadorId`.
+2. **`components/Navbar/Navbar.tsx`:** `organismo: 'Organismo'` en `ETIQUETA_ROL`, y ocultarle «Historial» como al operador.
+3. **`pages/Landing/Landing.tsx`:** el acceso propio del organismo lleva al mapa («Reportes validados»), no a «Mis reportes».
+4. **`components/Map/MapaSantiago.tsx`:** para un organismo, cambiar `onSnapshot(collection(db, 'reports'))` por `query(collection(db, 'reports'), where('organismo.id', '==', perfil.organismoId), where('validacion.validado', '==', true))`, y ocultarle «Confirmar» como al operador (`esOperador`).
+5. **`pages/Historial/Historial.tsx`:** a un organismo, redirigirlo al mapa.
+6. **`pages/Admin/AdminCuentas.tsx`** (opcional): para dar de alta organismos desde el panel, el perfil debe tener exactamente `uid`, `email`, `displayName` (1 a 60), `role: 'organismo'`, `organismoId`, `trustLevel: 0`, `validatedReports: 0`, `emailVerified`, `createdAt` y `updatedAt` (`creacionCuentaOrganismo` en las reglas). Como `/users` no se puede listar, el panel necesitaría guardar la lista en otro lado para mostrarlas; mientras tanto, el script basta.
+
+La campana (`CampanaAvisos`, `AvisosContext`) ya no hace nada para roles que no sean ciudadano o admin, así que no hay que tocarla.
+
+Pruebas: 10 unitarias nuevas (469 en total) y 12 de punta a punta (144), con la cuenta `orgmaipu` de la maqueta y el escenario `conValidados`. En las reglas, 18 casos nuevos en `reglas.mjs` (125) y 16 en `reglas-ataques.mjs`. Casos manuales: CP-ORG-01 a CP-ORG-16.
+
+### Instalar
+
+En la carpeta del repositorio, en `cmd`:
+
+```cmd
+git switch main-mobile
+git pull origin main-mobile
+git am "C:\ruta\cuentas-organismo.mbox"
+git log --oneline -5
+
+cd ciudad-alerta-app
+npm run test:una-vez
+npm run lint
+npm run diagnostico
+npm run diagnostico:reglas
+npm run e2e
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+Después, para crear las tres cuentas (la clave de cuenta de servicio va FUERA del repositorio):
+
+```cmd
+set GOOGLE_APPLICATION_CREDENTIALS=C:\claves\ciudad-alerta-admin.json
+node scripts/crear-cuentas-municipales.mjs
+node scripts/crear-cuentas-municipales.mjs --aplicar
+```
+
+Sin dependencias nuevas. Después: `git push origin main-mobile`.

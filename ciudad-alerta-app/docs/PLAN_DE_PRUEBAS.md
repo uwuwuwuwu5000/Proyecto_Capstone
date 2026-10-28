@@ -36,6 +36,7 @@ responsable y evidencia (captura o registro de consola).
 | U2 | ciudadano2@prueba.cl | ciudadano | Confirmaciones |
 | U3 | operador@prueba.cl | operador | Gestión de estados |
 | U4 | correo real del equipo | ciudadano | Recuperación de contraseña |
+| U5 | organismo.maipu@ciudadalerta.test | organismo (Maipú) | Ver los reportes validados (1.2) |
 
 Antes de comenzar, eliminar los reportes creados en sprints anteriores: los documentos sin
 los campos `geohash` y `organismo` quedan fuera de las consultas del mapa y distorsionan los
@@ -475,6 +476,31 @@ Las cuentas más nuevas solo usan la ubicación actual.
 | CP-VER-16 | Autor con 760 PC | Veredicto real | «sin cambio de PC»; el aviso dice que ya tiene el máximo | C | F |
 | CP-VER-17 | U3, modo avión | «Es real» y confirmar | «Sin conexión: el veredicto no se guardó»; nada cambia | B | F |
 
+### Cuenta de organismo (1.2)
+
+La cuenta de organismo es de solo lectura: ve, en «Reportes validados», los reportes de su
+comuna que la comunidad ya validó (`validacion.validado`). Se crea con
+`scripts/crear-cuentas-municipales.mjs` (GUIA_MODULOS, sección 16).
+
+| ID | Precondición | Pasos | Resultado esperado | Pri | Tipo |
+|---|---|---|---|---|---|
+| CP-ORG-01 | U5 | Entrar | El inicio ofrece «Reportes validados», Quejas y sugerencias, Mi perfil y Configuración; no aparecen Crear un reporte, Mis reportes, Mapa de incidencias, Cerca de mí ni «Tus reportes» | A | F |
+| CP-ORG-02 | U5; Maipú con reportes validados y sin validar | Abrir «Reportes validados» | Solo los validados de Maipú, en el mapa y en la lista, con el total | A | F |
+| CP-ORG-03 | U5; un reporte validado de Pudahuel | Abrir «Reportes validados» | El de Pudahuel no aparece | A | S |
+| CP-ORG-04 | U5 | Tocar un reporte de la lista o del mapa | Detalle con foto y seguimiento y «llegó a tu organismo»; sin Confirmar ni botones de Gestión | A | F |
+| CP-ORG-05 | U5 | Abrir por enlace el detalle de un reporte de Maipú sin validar | «No encontramos esta incidencia»; no se ve ningún dato | A | S |
+| CP-ORG-06 | U5; U1 y U2 validan un reporte nuevo de Maipú (100 puntos y 3 votos) | «Actualizar» | El reporte aparece en la lista | A | I |
+| CP-ORG-07 | U5; Maipú sin reportes validados | Abrir «Reportes validados» | «Todavía no hay reportes validados en tu comuna.» | B | F |
+| CP-ORG-08 | U5, modo avión | Abrir «Reportes validados» | Mensaje de error con Reintentar | B | F |
+| CP-ORG-09 | U1 | Abrir `/validados` | «Esta pantalla es para las cuentas de organismo»; no consulta nada | B | S |
+| CP-ORG-10 | U5 con un cliente modificado | Crear un reporte o una confirmación | Denegada por las reglas | A | S |
+| CP-ORG-11 | U5 | Cambiar su `organismoId` o su `role` en `users/{uid}` | Denegada | A | S |
+| CP-ORG-12 | U1 | Cambiarse el `role` a `organismo`, o registrarse como organismo | Denegada | A | S |
+| CP-ORG-13 | U5 | Abrir la campana de avisos | Vacía y sin mensaje de error | B | UX |
+| CP-ORG-14 | Clave de servicio configurada | `node scripts/crear-cuentas-municipales.mjs` (sin `--aplicar`) | Muestra el plan de las tres comunas y no escribe nada | A | I |
+| CP-ORG-15 | CP-ORG-14 con `--aplicar`, dos veces | Revisar Authentication y `users` | Tres cuentas con `role: 'organismo'` y su `organismoId`; la segunda corrida no duplica ni cambia contraseñas | B | I |
+| CP-ORG-16 | U5 recién creada | Primera entrada: aceptar los términos | Entra al inicio (las reglas aceptan la actualización) | A | F |
+
 ---
 
 ## 16. Mi perfil e inicio (feedback Sprint 5)
@@ -726,8 +752,9 @@ alguno falla, la entrega se detiene.
 | 1.0 · Corregir o retirar un reporte | CP-AUT-01 a CP-AUT-08, CP-SEC-39 a CP-SEC-41 |
 | 1.0 · Borrador sin conexión | CP-BOR-01 a CP-BOR-11, CP-CFG-15 |
 | 1.0 · Bienvenida | CP-BIE-01 a CP-BIE-06 |
+| 1.2 · Cuenta de organismo | CP-ORG-01 a CP-ORG-16 |
 
-**Total: 415 casos** — 256 de prioridad A, 134 de prioridad B y 25 de prioridad C.
+**Total: 431 casos** — 267 de prioridad A, 139 de prioridad B y 25 de prioridad C.
 
 Los casos de prioridad A constituyen el criterio de aceptación de la entrega: ninguno puede
 quedar en estado Fallido. Los de prioridad B se registran como deuda conocida si no alcanzan
@@ -804,7 +831,7 @@ cada pantalla, que se lea, que nada se salga de la pantalla en un teléfono de 3
 de punta a punta, incluido cortar la señal. Cubren de forma automática, entre otros, CP-ACC-01,
 CP-ACC-02, CP-ACC-11, CP-DES-08, CP-DUP-01, CP-UBI-14 a CP-UBI-17, CP-UBI-19, CP-UBI-20, CP-UBI-24, CP-BOR-01 a CP-BOR-04, CP-BOR-11, CP-TER-04,
 CP-TER-05, CP-ELI-01 a CP-ELI-03, CP-ELI-06, CP-ELI-08, CP-BIE-02, CP-CFG-02, CP-CFG-05,
-CP-CFG-15, CP-CTO-01 y CP-EMG-01. No reemplazan los casos en el
+CP-CFG-15, CP-CTO-01, CP-EMG-01, CP-ORG-01 a CP-ORG-04, CP-ORG-07 y CP-ORG-09. No reemplazan los casos en el
 teléfono (sección 17): la cámara, el GPS, los permisos de Android y Firebase real quedan fuera.
 
 Una prueba nueva va junto al archivo que prueba, con el mismo nombre y `.spec.ts`; si usa

@@ -4,11 +4,11 @@ Cómo se prueba la app, cómo correr cada tipo de prueba en Windows y cómo escr
 
 | Tipo | Comando (desde `ciudad-alerta-app`) | Cuántas | Tiempo | Qué atrapa |
 |---|---|---|---|---|
-| Unitarias | `npm run test:una-vez` | 451 en 78 archivos | ~2 min | La lógica de servicios, guards y pantallas: validaciones, errores de red, carreras al pasar rápido de una pantalla a otra, escuchas que quedan abiertas |
+| Unitarias | `npm run test:una-vez` | 469 en 80 archivos | ~2 min | La lógica de servicios, guards y pantallas: validaciones, errores de red, carreras al pasar rápido de una pantalla a otra, escuchas que quedan abiertas |
 | Paquete `comun` | `npm run test:comun` | | segundos | Estados, transiciones, confianza, territorio, comparados con `firestore.rules` |
-| Reglas | `npm run diagnostico:reglas` | 100 casos | ~1 min | Lo que Firestore acepta o rechaza, en el emulador |
+| Reglas | `npm run diagnostico:reglas` | 125 casos | ~1 min | Lo que Firestore acepta o rechaza, en el emulador |
 | Diagnóstico | `npm run diagnostico` | | ~5 s | Imports, rutas, íconos, módulos, catálogos, paletas fijas, pruebas que no prueban nada |
-| De punta a punta | `npm run e2e` | 132 | ~7 min | La app compilada en un teléfono simulado: que cada pantalla abra sin errores, se lea bien y que los flujos completos funcionen |
+| De punta a punta | `npm run e2e` | 144 | ~7 min | La app compilada en un teléfono simulado: que cada pantalla abra sin errores, se lea bien y que los flujos completos funcionen |
 | Servicio de privacidad | `npm test` en `servicio-privacidad` | | ~1 min | El difuminado con los modelos reales |
 
 Ninguna usa el proyecto real de Firebase ni internet.
@@ -135,10 +135,10 @@ Si se cambió solo una prueba (no la app), basta con `npx playwright test -c e2e
 
 | Archivo | Qué prueba |
 |---|---|
-| `pantallas.spec.ts` | Las 28 pantallas con la cuenta que las usa, en tema oscuro y claro, y con el texto «Muy grande» |
+| `pantallas.spec.ts` | Las 31 pantallas con la cuenta que las usa, en tema oscuro y claro, y con el texto «Muy grande» |
 | `flujos-reporte.spec.ts` | Crear un reporte (foto, ubicación, comuna, aviso de emergencia), marcarlo en otro punto del mapa (y que una cuenta nueva no pueda), descripción corta, un reporte parecido cerca, servicio de privacidad caído, sin señal (en el teléfono y en la web), corregir, retirar y contactar al organismo |
 | `flujos-cuenta.spec.ts` | Entrar, guards, cerrar sesión, crear cuenta, términos nuevos, introducción, eliminar la cuenta |
-| `flujos-equipo.spec.ts` | La operadora cambia un estado y a la vecina le llega el aviso; bandeja; soporte |
+| `flujos-equipo.spec.ts` | La operadora cambia un estado y a la vecina le llega el aviso; bandeja; soporte; la cuenta de organismo ve solo los validados de su comuna y no reporta ni confirma |
 | `flujos-ajustes.spec.ts` | Tema, tamaño del texto, pantalla al abrir, introducción, «Borrar datos guardados» |
 | `revisor.spec.ts` | Los revisores de abajo, con páginas hechas a mano |
 | `humo.spec.ts` | La prueba más corta: si esta falla, falla todo |
@@ -163,6 +163,9 @@ Todas con la contraseña `secreta1`:
 | `admin` | admin@prueba.cl | Administración |
 | `antigua` | antigua@prueba.cl | Cuenta que no aceptó los términos vigentes |
 | `nueva` | nueva@prueba.cl | Cuenta creada hace 2 días: todavía no puede elegir en el mapa dónde marcar un reporte (pide 7) |
+| `orgmaipu` | organismo@maipu.cl | Cuenta de organismo de la Municipalidad de Maipú (1.2): solo ve los reportes validados de su comuna |
+
+Con `escenario: { conValidados: true }` en `abrir()`, la maqueta suma dos reportes de Maipú validados por la comunidad y uno de Pudahuel, también validado, que el organismo de Maipú no debe ver.
 
 ### Escribir una prueba
 
@@ -225,7 +228,7 @@ Si el servicio de la app cambia la firma de esos métodos, la maqueta deja de co
 
 ## 3. Reglas, diagnóstico y `comun`
 
-Ver `GUIA_DIAGNOSTICO.md`. Las reglas se prueban en el emulador con 100 casos: 27 controles (lo que debe funcionar), 70 bloqueos (lo que debe rechazarse) y 3 brechas conocidas que fallan a propósito hasta que se corrijan.
+Ver `GUIA_DIAGNOSTICO.md`. Las reglas se prueban en el emulador con 125 casos: 32 controles (lo que debe funcionar) y 93 bloqueos (lo que debe rechazarse). Desde la 1.1 no queda ninguna brecha conocida abierta.
 
 ---
 
