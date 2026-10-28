@@ -361,6 +361,22 @@ export async function getDocs(q) {
 }
 
 /**
+ * Tamaño aproximado de un documento según «Storage size calculations» de
+ * Firestore: textos en bytes UTF-8 + 1, números y fechas 8, booleanos y null 1,
+ * nombres de campo en bytes + 1, más el nombre del documento y 32 de base.
+ */
+const TAMANO_MAXIMO_DOCUMENTO = 1_048_576;
+function tamanoDeValor(v) {
+  if (v === null || typeof v === 'boolean') return 1;
+  if (typeof v === 'number' || v instanceof Marca) return 8;
+  if (typeof v === 'string') return Buffer.byteLength(v, 'utf8') + 1;
+  if (Array.isArray(v)) return v.reduce((s, x) => s + tamanoDeValor(x), 0);
+  if (typeof v === 'object') return Object.entries(v).reduce((s, [k, x]) => s + Buffer.byteLength(k, 'utf8') + 1 + tamanoDeValor(x), 0);
+  return 0;
+}
+const tamanoDeDocumento = (ruta, datos) => Buffer.byteLength(ruta, 'utf8') + 16 + 32 + tamanoDeValor(datos);
+
+/**
  * Aplica un lote de escrituras: [{ tipo: set|update|delete, ref, datos, merge }].
  * Todas se evalúan contra el estado previo; getAfter ve el estado final.
  */
@@ -379,6 +395,10 @@ async function confirmar(db, escrituras) {
       if (actual === undefined) throw new FirestoreError('not-found', `No document to update: ${e.ref.path}`);
       nuevo = aplicarActualizacion(actual, e.datos, hora);
     } else nuevo = undefined;
+    if (nuevo !== undefined && tamanoDeDocumento(e.ref.path, nuevo) > TAMANO_MAXIMO_DOCUMENTO) {
+      // Como el emulador: un documento de más de 1 MiB se rechaza antes de las reglas.
+      throw new FirestoreError('invalid-argument', `Document '${e.ref.path}' cannot be written because its size exceeds the maximum allowed size of 1,048,576 bytes.`);
+    }
     if (nuevo === undefined) despues.delete(e.ref.path);
     else despues.set(e.ref.path, nuevo);
     nuevos.push(nuevo);

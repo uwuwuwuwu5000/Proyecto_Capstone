@@ -15,7 +15,7 @@
  *   B · Veredicto: efecto en los PC     +10 / −15 y topes [0, 760].
  *   C · Tolerancias de tiempo           TOLERANCIA_TIEMPO_RESOLUCION_MS vs reglas.
  *   D · numeroDeDia y horario de Chile  el desfase fijo UTC−3 vs America/Santiago.
- *   E · Unicode y tamaño del texto      .length (app) vs puntos de código (reglas).
+ *   E · Largo de los textos              .length (formulario) vs size() (reglas).
  *   F · Geografía                        distancia, geohash y límites de coordenadas.
  *   G · Transiciones de estado           invariantes del ciclo de vida.
  */
@@ -26,6 +26,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { Informe } from './comun.mjs';
+import { largoDeTexto } from './simulador/interprete.mjs';
 
 const APP = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const COMUN = resolve(APP, '..', 'comun');
@@ -163,30 +164,35 @@ else informe.agregar('error', 'numeroDeDia no avanza de uno en uno cada 24 h');
 // ════════════════════════════════════════════════════════════════════════════
 // E · Unicode y tamaño del texto
 // ════════════════════════════════════════════════════════════════════════════
-informe.seccion('E · Unicode: .length (app) vs puntos de código (reglas size())');
-const puntosDeCodigo = (s) => [...s].length;
+// La unidad de size() es la del simulador (UTF-16, lo que mostró el emulador:
+// 6 emojis valen 12). Para revisar otra hipótesis: SIMULADOR_UNIDAD_TEXTO=bytes
+// o =puntos. reglas-ataques.mjs --emulador la mide de verdad (sección G).
+const unidad = process.env.SIMULADOR_UNIDAD_TEXTO ?? 'utf16';
+informe.seccion(`E · Largo de los textos: formulario (.length) vs reglas (size() en ${unidad})`);
 const muestras = [
+  { nombre: '5 emojis', texto: '👍'.repeat(5) },
   { nombre: '6 emojis', texto: '👍'.repeat(6) },
-  { nombre: 'familia (emoji compuesto)', texto: '👨‍👩‍👧‍👦' },
+  { nombre: 'familia (emoji compuesto)', texto: '👨‍👩‍👧‍👦 en la plaza' },
+  { nombre: '5 letras con tilde', texto: 'ááááá' },
   { nombre: 'acento combinante ×12', texto: 'é'.repeat(12) },
+  { nombre: '250 «ñ» (500 bytes)', texto: 'ñ'.repeat(250) },
+  { nombre: '500 caracteres con tildes', texto: 'Árbol caído en la vía. '.repeat(22).slice(0, 500) },
   { nombre: 'texto normal de 12', texto: 'bache grande' },
 ];
-let hayDesajuste = false;
+let desajustes = 0;
 for (const m of muestras) {
-  const js = m.texto.length; // lo que ve el validador del formulario (.length)
-  const cp = puntosDeCodigo(m.texto); // lo que cuenta size() de las reglas
-  const prob = C.problemaDescripcion?.(m.texto); // null si el formulario lo aceptaría
-  const pasaForm = prob === null || prob === undefined; // (según DESCRIPCION_MIN/MAX con .length tras trim)
-  const pasaRegla = cp >= 10 && cp <= 500;
-  if (js !== cp) {
-    hayDesajuste = true;
-    const nivel = pasaForm !== pasaRegla ? 'advertencia' : 'info';
-    informe.agregar(nivel, `«${m.nombre}»: .length=${js}, puntos de código=${cp}` + (pasaForm !== pasaRegla ? ` → el formulario lo ${pasaForm ? 'acepta' : 'rechaza'} pero las reglas lo ${pasaRegla ? 'aceptan' : 'rechazan'}` : ''), {
-      solucion: pasaForm !== pasaRegla ? 'Medir el largo en puntos de código en el formulario ([...texto].length) para que coincida con size() de las reglas.' : undefined,
+  const texto = m.texto.trim();
+  const pasaForm = C.problemaDescripcion(texto) === null; // lo que decide el formulario
+  const largo = largoDeTexto(texto);
+  const pasaRegla = largo >= C.DESCRIPCION_MIN && largo <= C.DESCRIPCION_MAX;
+  if (pasaForm !== pasaRegla) {
+    desajustes++;
+    informe.agregar('advertencia', `«${m.nombre}»: el formulario lo ${pasaForm ? 'acepta' : 'rechaza'} (.length=${texto.length}) y las reglas lo ${pasaRegla ? 'aceptan' : 'rechazan'} (size()=${largo})`, {
+      solucion: 'Medir en el formulario con la misma unidad que size() de las reglas.',
     });
   }
 }
-if (!hayDesajuste) informe.ok('no se detectó diferencia de conteo entre la app y las reglas en las muestras');
+if (!desajustes) informe.ok(`el formulario y las reglas deciden igual en las ${muestras.length} muestras (emojis, tildes, ñ, 500 caracteres)`);
 
 // ════════════════════════════════════════════════════════════════════════════
 // F · Geografía: distancia, geohash y coordenadas

@@ -169,12 +169,13 @@ else informe.agregar('error', `el largo de la descripción difiere: app ${descMi
   solucion: 'Igualar DESCRIPCION_MIN/MAX a los límites de descripcionValida().',
 });
 
-// A.6 · Unidad de medida del texto: la app usa .length (UTF-16); las reglas, size() (puntos de código)
+// A.6 · Unidad de medida del texto. La app mide con .length (unidades UTF-16).
+// El emulador cuenta igual con size() (6 emojis valen 12): no hay desajuste.
+// Se dejaba como advertencia por un supuesto (puntos de código) que el emulador
+// desmintió; reglas-ataques.mjs (sección G) lo vuelve a medir en cada corrida.
 if (/\.length/.test(descTxt ?? '') && /size\(\)/.test(reglas)) {
-  informe.agregar('advertencia', 'la app mide el texto con .length (UTF-16) y las reglas con size() (puntos de código)', {
-    archivo: 'comun/src/reportes/descripcion.ts',
-    detalle: 'Un texto con emojis o pares subrogados cuenta distinto: puede pasar el formulario y rechazarse en el servidor, o al revés.',
-    solucion: 'Medir en puntos de código en el cliente: [...texto].length en vez de texto.length.',
+  informe.agregar('info', 'la app mide los textos con .length (UTF-16), la misma unidad que size() en el emulador', {
+    detalle: 'Confírmalo con `node scripts/diagnostico/reglas-ataques.mjs --emulador` (sección G).',
   });
 }
 
@@ -242,23 +243,29 @@ for (const [coleccion, listas] of Object.entries(indicePorColeccion)) {
 // ════════════════════════════════════════════════════════════════════════════
 informe.seccion('C · Límites de formulario vs límites de las reglas');
 
-// C.1 · BUG · displayName del registro sin tope de largo, pero el reporte lo recorta a 60
+// C.1 · El nombre del perfil debe caber en autorNombre: las reglas exigen que el
+// reporte lleve exactamente el displayName del perfil y lo topan en N. Un nombre
+// más largo dejaba la cuenta sin poder reportar nunca (bug corregido en la 1.1).
 const login = leerLimpio(RAIZ, 'src', 'app', 'pages', 'login', 'login.page.ts') ?? '';
-const reportService = leerLimpio(RAIZ, 'src', 'app', 'modulos', 'reportes', 'datos', 'report.service.ts') ?? '';
 const nombreMin = Number(login.match(/displayName:\s*\[''\s*,\s*\[[^\]]*minLength\((\d+)\)/)?.[1]);
-const tieneMaxLenNombre = /displayName:\s*\[''\s*,\s*\[[^\]]*maxLength\((\d+)\)/.test(login);
-const recorte = Number(reportService.match(/\.slice\(0,\s*(\d+)\)/)?.[1]);
+const maxNombreForm = valorNumerico(login.match(/displayName:\s*\[''\s*,\s*\[[^\]]*maxLength\(([A-Za-z0-9_]+)\)/)?.[1]);
+const topeReporte = Number(cuerpoFuncion(reglas, 'autorNombreValido').match(/autorNombre\.size\(\)\s*<=\s*(\d+)/)?.[1]);
+const topePerfil = Number(cuerpoFuncion(reglas, 'creacionConValoresIniciales').match(/displayName\.size\(\)\s*<=\s*(\d+)/)?.[1]);
 const reglaExigeIgual = /get\(perfil\)\.data\.displayName == datos\.autorNombre/.test(reglas);
-if (!tieneMaxLenNombre && recorte && reglaExigeIgual) {
-  informe.agregar('error', `BUG · un nombre de más de ${recorte} caracteres impide crear reportes`, {
+if (reglaExigeIgual && (Number.isNaN(maxNombreForm) || maxNombreForm > topeReporte)) {
+  informe.agregar('error', `BUG · un nombre de más de ${topeReporte} caracteres impide crear reportes`, {
     archivo: 'src/app/pages/login/login.page.ts',
-    detalle: `El registro admite displayName de cualquier largo (solo minLength(${nombreMin || '?'}), sin maxLength). ` +
-      `El perfil guarda el nombre completo, pero report.service.ts lo recorta a ${recorte} (slice(0,${recorte})). ` +
-      `La regla exige displayName == autorNombre, así que si el nombre supera ${recorte}, la creación del reporte queda denegada para siempre.`,
-    solucion: `Poner Validators.maxLength(${recorte}) en el displayName del registro (y maxlength en el input), o no recortar y validar el largo antes de guardar el perfil.`,
+    detalle: `El registro admite displayName de ${Number.isNaN(maxNombreForm) ? 'cualquier largo' : `hasta ${maxNombreForm}`} (minLength(${nombreMin || '?'})). ` +
+      `La regla exige displayName == autorNombre y autorNombre ≤ ${topeReporte}: con un nombre más largo, la creación del reporte queda denegada para siempre.`,
+    solucion: `Validators.maxLength(${topeReporte}) en el displayName del registro (y maxlength en el input).`,
+  });
+} else if (reglaExigeIgual && (Number.isNaN(topePerfil) || topePerfil > topeReporte)) {
+  informe.agregar('advertencia', 'el formulario acota el nombre, pero las reglas no lo topan al crear el perfil', {
+    detalle: 'Otro cliente (el portal, o una versión antigua de la app) podría crear perfiles que después no pueden reportar.',
+    solucion: `En creacionConValoresIniciales: displayName.size() <= ${topeReporte}.`,
   });
 } else {
-  informe.ok('displayName del registro acotado o sin recorte en el reporte');
+  informe.ok(`nombre para mostrar: formulario ≤ ${maxNombreForm}, reglas al crear ≤ ${topePerfil}, autorNombre ≤ ${topeReporte}`);
 }
 
 // C.2 · Largos de soporte: asunto, preview, mensaje

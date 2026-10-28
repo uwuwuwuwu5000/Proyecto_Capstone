@@ -23,11 +23,24 @@
  *
  * Diferencias conocidas con Firestore real (por eso los hallazgos se deben
  * confirmar con el emulador): las consultas de listado se evalúan con un
- * documento simbólico armado con sus filtros de igualdad, `size()` de un
- * texto cuenta caracteres Unicode y los números se distinguen como enteros o
- * decimales igual que el SDK de JavaScript (un número con decimales en cero es
- * entero).
+ * documento simbólico armado con sus filtros de igualdad y los números se
+ * distinguen como enteros o decimales igual que el SDK de JavaScript (un número
+ * con decimales en cero es entero).
+ *
+ * `size()` de un texto cuenta unidades UTF-16, como `.length` en JavaScript:
+ * es lo que mostró el emulador (6 emojis cuentan 12, no 6). La documentación
+ * solo dice «número de caracteres»; `reglas-ataques.mjs --emulador` lo vuelve
+ * a medir en cada corrida. Para probar otra hipótesis:
+ * SIMULADOR_UNIDAD_TEXTO=bytes | puntos.
  */
+
+/** Unidad de `size()` en textos: utf16 (por defecto), bytes (UTF-8) o puntos (de código). */
+const UNIDAD_TEXTO = process.env.SIMULADOR_UNIDAD_TEXTO ?? 'utf16';
+export function largoDeTexto(texto) {
+  if (UNIDAD_TEXTO === 'bytes') return Buffer.byteLength(texto, 'utf8');
+  if (UNIDAD_TEXTO === 'puntos') return [...texto].length;
+  return texto.length;
+}
 
 // ─── Valores ──────────────────────────────────────────────────────────────────
 
@@ -939,7 +952,7 @@ function metodo(nodo, entorno, ctx) {
 
   switch (t) {
     case 'string':
-      if (n === 'size') return [...obj].length;
+      if (n === 'size') return largoDeTexto(obj);
       if (n === 'matches') {
         const [re] = args;
         if (typeof re !== 'string') falla('matches() espera texto');

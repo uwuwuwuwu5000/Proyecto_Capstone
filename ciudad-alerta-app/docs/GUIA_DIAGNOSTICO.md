@@ -26,7 +26,7 @@ Severidades:
 | ⚠ Advertencia | Bug probable o riesgo a futuro. |
 | ℹ Información | Dato útil, sin acción inmediata. |
 
-Los scripts terminan con código 1 si hay errores o brechas, así que sirven también en GitHub Actions. Mientras sigan las 3 brechas conocidas de las reglas, `npm run diagnostico:reglas` termina con código 1 aunque todos los controles y bloqueos estén en verde.
+Los scripts terminan con código 1 si hay errores o brechas, así que sirven también en GitHub Actions. Desde la 1.1 (reglas endurecidas) `diagnostico:reglas` y `diagnostico:ataques` terminan con código 0: no queda ninguna brecha conocida abierta.
 
 ---
 
@@ -100,7 +100,7 @@ Lee cada colección una vez; con los datos del piloto son pocos miles de lectura
 
 ## 3. Reglas — `npm run diagnostico:reglas`
 
-Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 100 casos y lo apaga. **Nunca toca el proyecto real.**
+Prueba las reglas de verdad: levanta el emulador de Firestore con un proyecto de prueba (`demo-ciudad-alerta`), carga `firestore.rules`, ejecuta 107 casos y lo apaga. Sin Java, `npm run diagnostico:reglas-sim` corre los mismos casos en el simulador. **Nunca toca el proyecto real.**
 
 Requisitos:
 
@@ -115,9 +115,9 @@ La versión de `@firebase/rules-unit-testing` depende de la de `firebase`: 13.x 
 Tres tipos de caso:
 
 - **Control (27):** flujos reales de la app que deben funcionar. Por ejemplo, crear un reporte con foto, que un admin cambie un estado, resolver un reporte guardando su tiempo de resolución (F12), abrir un ticket o confirmar con peso. Desde la 1.0 también aceptar los términos, dejar anónimos los reportes y los tickets de soporte al eliminar la cuenta, y que el autor corrija o retire su reporte sin revisar. Si alguno falla, una regla está bloqueando a usuarios legítimos.
-- **Bloqueo (70):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Desde la 1.0, además: cambiarse el `operadorId`, ser admin con el correo sin verificar, fechar un reporte en el pasado, anonimizar o retirar el reporte de otro, corregir uno que ya está en revisión y anotar un retiro en el historial sin cerrar el reporte. Y para los tickets: borrar los datos de contacto del ticket de otro, cambiar algo más al anonimizarlo o firmarlo con otro nombre. Si alguno pasa, es una brecha.
+- **Bloqueo (80):** cosas que deben rechazarse. Por ejemplo, leer el perfil de otro, subirse el nivel de confianza, firmar con otro nombre, que el operador de Maipú gestione un reporte de Pudahuel, inventar un tiempo de resolución o escribir en el ticket de otro. Desde la 1.0, además: cambiarse el `operadorId`, ser admin con el correo sin verificar, fechar un reporte en el pasado, anonimizar o retirar el reporte de otro, corregir uno que ya está en revisión y anotar un retiro en el historial sin cerrar el reporte. Y para los tickets: borrar los datos de contacto del ticket de otro, cambiar algo más al anonimizarlo o firmarlo con otro nombre. Si alguno pasa, es una brecha.
 - **Sistema de confianza** (25 de los anteriores, con el prefijo «Confianza:»): confirmación con peso, voto de peso 0 por correo sin verificar o cuenta nueva, validación al llegar a 100 puntos y 3 votos, contador del día, pausa de 20 s, límite diario, suspensión, puntos inventados, veredictos real y falso, y veredicto de un operador de otra comuna.
-- **Brecha (3):** huecos conocidos de las reglas actuales: campos extra al crear un reporte, fotos sin reporte y mensajes en tickets inexistentes. **Hoy fallan a propósito** y se ponen en verde cuando se corrigen. Las otras tres (el `operadorId`, el correo sin verificar y la fecha falsa) se cerraron en la 1.0 y ahora son bloqueos.
+- **Brecha (0):** huecos conocidos de las reglas. Los tres que quedaban (campos extra al crear un reporte, fotos sin reporte y mensajes en tickets inexistentes) se cerraron en la 1.1 y ahora son bloqueos, junto con siete casos nuevos de la 1.1: cambiarse el nombre por el de otra persona, apuntar a la foto de otro reporte, confirmar un reporte cerrado, anotar un cambio de estado que no se hizo, firmar un mensaje de soporte como el vecino, abrir un ticket con el correo de otra persona y corregir un reporte que ya tiene confirmaciones con peso. Antes, en la 1.0, se cerraron el `operadorId`, el correo sin verificar y la fecha falsa.
 
 Si fallan casos de control, revisa primero si cambió el formato de los documentos. Las funciones `perfil()` y `reporte()` del script imitan lo que escribe la app.
 
@@ -135,7 +135,11 @@ La contraparte agresiva de `reglas.mjs`. Corre sobre un **simulador de las regla
 - **B · Ataques dirigidos.** Alrededor de 50 intentos concretos de brecha con su impacto y su arreglo: subirse el nivel, declararse admin, suplantar nombres, reusar la foto de otro reporte, confirmar reportes cerrados, fabricar bitácoras, firmar mensajes de soporte como staff, subir fotos sin reporte, etc.
 - **C · Mutaciones generadas.** Toma una escritura válida y le aplica variaciones automáticas (campo extra, cambio de tipo, texto gigante, fecha falsa). Cada una debe seguir rechazándose.
 - **D · Lecturas por operación.** Cuántos documentos lee cada regla, contra el límite de 10 por operación de Firestore (solo en el simulador).
-- **E · Revisión estática.** Funciones de las reglas sin usar, creaciones sin lista blanca, lecturas que exponen datos.
+- **E · Revisión estática.** Funciones de las reglas sin usar, creaciones sin lista blanca (siguiendo las funciones que llaman), lecturas que exponen datos.
+- **F · Flujos reales.** Lo que escriben hoy la app y el portal (crear reportes, registrarse, confirmar, soporte, estados, borrar): deben pasar. Si uno falla, una regla nueva bloquea a usuarios legítimos.
+- **G · Unidad de `size()`.** Si las reglas cuentan los textos en unidades UTF-16 (como la app), en bytes o en puntos de código. En el emulador, cuenta UTF-16.
+
+Solo cuenta como brecha lo que de verdad se escribe: si Firestore rechaza algo por otro motivo (por ejemplo, un documento de más de 1 MiB), el caso sale en verde con el motivo.
 
 El simulador se calibra con los 100 casos de `reglas.mjs` (todos dan el mismo resultado). Aun así es una aproximación: confirma los hallazgos con `--emulador`.
 
@@ -199,31 +203,38 @@ Empaqueta `comun` y ejercita sus funciones puras contra las reglas y contra inva
 
 Las correcciones de las reglas deben hacerse sobre la versión del equipo. Ninguna cambia lo que la app escribe hoy, salvo la lista blanca de campos, que hay que armar con los campos exactos de cada colección.
 
-### Hallazgos de los scripts de seguridad ofensiva
+### Hallazgos de los scripts de seguridad ofensiva (y su corrección en la 1.1)
 
-Resultado al correrlos sobre el código actual.
+La primera corrida fue en el simulador; después se confirmó en el emulador real (`reglas-ataques.mjs --emulador`), que corrigió tres resultados:
 
-**Bug que impedía usar la app (nuevo, `contrato.mjs` y `logica.mjs`):**
+- **«dataUrl de 2 MB»** no era una brecha: Firestore rechaza el documento por pasar de 1 MiB antes de mirar las reglas, y el script contaba cualquier error distinto de «permiso denegado» como si se hubiera permitido. Ahora solo cuenta como brecha lo que de verdad se escribe.
+- **«emailVerified sin estarlo»** no era una brecha: el caso partía de un perfil ya verificado, así que no cambiaba nada. Se corrigió el caso; la regla siempre estuvo bien.
+- **Emojis:** el emulador cuenta 6 emojis como 12 caracteres, igual que `.length` en la app. **No había desajuste** (el simulador suponía puntos de código). La sección G de `reglas-ataques.mjs` mide la unidad en cada corrida.
 
-- **Un nombre de más de 60 caracteres impide crear reportes.** El registro acepta cualquier largo de nombre (solo `minLength(3)`, sin `maxLength`). El perfil guarda el nombre completo, pero `report.service.ts` lo recorta a 60 (`slice(0, 60)`), y la regla `autorNombreValido()` exige `displayName == autorNombre`. Si el nombre pasa de 60, la creación del reporte queda denegada para siempre, sin mensaje claro. Arreglo: `Validators.maxLength(60)` en el registro (y `maxlength` en el input), o validar el largo antes de guardar el perfil en vez de recortar.
-- **Emojis en la descripción.** El formulario mide con `.length` (UTF-16) y las reglas con `size()` (puntos de código). Una descripción de 6 emojis pasa el formulario (largo 12) pero la regla la ve como 6 y la rechaza. Arreglo: medir con `[...texto].length` en el formulario.
+**Bug corregido: un nombre de más de 60 caracteres impedía crear reportes.** El registro aceptaba cualquier largo, `report.service.ts` lo recortaba a 60 y la regla exige que el reporte lleve exactamente el `displayName` del perfil. Ahora el registro tiene `maxLength(60)` (`NOMBRE_MAXIMO`), `createUserDocument` recorta sin partir emojis (`recortarNombre`) y las reglas topan el nombre en 60 al crear el perfil.
 
-**Brechas de las reglas que confirma `reglas-ataques.mjs`** (ninguna da escalada de privilegios: rol, nivel y puntos están bien protegidos; son campos sin validar y faltas de coherencia):
+**Brechas cerradas en `firestore.rules` 1.1** (ninguna permitía subir de rol, nivel ni puntos; eran campos sin validar y faltas de coherencia):
 
-- **La creación de `reports` no tiene lista blanca (`hasOnly`).** Permite campos extra y, sobre todo, prefijar `resueltoAt`/`tiempoResolucionMs`/`retiradoPorAutor` (falsear métricas), reusar en `foto.path` la foto de otro reporte, y poner un `organismo.nombre` arbitrario (solo se valida `organismo.id`).
-- **`users`** no acota el tamaño ni el contenido de `displayName` ni `email` (ni al crear ni al actualizar): permite suplantar el nombre de otra persona y nombres enormes.
-- **Confirmaciones** sobre reportes ya cerrados o con veredicto: las reglas no miran el estado del reporte al confirmar.
-- **`statusHistory`**: la rama del gestor no exige que el reporte cambie de estado en el mismo lote (se puede fabricar bitácora/notificaciones sin mover el reporte).
-- **Soporte**: `autorEmail` y las fechas del ticket no se validan al crear; `lastMessagePreview` no se acota al actualizar; un gestor puede firmar un mensaje como `ciudadano`.
-- **`reportPhotos`**: se pueden subir fotos sin reporte, y el autor puede borrar la foto después de publicar (deja `foto.path` colgando).
-- **Edición del autor**: puede cambiar la descripción aunque ya tenga confirmaciones (el reporte sigue en «reportado»): cambio de carnada.
+- **`reports` al crear:** lista blanca de campos (ya no se nace con `resueltoAt`, `tiempoResolucionMs`, `retiradoPorAutor` ni campos inventados); la foto es la del propio reporte (`reportPhotos/{id}`, subida por quien reporta en el mismo lote, o su archivo en Cloud Storage); el nombre del organismo es el del catálogo; solo un admin marca `origen: 'portal_admin'`; la ubicación solo lleva `lat`, `lng`, `accuracy` y `fuente`.
+- **`users`:** lista blanca al crear; nombre de 1 a 60; nadie nace verificado si el token no lo dice; el nombre y el correo no se cambian a mano (solo al eliminar la cuenta o para completar un perfil antiguo).
+- **Confirmaciones:** no se confirma un reporte resuelto, cerrado o con veredicto (igual que ya decidía la app).
+- **`statusHistory`:** lista blanca, y la entrada del gestor debe viajar con el cambio de estado en el mismo lote.
+- **Soporte:** lista blanca del ticket y del mensaje; fechas del servidor; el correo de contacto es el de la sesión; el adelanto se acota también al actualizar; «staff» solo lo firma el equipo y «ciudadano» solo quien abrió el ticket; no hay mensajes en tickets inexistentes.
+- **`reportPhotos`:** lista blanca, fecha del servidor, solo con su reporte en el mismo lote; el autor ya no borra la foto de un reporte publicado.
+- **Edición del autor:** no corrige la descripción si ya hay confirmaciones con peso (la app oculta el botón y la transacción lo vuelve a comprobar); retirarlo sigue permitido.
 
-La raíz de casi todas es la misma: **listas blancas (`hasOnly`) al crear** y validar **coherencia entre documentos** (no solo el formato de cada campo).
+Los flujos de la app **y del portal** (`main-web`, sin tocarlo) se prueban en la sección F de `reglas-ataques.mjs`: crear reportes (con foto, en el mapa, con organismo genérico, desde el panel), registrarse, confirmar con el formato antiguo, abrir y responder tickets, cambiar estados y borrar reportes.
 
-**Avisos de higiene (`cliente.mjs`):** `.gitignore` no cubre `.env` ni una carpeta de claves; no hay Content-Security-Policy en `index.html`; un `console.error` registra el `uid`. **Sin secretos en el árbol ni en los 257 commits del historial.**
+**Queda abierto (decisión del equipo):**
 
-**Lo que está bien:** el servicio de privacidad pasa los 11 ataques de token, rechaza pixel bombs y SVG gigantes, elimina el EXIF/GPS de las fotos y tiene un CORS exacto sin comodín. Los cálculos de confianza de `comun` coinciden con las reglas en todo el rango. Rol, nivel de confianza y puntos no se pueden escalar.
+- **El formato antiguo de confirmación** (sin peso) no pasa por el límite diario ni la pausa de 20 s. Se mantiene porque el portal todavía lo escribe (`MapaSantiago.tsx`); cuando el portal use el formato con peso, se puede quitar de las reglas.
+- **Elegir el punto en el mapa** (cuentas de 7 días) se controla solo en la app, con la fecha de Authentication. Las reglas no ven esa fecha; con la del perfil podrían bloquear cuentas reparadas.
+- **Comuna incoherente con el organismo:** advertencia de calidad de datos. La comuna es un nombre y el catálogo usa códigos CUT: exigirlo en las reglas bloquearía reportes por una tilde.
+- **Lecturas abiertas:** cualquier cuenta lee el uid del autor y la ubicación exacta de los reportes (el mapa lo necesita). Si se quisiera ocultar, iría en un documento aparte.
+- **DST de Chile:** `numeroDeDia()` usa UTC−3 fijo; en invierno el contador del día se reinicia a las 23:00 (155 días al año). Bajo impacto.
 
-**Limitación conocida (no bug): DST de Chile.** `numeroDeDia()` usa un desfase fijo UTC−3; en invierno (UTC−4) el contador de confirmaciones se reinicia a las 23:00 locales, no a medianoche. 155 días al año. De bajo impacto; se puede documentar y dejar así, o calcular el día con la zona `America/Santiago`.
+**Avisos de higiene (`cliente.mjs`):** `.gitignore` no cubre `.env` ni una carpeta de claves; no hay Content-Security-Policy en `index.html`; un `console.error` registra el `uid`. **Sin secretos en el árbol ni en el historial de git.**
+
+**Lo que ya estaba bien:** el servicio de privacidad pasa los 11 ataques de token, rechaza pixel bombs y SVG gigantes, elimina el EXIF/GPS de las fotos y tiene un CORS exacto sin comodín. Los cálculos de confianza de `comun` coinciden con las reglas en todo el rango.
 
 Los informes completos (uno por script) quedan en `diagnostico/*.md` al correrlos.

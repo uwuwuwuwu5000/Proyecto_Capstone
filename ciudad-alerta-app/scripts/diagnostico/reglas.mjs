@@ -543,26 +543,46 @@ if (correosAdmin.length) {
 bloqueo('Un reporte no se crea con fecha falsa', () =>
   setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { createdAt: Timestamp.fromDate(new Date('2020-01-01')) })));
 
-// BRECHA: huecos conocidos de las reglas actuales
-brecha(
-  'Un reporte no acepta campos extra (validadoComunidad: true)',
-  () => setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { validadoComunidad: true })),
-  'En la creación de reports: && request.resource.data.keys().hasOnly([...campos que escribe la app...])',
-);
-brecha(
-  'No se suben fotos sin reporte',
-  () => setDoc(doc(como('ana'), 'reportPhotos/fantasma'), {
-    reportId: 'fantasma', ownerUid: 'ana', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA',
-  }),
-  'En reportPhotos create: && existsAfter(/databases/$(database)/documents/reports/$(reportId)) && getAfter(...).data.uid == request.auth.uid',
-);
-brecha(
-  'No se escriben mensajes en tickets inexistentes',
-  () => setDoc(doc(como('ana'), 'supportTickets/no_existe/messages/m1'), {
+// Brechas cerradas en la 1.1 (antes figuraban como BRECHA). Las encontró
+// reglas-ataques.mjs, que prueba además el resto de los cambios de la 1.1.
+bloqueo('Un reporte no acepta campos extra (validadoComunidad: true)', () =>
+  setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', { validadoComunidad: true })));
+bloqueo('No se suben fotos sin reporte', () =>
+  setDoc(doc(como('ana'), 'reportPhotos/fantasma'), {
+    reportId: 'fantasma', ownerUid: 'ana', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA', createdAt: serverTimestamp(),
+  }));
+bloqueo('No se escriben mensajes en tickets inexistentes', () =>
+  setDoc(doc(como('ana'), 'supportTickets/no_existe/messages/m1'), {
     ticketId: 'no_existe', autorUid: 'ana', autorRol: 'ciudadano', texto: 'Mensaje huérfano', createdAt: serverTimestamp(),
-  }),
-  'En messages create: reemplaza !exists(ticket) por existsAfter(ticket) && getAfter(ticket).data.uid == request.auth.uid',
-);
+  }));
+bloqueo('Un vecino no se cambia el nombre por el de otra persona', () =>
+  updateDoc(doc(como('ana'), 'users/ana'), { displayName: 'Luis Soto', updatedAt: serverTimestamp() }));
+bloqueo('Un reporte no apunta a la foto de otro reporte', () =>
+  setDoc(doc(como('ana'), 'reports/x'), reporte('ana', 'Ana Pérez', {
+    foto: { kind: 'firestore', path: 'reportPhotos/conFoto', url: null, mimeType: 'image/jpeg', sizeBytes: 12, privacidad: { aplicada: true } },
+  })));
+bloqueo('No se confirma un reporte cerrado', () =>
+  setDoc(doc(como('luis'), 'reports/r_ana/confirmations/luis'), { uid: 'luis', reportId: 'r_ana', createdAt: serverTimestamp() }),
+(db) => updateDoc(doc(db, 'reports/r_ana'), { estado: 'cerrado' }));
+bloqueo('Un gestor no anota un cambio de estado que no hizo', () =>
+  setDoc(doc(como('opmaipu'), 'reports/r_ana/statusHistory/suelta'), {
+    reportId: 'r_ana', desde: 'reportado', hacia: 'derivado', autorUid: 'opmaipu', autorRol: 'operador', autorNombre: 'Municipalidad de Maipú', comentario: '', createdAt: serverTimestamp(),
+  }));
+bloqueo('Un gestor no firma un mensaje de soporte como el vecino', () =>
+  setDoc(doc(como('opmaipu'), 'supportTickets/t_luis/messages/m2'), {
+    ticketId: 't_luis', autorUid: 'opmaipu', autorRol: 'ciudadano', texto: 'Me hago pasar por el vecino', createdAt: serverTimestamp(),
+  }));
+bloqueo('Un ticket no se abre con el correo de otra persona', () =>
+  setDoc(doc(como('ana'), 'supportTickets/t_x'), {
+    uid: 'ana', autorEmail: 'otra@correo.cl', tipo: 'queja', estado: 'abierto', asignadoA: null, asunto: 'La app se cierra',
+    lastMessagePreview: 'Al abrir el mapa', createdAt: serverTimestamp(), lastMessageAt: serverTimestamp(),
+  }));
+bloqueo('El autor no corrige un reporte que ya tiene confirmaciones con peso', () =>
+  updateDoc(doc(como('ana'), 'reports/r_ana'), {
+    descripcion: 'El bache está frente al paradero 3', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
+  }), (db) => updateDoc(doc(db, 'reports/r_ana'), { validacion: { puntos: 30, votos: 3, validado: false } }));
+
+// BRECHA: huecos conocidos de las reglas actuales (ninguno abierto en la 1.1).
 
 // ── Ejecución ────────────────────────────────────────────────────────────────
 const informe = new Informe('Pruebas de reglas de seguridad · Ciudad Alerta');
