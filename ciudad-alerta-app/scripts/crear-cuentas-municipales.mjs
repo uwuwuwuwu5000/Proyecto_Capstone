@@ -1,14 +1,21 @@
 #!/usr/bin/env node
 /**
- * Crea cuentas de organismo (rol «operador») para municipalidades de Santiago:
- * por defecto Maipú, Cerrillos y Pudahuel. Hace lo mismo que el panel de
- * administración (Operadores + Cuentas), pero de una vez:
+ * Crea las cuentas de las municipalidades de Santiago: por defecto Maipú,
+ * Cerrillos y Pudahuel. Dos tipos, que son rangos distintos:
  *
- *   1. Comprueba que la municipalidad exista en el catálogo (organismos/muni_<CUT>).
- *   2. Usa su operador activo; si no tiene, crea `op_<comuna>` (o reactiva el que había).
- *   3. Crea la cuenta en Authentication con una contraseña al azar.
- *   4. Crea su perfil en users/{uid} con role 'operador' y su operadorId.
- *   5. La anota en operadores/{id}.cuentas, para que el panel la muestre.
+ *   organismo (por defecto) · Solo mira: en la app ve, en el mapa «Reportes
+ *     validados», los reportes de SU comuna que la comunidad ya validó
+ *     (validacion.validado). No reporta, no confirma ni gestiona; las reglas
+ *     (1.2) le niegan todo lo demás. Pasos:
+ *       1. Comprueba que la municipalidad exista y esté activa (organismos/muni_<CUT>).
+ *       2. Crea la cuenta en Authentication con una contraseña al azar.
+ *       3. Crea su perfil users/{uid} con role 'organismo' y su organismoId.
+ *
+ *   operador (--rol=operador) · Gestiona los reportes de su municipalidad
+ *     (cambia estados, deriva, responde). Hace lo mismo que el panel
+ *     (Operadores + Cuentas): usa el operador activo de la municipalidad o
+ *     crea `op_<comuna>`, crea la cuenta y su perfil con role 'operador' y la
+ *     anota en operadores/{id}.cuentas.
  *
  * Por defecto SOLO muestra lo que haría y no escribe nada.
  * Con --aplicar escribe y muestra las contraseñas UNA vez, solo en pantalla:
@@ -16,7 +23,7 @@
  *
  * Se puede repetir sin duplicar nada: una cuenta que ya existe se reutiliza
  * (sin cambiar su contraseña, salvo con --nueva-clave). Una cuenta existente
- * con otro rol u otro operador NO se toca: el script avisa y la salta.
+ * con otro rol u otra municipalidad NO se toca: el script avisa y la salta.
  *
  * Usa el Admin SDK, que no pasa por las reglas de seguridad. Por eso pide una
  * clave de cuenta de servicio, que NUNCA debe quedar dentro del repositorio.
@@ -24,9 +31,10 @@
  *   (cmd)        set GOOGLE_APPLICATION_CREDENTIALS=C:\claves\ciudad-alerta-admin.json
  *   (PowerShell) $env:GOOGLE_APPLICATION_CREDENTIALS="C:\claves\ciudad-alerta-admin.json"
  *   node scripts/crear-cuentas-municipales.mjs              # qué haría
- *   node scripts/crear-cuentas-municipales.mjs --aplicar    # crea las cuentas
+ *   node scripts/crear-cuentas-municipales.mjs --aplicar    # crea las cuentas de organismo
  *
  * Opciones:
+ *   --rol=organismo|operador  Tipo de cuenta (por defecto organismo).
  *   --dominio=<dominio>    Dominio de los correos (por defecto ciudadalerta.test,
  *                          reservado: nunca llega correo ahí). Usa uno tuyo si
  *                          quieres poder recuperar contraseñas por correo.
@@ -35,9 +43,9 @@
  *   --sin-verificar        Deja el correo sin verificar (por defecto se marca
  *                          verificado: lo crea un admin y la casilla no existe,
  *                          así la app no le pide verificarlo).
- *   --asignar-abiertos     Asigna al operador los reportes abiertos de su
- *                          municipalidad que no tienen operador (sin tocar
- *                          updatedAt, para no generar avisos falsos).
+ *   --asignar-abiertos     Solo con --rol=operador: asigna al operador los
+ *                          reportes abiertos de su municipalidad que no tienen
+ *                          operador (sin tocar updatedAt, para no generar avisos falsos).
  */
 import { randomBytes } from 'node:crypto';
 import { readFileSync } from 'node:fs';
@@ -62,12 +70,14 @@ const COMUNAS = {
 const POR_DEFECTO = ['maipu', 'cerrillos', 'pudahuel'];
 const ESTADOS_INACTIVOS = new Set(['resuelto', 'cerrado']);
 
+const ROLES = ['organismo', 'operador'];
 const APLICAR = process.argv.includes('--aplicar');
 const NUEVA_CLAVE = process.argv.includes('--nueva-clave');
 const VERIFICADO = !process.argv.includes('--sin-verificar');
 const ASIGNAR = process.argv.includes('--asignar-abiertos');
 const argumento = (nombre, porDefecto) =>
   process.argv.find((a) => a.startsWith(`--${nombre}=`))?.split('=')[1]?.trim() || porDefecto;
+const ROL = argumento('rol', 'organismo').toLowerCase();
 const DOMINIO = argumento('dominio', 'ciudadalerta.test').replace(/^@/, '').toLowerCase();
 const ELEGIDAS = argumento('comunas', POR_DEFECTO.join(','))
   .split(',')
@@ -84,6 +94,13 @@ if (desconocidas.length) {
   terminar(`Comuna desconocida: ${desconocidas.join(', ')}. Disponibles: ${Object.keys(COMUNAS).join(', ')}.`);
 }
 if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(DOMINIO)) terminar(`El dominio «${DOMINIO}» no es válido.`);
+if (!ROLES.includes(ROL)) terminar(`Rol desconocido: «${ROL}». Usa --rol=organismo o --rol=operador.`);
+if (ASIGNAR && ROL !== 'operador') {
+  terminar('--asignar-abiertos es solo para --rol=operador: una cuenta de organismo no gestiona reportes.');
+}
+const ES_ORGANISMO = ROL === 'organismo';
+/** Las reglas aceptan nombres de hasta 60 caracteres. */
+const recortar = (texto) => [...String(texto).trim()].slice(0, 60).join('').trim();
 
 /** Contraseña al azar: 16 caracteres (letras, números, - y _). */
 const contrasena = () => randomBytes(12).toString('base64url');
@@ -116,6 +133,7 @@ const auth = getAuth();
 const db = getFirestore();
 
 console.log(`Proyecto: ${projectId}`);
+console.log(`Cuentas: ${ES_ORGANISMO ? 'organismo (solo ve los reportes validados de su comuna)' : 'operador (gestiona los reportes de su municipalidad)'}`);
 console.log(APLICAR ? 'Modo: APLICAR (crea las cuentas)\n' : 'Modo: diagnóstico (no escribe nada)\n');
 
 /** La cuenta de Authentication con ese correo, o null. */
@@ -125,6 +143,55 @@ async function cuentaPorCorreo(correo) {
   } catch (error) {
     if (error?.code === 'auth/user-not-found') return null;
     throw error;
+  }
+}
+
+/**
+ * Cuenta de organismo: organismo.<comuna>@<dominio>, con el nombre de la
+ * municipalidad. No usa operadores ni asigna reportes.
+ */
+async function planOrganismo(plan, clave) {
+  const local = clave.replace(/_/g, '.');
+  plan.correo = `organismo.${local}@${DOMINIO}`;
+  plan.nombreCuenta = recortar(plan.organismoNombre);
+  const existente = await cuentaPorCorreo(plan.correo);
+  if (!existente) {
+    plan.crearCuenta = true;
+    plan.crearPerfil = true;
+    plan.pasos.push(`crear la cuenta ${plan.correo} con una contraseña al azar${VERIFICADO ? ' (correo marcado verificado)' : ''}`);
+    plan.pasos.push(`crear su perfil con role 'organismo' y organismoId ${plan.organismoId}`);
+  } else {
+    plan.uid = existente.uid;
+    const perfil = await db.doc(`users/${existente.uid}`).get();
+    const rol = perfil.exists ? perfil.get('role') : null;
+    const suOrganismo = perfil.exists ? perfil.get('organismoId') : null;
+    if (perfil.exists && rol !== 'organismo') {
+      plan.problema = `${plan.correo} ya existe con rol «${rol}». No se convierte una cuenta existente: usa otro correo (--dominio=...) o cámbiala a mano.`;
+      return;
+    }
+    if (perfil.exists && suOrganismo !== plan.organismoId) {
+      plan.problema = `${plan.correo} ya es cuenta de «${suOrganismo}», no de ${plan.organismoId}. No se mueve una cuenta existente.`;
+      return;
+    }
+    plan.pasos.push(`la cuenta ${plan.correo} ya existe (uid ${existente.uid})${NUEVA_CLAVE ? ': se le da una contraseña nueva' : ': se reutiliza sin cambiar la contraseña'}`);
+    if (NUEVA_CLAVE) plan.nuevaClave = true;
+    if (!perfil.exists) {
+      plan.crearPerfil = true;
+      plan.pasos.push(`crear su perfil users/${existente.uid} con role 'organismo' (no tenía)`);
+    }
+  }
+
+  // Si antes se corrió la versión que creaba operadores, esa cuenta sigue ahí
+  // y puede gestionar reportes. No se borra sola: se avisa.
+  const anterior = await cuentaPorCorreo(`operador.${local}@${DOMINIO}`);
+  if (anterior) {
+    const perfil = await db.doc(`users/${anterior.uid}`).get();
+    if (perfil.exists && perfil.get('role') === 'operador') {
+      plan.avisos = [
+        `ojo: también existe operador.${local}@${DOMINIO} con rol «operador» (gestiona reportes). ` +
+          'Si no la necesitas, bórrala en Firebase → Authentication y su perfil en users/' + anterior.uid + '.',
+      ];
+    }
   }
 }
 
@@ -146,6 +213,11 @@ for (const clave of ELEGIDAS) {
     continue;
   }
   plan.organismoNombre = organismo.get('nombre') ?? `Municipalidad de ${nombre}`;
+
+  if (ES_ORGANISMO) {
+    await planOrganismo(plan, clave);
+    continue;
+  }
 
   // Operador: el activo de ese organismo (el mismo que elige la app al derivar).
   const operadores = await db.collection('operadores').where('organismoId', '==', organismoId).get();
@@ -214,6 +286,7 @@ for (const p of planes) {
   console.log(`▸ ${p.comuna} · ${p.organismoId}`);
   if (p.problema) console.log(`  ✖ ${p.problema}`);
   else p.pasos.forEach((paso) => console.log(`  · ${paso}`));
+  for (const aviso of p.avisos ?? []) console.log(`  ⚠ ${aviso}`);
   console.log('');
 }
 
@@ -224,8 +297,43 @@ if (!APLICAR) {
 }
 
 // ── Aplicar ──────────────────────────────────────────────────────────────────
+
+/** Crea la cuenta y el perfil de organismo; devuelve la contraseña nueva o null. */
+async function aplicarOrganismo(p) {
+  let clave = null;
+  if (p.crearCuenta) {
+    clave = contrasena();
+    const usuario = await auth.createUser({ email: p.correo, password: clave, displayName: p.nombreCuenta, emailVerified: VERIFICADO });
+    p.uid = usuario.uid;
+  } else if (p.nuevaClave) {
+    clave = contrasena();
+    await auth.updateUser(p.uid, { password: clave });
+  }
+  // La misma forma que aceptan las reglas (creacionCuentaOrganismo).
+  if (p.crearPerfil) {
+    await db.doc(`users/${p.uid}`).set({
+      uid: p.uid,
+      email: p.correo,
+      displayName: p.nombreCuenta,
+      role: 'organismo',
+      organismoId: p.organismoId,
+      trustLevel: 0,
+      validatedReports: 0,
+      emailVerified: VERIFICADO,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+  return clave;
+}
 const resultado = [];
 for (const p of listos) {
+  if (ES_ORGANISMO) {
+    resultado.push({ ...p, clave: await aplicarOrganismo(p), asignados: 0 });
+    console.log(`✓ ${p.comuna}: ${p.correo} lista (organismo ${p.organismoId})`);
+    continue;
+  }
+
   // 1 · Operador (como lo guarda el panel: merge, para no perder sus cuentas).
   if (p.crearOperador) {
     await db.doc(`operadores/${p.operadorId}`).set(
@@ -297,8 +405,12 @@ for (const r of resultado) {
   console.log(`  ${r.comuna.padEnd(18)} ${r.correo.padEnd(40)} ${r.clave ?? '(sin cambios)'}`);
 }
 console.log(
-  '\nCada cuenta entra a la app y al portal con su correo y contraseña, y gestiona los reportes de su\n' +
-    `municipalidad. ${DOMINIO === 'ciudadalerta.test'
+  (ES_ORGANISMO
+    ? '\nCada cuenta entra a la app con su correo y contraseña y ve, en «Reportes validados», los reportes de\n' +
+      'su comuna que la comunidad ya validó. No puede reportar, confirmar ni gestionar. '
+    : '\nCada cuenta entra a la app y al portal con su correo y contraseña, y gestiona los reportes de su\n' +
+      'municipalidad. ') +
+    `${DOMINIO === 'ciudadalerta.test'
       ? 'Con el dominio .test no llega correo: para cambiar una contraseña, vuelve a correr con --nueva-clave.'
       : 'Como el dominio es real, pueden cambiarla con «¿Olvidaste tu contraseña?» en el inicio de sesión.'}\n`,
 );
