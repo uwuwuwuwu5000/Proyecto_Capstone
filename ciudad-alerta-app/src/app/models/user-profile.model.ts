@@ -36,3 +36,24 @@ export interface UserProfile {
 
 /** Intervalo mínimo entre reportes de un mismo usuario, en milisegundos. */
 export const INTERVALO_MINIMO_REPORTE_MS = 30_000;
+
+/**
+ * Largo máximo del nombre para mostrar. Igual que `displayName.size() <= 60`
+ * (al crear el perfil) y `autorNombre.size() <= 60` (al crear un reporte) en
+ * firestore.rules: las reglas exigen que el nombre del reporte sea el del
+ * perfil, así que un nombre más largo dejaba la cuenta sin poder reportar.
+ */
+export const NOMBRE_MAXIMO = 60;
+
+/**
+ * Recorta un nombre a NOMBRE_MAXIMO unidades de texto (las mismas que cuenta
+ * `.length` y, según el emulador, `size()` de las reglas) sin partir un emoji
+ * por la mitad.
+ */
+export function recortarNombre(nombre: string, maximo = NOMBRE_MAXIMO): string {
+  if (nombre.length <= maximo) return nombre;
+  const corte = nombre.slice(0, maximo);
+  const ultimo = corte.charCodeAt(corte.length - 1);
+  // Un sustituto alto suelto (primera mitad de un emoji) quedaría inválido.
+  return ultimo >= 0xd800 && ultimo <= 0xdbff ? corte.slice(0, -1) : corte;
+}

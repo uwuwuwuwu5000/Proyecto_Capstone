@@ -22,10 +22,15 @@ export const MOTIVO_RETIRO_MAXIMO = 300;
 /** Firma pública del retiro en el historial: no se muestra el nombre de la persona. */
 export const FIRMA_DEL_AUTOR = 'Quien lo reportó';
 
+/** Si el reporte ya recibió confirmaciones con peso (puntos o votos en `validacion`). */
+export function tieneVotosConPeso(validacion: Report['validacion'] | null | undefined): boolean {
+  return (validacion?.votos ?? 0) > 0 || (validacion?.puntos ?? 0) > 0;
+}
+
 export class MiReporteError extends Error {
   constructor(
     override readonly message: string,
-    readonly code: 'sin_sesion' | 'no_es_tuyo' | 'ya_revisado' | 'descripcion' | 'red' | 'desconocido',
+    readonly code: 'sin_sesion' | 'no_es_tuyo' | 'ya_revisado' | 'ya_confirmado' | 'descripcion' | 'red' | 'desconocido',
   ) {
     super(message);
     this.name = 'MiReporteError';
@@ -51,13 +56,28 @@ export class MiReporteService {
     return reporte.uid === this.authService.user?.uid && reporte.estado === 'reportado';
   }
 
+  /**
+   * 1.1 · Corregir la descripción, además, solo mientras nadie lo haya
+   * confirmado con peso: los vecinos votaron por ese texto. Retirarlo sigue
+   * permitido. Es la misma condición que edicionDelAutorValida() de las reglas.
+   */
+  puedeCorregir(reporte: Pick<Report, 'uid' | 'estado' | 'validacion'>): boolean {
+    return this.puedeModificar(reporte) && !tieneVotosConPeso(reporte.validacion);
+  }
+
   async editarDescripcion(reporte: Report, texto: string): Promise<Report> {
     const descripcion = texto.trim();
     if (problemaDescripcion(descripcion) !== null) {
       throw new MiReporteError(`Usa entre ${DESCRIPCION_MIN} y ${DESCRIPCION_MAX} caracteres.`, 'descripcion');
     }
 
-    await this.enTransaccion(reporte, (transaccion, referencia) => {
+    await this.enTransaccion(reporte, (transaccion, referencia, actual) => {
+      if (tieneVotosConPeso(actual['validacion'] as Report['validacion'])) {
+        throw new MiReporteError(
+          'Ya hay vecinos que confirmaron este reporte: ya no se puede corregir la descripción. Si quedó mal, puedes retirarlo.',
+          'ya_confirmado',
+        );
+      }
       transaccion.update(referencia, {
         descripcion,
         updatedAt: serverTimestamp(),
@@ -109,7 +129,7 @@ export class MiReporteService {
 
   private async enTransaccion(
     reporte: Report,
-    escribir: (transaccion: Transaction, referencia: DocumentReference) => void,
+    escribir: (transaccion: Transaction, referencia: DocumentReference, actual: Record<string, unknown>) => void,
   ): Promise<void> {
     this.exigirAutor(reporte);
     const referencia = doc(this.firestore, 'reports', reporte.id);
@@ -123,7 +143,7 @@ export class MiReporteService {
             'ya_revisado',
           );
         }
-        escribir(transaccion, referencia);
+        escribir(transaccion, referencia, actual.data());
       });
     } catch (error) {
       if (error instanceof MiReporteError) throw error;

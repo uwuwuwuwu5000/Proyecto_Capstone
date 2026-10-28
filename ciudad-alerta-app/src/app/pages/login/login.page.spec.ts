@@ -110,6 +110,18 @@ describe('LoginPage', () => {
       expect(auth.register).not.toHaveBeenCalled();
     });
 
+    it('no acepta un nombre de más de 60 caracteres (las reglas no lo dejarían reportar)', async () => {
+      pagina.registroForm.setValue({ ...valido, displayName: 'A'.repeat(61) });
+
+      await pagina.registrar();
+
+      expect(pagina.registroForm.controls.displayName.hasError('maxlength')).toBe(true);
+      expect(auth.register).not.toHaveBeenCalled();
+
+      pagina.registroForm.controls.displayName.setValue('A'.repeat(60));
+      expect(pagina.registroForm.controls.displayName.valid).toBe(true);
+    });
+
     it('con contraseñas distintas lo dice', async () => {
       pagina.registroForm.setValue({ ...valido, confirmPassword: 'otra1234' });
 

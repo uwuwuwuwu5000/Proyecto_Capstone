@@ -20,11 +20,11 @@ const REPORTE = {
 
 type Interno = { correr: (fn: (t: Transaction) => Promise<void>) => Promise<void> };
 
-/** Transacción falsa: lee el reporte con `estado` y anota lo que se escribe. */
-function transaccionFalsa(estado: string | null) {
+/** Transacción falsa: lee el reporte con `estado` (y `extra`) y anota lo que se escribe. */
+function transaccionFalsa(estado: string | null, extra: Record<string, unknown> = {}) {
   const escrito = { set: [] as unknown[][], update: [] as unknown[][] };
   const transaccion = {
-    get: async () => ({ exists: () => estado !== null, data: () => ({ estado }) }),
+    get: async () => ({ exists: () => estado !== null, data: () => ({ estado, ...extra }) }),
     set: (...args: unknown[]) => escrito.set.push(args),
     update: (...args: unknown[]) => escrito.update.push(args),
   } as unknown as Transaction;
@@ -44,8 +44,8 @@ async function fallo(promesa: Promise<unknown>): Promise<MiReporteError> {
 describe('MiReporteService', () => {
   let servicio: MiReporteService;
 
-  function conTransaccion(estado: string | null) {
-    const falsa = transaccionFalsa(estado);
+  function conTransaccion(estado: string | null, extra: Record<string, unknown> = {}) {
+    const falsa = transaccionFalsa(estado, extra);
     vi.spyOn(servicio as unknown as Interno, 'correr').mockImplementation(async (fn) => fn(falsa.transaccion));
     return falsa.escrito;
   }
@@ -72,6 +72,24 @@ describe('MiReporteService', () => {
     expect(campos['descripcion']).toBe('El bache está frente al paradero 3');
     expect(actualizado.descripcion).toBe('El bache está frente al paradero 3');
     expect(actualizado.editadoAt).toBeDefined();
+  });
+
+  it('no deja corregir la descripción si ya hay confirmaciones con peso (retirar, sí)', () => {
+    const confirmado: Report = { ...REPORTE, validacion: { puntos: 30, votos: 3 } };
+    expect(servicio.puedeCorregir(REPORTE)).toBe(true);
+    expect(servicio.puedeCorregir({ ...REPORTE, validacion: { puntos: 0, votos: 0 } })).toBe(true);
+    expect(servicio.puedeCorregir(confirmado)).toBe(false);
+    expect(servicio.puedeCorregir({ ...REPORTE, validacion: { puntos: 10 } })).toBe(false);
+    expect(servicio.puedeModificar(confirmado)).toBe(true);
+  });
+
+  it('si alguien lo confirmó mientras tanto, no escribe la corrección', async () => {
+    const escrito = conTransaccion('reportado', { validacion: { puntos: 10, votos: 1 } });
+
+    const error = await fallo(servicio.editarDescripcion(REPORTE, 'El bache está frente al paradero 3'));
+
+    expect(error.code).toBe('ya_confirmado');
+    expect(escrito.update).toEqual([]);
   });
 
   it('no envía una descripción demasiado corta', async () => {

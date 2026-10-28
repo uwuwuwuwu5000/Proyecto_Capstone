@@ -28,7 +28,7 @@ import { VERSION_TERMINOS } from '@ciudad-alerta/comun';
 
 import { FIREBASE_AUTH, FIRESTORE } from '../core/firebase.providers';
 import { esCorreoAdministrador } from '../core/admin-emails';
-import { UserProfile } from '../models/user-profile.model';
+import { UserProfile, recortarNombre } from '../models/user-profile.model';
 
 /** Error de dominio con mensaje ya traducido y listo para mostrar en la UI. */
 export class AuthFailure extends Error {
@@ -352,7 +352,9 @@ export class AuthService {
     const perfil: UserProfile = {
       uid: user.uid,
       email: user.email ?? '',
-      displayName,
+      // 1.1 · Las reglas no aceptan más de NOMBRE_MAXIMO: el nombre puede venir
+      // del correo o de Authentication (al reparar un perfil), sin tope propio.
+      displayName: recortarNombre(displayName),
       // La lista de administradores se valida también en las reglas, que son
       // las que realmente autorizan este valor. DIAG-2 · Solo con el correo
       // verificado; si no, nace ciudadano y se promueve al verificarlo.

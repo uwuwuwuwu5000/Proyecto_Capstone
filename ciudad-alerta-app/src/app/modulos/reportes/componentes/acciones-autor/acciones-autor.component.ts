@@ -21,12 +21,18 @@ import { MOTIVO_RETIRO_MAXIMO, MiReporteError, MiReporteService } from '../../da
     @if (visible()) {
       <section class="propio" aria-labelledby="titulo-propio">
         <h2 id="titulo-propio">Tu reporte</h2>
-        <p class="nota">Mientras nadie lo revise, puedes corregir la descripción o retirarlo.</p>
+        @if (corregible()) {
+          <p class="nota">Mientras nadie lo revise, puedes corregir la descripción o retirarlo.</p>
+        } @else {
+          <p class="nota">Ya hay vecinos que lo confirmaron, así que la descripción no se puede cambiar. Si quedó mal, puedes retirarlo.</p>
+        }
         <div class="propio__acciones">
-          <ion-button fill="outline" size="small" [disabled]="guardando()" (click)="pedirEdicion()">
-            <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
-            Corregir descripción
-          </ion-button>
+          @if (corregible()) {
+            <ion-button fill="outline" size="small" [disabled]="guardando()" (click)="pedirEdicion()">
+              <ion-icon slot="start" name="create-outline" aria-hidden="true"></ion-icon>
+              Corregir descripción
+            </ion-button>
+          }
           <ion-button fill="clear" size="small" color="danger" [disabled]="guardando()" (click)="pedirRetiro()">
             <ion-icon slot="start" name="close-circle-outline" aria-hidden="true"></ion-icon>
             Retirar reporte
@@ -76,6 +82,8 @@ export class AccionesAutorComponent {
 
   protected readonly guardando = signal(false);
   protected readonly visible = computed(() => this.servicio.puedeModificar(this.reporte()));
+  /** 1.1 · Corregir el texto solo sin confirmaciones con peso (retirarlo, siempre). */
+  protected readonly corregible = computed(() => this.servicio.puedeCorregir(this.reporte()));
 
   async pedirEdicion(): Promise<void> {
     const alerta = await this.alertCtrl.create({

@@ -94,9 +94,10 @@
           labelPlacement="floating"
           fill="outline"
           placeholder="Cómo te verán tus vecinos"
+          [maxlength]="nombreMaximo"
         ></ion-input>
         @if (registroForm.controls.displayName.touched && registroForm.controls.displayName.invalid) {
-          <ion-note color="danger">Usa al menos 3 caracteres.</ion-note>
+          <ion-note color="danger">Usa entre 3 y {{ nombreMaximo }} caracteres.</ion-note>
         }
 
         <ion-input

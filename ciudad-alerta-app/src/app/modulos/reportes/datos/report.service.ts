@@ -20,7 +20,7 @@ import { CapturedPhoto } from './camera.service';
 import { ComunaDetectada, ComunaService } from '../../../services/comuna.service';
 import { RoutingService } from '../../../services/routing.service';
 import { PHOTO_STORAGE } from './photo-storage.service';
-import { INTERVALO_MINIMO_REPORTE_MS } from '../../../models/user-profile.model';
+import { INTERVALO_MINIMO_REPORTE_MS, recortarNombre } from '../../../models/user-profile.model';
 import {
   DESCRIPCION_MAX,
   DESCRIPCION_MIN,
@@ -108,12 +108,12 @@ export class ReportService {
      * comparan contra ese mismo campo, y así nadie puede firmar un reporte con
      * un nombre que no es el suyo.
      */
-    const autorNombre = (
+    const autorNombre = recortarNombre(
       perfil?.displayName ||
       usuario.displayName ||
       usuario.email?.split('@')[0] ||
-      'Vecino'
-    ).slice(0, 60);
+      'Vecino',
+    );
 
     const referencia = datos.id
       ? doc(this.firestore, 'reports', datos.id)

@@ -17,6 +17,7 @@ describe('AccionesAutorComponent', () => {
   let fixture: ComponentFixture<AccionesAutorComponent>;
   let servicio: {
     puedeModificar: ReturnType<typeof vi.fn>;
+    puedeCorregir: ReturnType<typeof vi.fn>;
     editarDescripcion: ReturnType<typeof vi.fn>;
     retirar: ReturnType<typeof vi.fn>;
   };
@@ -24,8 +25,9 @@ describe('AccionesAutorComponent', () => {
   let toasts: string[];
   let alCambiar: ReturnType<typeof vi.fn>;
 
-  function montar(puede = true): string {
+  function montar(puede = true, corregible = puede): string {
     servicio.puedeModificar.mockReturnValue(puede);
+    servicio.puedeCorregir.mockReturnValue(corregible);
     fixture = TestBed.createComponent(AccionesAutorComponent);
     fixture.componentRef.setInput('reporte', REPORTE);
     fixture.componentRef.setInput('alCambiar', alCambiar);
@@ -39,7 +41,7 @@ describe('AccionesAutorComponent', () => {
     alertas = [];
     toasts = [];
     alCambiar = vi.fn();
-    servicio = { puedeModificar: vi.fn(), editarDescripcion: vi.fn(), retirar: vi.fn() };
+    servicio = { puedeModificar: vi.fn(), puedeCorregir: vi.fn(), editarDescripcion: vi.fn(), retirar: vi.fn() };
 
     TestBed.configureTestingModule({
       providers: [
@@ -75,6 +77,13 @@ describe('AccionesAutorComponent', () => {
     expect(texto).toContain('Tu reporte');
     expect(texto).toContain('Corregir descripción');
     expect(texto).toContain('Retirar reporte');
+  });
+
+  it('si ya lo confirmaron con peso, solo ofrece retirarlo y explica por qué', () => {
+    const texto = montar(true, false);
+    expect(texto).not.toContain('Corregir descripción');
+    expect(texto).toContain('Retirar reporte');
+    expect(texto).toContain('Ya hay vecinos que lo confirmaron');
   });
 
   it('corrige la descripción y avisa al detalle', async () => {

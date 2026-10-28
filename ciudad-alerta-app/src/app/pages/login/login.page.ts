@@ -26,6 +26,7 @@ import { addIcons } from 'ionicons';
 import { alertCircleOutline, mailOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 
 import { AuthFailure, AuthService } from '../../services/auth.service';
+import { NOMBRE_MAXIMO } from '../../models/user-profile.model';
 import { ThemeToggleComponent } from '../../compartido/tema';
 import { VersionDemoComponent } from '../../compartido/version-demo';
 
@@ -70,6 +71,8 @@ export class LoginPage {
 
   readonly modo = signal<Modo>('login');
   readonly errorMensaje = signal<string | null>(null);
+  /** Las reglas no aceptan nombres más largos (ver NOMBRE_MAXIMO). */
+  readonly nombreMaximo = NOMBRE_MAXIMO;
 
   // CA-49 · Credenciales de acceso
   readonly loginForm = this.fb.group({
@@ -80,7 +83,7 @@ export class LoginPage {
   // CA-48 · Alta de cuenta
   readonly registroForm = this.fb.group(
     {
-      displayName: ['', [Validators.required, Validators.minLength(3)]],
+      displayName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(NOMBRE_MAXIMO)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]],
