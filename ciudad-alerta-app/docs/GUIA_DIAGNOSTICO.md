@@ -1,6 +1,8 @@
 # Diagnóstico de Ciudad Alerta
 
-Tres scripts que revisan el proyecto desde ángulos distintos. Ninguno modifica código ni datos. Cada uno imprime los hallazgos por consola y deja un informe en Markdown en la carpeta `diagnostico/`, útil como evidencia para el informe de avance.
+Ocho scripts que revisan el proyecto desde ángulos distintos. Ninguno modifica código ni datos. Cada uno imprime los hallazgos por consola y deja un informe en Markdown en la carpeta `diagnostico/`, útil como evidencia para el informe de avance.
+
+Los tres primeros son los de siempre (código, datos, reglas). Los cinco últimos son de **seguridad ofensiva**: en vez de comprobar que lo normal funcione, intentan *romper* cada parte del sistema para encontrar brechas y bugs que se hayan pasado.
 
 Las pruebas que ejecutan la app (unitarias y de punta a punta con Playwright) están en `GUIA_PRUEBAS.md`.
 
@@ -9,6 +11,11 @@ Las pruebas que ejecutan la app (unitarias y de punta a punta con Playwright) es
 | `codigo.mjs` | El código fuente, las reglas como texto, Android y el build | Nada extra | ~5 s (~1 min con `--build`) |
 | `datos.mjs` | Los datos reales en Firestore y Authentication | Clave de cuenta de servicio | ~10 s |
 | `reglas.mjs` | Las reglas de seguridad ejecutadas en el emulador | Firebase CLI, Java 21, `@firebase/rules-unit-testing` | ~1 min |
+| `reglas-ataques.mjs` | Ataca las reglas: matriz de acceso, ~50 intentos de brecha, mutaciones | Nada (simulador) o emulador con `--emulador` | ~1 s / ~1 min |
+| `contrato.mjs` | Que la app, las reglas y los índices digan lo mismo; límites de formulario | Nada extra | ~1 s |
+| `cliente.mjs` | Secretos (árbol e historial git), Android, build, XSS, CSP, dependencias | git; red solo con `--audit` | ~20 s |
+| `servicio-ataques.mjs` | Ataca el servicio de privacidad: tokens, límite, pixel bombs, EXIF, CORS | `servicio-privacidad` instalado | ~3 s |
+| `logica.mjs` | Invariantes de `comun`: confianza, DST de Chile, Unicode, geo, estados | `servicio-privacidad` (trae esbuild) | ~1 s |
 
 Severidades:
 
@@ -32,7 +39,15 @@ npm pkg set "scripts.diagnostico=node scripts/diagnostico/codigo.mjs"
 npm pkg set "scripts.diagnostico:build=node scripts/diagnostico/codigo.mjs --build"
 npm pkg set "scripts.diagnostico:datos=node scripts/diagnostico/datos.mjs"
 npm pkg set "scripts.diagnostico:reglas=node scripts/diagnostico/reglas.mjs"
+npm pkg set "scripts.diagnostico:reglas-sim=node scripts/diagnostico/simulador/ejecutar.mjs scripts/diagnostico/reglas.mjs"
+npm pkg set "scripts.diagnostico:ataques=node scripts/diagnostico/reglas-ataques.mjs"
+npm pkg set "scripts.diagnostico:contrato=node scripts/diagnostico/contrato.mjs"
+npm pkg set "scripts.diagnostico:cliente=node scripts/diagnostico/cliente.mjs"
+npm pkg set "scripts.diagnostico:servicio=node scripts/diagnostico/servicio-ataques.mjs"
+npm pkg set "scripts.diagnostico:logica=node scripts/diagnostico/logica.mjs"
 ```
+
+La carpeta `scripts/diagnostico/simulador/` (6 archivos) acompaña a los scripts: es un intérprete de las reglas de Firestore que permite correr `reglas-ataques.mjs` (y, con `diagnostico:reglas-sim`, los 100 casos de `reglas.mjs`) sin Java ni el emulador. Es una aproximación: lo que encuentre conviene confirmarlo con `--emulador`.
 
 ---
 
@@ -108,6 +123,63 @@ Si fallan casos de control, revisa primero si cambió el formato de los document
 
 ---
 
+## Scripts de seguridad ofensiva (4–8)
+
+Estos cinco no comprueban que lo normal funcione, sino que intentan *romper* el sistema. Reutilizan el registro y los informes de los anteriores, así que los hallazgos salen con las mismas severidades.
+
+### 4. Ataques a las reglas — `npm run diagnostico:ataques`
+
+La contraparte agresiva de `reglas.mjs`. Corre sobre un **simulador de las reglas** escrito en `scripts/diagnostico/simulador/` (no necesita Java), y con `--emulador` sobre el emulador real. Secciones:
+
+- **A · Matriz de acceso.** Cada combinación de rol (anónimo, ciudadano, operador, admin) × colección × operación (get/list/create/update/delete) contra lo que *debería* poder. Marca tanto lo que permite de más (brecha) como lo que bloquea de menos (error).
+- **B · Ataques dirigidos.** Alrededor de 50 intentos concretos de brecha con su impacto y su arreglo: subirse el nivel, declararse admin, suplantar nombres, reusar la foto de otro reporte, confirmar reportes cerrados, fabricar bitácoras, firmar mensajes de soporte como staff, subir fotos sin reporte, etc.
+- **C · Mutaciones generadas.** Toma una escritura válida y le aplica variaciones automáticas (campo extra, cambio de tipo, texto gigante, fecha falsa). Cada una debe seguir rechazándose.
+- **D · Lecturas por operación.** Cuántos documentos lee cada regla, contra el límite de 10 por operación de Firestore (solo en el simulador).
+- **E · Revisión estática.** Funciones de las reglas sin usar, creaciones sin lista blanca, lecturas que exponen datos.
+
+El simulador se calibra con los 100 casos de `reglas.mjs` (todos dan el mismo resultado). Aun así es una aproximación: confirma los hallazgos con `--emulador`.
+
+### 5. Contrato app ↔ reglas ↔ índices — `npm run diagnostico:contrato`
+
+Lee el código y lo compara, sin ejecutar nada. Busca desajustes que no rompen el build pero explotan en producción:
+
+- **Acoplamientos declarados.** Los valores que las reglas dicen mantener en sincronía con la app: correos de administrador, transiciones de estado, categorías de respaldo, intervalo entre reportes y largo de la descripción.
+- **Consultas vs índices.** Cada consulta compuesta (con `orderBy` sobre otro campo, o un operador de rango) necesita su índice en `firestore.indexes.json`; las de varias igualdades sin `orderBy` no lo necesitan.
+- **Límites de formulario vs reglas.** Que el formulario nunca deje enviar algo más largo de lo que la regla acepta. Aquí sale el bug del nombre de más de 60 caracteres.
+- **Rutas sensibles** con su guard, y **`onSnapshot`** sin cancelar.
+
+### 6. Higiene del cliente — `npm run diagnostico:cliente`
+
+Lo que se filtra o se endurece fuera de las reglas:
+
+- **Secretos** en los archivos rastreados y en **todo el historial de git** (claves privadas, service accounts, `.env`). La API key web de Firebase no cuenta: es pública por diseño.
+- **Cobertura de `.gitignore`** para claves y keystores.
+- **Artefactos de build** (`dist`, `www`, `*.map`) que no deberían estar en git.
+- **Sinks de XSS** (`innerHTML`, `bypassSecurityTrust`, `eval`), **Android/Capacitor** (cleartext, debuggable, allowBackup), **CSP** y **PII en logs**.
+- Con `--audit`, corre `npm audit` en la app, `comun` y el servicio (necesita red).
+
+### 7. Ataques al servicio de privacidad — `npm run diagnostico:servicio`
+
+Ataca `servicio-privacidad` sin levantarlo: empaqueta sus módulos con esbuild y les inyecta claves y relojes de prueba.
+
+- **A · Token de sesión.** Once ataques: `alg:none`, firma con otra clave, confusión RS256→HS256, emisor/audiencia equivocados, vencido, `nbf` futuro, sin `sub`, sin `Bearer`. El válido se acepta.
+- **B · Límite por usuario.** Llenar, bloquear, aislamiento por uid, ventana deslizante. (El límite es por uid del token, así que falsear `X-Forwarded-For` no lo evade.)
+- **C · Procesamiento de imagen.** Pixel bombs (imagen de 100 MP), archivos que no son imagen, SVG gigante, y que la foto protegida **no conserve el EXIF/GPS** de la cámara.
+- **D · CORS/tipo/tamaño.** Orígenes exactos sin comodín, allowlist de tipos, tope de 6 MB.
+- **E · Sondas HTTP en vivo** (opcional): con `--url http://localhost:8080` prueba `/salud`, el 401 sin token, el preflight de un origen no permitido y que el error no filtre trazas.
+
+### 8. Lógica y casos borde — `npm run diagnostico:logica`
+
+Empaqueta `comun` y ejercita sus funciones puras contra las reglas y contra invariantes:
+
+- **Confianza.** `nivelDePuntos`, `pesoDeNivel` y `limiteDiario` comparados con las reglas en todo el rango, más monotonía y bordes exactos.
+- **Veredicto.** +10 / −15 y topes [0, 760].
+- **DST de Chile.** El `numeroDeDia` usa un desfase fijo UTC−3; en invierno Chile es UTC−4, así que el contador de confirmaciones se reinicia a las 23:00 locales (ver hallazgos).
+- **Unicode.** `.length` (lo que mide el formulario) vs puntos de código (lo que cuenta `size()` de las reglas): una descripción de emojis puede pasar el formulario y rechazarse en el servidor.
+- **Geografía** (distancia, geohash contra la regla, límites de coordenadas) y **transiciones** (invariantes del ciclo de vida).
+
+---
+
 ## Hallazgos al revisar el código entregado
 
 `codigo.mjs` sobre la copia del código que tengo (sin `node_modules` ni `android/`):
@@ -126,3 +198,32 @@ Si fallan casos de control, revisa primero si cambió el formato de los document
 **Código de la app:** sin imports rotos, sin etiquetas sin importar, sin íconos sin registrar, sin rutas inexistentes, sin colecciones sin regla, sin consultas sin índice y con los catálogos sincronizados con las reglas.
 
 Las correcciones de las reglas deben hacerse sobre la versión del equipo. Ninguna cambia lo que la app escribe hoy, salvo la lista blanca de campos, que hay que armar con los campos exactos de cada colección.
+
+### Hallazgos de los scripts de seguridad ofensiva
+
+Resultado al correrlos sobre el código actual.
+
+**Bug que impedía usar la app (nuevo, `contrato.mjs` y `logica.mjs`):**
+
+- **Un nombre de más de 60 caracteres impide crear reportes.** El registro acepta cualquier largo de nombre (solo `minLength(3)`, sin `maxLength`). El perfil guarda el nombre completo, pero `report.service.ts` lo recorta a 60 (`slice(0, 60)`), y la regla `autorNombreValido()` exige `displayName == autorNombre`. Si el nombre pasa de 60, la creación del reporte queda denegada para siempre, sin mensaje claro. Arreglo: `Validators.maxLength(60)` en el registro (y `maxlength` en el input), o validar el largo antes de guardar el perfil en vez de recortar.
+- **Emojis en la descripción.** El formulario mide con `.length` (UTF-16) y las reglas con `size()` (puntos de código). Una descripción de 6 emojis pasa el formulario (largo 12) pero la regla la ve como 6 y la rechaza. Arreglo: medir con `[...texto].length` en el formulario.
+
+**Brechas de las reglas que confirma `reglas-ataques.mjs`** (ninguna da escalada de privilegios: rol, nivel y puntos están bien protegidos; son campos sin validar y faltas de coherencia):
+
+- **La creación de `reports` no tiene lista blanca (`hasOnly`).** Permite campos extra y, sobre todo, prefijar `resueltoAt`/`tiempoResolucionMs`/`retiradoPorAutor` (falsear métricas), reusar en `foto.path` la foto de otro reporte, y poner un `organismo.nombre` arbitrario (solo se valida `organismo.id`).
+- **`users`** no acota el tamaño ni el contenido de `displayName` ni `email` (ni al crear ni al actualizar): permite suplantar el nombre de otra persona y nombres enormes.
+- **Confirmaciones** sobre reportes ya cerrados o con veredicto: las reglas no miran el estado del reporte al confirmar.
+- **`statusHistory`**: la rama del gestor no exige que el reporte cambie de estado en el mismo lote (se puede fabricar bitácora/notificaciones sin mover el reporte).
+- **Soporte**: `autorEmail` y las fechas del ticket no se validan al crear; `lastMessagePreview` no se acota al actualizar; un gestor puede firmar un mensaje como `ciudadano`.
+- **`reportPhotos`**: se pueden subir fotos sin reporte, y el autor puede borrar la foto después de publicar (deja `foto.path` colgando).
+- **Edición del autor**: puede cambiar la descripción aunque ya tenga confirmaciones (el reporte sigue en «reportado»): cambio de carnada.
+
+La raíz de casi todas es la misma: **listas blancas (`hasOnly`) al crear** y validar **coherencia entre documentos** (no solo el formato de cada campo).
+
+**Avisos de higiene (`cliente.mjs`):** `.gitignore` no cubre `.env` ni una carpeta de claves; no hay Content-Security-Policy en `index.html`; un `console.error` registra el `uid`. **Sin secretos en el árbol ni en los 257 commits del historial.**
+
+**Lo que está bien:** el servicio de privacidad pasa los 11 ataques de token, rechaza pixel bombs y SVG gigantes, elimina el EXIF/GPS de las fotos y tiene un CORS exacto sin comodín. Los cálculos de confianza de `comun` coinciden con las reglas en todo el rango. Rol, nivel de confianza y puntos no se pueden escalar.
+
+**Limitación conocida (no bug): DST de Chile.** `numeroDeDia()` usa un desfase fijo UTC−3; en invierno (UTC−4) el contador de confirmaciones se reinicia a las 23:00 locales, no a medianoche. 155 días al año. De bajo impacto; se puede documentar y dejar así, o calcular el día con la zona `America/Santiago`.
+
+Los informes completos (uno por script) quedan en `diagnostico/*.md` al correrlos.
