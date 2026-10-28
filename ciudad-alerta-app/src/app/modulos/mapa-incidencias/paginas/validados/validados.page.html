@@ -1,0 +1,88 @@
+<ion-header class="cabecera" [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/home" text="" aria-label="Volver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Reportes validados</ion-title>
+    <ion-buttons slot="end">
+      <app-ranura nombre="cabecera.acciones" />
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="mapa-content" [fullscreen]="true">
+  <div class="mapa-shell">
+    <p class="intro">
+      @if (organismo(); as nombre) {
+        <strong>{{ nombre }}</strong>:
+      }
+      los reportes de tu comuna que la comunidad ya validó. Los demás no se muestran hasta
+      que se validen.
+    </p>
+
+    @if (estado() === 'listo' || estado() === 'cargando') {
+      <app-map-view
+        class="mapa-grande"
+        [centrarEnUbicacion]="false"
+        [encuadre]="encuadre()"
+        [markers]="marcadores()"
+        [cargarHistorial]="cargadorHistorial"
+        (markerSelected)="abrirDetalle($event)"
+      ></app-map-view>
+    }
+
+    @switch (estado()) {
+      @case ('cargando') {
+        <p class="estado">Cargando los reportes validados…</p>
+      }
+      @case ('sin_organismo') {
+        <p class="estado estado--error">
+          Esta pantalla es para las cuentas de organismo. Tu cuenta no tiene un organismo asignado:
+          pídeselo al equipo de Ciudad Alerta.
+        </p>
+      }
+      @case ('error') {
+        <div class="bloque-estado">
+          <p class="estado estado--error">No se pudieron cargar los reportes validados. Revisa tu conexión.</p>
+          <ion-button fill="outline" expand="block" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Reintentar
+          </ion-button>
+        </div>
+      }
+      @case ('listo') {
+        <div class="resumen">
+          <p class="estado">
+            @if (resultados().length === 0) {
+              Todavía no hay reportes validados en tu comuna.
+            } @else {
+              {{ resultados().length }}
+              {{ resultados().length === 1 ? 'reporte validado' : 'reportes validados' }}.
+              @if (hayMas()) {
+                Se muestran los {{ maximo }} más recientes.
+              }
+            }
+          </p>
+          <ion-button class="actualizar" fill="clear" size="small" (click)="cargar()">
+            <ion-icon slot="start" name="refresh-outline" aria-hidden="true"></ion-icon>
+            Actualizar
+          </ion-button>
+        </div>
+
+        @if (resultados().length) {
+          <ul class="lista" aria-label="Reportes validados">
+            @for (report of resultados(); track report.id) {
+              <li>
+                <button type="button" class="fila" (click)="abrirDetalle(report.id)">
+                  <span class="fila__titulo">{{ categoria(report) }} · {{ etiquetaEstado(report) }}</span>
+                  <span class="fila__texto">{{ report.descripcion }}</span>
+                  <span class="fila__meta">{{ fecha(report) }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      }
+    }
+  </div>
+</ion-content>

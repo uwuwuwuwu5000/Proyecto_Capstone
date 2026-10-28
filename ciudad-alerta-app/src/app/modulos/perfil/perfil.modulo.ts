@@ -36,6 +36,7 @@ export const MODULO_PERFIL: ModuloApp = {
       icono: 'person-circle-outline',
       ruta: '/perfil',
       orden: 90,
+      paraOrganismo: true,
     },
   ],
   iconos: { 'person-circle-outline': personCircleOutline },

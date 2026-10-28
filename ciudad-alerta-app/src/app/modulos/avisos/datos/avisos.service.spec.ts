@@ -186,6 +186,19 @@ describe('AvisosService · al cambiar de cuenta', () => {
     expect(escuchas).toEqual(['luis']);
   });
 
+  it('una cuenta de organismo no escucha reportes propios ni muestra un error (las reglas se lo negarían)', async () => {
+    const proto = AvisosService.prototype as unknown as { esCuentaDeOrganismo: (uid: string) => Promise<boolean> };
+    vi.spyOn(proto, 'esCuentaDeOrganismo').mockResolvedValue(true);
+
+    sesion.next({ uid: 'org' });
+    lecturas.get('org')!(undefined);
+    await vi.waitFor(() => expect(service.cargando()).toBe(false));
+
+    expect(escuchas).toEqual([]);
+    expect(service.error()).toBeNull();
+    expect(service.avisos()).toEqual([]);
+  });
+
   it('al cerrar sesión corta la escucha, y un error tardío no muestra un aviso falso', async () => {
     sesion.next({ uid: 'ana' });
     lecturas.get('ana')!(undefined);

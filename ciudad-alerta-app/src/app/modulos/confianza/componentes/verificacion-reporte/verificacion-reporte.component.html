@@ -61,6 +61,9 @@
             @case ('operador') {
               <p class="nota">Las cuentas de operador gestionan reportes; no los confirman.</p>
             }
+            @case ('organismo') {
+              <p class="nota">Este reporte ya fue validado por la comunidad y llegó a tu organismo.</p>
+            }
             @case ('cerrado') {
               <p class="nota">
                 @if (reporte().retiradoPorAutor) {

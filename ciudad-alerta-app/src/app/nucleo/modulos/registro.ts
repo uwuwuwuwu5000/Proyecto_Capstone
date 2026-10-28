@@ -81,8 +81,17 @@ export function accesosParaRol(
 ): AccesoInicio[] {
   return modulosActivos(entradas)
     .flatMap((m) => m.accesos ?? [])
-    .filter((a) => !a.roles || (rol !== null && a.roles.includes(rol)))
+    .filter((a) => visibleParaRol(a, rol))
     .sort((a, b) => a.orden - b.orden);
+}
+
+/**
+ * Si un botón le corresponde a un rol. La cuenta de organismo (solo lectura)
+ * ve únicamente los que la nombran o declaran `paraOrganismo`.
+ */
+function visibleParaRol(acceso: AccesoInicio, rol: UserRole | null): boolean {
+  if (rol === 'organismo') return acceso.paraOrganismo === true || (acceso.roles?.includes('organismo') ?? false);
+  return !acceso.roles || (rol !== null && acceso.roles.includes(rol));
 }
 
 /** Grupos del inicio, en orden, con su título. */

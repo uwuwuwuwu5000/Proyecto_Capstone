@@ -91,6 +91,26 @@ describe('registro de módulos', () => {
     expect(accesosParaRol(config, null).map((a) => a.id)).toEqual(['primero', 'todos']);
   });
 
+  it('accesos: la cuenta de organismo solo ve los que la incluyen (por defecto, ninguno)', () => {
+    const config = [
+      entrada(
+        moduloDePrueba('a', {
+          accesos: [
+            { id: 'crear', texto: 'Crear', icono: 'i', ruta: '/c', orden: 10 },
+            { id: 'validados', texto: 'Reportes validados', icono: 'i', ruta: '/v', orden: 5, roles: ['organismo'] },
+            { id: 'perfil', texto: 'Mi perfil', icono: 'i', ruta: '/p', orden: 90, paraOrganismo: true },
+            { id: 'staff', texto: 'Gestión', icono: 'i', ruta: '/g', orden: 100, roles: ['admin', 'operador'] },
+          ],
+        }),
+      ),
+    ];
+
+    expect(accesosParaRol(config, 'organismo').map((a) => a.id)).toEqual(['validados', 'perfil']);
+    // Para los demás roles, paraOrganismo no cambia nada y el botón del organismo no aparece.
+    expect(accesosParaRol(config, 'ciudadano').map((a) => a.id)).toEqual(['crear', 'perfil']);
+    expect(accesosParaRol(config, 'operador').map((a) => a.id)).toEqual(['crear', 'perfil', 'staff']);
+  });
+
   it('texto del acceso según el rol', () => {
     const acceso = { id: 'g', texto: 'Todas las incidencias', textoSegunRol: { operador: 'Reportes asignados' }, icono: 'i', ruta: '/g', orden: 1 };
     expect(textoDeAcceso(acceso, 'operador')).toBe('Reportes asignados');

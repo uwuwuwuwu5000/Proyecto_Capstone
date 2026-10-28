@@ -18,6 +18,7 @@ describe('ConfianzaService · por qué no se puede confirmar', () => {
   it.each([
     ['su propio reporte', { propio: true }, 'propio'],
     ['una cuenta operador', { operador: true }, 'operador'],
+    ['una cuenta de organismo (recibe los reportes ya validados)', { organismo: true }, 'organismo'],
     ['un reporte resuelto', { estadoReporte: 'resuelto' }, 'cerrado'],
     ['un reporte cerrado o retirado por su autor', { estadoReporte: 'cerrado' }, 'cerrado'],
     ['un reporte con veredicto', { conVeredicto: true }, 'revisado'],

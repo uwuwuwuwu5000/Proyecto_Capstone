@@ -126,6 +126,17 @@ export class RoutingService {
     return getDoc(doc(this.firestore, 'organismos', organismoId));
   }
 
+  /** 1.2 · Nombre del organismo en el catálogo, o null si no existe o no se pudo leer. */
+  async nombreDeOrganismo(organismoId: string): Promise<string | null> {
+    try {
+      const snapshot = await this.leerOrganismo(organismoId);
+      const nombre = snapshot.exists() ? (snapshot.data() as { nombre?: unknown }).nombre : null;
+      return typeof nombre === 'string' ? nombre : null;
+    } catch {
+      return null;
+    }
+  }
+
   private async leerMunicipio(organismoId: string): Promise<Organismo | null> {
     if (this.cacheMunicipios.has(organismoId)) {
       return this.cacheMunicipios.get(organismoId) ?? null;

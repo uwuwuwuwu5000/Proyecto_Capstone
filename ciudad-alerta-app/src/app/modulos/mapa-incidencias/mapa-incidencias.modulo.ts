@@ -1,4 +1,4 @@
-import { mapOutline } from 'ionicons/icons';
+import { mapOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 
 import { authGuard } from '../../guards/auth-guard';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
@@ -25,6 +25,12 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
       canActivate: [authGuard],
       loadComponent: () => import('./paginas/mapa/mapa.page').then((m) => m.MapaPage),
     },
+    {
+      // 1.2 · El mapa de una cuenta de organismo: sus reportes validados.
+      path: 'validados',
+      canActivate: [authGuard],
+      loadComponent: () => import('./paginas/validados/validados.page').then((m) => m.ValidadosPage),
+    },
   ],
   accesos: [
     {
@@ -35,6 +41,15 @@ export const MODULO_MAPA_INCIDENCIAS: ModuloApp = {
       orden: 20,
       seccion: 'explorar',
     },
+    {
+      id: 'validados-organismo',
+      texto: 'Reportes validados',
+      icono: 'shield-checkmark-outline',
+      ruta: '/validados',
+      roles: ['organismo'],
+      orden: 10,
+      estilo: 'principal',
+    },
   ],
-  iconos: { 'map-outline': mapOutline },
+  iconos: { 'map-outline': mapOutline, 'shield-checkmark-outline': shieldCheckmarkOutline },
 };

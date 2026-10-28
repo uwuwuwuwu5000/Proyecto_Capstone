@@ -5,4 +5,5 @@ export const ETIQUETAS_ROL: Readonly<Record<UserRole, string>> = {
   ciudadano: 'Vecino o vecina',
   operador: 'Operador municipal',
   admin: 'Administración Ciudad Alerta',
+  organismo: 'Organismo (recibe los reportes validados)',
 };

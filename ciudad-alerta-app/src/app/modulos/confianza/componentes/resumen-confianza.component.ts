@@ -4,7 +4,7 @@ import { IonIcon, IonProgressBar, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { chevronForwardOutline, ribbonOutline } from 'ionicons/icons';
 
-import { UserProfile } from '../../../models/user-profile.model';
+import { UserProfile, esCuentaInstitucional } from '../../../models/user-profile.model';
 import { EsperaDePantalla } from '../../../nucleo/carga';
 import { ConfianzaService } from '../datos/confianza.service';
 import { ProgresoNivel, progresoDeNivel } from '@ciudad-alerta/comun';
@@ -100,7 +100,8 @@ export class ResumenConfianzaComponent {
         return;
       }
 
-      if (perfil.role === 'operador') {
+      // Las cuentas de operador y de organismo no tienen nivel de confianza.
+      if (esCuentaInstitucional(perfil.role)) {
         this.progreso.set(null);
         this.carga?.listo();
         return;

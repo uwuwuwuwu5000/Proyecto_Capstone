@@ -24,6 +24,7 @@ import { PARAMETROS_CONFIANZA } from '@ciudad-alerta/comun';
 
 import { Aviso, AvisoSinVisto, EstadoAvisos } from '../modelo/aviso.model';
 import { Report, StatusChange } from '../../../models/report.model';
+import { esCuentaDeOrganismo } from '../../../models/user-profile.model';
 
 /**
  * Reportes propios que se vigilan.
@@ -172,6 +173,17 @@ export class AvisosService {
       return;
     }
 
+    // 1.2 · Una cuenta de organismo no tiene reportes propios, y las reglas no
+    // le dejan consultar reportes por autor: sin escucha, la campana queda
+    // vacía en vez de mostrar un error engañoso.
+    if (await this.esCuentaDeOrganismo(uid)) {
+      if (this.uid === uid) this.cargando.set(false);
+      return;
+    }
+    if (this.uid !== uid) {
+      return;
+    }
+
     this.escucha = this.escuchar(
       uid,
       (reportes) => {
@@ -188,6 +200,15 @@ export class AvisosService {
         this.cargando.set(false);
       },
     );
+  }
+
+  /** Si la sesión es de una cuenta de organismo (aparte, para probar sin red). */
+  protected async esCuentaDeOrganismo(uid: string): Promise<boolean> {
+    try {
+      return esCuentaDeOrganismo((await this.authService.getUserProfile(uid))?.role);
+    } catch {
+      return false;
+    }
   }
 
   /** La escucha de Firestore, aparte para poder probar el servicio sin red. */

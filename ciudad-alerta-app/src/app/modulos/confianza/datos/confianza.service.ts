@@ -53,6 +53,7 @@ export type MotivoBloqueo =
   | 'confirmado'
   | 'propio'
   | 'operador'
+  | 'organismo'
   | 'cerrado'
   | 'revisado'
   | 'suspendido'
@@ -135,6 +136,8 @@ export function estaCerrado(estado: unknown): boolean {
 export function motivoDeBloqueo(datos: {
   propio: boolean;
   operador: boolean;
+  /** 1.2 · Cuenta de organismo: recibe los reportes ya validados, no los confirma. */
+  organismo?: boolean;
   estadoReporte: unknown;
   conVeredicto: boolean;
   suspendido: boolean;
@@ -143,6 +146,7 @@ export function motivoDeBloqueo(datos: {
 }): MotivoBloqueo | null {
   if (datos.propio) return 'propio';
   if (datos.operador) return 'operador';
+  if (datos.organismo) return 'organismo';
   // 1.0 · Un reporte cerrado o retirado ya no necesita confirmaciones.
   if (estaCerrado(datos.estadoReporte)) return 'cerrado';
   if (datos.conVeredicto) return 'revisado';
@@ -226,6 +230,7 @@ export class ConfianzaService {
     const bloqueo = motivoDeBloqueo({
       propio: reporte.uid === usuario.uid,
       operador: perfil.data()?.['role'] === 'operador',
+      organismo: perfil.data()?.['role'] === 'organismo',
       estadoReporte: reporte.estado,
       conVeredicto: validacionCompleta(reporte.validacion).veredicto !== null,
       suspendido: estado.suspendido,
@@ -251,6 +256,9 @@ export class ConfianzaService {
 
     if (perfil.data()?.['role'] === 'operador') {
       throw this.error('operador');
+    }
+    if (perfil.data()?.['role'] === 'organismo') {
+      throw this.error('organismo');
     }
 
     const cuentaCreadaMs = this.milisegundos(perfil.data()?.['createdAt']);
@@ -515,6 +523,7 @@ export class ConfianzaService {
       confirmado: 'Ya confirmaste este reporte.',
       propio: 'Este es tu reporte: lo confirman otros vecinos.',
       operador: 'Las cuentas de operador gestionan reportes; no los confirman.',
+      organismo: 'Las cuentas de organismo reciben los reportes ya validados; no los confirman.',
       cerrado: 'Este reporte ya está cerrado: no hace falta confirmarlo.',
       revisado: 'Un operador ya revisó este reporte, así que no hace falta confirmarlo.',
       suspendido:

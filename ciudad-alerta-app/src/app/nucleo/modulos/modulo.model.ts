@@ -96,8 +96,17 @@ export interface AccesoInicio {
   readonly icono: string;
   /** Ruta absoluta: '/mapa'. */
   readonly ruta: string;
-  /** Roles que ven el botón. Sin valor, lo ven todos. */
+  /**
+   * Roles que ven el botón. Sin valor, lo ven todos, salvo las cuentas de
+   * organismo: esas solo ven los botones que las nombran en `roles` o que
+   * declaran `paraOrganismo`.
+   */
   readonly roles?: readonly UserRole[];
+  /**
+   * 1.2 · Que también lo vea una cuenta de organismo (solo lectura). Por
+   * defecto no: un botón nuevo para vecinos no le aparece por descuido.
+   */
+  readonly paraOrganismo?: boolean;
   /** Posición en el inicio: menor va primero. Convención en GUIA_MODULOS.md. */
   readonly orden: number;
   /** 'principal' = botón destacado; 'gestion' = color de staff. */

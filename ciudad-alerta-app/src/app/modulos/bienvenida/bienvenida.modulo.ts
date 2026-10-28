@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 
 import { authGuard } from '../../guards/auth-guard';
+import { esCuentaInstitucional } from '../../models/user-profile.model';
 import { ModuloApp } from '../../nucleo/modulos/modulo.model';
 import { BienvenidaService } from './datos/bienvenida.service';
 
@@ -26,6 +27,8 @@ export const MODULO_BIENVENIDA: ModuloApp = {
       loadComponent: () => import('./paginas/bienvenida/bienvenida.page').then((m) => m.BienvenidaPage),
     },
   ],
+  // La bienvenida explica cómo reportar y confirmar: no es para las cuentas
+  // de operador ni de organismo.
   alEntrarAlInicio: (perfil) =>
-    perfil?.role === 'operador' || inject(BienvenidaService).vista() ? null : '/bienvenida',
+    esCuentaInstitucional(perfil?.role) || inject(BienvenidaService).vista() ? null : '/bienvenida',
 };

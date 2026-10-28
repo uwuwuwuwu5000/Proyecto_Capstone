@@ -117,6 +117,8 @@ export class MiPerfilPage {
 
       if (perfil?.role === 'operador' && perfil.operadorId) {
         this.organismo.set(await this.perfilService.organismoDeOperador(perfil.operadorId));
+      } else if (perfil?.role === 'organismo' && perfil.organismoId) {
+        this.organismo.set(await this.perfilService.nombreDeOrganismo(perfil.organismoId));
       }
     } catch {
       this.perfil.set(null);

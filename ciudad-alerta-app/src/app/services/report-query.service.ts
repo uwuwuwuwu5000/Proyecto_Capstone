@@ -287,6 +287,40 @@ export class ReportQueryService {
       );
   }
 
+  /**
+   * 1.2 · Lo que ve una cuenta de organismo: los reportes de su organismo ya
+   * validados por la comunidad (`validacion.validado`). Es la única consulta
+   * de reportes que las reglas le permiten: sin estos dos filtros, se rechaza.
+   *
+   * Usa el índice reports(organismo.id, validacion.validado, createdAt) para
+   * traer primero los más nuevos. Si todavía no está desplegado, consulta solo
+   * con las dos igualdades (no necesitan índice) y ordena en el teléfono.
+   */
+  async validadosDeOrganismo(organismoId: string, maximo = 500): Promise<{ reportes: Report[]; hayMas: boolean }> {
+    const referencia = collection(this.firestore, 'reports');
+    const filtros = [where('organismo.id', '==', organismoId), where('validacion.validado', '==', true)];
+
+    let snapshot;
+    try {
+      snapshot = await getDocs(query(referencia, ...filtros, orderBy('createdAt', 'desc'), limit(maximo + 1)));
+    } catch (error) {
+      if (!(error instanceof FirebaseError) || error.code !== 'failed-precondition') {
+        throw error;
+      }
+      console.warn(
+        'Falta el índice reports(organismo.id, validacion.validado, createdAt). Despliégalo con: firebase deploy --only firestore:indexes',
+      );
+      snapshot = await getDocs(query(referencia, ...filtros, limit(maximo + 1)));
+    }
+
+    const milisegundos = (r: Report) => (r.createdAt instanceof Timestamp ? r.createdAt.toMillis() : 0);
+    const reportes = snapshot.docs
+      .map((d) => ({ id: d.id, ...d.data() }) as Report)
+      .sort((a, b) => milisegundos(b) - milisegundos(a));
+
+    return { reportes: reportes.slice(0, maximo), hayMas: reportes.length > maximo };
+  }
+
   /** HU-26 · Un reporte por id. Devuelve null si no existe. */
   async getById(reportId: string): Promise<Report | null> {
     const snapshot: DocumentSnapshot = await getDoc(

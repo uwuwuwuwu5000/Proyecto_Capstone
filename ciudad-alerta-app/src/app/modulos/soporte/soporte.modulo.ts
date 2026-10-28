@@ -38,7 +38,8 @@ export const MODULO_SOPORTE: ModuloApp = {
     },
   ],
   accesos: [
-    { id: 'soporte', texto: 'Quejas y sugerencias', icono: 'chatbubbles-outline', ruta: '/support', orden: 50 },
+    // También para una cuenta de organismo: es su canal con el equipo de Ciudad Alerta.
+    { id: 'soporte', texto: 'Quejas y sugerencias', icono: 'chatbubbles-outline', ruta: '/support', orden: 50, paraOrganismo: true },
     {
       id: 'bandeja-soporte',
       texto: 'Bandeja de soporte',

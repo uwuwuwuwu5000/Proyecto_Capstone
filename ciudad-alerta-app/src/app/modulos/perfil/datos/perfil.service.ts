@@ -23,6 +23,15 @@ export class PerfilService {
       const organismoId = (operador.data() as OperadorDoc | undefined)?.organismoId;
       if (!organismoId) return null;
 
+      return this.nombreDeOrganismo(organismoId);
+    } catch {
+      return null;
+    }
+  }
+
+  /** 1.2 · Nombre de un organismo del catálogo (el de una cuenta de organismo). */
+  async nombreDeOrganismo(organismoId: string): Promise<string | null> {
+    try {
       const organismo = await getDoc(doc(this.firestore, 'organismos', organismoId));
       return (organismo.data() as OrganismoDoc | undefined)?.nombre ?? null;
     } catch {

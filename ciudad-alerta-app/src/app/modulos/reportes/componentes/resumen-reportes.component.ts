@@ -4,7 +4,7 @@ import { addCircleOutline, documentTextOutline } from 'ionicons/icons';
 
 import { TarjetaResumenComponent } from '../../../compartido/tarjeta-resumen';
 import { EsperaDePantalla } from '../../../nucleo/carga';
-import { UserProfile } from '../../../models/user-profile.model';
+import { UserProfile, esCuentaInstitucional } from '../../../models/user-profile.model';
 import { ReportQueryService } from '../../../services/report-query.service';
 import { ResumenMisReportes, resumenDeMisReportes, textoConteos, textoUltimo } from '../resumen';
 import { RUTAS_REPORTES } from '../rutas';
@@ -69,7 +69,9 @@ export class ResumenReportesComponent {
         return;
       }
 
-      if (perfil.role === 'operador') {
+      // Operadores y organismos no reportan como vecinos (1.2: al organismo,
+      // además, las reglas no le dejan leer sus «reportes»).
+      if (esCuentaInstitucional(perfil.role)) {
         this.resumen.set(null);
         this.carga?.listo();
         return;

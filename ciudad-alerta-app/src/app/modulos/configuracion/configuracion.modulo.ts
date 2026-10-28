@@ -38,6 +38,7 @@ export const MODULO_CONFIGURACION: ModuloApp = {
       ruta: '/configuracion',
       // Junto a «Mi perfil», en «Tu cuenta».
       orden: 95,
+      paraOrganismo: true,
     },
   ],
   iconos: { 'settings-outline': settingsOutline },

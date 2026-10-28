@@ -58,6 +58,12 @@ describe('ResumenReportesComponent (ranura inicio.resumen)', () => {
     expect(getMyReports).not.toHaveBeenCalled();
   });
 
+  it('una cuenta de organismo tampoco (las reglas le negarían la consulta)', async () => {
+    const html = await mostrar('organismo');
+    expect(html.textContent?.trim()).toBe('');
+    expect(getMyReports).not.toHaveBeenCalled();
+  });
+
   it('sin red no muestra nada, sin romper el inicio', async () => {
     getMyReports.mockRejectedValue(new Error('sin red'));
     expect((await mostrar('ciudadano')).textContent?.trim()).toBe('');

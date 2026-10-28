@@ -1,7 +1,24 @@
 import { FieldValue, Timestamp } from 'firebase/firestore';
 
-/** Roles previstos para el MVP de Ciudad Alerta. */
-export type UserRole = 'ciudadano' | 'operador' | 'admin';
+/**
+ * Roles de Ciudad Alerta.
+ *  - ciudadano: reporta y confirma.
+ *  - operador: gestiona los reportes asignados (estados y veredictos).
+ *  - admin: todo, más los catálogos.
+ *  - organismo (1.2): la municipalidad que recibe los reportes ya validados por
+ *    la comunidad. Solo lectura: ve en el mapa los validados de su organismo.
+ */
+export type UserRole = 'ciudadano' | 'operador' | 'admin' | 'organismo';
+
+/** Cuenta de una institución (operador u organismo): no reporta ni confirma como vecino. */
+export function esCuentaInstitucional(rol: UserRole | null | undefined): boolean {
+  return rol === 'operador' || rol === 'organismo';
+}
+
+/** Cuenta de organismo: solo lectura, y solo los reportes validados de su organismo. */
+export function esCuentaDeOrganismo(rol: UserRole | null | undefined): boolean {
+  return rol === 'organismo';
+}
 
 /**
  * Documento base creado en `users/{uid}` al registrarse (CA-48).
@@ -18,6 +35,8 @@ export interface UserProfile {
   emailVerified: boolean;
   /** En cuentas de rol `operador`, el operador que representan. */
   operadorId?: string | null;
+  /** En cuentas de rol `organismo`, el organismo (`organismos/{id}`) cuyos reportes validados ven. */
+  organismoId?: string | null;
   /**
    * Momento del último reporte creado. Sostiene el intervalo mínimo entre
    * envíos (BUG 60). Ausente en los perfiles creados antes de esta versión.
