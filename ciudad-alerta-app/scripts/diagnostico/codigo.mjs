@@ -724,7 +724,11 @@ if (reglas) {
       if (/^true$/.test(condicion)) {
         informe.agregar('brecha', `'${nombre}': allow ${a[1]} if true (abierto a cualquiera)`, { archivo: 'firestore.rules', linea });
       }
-      if (operaciones.some((o) => ['read', 'get', 'list'].includes(o)) && /^estaAutenticado\(\)$|^request\.auth\s*!=\s*null$/.test(condicion)) {
+      const lee = operaciones.some((o) => ['read', 'get', 'list'].includes(o));
+      // 1.2 · «Cualquiera con sesión; un organismo, solo lo validado de su comuna»: sigue abierto para los vecinos.
+      if (lee && /^estaAutenticado\(\)\s*&&\s*\(\s*!esCuentaDeOrganismo\(\)\s*\|\|/.test(condicion)) {
+        lecturaAbierta.push(`${nombre} (un organismo, solo lo validado de su comuna)`);
+      } else if (lee && /^estaAutenticado\(\)$|^request\.auth\s*!=\s*null$/.test(condicion)) {
         lecturaAbierta.push(nombre);
       }
 
@@ -751,7 +755,9 @@ if (reglas) {
 
   if (lecturaAbierta.length) {
     informe.agregar('info', `Cualquier usuario con sesión puede leer: ${[...new Set(lecturaAbierta)].join(', ')}`, {
-      detalle: 'Incluye uid, nombre y ubicación exacta de cada reporte. Es intencional en el MVP; tenlo presente para la política de privacidad.',
+      detalle: lecturaAbierta.some((c) => c.startsWith('reports'))
+        ? 'Incluye uid, nombre y ubicación exacta de cada reporte. Es intencional en el MVP; tenlo presente para la política de privacidad.'
+        : 'Catálogos sin datos personales.',
     });
   }
   if (sinListaBlanca.length) {

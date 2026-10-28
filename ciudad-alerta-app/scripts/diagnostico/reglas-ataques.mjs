@@ -174,6 +174,8 @@ async function sembrar() {
       'users/opmaipu': perfil('opmaipu', 'Operador Maipú', 'operador', { operadorId: 'op_maipu', ...antigua }),
       'users/oppuda': perfil('oppuda', 'Operador Pudahuel', 'operador', { operadorId: 'op_pudahuel', ...antigua }),
       'users/admin': perfil('admin', 'Admin', 'admin', antigua),
+      // Cuenta de organismo (1.2): solo ve los reportes validados de Maipú.
+      'users/orgmaipu': perfil('orgmaipu', 'Municipalidad de Maipú', 'organismo', { organismoId: 'muni_13119', ...antigua }),
       // Organismos y operadores
       'organismos/muni_13119': { ...MAIPU, comunasAtendidas: ['13119'], codigoRegion: '13', region: 'Metropolitana', activo: true },
       'organismos/muni_13124': { ...PUDAHUEL, comunasAtendidas: ['13124'], codigoRegion: '13', region: 'Metropolitana', activo: true },
@@ -198,6 +200,9 @@ async function sembrar() {
       },
       'reports/r_conFoto': { ...reporte('ana', 'Ana Pérez', { foto: { kind: 'firestore', path: 'reportPhotos/r_conFoto', bytes: 12, privacidad: { aplicada: true, personas: 0, rostros: 0 } } }), createdAt: ahora, updatedAt: ahora },
       'reportPhotos/r_conFoto': { reportId: 'r_conFoto', ownerUid: 'ana', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA', createdAt: ahora },
+      // Un reporte de Maipú validado por la comunidad, con foto (lo ve el organismo).
+      'reports/r_validado': { ...reporte('luis', 'Luis Soto', { validacion: { puntos: 120, votos: 4, validado: true } }), createdAt: ahora, updatedAt: ahora },
+      'reportPhotos/r_validado': { reportId: 'r_validado', ownerUid: 'luis', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA', createdAt: ahora },
       // Confirmaciones y contador
       'reports/r_ana/confirmations/luis': { uid: 'luis', reportId: 'r_ana', createdAt: ahora, nivel: 0, peso: 10 },
       // statusHistory
@@ -340,6 +345,18 @@ const CELDAS = [
   // reportPhotos
   ['ana lee una foto de reporte', true, () => getDoc(doc(como('ana'), 'reportPhotos/r_conFoto'))],
   ['anónimo lee una foto de reporte', false, () => getDoc(doc(anonimo(), 'reportPhotos/r_conFoto'))],
+  // Cuenta de organismo (1.2): solo lo validado de su municipalidad.
+  ['el organismo lista los validados de su municipalidad', true, () =>
+    getDocs(query(collection(como('orgmaipu'), 'reports'), where('organismo.id', '==', 'muni_13119'), where('validacion.validado', '==', true)))],
+  ['el organismo lee un reporte validado de su municipalidad', true, () => getDoc(doc(como('orgmaipu'), 'reports/r_validado'))],
+  ['el organismo lee la foto de un reporte validado', true, () => getDoc(doc(como('orgmaipu'), 'reportPhotos/r_validado'))],
+  ['el organismo lista todos los reportes', false, () => getDocs(collection(como('orgmaipu'), 'reports'))],
+  ['el organismo lee un reporte sin validar', false, () => getDoc(doc(como('orgmaipu'), 'reports/r_ana'))],
+  ['el organismo lee la foto de un reporte sin validar', false, () => getDoc(doc(como('orgmaipu'), 'reportPhotos/r_conFoto'))],
+  ['el organismo lee las confirmaciones de un reporte sin validar', false, () => getDocs(collection(como('orgmaipu'), 'reports/r_ana/confirmations'))],
+  ['el organismo lee un reporte validado de otra municipalidad', false, () => getDoc(doc(como('orgmaipu'), 'reports/r_luis'))],
+  ['el organismo lee la confianza de un vecino', false, () => getDoc(doc(como('orgmaipu'), 'users/ana/confianza/actual'))],
+  ['el organismo lee un ticket ajeno', false, () => getDoc(doc(como('orgmaipu'), 'supportTickets/t_luis'))],
 ];
 
 for (const [nombre, esperado, fn] of CELDAS) {
@@ -857,6 +874,23 @@ await permitido('gestor: cambia el estado y deja el historial en el mismo lote',
   });
   return lote.commit();
 });
+await permitido('app: el organismo abre su mapa (validados de su municipalidad, del más nuevo al más antiguo)', () =>
+  getDocs(query(collection(como('orgmaipu'), 'reports'), where('organismo.id', '==', 'muni_13119'), where('validacion.validado', '==', true))));
+await permitido('app: el organismo acepta los términos al entrar', () =>
+  updateDoc(doc(como('orgmaipu'), 'users/orgmaipu'), { terminosVersion: '2026-11', terminosAceptadosAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+await ataque('organismo: crea un reporte', () =>
+  setDoc(doc(como('orgmaipu'), 'reports/x'), reporte('orgmaipu', 'Municipalidad de Maipú')),
+  { impacto: 'Una cuenta institucional publicaría reportes como si fuera un vecino.' });
+await ataque('organismo: confirma un reporte validado', () =>
+  setDoc(doc(como('orgmaipu'), 'reports/r_validado/confirmations/orgmaipu'), { uid: 'orgmaipu', reportId: 'r_validado', createdAt: serverTimestamp() }),
+  { impacto: 'El organismo inflaría la validación de los reportes que recibe.' });
+await ataque('organismo: se cambia a otra municipalidad', () =>
+  updateDoc(doc(como('orgmaipu'), 'users/orgmaipu'), { organismoId: 'muni_13124' }),
+  { impacto: 'Vería los reportes validados de otra comuna.' });
+await ataque('organismo: se da rol de operador', () =>
+  updateDoc(doc(como('orgmaipu'), 'users/orgmaipu'), { role: 'operador', operadorId: 'op_maipu' }),
+  { impacto: 'Pasaría a gestionar reportes.' });
+
 await permitido('portal: un admin elimina un reporte junto con su foto', () => {
   const db = como('admin');
   const lote = writeBatch(db);

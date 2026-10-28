@@ -754,6 +754,11 @@ function campo(obj, nombre) {
   if (obj?.__espacio) throw new NoSimulado(`${obj.__espacio}.${nombre}`);
   if (obj?.__simbolico) {
     if (nombre in obj.valores) return obj.valores[nombre];
+    // Un filtro sobre un campo anidado (where('organismo.id', '==', …)) asegura
+    // resource.data.organismo.id: se devuelve el submapa simbólico.
+    const prefijo = `${nombre}.`;
+    const anidados = Object.entries(obj.valores).filter(([k]) => k.startsWith(prefijo));
+    if (anidados.length) return simbolico(Object.fromEntries(anidados.map(([k, v]) => [k.slice(prefijo.length), v])));
     falla(`la consulta no filtra por «${nombre}»: Firestore no puede asegurar la regla`);
   }
   if (esMapa(obj)) {

@@ -179,6 +179,21 @@ async function sembrar() {
       'supportTickets/t_luis/messages/m1': {
         ticketId: 't_luis', autorUid: 'luis', autorRol: 'ciudadano', texto: 'Al abrir el mapa se cierra', createdAt: ahora,
       },
+      // 1.2 · Cuenta de organismo de Maipú y reportes validados por la comunidad.
+      'users/orgmaipu': perfil('orgmaipu', 'Municipalidad de Maipú', 'organismo', { organismoId: 'muni_13119', ...antigua }),
+      'reports/r_validado': {
+        ...reporte('luis', 'Luis Soto', { validacion: { puntos: 120, votos: 4, validado: true } }), createdAt: ahora, updatedAt: ahora,
+      },
+      'reports/r_validado/statusHistory/h1': {
+        reportId: 'r_validado', desde: 'reportado', hacia: 'en_revision', autorUid: 'admin', autorRol: 'admin', comentario: '', createdAt: ahora,
+      },
+      'reportPhotos/r_validado': { reportId: 'r_validado', ownerUid: 'luis', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA', createdAt: ahora },
+      'reportPhotos/r_ana': { reportId: 'r_ana', ownerUid: 'ana', mimeType: 'image/jpeg', dataUrl: 'data:image/jpeg;base64,/9j/AAAA', createdAt: ahora },
+      'reports/r_validado_pudahuel': {
+        ...reporte('luis', 'Luis Soto', { comuna: 'Pudahuel', organismo: PUDAHUEL, operadorId: 'op_pudahuel', validacion: { puntos: 120, votos: 4, validado: true } }),
+        createdAt: ahora,
+        updatedAt: ahora,
+      },
     };
     for (const [ruta, datos] of Object.entries(escrituras)) await setDoc(doc(db, ruta), datos);
   });
@@ -581,6 +596,46 @@ bloqueo('El autor no corrige un reporte que ya tiene confirmaciones con peso', (
   updateDoc(doc(como('ana'), 'reports/r_ana'), {
     descripcion: 'El bache está frente al paradero 3', updatedAt: serverTimestamp(), editadoAt: serverTimestamp(),
   }), (db) => updateDoc(doc(db, 'reports/r_ana'), { validacion: { puntos: 30, votos: 3, validado: false } }));
+
+// 1.2 · Cuenta de organismo: solo ve los reportes validados de su municipalidad.
+const organismo = () => como('orgmaipu');
+const validadosDe = (db, organismoId) =>
+  getDocs(query(collection(db, 'reports'), where('organismo.id', '==', organismoId), where('validacion.validado', '==', true)));
+control('Organismo: lista los reportes validados de su municipalidad', () => validadosDe(organismo(), 'muni_13119'));
+control('Organismo: abre un reporte validado de su municipalidad, con su foto y su historial', async () => {
+  const db = organismo();
+  await getDoc(doc(db, 'reports/r_validado'));
+  await getDoc(doc(db, 'reportPhotos/r_validado'));
+  return getDocs(collection(db, 'reports/r_validado/statusHistory'));
+});
+control('Organismo: acepta los términos al entrar', () =>
+  updateDoc(doc(organismo(), 'users/orgmaipu'), { terminosVersion: '2026-11', terminosAceptadosAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+control('Un admin da de alta una cuenta de organismo', () =>
+  setDoc(doc(como('admin'), 'users/orgcerrillos'), {
+    uid: 'orgcerrillos', email: 'organismo.cerrillos@ciudadalerta.test', displayName: 'Municipalidad de Cerrillos', role: 'organismo',
+    organismoId: 'muni_13124', trustLevel: 0, validatedReports: 0, emailVerified: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+  }));
+control('Un ciudadano sigue viendo todos los reportes (también los sin validar)', () => getDoc(doc(como('luis'), 'reports/r_ana')));
+bloqueo('Organismo: no lista todos los reportes', () => getDocs(collection(organismo(), 'reports')));
+bloqueo('Organismo: no lista los de su municipalidad sin el filtro de validados', () =>
+  getDocs(query(collection(organismo(), 'reports'), where('organismo.id', '==', 'muni_13119'))));
+bloqueo('Organismo: no lista los validados de otra municipalidad', () => validadosDe(organismo(), 'muni_13124'));
+bloqueo('Organismo: no abre un reporte sin validar de su municipalidad', () => getDoc(doc(organismo(), 'reports/r_ana')));
+bloqueo('Organismo: no abre un reporte validado de otra municipalidad', () => getDoc(doc(organismo(), 'reports/r_validado_pudahuel')));
+bloqueo('Organismo: no ve la foto de un reporte sin validar', () => getDoc(doc(organismo(), 'reportPhotos/r_ana')));
+bloqueo('Organismo: no lee el historial de un reporte sin validar', () => getDocs(collection(organismo(), 'reports/r_ana/statusHistory')));
+bloqueo('Organismo: no crea reportes', () =>
+  setDoc(doc(organismo(), 'reports/x'), reporte('orgmaipu', 'Municipalidad de Maipú')));
+bloqueo('Organismo: no confirma reportes', () =>
+  setDoc(doc(organismo(), 'reports/r_validado/confirmations/orgmaipu'), { uid: 'orgmaipu', reportId: 'r_validado', createdAt: serverTimestamp() }));
+bloqueo('Organismo: no cambia el estado de un reporte', () =>
+  cambioDeEstado(organismo(), 'orgmaipu', 'organismo', 'Municipalidad de Maipú', 'r_validado', 'reportado', 'en_revision'));
+bloqueo('Organismo: no se cambia de municipalidad', () =>
+  updateDoc(doc(organismo(), 'users/orgmaipu'), { organismoId: 'muni_13124', updatedAt: serverTimestamp() }));
+bloqueo('Un ciudadano no se convierte en organismo', () =>
+  updateDoc(doc(como('ana'), 'users/ana'), { role: 'organismo', organismoId: 'muni_13119' }));
+bloqueo('Nadie se registra solo como organismo', () =>
+  setDoc(doc(como('nuevo'), 'users/nuevo'), { ...perfil('nuevo', 'Municipalidad Falsa', 'organismo'), organismoId: 'muni_13119', createdAt: serverTimestamp() }));
 
 // BRECHA: huecos conocidos de las reglas actuales (ninguno abierto en la 1.1).
 

@@ -75,6 +75,33 @@ service cloud.firestore {
       return exists(perfil) && get(perfil).data.role == 'operador';
     }
 
+    /**
+     * 1.2 · Cuenta de organismo (role 'organismo', con organismoId): la
+     * municipalidad que recibe los reportes ya validados por la comunidad. Es
+     * de solo lectura: no reporta, no confirma ni gestiona, y solo ve los
+     * reportes de su organismo con validacion.validado == true. A diferencia
+     * del operador, no cambia estados ni da veredictos.
+     *
+     * Todas las comprobaciones leen el mismo documento (el perfil propio), que
+     * Firestore cuenta una sola vez por operación.
+     */
+    function rutaPerfilPropio() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function esCuentaDeOrganismo() {
+      return exists(rutaPerfilPropio()) && get(rutaPerfilPropio()).data.role == 'organismo';
+    }
+
+    /**
+     * Lo que una cuenta de organismo puede leer de un reporte. En un listado,
+     * la consulta debe filtrar por organismo.id y validacion.validado.
+     */
+    function visibleParaOrganismo(reporte) {
+      return reporte.organismo.id == get(rutaPerfilPropio()).data.organismoId
+        && reporte.validacion.validado == true;
+    }
+
     // ======================================================================
     // SISTEMA DE CONFIANZA (ver sistema_confianza.md)
     // ======================================================================
@@ -313,6 +340,8 @@ service cloud.firestore {
         // DIAG-1 · El operadorId lo asigna un admin al crear la cuenta: si el
         // operador pudiera cambiárselo, gestionaría reportes de otra comuna.
         && request.resource.data.get('operadorId', null) == resource.data.get('operadorId', null)
+        // 1.2 · Lo mismo para una cuenta de organismo: no se cambia de municipalidad.
+        && request.resource.data.get('organismoId', null) == resource.data.get('organismoId', null)
         && (
              request.resource.data.role == resource.data.role
              // Única promoción de rol admitida: una cuenta de la lista de
@@ -420,6 +449,29 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/operadores/$(datos.operadorId));
     }
 
+    /**
+     * 1.2 · Alta de una cuenta de organismo (role 'organismo') por un admin:
+     * la misma forma que escribe scripts/crear-cuentas-municipales.mjs. El
+     * organismo debe existir en el catálogo.
+     */
+    function creacionCuentaOrganismo(userId) {
+      let datos = request.resource.data;
+      return datos.keys().hasOnly([
+               'uid', 'email', 'displayName', 'role', 'organismoId', 'trustLevel',
+               'validatedReports', 'emailVerified', 'createdAt', 'updatedAt'
+             ])
+        && datos.uid == userId
+        && datos.role == 'organismo'
+        && datos.trustLevel == 0
+        && datos.validatedReports == 0
+        && datos.email is string
+        && datos.displayName is string
+        && datos.displayName.size() >= 1
+        && datos.displayName.size() <= 60
+        && datos.organismoId is string
+        && exists(/databases/$(database)/documents/organismos/$(datos.organismoId));
+    }
+
     // --- Perfiles de usuario ----------------------------------------------
 
     match /users/{userId} {
@@ -431,7 +483,7 @@ service cloud.firestore {
       // cuenta de organismo la hace un admin desde el panel, firmando con su
       // propia sesión (por eso esa rama no exige esPropietario).
       allow create: if (esPropietario(userId) && creacionConValoresIniciales(userId))
-        || (esAdministrador() && creacionCuentaOperador(userId));
+        || (esAdministrador() && (creacionCuentaOperador(userId) || creacionCuentaOrganismo(userId)));
       // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
       // campos arbitrarios a su propio documento.
       allow update: if (esPropietario(userId)
@@ -447,7 +499,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
              'uid', 'email', 'displayName', 'role', 'trustLevel',
              'validatedReports', 'emailVerified', 'ultimoReporteAt',
-             'operadorId', 'terminosVersion', 'terminosAceptadosAt',
+             'operadorId', 'organismoId', 'terminosVersion', 'terminosAceptadosAt',
              'createdAt', 'updatedAt'
            ]))
         // Veredicto de un gestor: el espejo de nivel y reportes validados.
@@ -874,9 +926,14 @@ service cloud.firestore {
 
     match /reports/{reportId} {
       // El mapa público del MVP es visible para cualquier usuario autenticado.
-      allow read: if estaAutenticado();
+      // 1.2 · Salvo una cuenta de organismo, que solo ve los reportes de su
+      // organismo ya validados por la comunidad.
+      allow read: if estaAutenticado()
+        && (!esCuentaDeOrganismo() || visibleParaOrganismo(resource.data));
 
       allow create: if estaAutenticado()
+        // 1.2 · Una cuenta de organismo recibe reportes; no los crea.
+        && !esCuentaDeOrganismo()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.estado == 'reportado'
         && request.resource.data.confirmaciones == 0
@@ -1002,7 +1059,8 @@ service cloud.firestore {
       // confirma, así que un segundo intento sería un update y queda denegado:
       // la unicidad la garantizan la estructura y estas reglas, no el cliente.
       match /confirmations/{userId} {
-        allow read: if estaAutenticado();
+        allow read: if estaAutenticado()
+          && (!esCuentaDeOrganismo() || visibleParaOrganismo(datosReporte(reportId)));
 
         // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
         // Dos formatos. El antiguo (solo uid, reportId y createdAt) sigue
@@ -1020,6 +1078,8 @@ service cloud.firestore {
           && !(datosReporte(reportId).estado in ['resuelto', 'cerrado'])
           && validacionDe(datosReporte(reportId)).get('veredicto', null) == null
           && !esCuentaOperador()
+          // 1.2 · Los organismos reciben los reportes ya validados: no votan.
+          && !esCuentaDeOrganismo()
           && (
                request.resource.data.keys().hasOnly(['uid', 'reportId', 'createdAt'])
                || confirmacionConPesoValida(reportId, userId)
@@ -1032,7 +1092,8 @@ service cloud.firestore {
 
       // HU-28 · Bitácora de cambios de estado. Inmutable una vez escrita.
       match /statusHistory/{cambioId} {
-        allow read: if estaAutenticado();
+        allow read: if estaAutenticado()
+          && (!esCuentaDeOrganismo() || visibleParaOrganismo(datosReporte(reportId)));
 
         /**
          * BUG 15 · `desde` debe coincidir con el estado que el reporte tiene
@@ -1085,7 +1146,10 @@ service cloud.firestore {
      * fotos sueltas, sin reporte, hasta llenar la cuota.
      */
     match /reportPhotos/{reportId} {
-      allow read: if estaAutenticado();
+      // 1.2 · Una cuenta de organismo, solo la foto de un reporte que puede ver.
+      allow read: if estaAutenticado()
+        && (!esCuentaDeOrganismo()
+            || visibleParaOrganismo(get(/databases/$(database)/documents/reports/$(reportId)).data));
 
       allow create: if estaAutenticado()
         && request.resource.data.keys().hasOnly(['reportId', 'ownerUid', 'mimeType', 'dataUrl', 'sizeBytes', 'createdAt'])
