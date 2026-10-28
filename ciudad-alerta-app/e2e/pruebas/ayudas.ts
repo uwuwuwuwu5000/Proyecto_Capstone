@@ -4,7 +4,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 
 import { ProblemaDeLegibilidad, problemasDeLegibilidad } from './legibilidad';
 
-export type Cuenta = 'ana' | 'luis' | 'op' | 'admin' | 'antigua' | 'nueva' | null;
+export type Cuenta = 'ana' | 'luis' | 'op' | 'admin' | 'antigua' | 'nueva' | 'orgmaipu' | null;
 
 export interface Apertura {
   /** Con quién empieza la sesión (null: sin sesión). */
@@ -13,7 +13,7 @@ export interface Apertura {
   texto?: 'normal' | 'grande' | 'muy-grande';
   /** Ya vio la bienvenida (por defecto sí, para ir directo al inicio). */
   bienvenidaVista?: boolean;
-  escenario?: { privacidadCaida?: boolean };
+  escenario?: { privacidadCaida?: boolean; conValidados?: boolean };
 }
 
 /** PNG transparente de 1×1 para los mosaicos del mapa (sin internet en las pruebas). */

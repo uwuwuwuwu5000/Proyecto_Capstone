@@ -1,3 +1,5 @@
+import { escenario } from './escenario';
+
 /**
  * Base de datos en memoria de la maqueta de pruebas de punta a punta.
  *
@@ -10,7 +12,7 @@
  * convierten a Timestamp antes de entregarlas a la app.
  */
 
-export type Rol = 'ciudadano' | 'operador' | 'admin';
+export type Rol = 'ciudadano' | 'operador' | 'admin' | 'organismo';
 
 export interface Cuenta {
   uid: string;
@@ -19,6 +21,8 @@ export interface Cuenta {
   displayName: string;
   role: Rol;
   operadorId?: string;
+  /** Cuenta de organismo (1.2): el organismo cuyos reportes validados ve. */
+  organismoId?: string;
   emailVerified: boolean;
   creadaMs: number;
   terminosVersion?: string;
@@ -124,7 +128,7 @@ function semilla(ahora: number): Base {
     ...r,
   });
 
-  return {
+  const sembrada: Base = {
     cuentas: {
       ana: { uid: 'ana', email: 'ana@prueba.cl', password: 'secreta1', displayName: 'Ana Pérez', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 30 * DIA, terminosVersion: 'vigente' },
       luis: { uid: 'luis', email: 'luis@prueba.cl', password: 'secreta1', displayName: 'Luis Soto', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 60 * DIA, terminosVersion: 'vigente' },
@@ -133,6 +137,8 @@ function semilla(ahora: number): Base {
       antigua: { uid: 'antigua', email: 'antigua@prueba.cl', password: 'secreta1', displayName: 'Cuenta Antigua', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 400 * DIA },
       // Creada hace 2 días: todavía no puede elegir en el mapa dónde marcar un reporte (pide 7).
       nueva: { uid: 'nueva', email: 'nueva@prueba.cl', password: 'secreta1', displayName: 'Nora Nueva', role: 'ciudadano', emailVerified: true, creadaMs: ahora - 2 * DIA, terminosVersion: 'vigente' },
+      // 1.2 · Cuenta de organismo: solo ve los reportes validados de Maipú.
+      orgmaipu: { uid: 'orgmaipu', email: 'organismo@maipu.cl', password: 'secreta1', displayName: 'Municipalidad de Maipú', role: 'organismo', organismoId: 'muni_13119', emailVerified: true, creadaMs: ahora - 30 * DIA, terminosVersion: 'vigente' },
     },
     reportes: {
       r_ana_nuevo: reporte({ id: 'r_ana_nuevo', uid: 'ana', descripcion: 'Luminaria apagada frente al paradero 3 de Av. Pajaritos', creadoMs: ahora - HORA, actualizadoMs: ahora - HORA }),
@@ -196,6 +202,31 @@ function semilla(ahora: number): Base {
     sesion: null,
     siguienteId: 1,
   };
+
+  // 1.2 · Para el mapa de la cuenta de organismo: dos reportes de Maipú
+  // validados por la comunidad y uno de Pudahuel (que el de Maipú no ve). Solo
+  // con el escenario, para no cambiar lo que ven las demás pruebas.
+  if (escenario().conValidados) {
+    const validado = { puntos: 120, votos: 4, validado: true };
+    sembrada.reportes['r_val_luminaria'] = reporte({
+      id: 'r_val_luminaria', uid: 'luis', autorNombre: 'Luis Soto', categoria: 'luminaria',
+      descripcion: 'Poste sin luz en toda la cuadra, confirmado por los vecinos', estado: 'en_revision',
+      ubicacion: cerca(40, 40), validacion: validado, creadoMs: ahora - 2 * DIA, actualizadoMs: ahora - DIA,
+    });
+    sembrada.reportes['r_val_arbol'] = reporte({
+      id: 'r_val_arbol', uid: 'ana', categoria: 'arbol_peligroso',
+      descripcion: 'Rama grande a punto de caer sobre la ciclovía', estado: 'derivado',
+      ubicacion: cerca(-30, -50), validacion: validado, creadoMs: ahora - 4 * DIA, actualizadoMs: ahora - 3 * DIA,
+    });
+    sembrada.reportes['r_val_pudahuel'] = reporte({
+      id: 'r_val_pudahuel', uid: 'luis', autorNombre: 'Luis Soto', categoria: 'microbasural',
+      descripcion: 'Microbasural junto a la feria de Pudahuel, ya validado',
+      comuna: 'Pudahuel', organismo: { id: 'muni_13124', nombre: 'Municipalidad de Pudahuel', tipo: 'municipio', comuna: 'Pudahuel' },
+      operadorId: null, ubicacion: cerca(900, 900), validacion: validado,
+    });
+  }
+
+  return sembrada;
 }
 
 let memoria: Base | null = null;

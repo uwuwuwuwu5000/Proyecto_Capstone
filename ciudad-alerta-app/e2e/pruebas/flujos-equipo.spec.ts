@@ -112,3 +112,71 @@ test.describe('Soporte', () => {
     await expect(page.getByRole('button', { name: 'Enviar mensaje' })).toHaveAttribute('disabled', '');
   });
 });
+
+/** Cuántos reportes muestra el mapa: los pines sueltos más lo que suma cada grupo. */
+async function reportesEnElMapa(pantalla: ReturnType<typeof vista>): Promise<number> {
+  return pantalla.locator('app-map-view').evaluate((mapa) => {
+    const sueltos = mapa.querySelectorAll('.marcador-incidencia').length;
+    const agrupados = [...mapa.querySelectorAll('.grupo-incidencias__burbuja')].reduce((total, b) => total + (Number(b.textContent) || 0), 0);
+    return sueltos + agrupados;
+  });
+}
+
+test.describe('Cuenta de organismo', () => {
+  test('la municipalidad solo ve los reportes de su comuna que la comunidad validó, y no puede reportar ni confirmar', async ({ page }) => {
+    await abrir(page, '/home', { como: 'orgmaipu', escenario: { conValidados: true } });
+
+    // El inicio solo le ofrece lo suyo: el mapa de validados, soporte, perfil y configuración.
+    const inicio = vista(page);
+    await expect(inicio.getByText('Reportes validados')).toBeVisible();
+    for (const ajeno of ['Crear un reporte', 'Mis reportes', 'Mapa de incidencias', 'Cerca de mí', 'Todas las incidencias', 'Tus reportes']) {
+      await expect(inicio.getByText(ajeno, { exact: true }), `«${ajeno}» no es para un organismo`).toHaveCount(0);
+    }
+
+    await inicio.getByText('Reportes validados').click();
+    await expect(page).toHaveURL(/\/validados$/);
+    await esperarPantalla(page);
+
+    const mapa = vista(page);
+    await expect(mapa.getByText('Municipalidad de Maipú').first()).toBeVisible();
+    await expect(mapa.getByText('2 reportes validados.')).toBeVisible();
+    const lista = mapa.getByRole('list', { name: 'Reportes validados' });
+    await expect(lista.getByRole('listitem')).toHaveCount(2);
+    await expect(lista).toContainText('Poste sin luz en toda la cuadra');
+    await expect(lista).toContainText('Rama grande a punto de caer');
+    // Ni lo de otra comuna (aunque esté validado) ni lo de Maipú sin validar.
+    await expect(lista).not.toContainText('Pudahuel');
+    await expect(lista).not.toContainText('Fuga de agua en la vereda');
+    await expect.poll(() => reportesEnElMapa(mapa)).toBe(2);
+
+    // El detalle se abre en modo lectura: sin gestión ni confirmación.
+    await lista.getByRole('button').filter({ hasText: 'Poste sin luz' }).click();
+    await expect(page).toHaveURL(/\/report\/r_val_luminaria$/);
+    await esperarPantalla(page);
+    const detalle = vista(page);
+    await expect(detalle.getByText('Poste sin luz en toda la cuadra').first()).toBeVisible();
+    await expect(detalle.getByText('llegó a tu organismo')).toBeVisible();
+    await expect(detalle.getByRole('button', { name: /^Confirmar/ })).toHaveCount(0);
+    await expect(detalle.locator('app-gestion-reporte').getByRole('button')).toHaveCount(0);
+    await expect(detalle.getByRole('button', { name: 'Corregir descripción' })).toHaveCount(0);
+
+    // No dejó nada escrito en la base.
+    const base = await datos(page);
+    expect(base.confirmaciones['r_val_luminaria'] ?? []).not.toContain('orgmaipu');
+    expect(Object.values(base.reportes).filter((r) => r.uid === 'orgmaipu')).toEqual([]);
+  });
+
+  test('sin reportes validados en su comuna lo dice, sin mostrar los demás', async ({ page }) => {
+    await abrir(page, '/validados', { como: 'orgmaipu' });
+    const mapa = vista(page);
+    await expect(mapa.getByText('Todavía no hay reportes validados en tu comuna.')).toBeVisible();
+    await expect(mapa.getByRole('list', { name: 'Reportes validados' })).toHaveCount(0);
+    expect(await reportesEnElMapa(mapa)).toBe(0);
+  });
+
+  test('una vecina que abre el mapa de validados ve que no es para ella', async ({ page }) => {
+    await abrir(page, '/validados', { como: 'ana', escenario: { conValidados: true } });
+    await expect(vista(page).getByText('Esta pantalla es para las cuentas de organismo.')).toBeVisible();
+    await expect(vista(page).getByRole('list', { name: 'Reportes validados' })).toHaveCount(0);
+  });
+});

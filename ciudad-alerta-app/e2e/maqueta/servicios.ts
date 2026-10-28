@@ -95,6 +95,7 @@ function aPerfil(c: Cuenta): UserProfile {
     validatedReports: 0,
     emailVerified: c.emailVerified,
     operadorId: c.operadorId ?? null,
+    ...(c.organismoId ? { organismoId: c.organismoId } : {}),
     ...(c.terminosVersion ? { terminosVersion: c.terminosVersion === 'vigente' ? VERSION_TERMINOS : c.terminosVersion } : {}),
     createdAt: Timestamp.fromMillis(c.creadaMs),
     updatedAt: Timestamp.fromMillis(c.creadaMs),
@@ -284,6 +285,13 @@ export class ConsultasFalsas {
     return this.todos().filter((r) => r.operadorId === operadorId);
   }
 
+  /** 1.2 · Lo mismo que dejan leer las reglas a una cuenta de organismo. */
+  async validadosDeOrganismo(organismoId: string): Promise<{ reportes: Report[]; hayMas: boolean }> {
+    await espera(RED_MS);
+    exigirRed();
+    return { reportes: this.todos().filter((r) => r.organismo?.id === organismoId && r.validacion?.validado === true), hayMas: false };
+  }
+
   async getById(reportId: string): Promise<Report | null> {
     await espera(RED_MS);
     exigirRed();
@@ -304,7 +312,7 @@ export class ConsultasFalsas {
       : 'Hace unos instantes';
   }
 }
-type _Consultas = Imita<ConsultasFalsas, Pick<ReportQueryService, 'getById' | 'getMyReports' | 'formatearFecha'>>;
+type _Consultas = Imita<ConsultasFalsas, Pick<ReportQueryService, 'getById' | 'getMyReports' | 'formatearFecha' | 'validadosDeOrganismo'>>;
 
 function distancia(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const rad = Math.PI / 180;
@@ -341,8 +349,19 @@ export class RuteoFalso {
   async resolveOperador(): Promise<string | null> {
     return 'op_maipu';
   }
+
+  async nombreDeOrganismo(organismoId: string): Promise<string | null> {
+    await espera(RED_MS / 2);
+    return NOMBRES_DE_ORGANISMOS[organismoId] ?? null;
+  }
 }
-type _Ruteo = Imita<RuteoFalso, Pick<RoutingService, 'getStatusHistory'>>;
+type _Ruteo = Imita<RuteoFalso, Pick<RoutingService, 'getStatusHistory' | 'nombreDeOrganismo'>>;
+
+/** Los organismos que usa la maqueta. */
+const NOMBRES_DE_ORGANISMOS: Record<string, string> = {
+  muni_13119: 'Municipalidad de Maipú',
+  muni_13124: 'Municipalidad de Pudahuel',
+};
 
 // ─── Reportes: escritura ─────────────────────────────────────────────────────
 
@@ -663,6 +682,7 @@ export class ConfianzaFalsa {
       : motivoDeBloqueo({
           propio: reporte.uid === uid,
           operador: cuenta?.role === 'operador',
+          organismo: cuenta?.role === 'organismo',
           estadoReporte: reporte.estado,
           conVeredicto: validacionCompleta(reporte.validacion).veredicto !== null,
           suspendido: false,
@@ -879,8 +899,13 @@ export class PerfilFalso {
     await espera(RED_MS);
     return base().operadores[operadorId] ? 'Municipalidad de Maipú' : null;
   }
+
+  async nombreDeOrganismo(organismoId: string): Promise<string | null> {
+    await espera(RED_MS);
+    return NOMBRES_DE_ORGANISMOS[organismoId] ?? null;
+  }
 }
-type _Perfil = Imita<PerfilFalso, Pick<PerfilService, 'organismoDeOperador'>>;
+type _Perfil = Imita<PerfilFalso, Pick<PerfilService, 'organismoDeOperador' | 'nombreDeOrganismo'>>;
 
 /** El servicio real de eliminar la cuenta; cada paso de Firebase, contra la base en memoria. */
 @Injectable()

@@ -5,6 +5,8 @@
  */
 export interface Escenario {
   privacidadCaida?: boolean;
+  /** 1.2 · Agrega reportes validados por la comunidad (mapa de la cuenta de organismo). */
+  conValidados?: boolean;
 }
 
 export function escenario(): Escenario {

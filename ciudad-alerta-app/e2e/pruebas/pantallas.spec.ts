@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test';
 
-import { Cuenta, abrir, esperarPantalla, expect, revisarTodaLaPantalla, test, vista } from './ayudas';
+import { Apertura, Cuenta, abrir, esperarPantalla, expect, revisarTodaLaPantalla, test, vista } from './ayudas';
 import { controlesSinNombre } from './accesibilidad';
 import { describir } from './legibilidad';
 
@@ -20,6 +20,8 @@ interface Pantalla {
   muestra: RegExp;
   /** Algo que hacer antes de revisar (abrir una pestaña, por ejemplo). */
   antes?: (page: Page) => Promise<void>;
+  /** Datos de prueba adicionales (ver e2e/maqueta/escenario.ts). */
+  escenario?: Apertura['escenario'];
 }
 
 export const PANTALLAS: Pantalla[] = [
@@ -67,13 +69,28 @@ export const PANTALLAS: Pantalla[] = [
   { nombre: 'Municipalidades', ruta: '/admin-organismos', como: 'admin', muestra: /Municipalidades|municipalidades/ },
   { nombre: 'Bandeja de soporte', ruta: '/support-inbox', como: 'admin', muestra: /La foto tarda mucho/ },
   { nombre: 'Configuración del equipo', ruta: '/configuracion', como: 'admin', muestra: /Módulos de esta versión/ },
+  { nombre: 'Inicio de un organismo', ruta: '/home', como: 'orgmaipu', muestra: /Reportes validados/ },
+  {
+    nombre: 'Reportes validados del organismo',
+    ruta: '/validados',
+    como: 'orgmaipu',
+    muestra: /2 reportes validados/,
+    escenario: { conValidados: true },
+  },
+  {
+    nombre: 'Detalle de un reporte validado, visto por el organismo',
+    ruta: '/report/r_val_luminaria',
+    como: 'orgmaipu',
+    muestra: /llegó a tu organismo/,
+    escenario: { conValidados: true },
+  },
 ];
 
 for (const pantalla of PANTALLAS) {
   test.describe(pantalla.nombre, () => {
     for (const tema of ['oscuro', 'claro'] as const) {
       test(`se lee bien en tema ${tema}`, async ({ page }) => {
-        await abrir(page, pantalla.ruta, { como: pantalla.como, tema });
+        await abrir(page, pantalla.ruta, { como: pantalla.como, tema, escenario: pantalla.escenario });
         if (pantalla.antes) {
           await pantalla.antes(page);
           await esperarPantalla(page);
@@ -91,7 +108,7 @@ for (const pantalla of PANTALLAS) {
     }
 
     test('con el texto «Muy grande» nada se sale de la pantalla', async ({ page }) => {
-      await abrir(page, pantalla.ruta, { como: pantalla.como, texto: 'muy-grande' });
+      await abrir(page, pantalla.ruta, { como: pantalla.como, texto: 'muy-grande', escenario: pantalla.escenario });
       if (pantalla.antes) {
         await pantalla.antes(page);
         await esperarPantalla(page);
