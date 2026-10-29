@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  MOTIVO_VEREDICTO_MAXIMO,
   NIVELES,
   PARAMETROS_CONFIANZA,
   cuentaEsAntigua,
+  efectoDeVeredicto,
   inicioDeDia,
   limiteDiario,
+  motivoDeVeredicto,
   nivelDePuntos,
   numeroDeDia,
   pesoDeNivel,
@@ -111,6 +114,58 @@ describe('confianza: veredictos y progreso', () => {
     expect(puntosTrasVeredicto(760, 'real')).toBe(760);
     expect(puntosTrasVeredicto(40, 'falso')).toBe(25);
     expect(puntosTrasVeredicto(5, 'falso')).toBe(0);
+  });
+
+  it('efecto de un veredicto real en un autor sin documento de confianza', () => {
+    expect(efectoDeVeredicto(undefined, 'real')).toEqual({
+      puntosAntes: 0,
+      puntosConfianza: 10,
+      trustLevel: 0,
+      validatedReports: 1,
+      reportesFalsos: 0,
+      confirmacionesSuspendidas: false,
+      veredictoPuntos: 10,
+    });
+  });
+
+  it('efecto de un veredicto falso: −15, un falso más y conserva la suspensión', () => {
+    const previo = { puntosConfianza: 40, validatedReports: 4, reportesFalsos: 1, confirmacionesSuspendidas: true };
+    expect(efectoDeVeredicto(previo, 'falso')).toEqual({
+      puntosAntes: 40,
+      puntosConfianza: 25,
+      trustLevel: 0,
+      validatedReports: 4,
+      reportesFalsos: 2,
+      confirmacionesSuspendidas: true,
+      veredictoPuntos: -15,
+    });
+  });
+
+  it('veredictoPuntos dice lo que de verdad cambió en el tope y en 0', () => {
+    expect(efectoDeVeredicto({ puntosConfianza: 755 }, 'real')).toMatchObject({ puntosConfianza: 760, trustLevel: 10, veredictoPuntos: 5 });
+    expect(efectoDeVeredicto({ puntosConfianza: 760 }, 'real').veredictoPuntos).toBe(0);
+    expect(efectoDeVeredicto({ puntosConfianza: 0 }, 'falso').veredictoPuntos).toBe(0);
+  });
+
+  it('el nivel tras el veredicto es el de las reglas', () => {
+    for (const pc of [0, 25, 30, 35, 70, 120, 250, 750]) {
+      for (const veredicto of ['real', 'falso'] as const) {
+        const efecto = efectoDeVeredicto({ puntosConfianza: pc }, veredicto);
+        // Regla: real → min(pc + 10, 760); falso → max(pc − 15, 0).
+        const esperado = veredicto === 'real' ? (pc + 10 > 760 ? 760 : pc + 10) : pc - 15 < 0 ? 0 : pc - 15;
+        expect(efecto.puntosConfianza).toBe(esperado);
+        expect(efecto.trustLevel).toBe(reglas.nivelDePuntos(esperado));
+      }
+    }
+  });
+
+  it('motivo: obligatorio si es falso, opcional si es real, con tope de largo', () => {
+    expect(motivoDeVeredicto('falso', '   ').error).toContain('motivo');
+    expect(motivoDeVeredicto('falso', '  No había ningún bache ')).toEqual({ motivo: 'No había ningún bache', error: null });
+    expect(motivoDeVeredicto('real', '')).toEqual({ motivo: null, error: null });
+    expect(motivoDeVeredicto('real', undefined)).toEqual({ motivo: null, error: null });
+    expect(motivoDeVeredicto('falso', 'x'.repeat(MOTIVO_VEREDICTO_MAXIMO)).error).toBeNull();
+    expect(motivoDeVeredicto('falso', 'x'.repeat(MOTIVO_VEREDICTO_MAXIMO + 1)).error).toContain('512');
   });
 
   it('progreso hacia el siguiente nivel', () => {

@@ -121,6 +121,74 @@ export function puntosTrasVeredicto(puntos: number, veredicto: 'real' | 'falso')
   return Math.max(0, Math.min(P.puntosMaximos, puntos + delta));
 }
 
+/** Largo máximo del motivo de un veredicto. Regla `veredictoValido`. */
+export const MOTIVO_VEREDICTO_MAXIMO = 512;
+
+/**
+ * El motivo limpio, o un error para mostrar. Falso exige un motivo con algo
+ * más que espacios; real lo admite opcional (null si viene vacío).
+ */
+export function motivoDeVeredicto(
+  veredicto: 'real' | 'falso',
+  texto: string | null | undefined,
+): { motivo: string | null; error: string | null } {
+  const motivo = (texto ?? '').trim();
+
+  if (motivo.length > MOTIVO_VEREDICTO_MAXIMO) {
+    return { motivo: null, error: `El motivo puede tener hasta ${MOTIVO_VEREDICTO_MAXIMO} caracteres.` };
+  }
+
+  if (veredicto === 'falso' && motivo === '') {
+    return { motivo: null, error: 'Escribe el motivo: el autor lo verá junto al aviso.' };
+  }
+
+  return { motivo: motivo === '' ? null : motivo, error: null };
+}
+
+/** Lo que hay hoy en `users/{autor}/confianza/actual`. Sin documento, todo en cero. */
+export interface ConfianzaGuardada {
+  puntosConfianza?: number;
+  validatedReports?: number;
+  reportesFalsos?: number;
+  confirmacionesSuspendidas?: boolean;
+}
+
+/** Cómo queda la confianza del autor tras un veredicto. */
+export interface EfectoVeredicto {
+  puntosAntes: number;
+  puntosConfianza: number;
+  trustLevel: number;
+  validatedReports: number;
+  reportesFalsos: number;
+  confirmacionesSuspendidas: boolean;
+  /** Lo que de verdad cambió: 0 en el tope de PC o en 0. */
+  veredictoPuntos: number;
+}
+
+/**
+ * Efecto de un veredicto en la confianza del autor: +10 PC y un reporte
+ * validado si es real; −15 PC y un reporte falso si no. Regla
+ * `confianzaDeVeredictoValida`, número por número.
+ */
+export function efectoDeVeredicto(
+  previo: ConfianzaGuardada | null | undefined,
+  veredicto: 'real' | 'falso',
+): EfectoVeredicto {
+  const real = veredicto === 'real';
+  const puntosAntes = previo?.puntosConfianza ?? 0;
+  const puntosConfianza = puntosTrasVeredicto(puntosAntes, veredicto);
+
+  return {
+    puntosAntes,
+    puntosConfianza,
+    trustLevel: nivelDePuntos(puntosConfianza),
+    validatedReports: (previo?.validatedReports ?? 0) + (real ? 1 : 0),
+    reportesFalsos: (previo?.reportesFalsos ?? 0) + (real ? 0 : 1),
+    confirmacionesSuspendidas: previo?.confirmacionesSuspendidas ?? false,
+    veredictoPuntos: puntosConfianza - puntosAntes,
+  };
+}
+
 export interface ProgresoNivel {
   nivel: number;
   nombre: string;

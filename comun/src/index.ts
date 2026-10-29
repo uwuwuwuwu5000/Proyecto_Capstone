@@ -13,6 +13,7 @@ export * from './reportes/categorias';
 export * from './reportes/descripcion';
 export * from './reportes/tiempos';
 export * from './reportes/gestion';
+export * from './reportes/contacto';
 
 // Sistema de confianza
 export * from './confianza/parametros';
@@ -28,3 +29,6 @@ export * from './geo/distancia';
 // Privacidad de las fotos
 export * from './privacidad/parametros';
 export * from './privacidad/geometria';
+
+// Términos, privacidad y eliminación de cuenta
+export * from './legal/terminos';
