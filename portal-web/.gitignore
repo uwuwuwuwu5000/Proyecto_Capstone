@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 firestore-debug.log
 *.log
+
+# Playwright
+playwright-report
+test-results
+e2e/.sesiones

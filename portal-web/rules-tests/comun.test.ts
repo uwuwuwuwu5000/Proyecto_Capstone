@@ -24,7 +24,7 @@ describe('estados', () => {
   })
 })
 
-describe('sistema de confianza (copia del portal contra comun)', () => {
+describe('sistema de confianza (el portal usa los cálculos de comun)', () => {
   const puntos = Array.from({ length: 821 }, (_, i) => i)
   const niveles = Array.from({ length: 11 }, (_, i) => i)
 

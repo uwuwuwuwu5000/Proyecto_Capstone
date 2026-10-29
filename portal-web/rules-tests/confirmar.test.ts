@@ -21,6 +21,7 @@ const antiguaMs = () => Date.now() - 10 * DIA
 const hoy = () => String(numeroDeDia())
 
 interface Semilla {
+  estado?: string
   validacion?: object | null
   confianza?: object
   limite?: { confirmaciones: number; ultimaAt: ReturnType<typeof hace> }
@@ -31,7 +32,7 @@ async function sembrar(s: Semilla = {}) {
   await env.clearFirestore()
   await sembrarBase(env, async (db) => {
     await setDoc(doc(db, 'reports', 'r1'), {
-      ...reporteNuevo(CIUDADANO, () => new Date()),
+      ...reporteNuevo(CIUDADANO, () => new Date(), s.estado ? { estado: s.estado } : {}),
       ...(s.validacion === null ? {} : { validacion: s.validacion ?? VALIDACION_CERO }),
     })
     if (s.confianza) await setDoc(doc(db, 'users', VOTANTE, 'confianza', 'actual'), s.confianza)
@@ -149,6 +150,26 @@ describe('casos que el portal detecta antes de escribir', () => {
     await sembrar()
     const p = confirmarReporte(bd(VOTANTE), { reportId: 'no_existe', uid: VOTANTE, correoVerificado: true, creadaEnMs: antiguaMs() })
     expect(await codigo(p)).toBe('no_existe')
+  })
+  // Fase 0.3: desde la versión 1.1 las reglas rechazan estas confirmaciones;
+  // el portal debe avisarlo con un mensaje claro y no con «rechazada».
+  it.each(['resuelto', 'cerrado'])('un reporte «%s» ya no se confirma', async (estado) => {
+    await sembrar({ estado })
+    expect(await codigo(confirmar())).toBe('finalizado')
+    expect(await leer(['reports', 'r1', 'confirmations', VOTANTE])).toBeUndefined()
+  })
+  it('un reporte con veredicto ya no se confirma', async () => {
+    await sembrar({
+      validacion: { ...VALIDACION_CERO, validado: true, puntos: 105, votos: 4, veredicto: 'real', veredictoPor: OPERADOR },
+    })
+    expect(await codigo(confirmar())).toBe('con_veredicto')
+  })
+  it('las reglas rechazan una confirmación de un reporte cerrado aunque el portal no la detecte', async () => {
+    await sembrar({ estado: 'cerrado' })
+    const ruta = doc(bd(VOTANTE), 'reports', 'r1', 'confirmations', VOTANTE)
+    await expect(
+      setDoc(ruta, { uid: VOTANTE, reportId: 'r1', nivel: 0, peso: 10, createdAt: new Date() }),
+    ).rejects.toThrow()
   })
   it('una cuenta operador no confirma (lo rechazan las reglas)', async () => {
     await sembrar()

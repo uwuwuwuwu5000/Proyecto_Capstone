@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
+    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-ciudad-alerta \"playwright test\"",
+    "test:e2e:ui": "playwright test --ui",
     "test:reglas": "firebase emulators:exec --only firestore --project demo-ciudad-alerta \"vitest run --config vitest.reglas.config.ts\""
   },
   "dependencies": {
@@ -18,22 +20,26 @@
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "@tensorflow/tfjs-converter": "^4.22.0",
     "@tensorflow/tfjs-core": "^4.22.0",
+    "@types/supercluster": "^7.1.3",
     "firebase": "^12.18.0",
     "geofire-common": "^6.0.0",
     "leaflet": "^1.9.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-leaflet": "^5.0.0",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.3",
+    "supercluster": "^9.1.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.64.1",
     "@rolldown/binding-win32-x64-msvc": "^1.2.7",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "firebase-admin": "^13.10.0",
     "oxlint": "^1.79.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.2",
