@@ -1,0 +1,239 @@
+﻿IDs del plan;Archivo de prueba;Prueba;Resultado;Segundos
+AV2,AV3;avisos.test.ts;validación y veredicto > sin nada que avisar, lista vacía;OK;0.0033275
+AV2,AV3;avisos.test.ts;validación y veredicto > validado por la comunidad;OK;0.0017894
+AV2,AV3;avisos.test.ts;validación y veredicto > validado sin fecha no genera aviso (no se puede ordenar ni dar por visto);OK;0.0002784
+AV2,AV3;avisos.test.ts;validación y veredicto > veredicto real muestra los puntos;OK;0.0003187
+AV2,AV3;avisos.test.ts;validación y veredicto > veredicto falso muestra el motivo y los puntos restados;OK;0.0003287
+AV2,AV3;avisos.test.ts;validación y veredicto > sin cambio de puntos (piso o tope), no se menciona;OK;0.0001837
+AV2,AV3;avisos.test.ts;validación y veredicto > validado y con veredicto: dos avisos;OK;0.0002814
+AV2,AV3;avisos.test.ts;validación y veredicto > la descripción larga se acorta;OK;0.0003014
+AV4,PA3;avisos.test.ts;nivel > sin nivel anterior conocido, el texto es neutro;OK;0.0004356
+AV4,PA3;avisos.test.ts;nivel > sin nivel anterior y en el nivel 0, no hay aviso;OK;0.0002755
+AV4,PA3;avisos.test.ts;nivel > subió;OK;0.0003873
+AV4,PA3;avisos.test.ts;nivel > bajó;OK;0.0001312
+AV4,PA3;avisos.test.ts;nivel > igual al anterior, sin aviso;OK;0.0001372
+AV4,PA3;avisos.test.ts;nivel > el nivel visto sale de los marcadores, sin contar el actual;OK;0.0004998
+RI8;base.test.ts;compatibilidad con firestore.rules > reportes > un ciudadano crea su reporte;OK;0.2814703
+RI2;base.test.ts;compatibilidad con firestore.rules > reportes > no se crea un reporte a nombre de otro;OK;0.1356799
+MS4;base.test.ts;compatibilidad con firestore.rules > reportes > un ciudadano no cambia el estado;OK;0.1291296
+MS4,AD8;base.test.ts;compatibilidad con firestore.rules > reportes > el operador asignado cambia el estado;OK;0.0797326
+MS4;base.test.ts;compatibilidad con firestore.rules > reportes > el administrador cambia el estado;OK;0.0828588
+MS5,WG10;base.test.ts;compatibilidad con firestore.rules > reportes > una transición inválida se rechaza;OK;0.1065412
+VC3,VC6;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > otro vecino confirma;OK;0.0835905
+VC7,SG7,CT9;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > nadie confirma su propio reporte;OK;0.0737549
+VC4,VC7,CT9;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > no se confirma dos veces;OK;0.0753878
+VC7,SG7,CT9;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > un operador no confirma;OK;0.088223
+PF4;base.test.ts;compatibilidad con firestore.rules > perfiles > cada quien lee su perfil y no el de otro;OK;0.1627989
+SG1;base.test.ts;compatibilidad con firestore.rules > perfiles > un usuario no se sube el nivel;OK;0.0745574
+SG1;base.test.ts;compatibilidad con firestore.rules > perfiles > un usuario no se hace administrador;OK;0.0855117
+AV5;base.test.ts;compatibilidad con firestore.rules > perfiles > guarda qué avisos ya vio;OK;0.0801947
+AD8,MS4,MS6;base.test.ts;compatibilidad con firestore.rules > historial de estados > el operador asignado cambia estado y registra el historial en un lote;OK;0.0914983
+CM1;comun.test.ts;estados > el portal usa los de comun;OK;0.0048613
+CM1;comun.test.ts;estados > «Resuelto» es verde, como en la app;OK;0.0004407
+CM1,RI3,MB1;comun.test.ts;estados > largo de la descripción;OK;0.0004156
+CM3,CT1,CT2;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > nivel, peso y límite diario;OK;0.0045041
+CM3,CT1,CT2;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > número de día;OK;0.000793
+CM3,CT1,CT2;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > sumar un voto;OK;0.0010941
+CM3,CT1,CT2;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > puntos tras el veredicto;OK;0.0006914
+CM3,CT1,CT2;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > porcentaje de verificación;OK;0.0004669
+CM2;comun.test.ts;tiempos > formato de la duración, mediana y promedio;OK;0.0233337
+CM2;comun.test.ts;tiempos > primera atención y resolución con el historial ordenado;OK;0.0005608
+WM1;comun.test.ts;mapa de calor > agrupación por comuna y tramos;OK;0.0012078
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > un voto de nivel 0 con el peso exacto (10) se acepta;OK;1.6562512
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > un peso inventado se rechaza;OK;0.397206
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > un nivel falseado se rechaza (dice nivel 5 y su confianza es 0);OK;0.2549973
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > la suma del reporte debe ser la anterior más el peso;OK;0.2371076
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > votos debe subir en 1;OK;0.3070364
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > sin tocar validacion del reporte se rechaza;OK;0.2121327
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > sin escribir el contador del día se rechaza;OK;0.1906297
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > el contador de otro día se rechaza;OK;0.2092493
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > no se confirma el propio reporte;OK;0.2196652
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > una cuenta operador no confirma;OK;0.2263487
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > no se confirma dos veces;OK;0.363378
+CT3,CT2,VC3,VC7;confianza.test.ts;confirmar con peso > un voto no puede sumar a nombre de otro usuario;OK;0.1740422
+CT5;confianza.test.ts;peso 0 por correo o antigüedad > con el correo sin verificar solo se acepta peso 0, sin sumar votos;OK;0.300212
+CT5;confianza.test.ts;peso 0 por correo o antigüedad > una cuenta de menos de 24 horas solo se acepta con peso 0;OK;0.3039053
+CT2;confianza.test.ts;niveles > un votante de nivel 4 pesa 20 y puede confirmar;OK;0.1653711
+CT2;confianza.test.ts;niveles > el nivel 10 pesa 34 (tope);OK;0.1736497
+CT2;confianza.test.ts;niveles > el peso del nivel 10 no puede ser 35;OK;0.1777458
+CT6;confianza.test.ts;límites y suspensión > nivel 0: la sexta confirmación del día se rechaza;OK;0.1871973
+CT6;confianza.test.ts;límites y suspensión > nivel 0: la quinta confirmación del día se acepta;OK;0.1693624
+CT6;confianza.test.ts;límites y suspensión > el contador no puede saltar de a más de uno;OK;0.1905462
+CT7;confianza.test.ts;límites y suspensión > la pausa de 20 s: una segunda confirmación inmediata se rechaza;OK;0.140761
+CT7;confianza.test.ts;límites y suspensión > pasada la pausa se acepta;OK;0.2113383
+CT8;confianza.test.ts;límites y suspensión > con las confirmaciones suspendidas se rechaza;OK;0.1996977
+CT6;confianza.test.ts;límites y suspensión > un usuario no reinicia su contador del día;OK;0.1729546
+CT4;confianza.test.ts;validación del reporte (sección 4.3) > con 95 puntos y 3 votos, el voto que llega a 105 debe marcar validado;OK;0.3534583
+CT4;confianza.test.ts;validación del reporte (sección 4.3) > no se marca validado con menos de 100 puntos;OK;0.2219841
+CT4;confianza.test.ts;validación del reporte (sección 4.3) > no se marca validado con menos de 3 personas, aunque sumen 100;OK;0.1410325
+CT4;confianza.test.ts;validación del reporte (sección 4.3) > un voto de peso 0 no cuenta como persona;OK;0.3172062
+CT14;confianza.test.ts;reporte antiguo sin el mapa validacion > la primera confirmación con peso crea el mapa;OK;0.1506721
+CT21;confianza.test.ts;formato antiguo de confirmación (transición) > se acepta sin peso y no toca la validación;OK;0.1570309
+CT21;confianza.test.ts;formato antiguo de confirmación (transición) > el formato antiguo no puede llevar un peso escondido;OK;0.1520757
+CT21;confianza.test.ts;formato antiguo de confirmación (transición) > un voto sin el formato antiguo ni el nuevo no suma a la validación;OK;0.1384699
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: el autor sube de 0 a 10 PC y validatedReports a 1;OK;0.1478031
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: con 35 PC pasa a 45 y sube al nivel 1;OK;0.3108721
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: un nivel mal calculado se rechaza;OK;0.2770867
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: puntos que no son la suma exacta se rechazan;OK;0.1703882
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: el tope de 760 (755 + 10 = 760);OK;0.3025176
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > real: pasar de 760 se rechaza;OK;0.2427813
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > falso: con 20 PC baja a 5 y suma un falso;OK;0.238718
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > falso: el piso es 0 (con 5 PC queda en 0 y se aplican -5);OK;0.2030677
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > falso: bajar de 0 se rechaza;OK;0.229321
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > falso: sin comentario se rechaza;OK;0.2073952
+CT10,CT11,CT12;confianza.test.ts;veredicto del operador > falso: el comentario no puede ser solo espacios;OK;0.2429938
+CT10;confianza.test.ts;veredicto del operador > sin escribir los puntos del autor en el mismo lote se rechaza;OK;0.1540913
+CT10;confianza.test.ts;veredicto del operador > el espejo en users debe coincidir con confianza/actual;OK;0.2383208
+CT13;confianza.test.ts;veredicto del operador > un veredicto no se cambia una vez dado;OK;0.1869156
+CT13;confianza.test.ts;veredicto del operador > un segundo veredicto sobre el mismo reporte se rechaza aunque no toque los puntos;OK;0.282907
+CT10;confianza.test.ts;veredicto del operador > el administrador también da veredicto;OK;0.1650018
+CT13;confianza.test.ts;veredicto del operador > un ciudadano no da veredicto;OK;0.1240139
+CT13;confianza.test.ts;veredicto del operador > un operador de otro organismo no da veredicto;OK;0.1749923
+CT13;confianza.test.ts;veredicto del operador > nadie da veredicto a su propio reporte;OK;0.1638095
+CT13;confianza.test.ts;veredicto del operador > el reporte de un autor que no es ciudadano no da puntos;OK;0.2102128
+SG9;confianza.test.ts;acceso a confianza/actual > el dueño lee la suya;OK;0.22645
+SG9;confianza.test.ts;acceso a confianza/actual > otro ciudadano no la lee (el nivel es privado);OK;0.1669645
+SG9;confianza.test.ts;acceso a confianza/actual > un operador la lee;OK;0.1414902
+SG9;confianza.test.ts;acceso a confianza/actual > el dueño no la modifica;OK;0.1087161
+SG9;confianza.test.ts;acceso a confianza/actual > un operador no la modifica por su cuenta (sin veredicto);OK;0.1177508
+CT17,SG11;confianza.test.ts;acceso a confianza/actual > el administrador suspende confirmaciones sin cambiar los puntos;OK;0.1044663
+CT17,SG11;confianza.test.ts;acceso a confianza/actual > el administrador no puede cambiar los puntos al suspender;OK;0.1459315
+SG10;confianza.test.ts;perfil y reportes > createdAt no se puede cambiar (antigüedad de la cuenta);OK;0.1525693
+SG10;confianza.test.ts;perfil y reportes > un perfil sin createdAt puede completarlo una vez, con la hora del servidor;OK;0.182675
+SG10;confianza.test.ts;perfil y reportes > al registrarse, createdAt debe ser la hora del servidor;OK;0.1387824
+SG1;confianza.test.ts;perfil y reportes > un reporte nuevo no puede nacer con puntos o validado;OK;0.1712856
+SG1;confianza.test.ts;perfil y reportes > el autor no modifica la validación de su reporte;OK;0.1041501
+CT3,VC3;confirmar.test.ts;confirmar con peso > un voto de nivel 0 suma 10 puntos y crea el contador del día;OK;0.4392648
+CT3,VC3;confirmar.test.ts;confirmar con peso > un votante de nivel 4 pesa 20;OK;0.1114168
+CT4;confirmar.test.ts;confirmar con peso > con 95 puntos y 3 personas, el voto siguiente deja el reporte validado;OK;0.1326544
+CT14;confirmar.test.ts;confirmar con peso > un reporte antiguo sin el mapa validacion lo recibe con el primer voto;OK;0.1049033
+CT20;confirmar.test.ts;confirmar con peso > dos votantes a la vez: las sumas no se pisan;OK;0.2231259
+CT5;confirmar.test.ts;voto con peso 0 > correo sin verificar: se registra, no suma y cuenta el día;OK;0.2161754
+CT5;confirmar.test.ts;voto con peso 0 > cuenta de menos de 24 horas: pesa 0;OK;0.1355477
+CT9;confirmar.test.ts;casos que el portal detecta antes de escribir > no se confirma el propio reporte;OK;0.0761318
+CT9;confirmar.test.ts;casos que el portal detecta antes de escribir > no se confirma dos veces;OK;0.1492192
+CT8;confirmar.test.ts;casos que el portal detecta antes de escribir > confirmaciones suspendidas;OK;0.0828551
+CT6;confirmar.test.ts;casos que el portal detecta antes de escribir > límite diario (nivel 0: 5);OK;0.1014058
+CT7;confirmar.test.ts;casos que el portal detecta antes de escribir > pausa de 20 segundos;OK;0.0694612
+CT9;confirmar.test.ts;casos que el portal detecta antes de escribir > el reporte no existe;OK;0.0933336
+CT9;confirmar.test.ts;casos que el portal detecta antes de escribir > una cuenta operador no confirma (lo rechazan las reglas);OK;0.2077024
+WG11;correcciones.test.ts;filtro de veredicto > real;OK;0.0034374
+WG11;correcciones.test.ts;filtro de veredicto > falso;OK;0.0002625
+WG11;correcciones.test.ts;filtro de veredicto > sin veredicto: cualquier reporte que aún no tiene veredicto;OK;0.0002126
+WG11;correcciones.test.ts;filtro de veredicto > por verificar sigue siendo validado y sin veredicto;OK;0.0003192
+WG11;correcciones.test.ts;"filtro de veredicto > real y falso se resuelven en el servidor; sin veredicto lo termina la página";OK;0.0208848
+WG11;correcciones.test.ts;filtro de veredicto > la URL solo admite valores conocidos;OK;0.0004846
+CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > sin veredicto: bloqueado, y no hay estados siguientes;OK;0.0003306
+CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > con veredicto: se permiten las transiciones normales;OK;0.0002816
+CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > un reporte creado desde el portal por un administrador queda exento;OK;0.000387
+CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > el reporte propio de quien gestiona queda exento (nadie se da veredicto a sí mismo);OK;0.0003842
+CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > en lote: solo cuentan los reportes con veredicto;OK;0.0004948
+AV6;correcciones.test.ts;avisos de soporte > un aviso por conversación, que lleva a ella;OK;0.0013061
+AV6;correcciones.test.ts;avisos de soporte > un mensaje nuevo cambia el id: vuelve a avisar aunque se hubiera visto;OK;0.0016515
+AV6;correcciones.test.ts;avisos de soporte > sin fecha del último mensaje no hay aviso;OK;0.0010048
+WG11;filtros.test.ts;filtro de verificación > sin filtro, todos;OK;0.0035421
+WG11;filtros.test.ts;filtro de verificación > validados: los que la comunidad validó, tengan o no veredicto;OK;0.001371
+WG11;filtros.test.ts;filtro de verificación > por verificar: validados que aún no tienen veredicto;OK;0.0002179
+WG11;filtros.test.ts;filtro de verificación > solo «por verificar» actúa sobre la página;OK;0.0004489
+WG11;filtros.test.ts;filtro de verificación > el resumen explica qué se oculta;OK;0.019852
+WB1;mapa.test.ts;regiones > un punto dentro de la caja da su región;OK;0.0020202
+WB1;mapa.test.ts;regiones > con cajas que se traslapan, gana la más chica;OK;0.0003526
+WB1;mapa.test.ts;regiones > fuera de todas, null;OK;0.0001901
+WB5,WB6;mapa.test.ts;lectura por región > parte una lista en tandas (las consultas «in» admiten 30);OK;0.0009458
+WB5,WB6;mapa.test.ts;lectura por región > une la consulta de la región con los antiguos sin región, sin repetidos;OK;0.0005023
+WB5,WB6;mapa.test.ts;lectura por región > descarta los que dicen pertenecer a otra región;OK;0.000209
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > con el mapa alejado, los reportes juntos forman un solo círculo con el total;OK;0.0049782
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > al acercarse lo suficiente, se separan en pines sueltos;OK;0.0010222
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > un reporte solo nunca se agrupa;OK;0.0007833
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > reportes lejanos no se mezclan;OK;0.0004841
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > dos reportes en el mismo punto no se separan ni con el acercamiento máximo;OK;0.0006671
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > el número de un grupo no sirve en el índice nuevo (por eso el mapa no lo conserva al elegir un reporte);OK;0.0011165
+WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > tamaño y texto del círculo;OK;0.0004038
+CT8,CT17;moderacion.test.ts;suspender y rehabilitar > un administrador suspende a un usuario sin documento de confianza, y deja de poder confirmar;OK;0.3148075
+CT8,CT17;moderacion.test.ts;suspender y rehabilitar > al rehabilitarlo, vuelve a poder confirmar;OK;0.1710317
+CT8,CT17;moderacion.test.ts;suspender y rehabilitar > no toca los puntos, el nivel ni los contadores;OK;0.1782262
+CT8,CT17;moderacion.test.ts;suspender y rehabilitar > funciona aunque el usuario ya haya recibido un veredicto (su documento tiene ultimoReporteId);OK;0.1665656
+CT8,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un operador no puede suspender;OK;0.0898039
+CT8,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un vecino no puede rehabilitarse a sí mismo;OK;0.1676173
+CT8,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un vecino no puede suspender a otro;OK;0.0783614
+CT17;moderacion.test.ts;quiénes confirmaron un reporte > lista a los confirmantes con su nivel, peso y si están suspendidos;OK;0.3989179
+CT17;moderacion.test.ts;quiénes confirmaron un reporte > un reporte sin confirmaciones devuelve la lista vacía;OK;0.1221026
+CT1,PA2;paridad.test.ts;niveles > cada umbral da su nivel y un punto menos da el anterior;OK;0.0029156
+CT1,PA2;paridad.test.ts;niveles > puntos para el siguiente nivel;OK;0.0004694
+CT2,CT6,CT5;paridad.test.ts;peso y límites > pesos de la sección 4.2;OK;0.0004697
+CT2,CT6,CT5;paridad.test.ts;peso y límites > límites diarios de la sección 4.5;OK;0.0003565
+CT2,CT6,CT5;paridad.test.ts;peso y límites > el voto pesa 0 sin correo verificado o con menos de 24 horas;OK;0.000441
+CT2,CT6,CT5,CT19;paridad.test.ts;peso y límites > el día cambia a las 00:00 de UTC-3;OK;0.0004139
+CT4,CT10,CT12;paridad.test.ts;validación y veredicto > suma de votos: 100 puntos y 3 personas;OK;0.0019559
+CT4,CT10,CT12;paridad.test.ts;validación y veredicto > veredicto real y falso, con piso y tope;OK;0.0006396
+CT4,CT10,CT12;paridad.test.ts;validación y veredicto > porcentaje de verificación;OK;0.0003755
+CT14;paridad.test.ts;lectura de datos con ceros donde falte > reporte antiguo sin validacion;OK;0.0004139
+CT14;paridad.test.ts;lectura de datos con ceros donde falte > usuario sin documento de confianza;OK;0.0002727
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 0: el peso 10 se acepta y otro se rechaza;OK;0.4121668
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 0: el límite diario es 5;OK;0.2258001
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 1: el peso 12.5 se acepta y otro se rechaza;OK;0.2598045
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 1: el límite diario es 8;OK;0.2636298
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 2: el peso 15 se acepta y otro se rechaza;OK;0.3100563
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 2: el límite diario es 12;OK;0.397745
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 3: el peso 17.5 se acepta y otro se rechaza;OK;0.3102682
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 3: el límite diario es 12;OK;0.3001004
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 4: el peso 20 se acepta y otro se rechaza;OK;0.3524667
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 4: el límite diario es 20;OK;0.3170735
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 5: el peso 22.5 se acepta y otro se rechaza;OK;0.2168429
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 5: el límite diario es 20;OK;0.2610373
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 6: el peso 25 se acepta y otro se rechaza;OK;0.3092837
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 6: el límite diario es 20;OK;0.2786493
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 7: el peso 27.5 se acepta y otro se rechaza;OK;0.2208796
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 7: el límite diario es 30;OK;0.2998627
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 8: el peso 30 se acepta y otro se rechaza;OK;0.3491827
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 8: el límite diario es 30;OK;0.2900028
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 9: el peso 32.5 se acepta y otro se rechaza;OK;0.3280373
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 9: el límite diario es 30;OK;0.3439831
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 10: el peso 34 se acepta y otro se rechaza;OK;0.3210668
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 10: el límite diario es 30;OK;0.3391838
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 0 PC → 10 PC, nivel 0;OK;0.2784184
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 35 PC → 45 PC, nivel 1;OK;0.2952933
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 75 PC → 85 PC, nivel 2;OK;0.3148223
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 125 PC → 135 PC, nivel 3;OK;0.3052878
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 185 PC → 195 PC, nivel 4;OK;0.2184335
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 255 PC → 265 PC, nivel 5;OK;0.2298674
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 335 PC → 345 PC, nivel 6;OK;0.2273641
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 425 PC → 435 PC, nivel 7;OK;0.2775608
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 525 PC → 535 PC, nivel 8;OK;0.2637094
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 635 PC → 645 PC, nivel 9;OK;0.2371816
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 755 PC → 760 PC, nivel 10;OK;0.3167537
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 760 PC → 760 PC, nivel 10;OK;0.3037443
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 0 PC → 0 PC, nivel 0;OK;0.2961769
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 5 PC → 0 PC, nivel 0;OK;0.2697282
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 20 PC → 5 PC, nivel 0;OK;0.2560289
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 50 PC → 35 PC, nivel 0;OK;0.1524883
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 135 PC → 120 PC, nivel 2;OK;0.1435005
+CT1,CT2,CT6,CT12,CM3;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 760 PC → 745 PC, nivel 9;OK;0.1369835
+WT5,CM2;tiempos.test.ts;calcularTiempos > con el historial ordenado;OK;0.0058076
+WT5,CM2;tiempos.test.ts;calcularTiempos > con el historial en desorden, la primera atención sigue siendo el primer cambio;OK;0.0007034
+WT5,CM2;tiempos.test.ts;calcularTiempos > si el reporte guarda tiempoResolucionMs, ese es el dato oficial (igual que la app);OK;0.0003711
+WT5,CM2;tiempos.test.ts;calcularTiempos > un reporte sin atender no tiene tiempos;OK;0.0004825
+WT5,CM2;tiempos.test.ts;calcularTiempos > sin fecha de creación solo vale el tiempo guardado;OK;0.0005335
+WT5,CM2;tiempos.test.ts;calcularTiempos > un cambio anterior a la creación (reloj adelantado) no da un tiempo negativo;OK;0.0005005
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > un reporte abierto no muestra nada;OK;0.000728
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > resuelto con los datos guardados: fecha y tiempo;OK;0.0415147
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > resuelto antes de existir esos datos: se deduce del historial y se dice;OK;0.0006891
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > un reporte antiguo terminado espera a tener su historial antes de decir algo;OK;0.0003804
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > cerrado sin pasar por resuelto;OK;0.0006105
+WT5,CM2;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > cerrado y sin historial: no se sabe si antes se resolvió;OK;0.000241
+CT10,PA1,PA3;veredicto.test.ts;veredicto real > el operador asignado suma 10 puntos a un autor sin historial;OK;0.3843203
+CT10,PA1,PA3;veredicto.test.ts;veredicto real > sube de nivel: 35 + 10 = 45 PC → nivel 1, y el espejo en users lo refleja;OK;0.2170624
+CT10,PA1,PA3;veredicto.test.ts;veredicto real > tope de 760: 755 + 10 aplica solo 5;OK;0.1651113
+CT10,PA1,PA3;veredicto.test.ts;veredicto real > el administrador también da veredicto;OK;0.0987549
+CT11,CT12;veredicto.test.ts;veredicto falso > con 20 PC baja a 5 y cuenta un reporte falso;OK;0.1397606
+CT11,CT12;veredicto.test.ts;veredicto falso > piso en 0: con 5 PC se aplican −5;OK;0.138418
+CT11,CT12;veredicto.test.ts;veredicto falso > puede bajar de nivel: 45 PC (nivel 1) → 30 PC (nivel 0);OK;0.1584094
+CT11,CT12;veredicto.test.ts;veredicto falso > sin comentario no se guarda;OK;0.0664012
+CT13;veredicto.test.ts;casos que se rechazan > un veredicto no se cambia;OK;0.1568908
+CT13;veredicto.test.ts;casos que se rechazan > no al reporte propio;OK;0.0655607
+CT13;veredicto.test.ts;casos que se rechazan > los reportes creados desde el portal no dan puntos;OK;0.1194731
+CT13,AD6;veredicto.test.ts;casos que se rechazan > un operador de otro organismo no puede;OK;0.0822822
+CT13;veredicto.test.ts;casos que se rechazan > un ciudadano no puede;OK;0.0923964
+CT13;veredicto.test.ts;casos que se rechazan > un reporte sin operador solo lo resuelve un administrador;OK;0.2167536
+CT13;veredicto.test.ts;casos que se rechazan > el reporte no existe;OK;0.0596015
+CT13;veredicto.test.ts;casos que se rechazan > un reporte antiguo sin el mapa validacion también se puede resolver;OK;0.0934155

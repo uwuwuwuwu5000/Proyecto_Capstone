@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="65" failures="0" errors="0" time="0.1441866">
+    <testsuite name="test/confianza.test.ts" timestamp="2026-10-22T07:35:24.298Z" hostname="ESTEBAN-N" tests="13" failures="0" errors="0" skipped="0" time="0.0422111">
+        <testcase classname="test/confianza.test.ts" name="confianza: igual que firestore.rules &gt; nivel para 0 a 800 PC" time="0.0278994">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: igual que firestore.rules &gt; peso y límite diario para los niveles 0 a 10" time="0.0010552">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: igual que firestore.rules &gt; número de día con desfase UTC−3" time="0.0020498">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: igual que firestore.rules &gt; 11 niveles con umbrales crecientes y tope en el último" time="0.0016543">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; sin correo verificado o con cuenta nueva el voto pesa 0" time="0.0014745">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; la cuenta es antigua desde las 24 h exactas" time="0.0008881">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; diez votos de nivel 0 validan en el décimo" time="0.0005557">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; nunca valida una sola persona: tres votos de nivel 10" time="0.0001976">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; un voto de peso 0 no cuenta como persona" time="0.0009756">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; una vez validado, sigue validado" time="0.0002928">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: voto y validación &gt; porcentaje para la barra, con tope en 100" time="0.0002928">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: veredictos y progreso &gt; real suma 10 con tope 760; falso resta 15 sin bajar de 0" time="0.0002374">
+        </testcase>
+        <testcase classname="test/confianza.test.ts" name="confianza: veredictos y progreso &gt; progreso hacia el siguiente nivel" time="0.0005739">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/geo.test.ts" timestamp="2026-10-22T07:35:24.302Z" hostname="ESTEBAN-N" tests="5" failures="0" errors="0" skipped="0" time="0.0106399">
+        <testcase classname="test/geo.test.ts" name="distancias &gt; Maipú a Cerrillos, unos 4 km" time="0.0034673">
+        </testcase>
+        <testcase classname="test/geo.test.ts" name="distancias &gt; el mismo punto está a 0 m y la distancia es simétrica" time="0.0006238">
+        </testcase>
+        <testcase classname="test/geo.test.ts" name="distancias &gt; formato en metros o kilómetros" time="0.0007081">
+        </testcase>
+        <testcase classname="test/geo.test.ts" name="cajas &gt; caja de puntos, unión y pertenencia" time="0.0017741">
+        </testcase>
+        <testcase classname="test/geo.test.ts" name="cajas &gt; lee el formato [minLng, minLat, maxLng, maxLat] de GeoJSON" time="0.0005277">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/gestion.test.ts" timestamp="2026-10-22T07:35:24.303Z" hostname="ESTEBAN-N" tests="10" failures="0" errors="0" skipped="0" time="0.0120558">
+        <testcase classname="test/gestion.test.ts" name="permisoDeGestion (puedeGestionarReporte de las reglas) &gt; un admin gestiona cualquier reporte" time="0.0037283">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="permisoDeGestion (puedeGestionarReporte de las reglas) &gt; un operador solo gestiona los reportes con su operadorId" time="0.001749">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="permisoDeGestion (puedeGestionarReporte de las reglas) &gt; un operador sin operadorId no gestiona aunque el reporte tampoco tenga" time="0.0003215">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="permisoDeGestion (puedeGestionarReporte de las reglas) &gt; un ciudadano o una sesión sin perfil no son gestores ni ven motivo" time="0.0004735">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; al resolver envía el tiempo desde la creación" time="0.0005135">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; nunca envía un tiempo negativo (reloj del autor adelantado)" time="0.000315">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; sin fecha de creación no envía tiempo de resolución" time="0.0005928">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; al cerrar sin haber resuelto marca cerrado sin resolver" time="0.0004058">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; cerrar un reporte ya resuelto o avanzar entre estados abiertos no agrega nada" time="0.0004872">
+        </testcase>
+        <testcase classname="test/gestion.test.ts" name="resolucionDelCambio (cambioDeEstadoValido de las reglas) &gt; la tolerancia es la de las reglas (900000 ms)" time="0.0004309">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/privacidad.test.ts" timestamp="2026-10-22T07:35:24.305Z" hostname="ESTEBAN-N" tests="6" failures="0" errors="0" skipped="0" time="0.0135986">
+        <testcase classname="test/privacidad.test.ts" name="privacidad: geometría &gt; amplía el rostro hacia frente, cabello y mentón" time="0.0052967">
+        </testcase>
+        <testcase classname="test/privacidad.test.ts" name="privacidad: geometría &gt; nunca se sale de la imagen" time="0.0008724">
+        </testcase>
+        <testcase classname="test/privacidad.test.ts" name="privacidad: geometría &gt; la cabeza es la parte superior de la persona" time="0.0007145">
+        </testcase>
+        <testcase classname="test/privacidad.test.ts" name="privacidad: geometría &gt; no difumina dos veces la cabeza de quien ya tiene el rostro detectado" time="0.0020701">
+        </testcase>
+        <testcase classname="test/privacidad.test.ts" name="privacidad: geometría &gt; pixelado de entre 2 y 8 bloques a lo ancho" time="0.0007378">
+        </testcase>
+        <testcase classname="test/privacidad.test.ts" name="privacidad: parámetros &gt; umbral bajo a propósito y versión según los modelos" time="0.00073">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/reportes.test.ts" timestamp="2026-10-22T07:35:24.307Z" hostname="ESTEBAN-N" tests="10" failures="0" errors="0" skipped="0" time="0.0105021">
+        <testcase classname="test/reportes.test.ts" name="estados &gt; cada estado tiene etiqueta, color y transiciones" time="0.0033451">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="estados &gt; sigue el flujo de transicionValida() de las reglas" time="0.0009083">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="estados &gt; ningún estado vuelve hacia atrás en el flujo" time="0.0004185">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="estados &gt; todo estado puede terminar cerrado" time="0.0002585">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="estados &gt; reconoce estados y finalizados" time="0.0004272">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="estados &gt; resuelto se ve sobre un mapa claro (no es blanco)" time="0.0002738">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="categorías &gt; son las 7 del piloto, sin repetir" time="0.0008312">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="categorías &gt; etiqueta legible y respaldo para ids desconocidos" time="0.0002654">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="descripción &gt; mismos límites que las reglas" time="0.0003046">
+        </testcase>
+        <testcase classname="test/reportes.test.ts" name="descripción &gt; detecta vacía, corta y larga" time="0.000405">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/territorio.test.ts" timestamp="2026-10-22T07:35:24.309Z" hostname="ESTEBAN-N" tests="5" failures="0" errors="0" skipped="0" time="0.0121251">
+        <testcase classname="test/territorio.test.ts" name="nombres y códigos &gt; normaliza nombres de comunas entre fuentes" time="0.0039689">
+        </testcase>
+        <testcase classname="test/territorio.test.ts" name="nombres y códigos &gt; códigos CUT, región y municipalidad" time="0.0010438">
+        </testcase>
+        <testcase classname="test/territorio.test.ts" name="nombres y códigos &gt; nombre corto de región" time="0.0007447">
+        </testcase>
+        <testcase classname="test/territorio.test.ts" name="mapa de calor por comuna &gt; agrupa por municipalidad y, si no hay, por nombre" time="0.0024439">
+        </testcase>
+        <testcase classname="test/territorio.test.ts" name="mapa de calor por comuna &gt; tramos de intensidad y leyenda" time="0.0012126">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/tiempos.test.ts" timestamp="2026-10-22T07:35:24.310Z" hostname="ESTEBAN-N" tests="16" failures="0" errors="0" skipped="0" time="0.043054">
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; primera atención y resolución desde la creación" time="0.0060293">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; acepta el historial desordenado" time="0.0006269">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; abierto: sin tiempo de resolución; nunca atendido: sin primera atención" time="0.0007452">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; usa el tiempoResolucionMs guardado si existe" time="0.0004055">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; un reloj adelantado no da tiempos negativos" time="0.0004597">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="tiempos de atención y resolución &gt; ignora cambios sin fecha y reportes sin fecha de creación" time="0.0004139">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="estadísticas y formato &gt; mediana y promedio" time="0.0009969">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="estadísticas y formato &gt; duraciones legibles" time="0.0272007">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; usa tiempoResolucionMs cuando el reporte lo trae: es el dato oficial" time="0.0006227">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; sin el campo, lo deduce del historial (reportes antiguos)" time="0.0004391">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; resuelto sin historial ni campo: se sabe que se resolvió, no cuánto tardó" time="0.0002574">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; cerrado sin pasar por resuelto" time="0.0002185">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; cerrado sin historial: no se puede saber si se resolvió" time="0.0002904">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="resolucionDeReporte (F12) &gt; un reporte en curso está abierto" time="0.000366">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="haceCuanto &gt; en minutos, horas y días" time="0.0005208">
+        </testcase>
+        <testcase classname="test/tiempos.test.ts" name="haceCuanto &gt; una fecha en el futuro (reloj adelantado) es «recién»" time="0.0002383">
+        </testcase>
+    </testsuite>
+</testsuites>

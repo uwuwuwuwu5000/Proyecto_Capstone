@@ -1,0 +1,66 @@
+﻿IDs del plan;Archivo de prueba;Prueba;Resultado;Segundos
+CT1,PA2;confianza.test.ts;confianza: igual que firestore.rules > nivel para 0 a 800 PC;OK;0.0278994
+CT2,CT6;confianza.test.ts;confianza: igual que firestore.rules > peso y límite diario para los niveles 0 a 10;OK;0.0010552
+CT19;confianza.test.ts;confianza: igual que firestore.rules > número de día con desfase UTC−3;OK;0.0020498
+CT1,PA2;confianza.test.ts;confianza: igual que firestore.rules > 11 niveles con umbrales crecientes y tope en el último;OK;0.0016543
+CT5;confianza.test.ts;confianza: voto y validación > sin correo verificado o con cuenta nueva el voto pesa 0;OK;0.0014745
+CT5;confianza.test.ts;confianza: voto y validación > la cuenta es antigua desde las 24 h exactas;OK;0.0008881
+CT4;confianza.test.ts;confianza: voto y validación > diez votos de nivel 0 validan en el décimo;OK;0.0005557
+CT4;confianza.test.ts;confianza: voto y validación > nunca valida una sola persona: tres votos de nivel 10;OK;0.0001976
+CT4;confianza.test.ts;confianza: voto y validación > un voto de peso 0 no cuenta como persona;OK;0.0009756
+CT4;confianza.test.ts;confianza: voto y validación > una vez validado, sigue validado;OK;0.0002928
+CT3,CT4;confianza.test.ts;confianza: voto y validación > porcentaje para la barra, con tope en 100;OK;0.0002928
+CT10,CT11,CT12,PA1;confianza.test.ts;"confianza: veredictos y progreso > real suma 10 con tope 760; falso resta 15 sin bajar de 0";OK;0.0002374
+CT16;confianza.test.ts;confianza: veredictos y progreso > progreso hacia el siguiente nivel;OK;0.0005739
+VC1;geo.test.ts;distancias > Maipú a Cerrillos, unos 4 km;OK;0.0034673
+VC1;geo.test.ts;distancias > el mismo punto está a 0 m y la distancia es simétrica;OK;0.0006238
+VC1;geo.test.ts;distancias > formato en metros o kilómetros;OK;0.0007081
+RI12;geo.test.ts;cajas > caja de puntos, unión y pertenencia;OK;0.0017741
+RI12;geo.test.ts;cajas > lee el formato [minLng, minLat, maxLng, maxLat] de GeoJSON;OK;0.0005277
+AD6,AD8,MS4;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un admin gestiona cualquier reporte;OK;0.0037283
+AD6,AD8,MS4;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un operador solo gestiona los reportes con su operadorId;OK;0.001749
+AD6,AD8,MS4;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un operador sin operadorId no gestiona aunque el reporte tampoco tenga;OK;0.0003215
+AD6,AD8,MS4;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un ciudadano o una sesión sin perfil no son gestores ni ven motivo;OK;0.0004735
+WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > al resolver envía el tiempo desde la creación;OK;0.0005135
+WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > nunca envía un tiempo negativo (reloj del autor adelantado);OK;0.000315
+WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > sin fecha de creación no envía tiempo de resolución;OK;0.0005928
+WT2;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > al cerrar sin haber resuelto marca cerrado sin resolver;OK;0.0004058
+WT3;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > cerrar un reporte ya resuelto o avanzar entre estados abiertos no agrega nada;OK;0.0004872
+WT4;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > la tolerancia es la de las reglas (900000 ms);OK;0.0004309
+RI11,DW1;privacidad.test.ts;privacidad: geometría > amplía el rostro hacia frente, cabello y mentón;OK;0.0052967
+RI11,DW1;privacidad.test.ts;privacidad: geometría > nunca se sale de la imagen;OK;0.0008724
+RI11,DW1;privacidad.test.ts;privacidad: geometría > la cabeza es la parte superior de la persona;OK;0.0007145
+RI11,DW1;privacidad.test.ts;privacidad: geometría > no difumina dos veces la cabeza de quien ya tiene el rostro detectado;OK;0.0020701
+RI11,DW1;privacidad.test.ts;privacidad: geometría > pixelado de entre 2 y 8 bloques a lo ancho;OK;0.0007378
+RI11,DW1;privacidad.test.ts;privacidad: parámetros > umbral bajo a propósito y versión según los modelos;OK;0.00073
+CM1;reportes.test.ts;estados > cada estado tiene etiqueta, color y transiciones;OK;0.0033451
+CM1,MS5,WG10;reportes.test.ts;estados > sigue el flujo de transicionValida() de las reglas;OK;0.0009083
+CM1,MS5,WG10;reportes.test.ts;estados > ningún estado vuelve hacia atrás en el flujo;OK;0.0004185
+CM1,MS5,WG10;reportes.test.ts;estados > todo estado puede terminar cerrado;OK;0.0002585
+CM1;reportes.test.ts;estados > reconoce estados y finalizados;OK;0.0004272
+CM1;reportes.test.ts;estados > resuelto se ve sobre un mapa claro (no es blanco);OK;0.0002738
+RI7,MB3;reportes.test.ts;categorías > son las 7 del piloto, sin repetir;OK;0.0008312
+RI7,MB3;reportes.test.ts;categorías > etiqueta legible y respaldo para ids desconocidos;OK;0.0002654
+RI3,MB1;reportes.test.ts;descripción > mismos límites que las reglas;OK;0.0003046
+RI3,MB1;reportes.test.ts;descripción > detecta vacía, corta y larga;OK;0.000405
+RI12,MB2;territorio.test.ts;nombres y códigos > normaliza nombres de comunas entre fuentes;OK;0.0039689
+RI12,MB2;territorio.test.ts;nombres y códigos > códigos CUT, región y municipalidad;OK;0.0010438
+RI12,MB2;territorio.test.ts;nombres y códigos > nombre corto de región;OK;0.0007447
+WM1,WM2;territorio.test.ts;mapa de calor por comuna > agrupa por municipalidad y, si no hay, por nombre;OK;0.0024439
+WM1,WM2;territorio.test.ts;mapa de calor por comuna > tramos de intensidad y leyenda;OK;0.0012126
+CM2,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > primera atención y resolución desde la creación;OK;0.0060293
+CM2,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > acepta el historial desordenado;OK;0.0006269
+CM2,WM2,WR5;tiempos.test.ts;"tiempos de atención y resolución > abierto: sin tiempo de resolución; nunca atendido: sin primera atención";OK;0.0007452
+CM2,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > usa el tiempoResolucionMs guardado si existe;OK;0.0004055
+CM2,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > un reloj adelantado no da tiempos negativos;OK;0.0004597
+CM2,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > ignora cambios sin fecha y reportes sin fecha de creación;OK;0.0004139
+WR5,WE1;tiempos.test.ts;estadísticas y formato > mediana y promedio;OK;0.0009969
+WR5,WE1;tiempos.test.ts;estadísticas y formato > duraciones legibles;OK;0.0272007
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > usa tiempoResolucionMs cuando el reporte lo trae: es el dato oficial;OK;0.0006227
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > sin el campo, lo deduce del historial (reportes antiguos);OK;0.0004391
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > resuelto sin historial ni campo: se sabe que se resolvió, no cuánto tardó;OK;0.0002574
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > cerrado sin pasar por resuelto;OK;0.0002185
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > cerrado sin historial: no se puede saber si se resolvió;OK;0.0002904
+WT5,CM2;tiempos.test.ts;resolucionDeReporte (F12) > un reporte en curso está abierto;OK;0.000366
+;tiempos.test.ts;haceCuanto > en minutos, horas y días;OK;0.0005208
+;tiempos.test.ts;haceCuanto > una fecha en el futuro (reloj adelantado) es «recién»;OK;0.0002383

@@ -1,0 +1,1627 @@
+{
+ "AV2": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts",
+   "portal-web/rules-tests/avisos.test.ts"
+  ]
+ },
+ "AV3": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts",
+   "portal-web/rules-tests/avisos.test.ts"
+  ]
+ },
+ "AV4": {
+  "ok": 7,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts",
+   "portal-web/rules-tests/avisos.test.ts"
+  ]
+ },
+ "PA3-W": {
+  "ok": 11,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/avisos.test.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "RI8-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/crear-reporte.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "RI2-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/crear-reporte.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "MS4-W": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts",
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "AD8-W": {
+  "ok": 7,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts",
+   "portal-web/e2e/resumen-operador.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "MS5-W": {
+  "ok": 5,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "WG10": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "VC3-W": {
+  "ok": 16,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/base.test.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts"
+  ]
+ },
+ "VC6-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "VC7": {
+  "ok": 15,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/base.test.ts",
+   "portal-web/rules-tests/confianza.test.ts"
+  ]
+ },
+ "SG7": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "CT9-W": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/base.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts"
+  ]
+ },
+ "VC4-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "PF4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "SG1": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/base.test.ts",
+   "portal-web/rules-tests/confianza.test.ts"
+  ]
+ },
+ "AV5": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "MS6-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/base.test.ts"
+  ]
+ },
+ "CM1-W": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/rules-tests/comun.test.ts"
+  ]
+ },
+ "RI3-W": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/e2e/crear-reporte.spec.ts",
+   "portal-web/rules-tests/comun.test.ts"
+  ]
+ },
+ "MB1": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/rules-tests/comun.test.ts"
+  ]
+ },
+ "CM3-W": {
+  "ok": 45,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/comun.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT1-W": {
+  "ok": 49,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/rules-tests/comun.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT2-W": {
+  "ok": 65,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/rules-tests/comun.test.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CM2-W": {
+  "ok": 26,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/tiempos.test.ts",
+   "portal-web/rules-tests/comun.test.ts",
+   "portal-web/rules-tests/tiempos.test.ts"
+  ]
+ },
+ "WM1": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/territorio.test.ts",
+   "portal-web/rules-tests/comun.test.ts"
+  ]
+ },
+ "CT3-W": {
+  "ok": 16,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts"
+  ]
+ },
+ "CT5-W": {
+  "ok": 12,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT6-W": {
+  "ok": 51,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT7-W": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts"
+  ]
+ },
+ "CT8-W": {
+  "ok": 10,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts",
+   "portal-web/rules-tests/moderacion.test.ts"
+  ]
+ },
+ "CT4-W": {
+  "ok": 13,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT14-W": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/confirmar.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT21-W": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts"
+  ]
+ },
+ "CT10-W": {
+  "ok": 23,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/paridad.test.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "CT11-W": {
+  "ok": 17,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "CT12-W": {
+  "ok": 59,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/paridad.test.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "CT13-W": {
+  "ok": 15,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "SG9": {
+  "ok": 5,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts"
+  ]
+ },
+ "CT17": {
+  "ok": 11,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/moderacion.test.ts"
+  ]
+ },
+ "SG11": {
+  "ok": 5,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts",
+   "portal-web/rules-tests/moderacion.test.ts"
+  ]
+ },
+ "SG10": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confianza.test.ts"
+  ]
+ },
+ "CT20": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/rules-tests/confirmar.test.ts"
+  ]
+ },
+ "WG11": {
+  "ok": 12,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/correcciones.test.ts",
+   "portal-web/rules-tests/filtros.test.ts"
+  ]
+ },
+ "CT15": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/correcciones.test.ts"
+  ]
+ },
+ "WG5": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/correcciones.test.ts"
+  ]
+ },
+ "AV6": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts",
+   "portal-web/rules-tests/correcciones.test.ts"
+  ]
+ },
+ "WB1": {
+  "ok": 4,
+  "mal": 1,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts",
+   "portal-web/rules-tests/mapa.test.ts"
+  ]
+ },
+ "WB5": {
+  "ok": 3,
+  "mal": 1,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts",
+   "portal-web/rules-tests/mapa.test.ts"
+  ]
+ },
+ "WB6": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts",
+   "portal-web/rules-tests/mapa.test.ts"
+  ]
+ },
+ "WB3": {
+  "ok": 8,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts",
+   "portal-web/rules-tests/mapa.test.ts"
+  ]
+ },
+ "WB4": {
+  "ok": 8,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts",
+   "portal-web/rules-tests/mapa.test.ts"
+  ]
+ },
+ "PA2-W": {
+  "ok": 5,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/confianza.spec.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "CT19-W": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/rules-tests/paridad.test.ts"
+  ]
+ },
+ "WT5": {
+  "ok": 18,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/tiempos.test.ts",
+   "portal-web/rules-tests/tiempos.test.ts"
+  ]
+ },
+ "PA1-W": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "AD6-W": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)",
+   "Portal web (rules-tests)"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts",
+   "portal-web/e2e/resumen-operador.spec.ts",
+   "portal-web/rules-tests/veredicto.test.ts"
+  ]
+ },
+ "CT16": {
+  "ok": 4,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/confianza.test.ts",
+   "portal-web/e2e/confianza.spec.ts"
+  ]
+ },
+ "VC1": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/geo.test.ts"
+  ]
+ },
+ "RI12-W": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/geo.test.ts",
+   "comun/test/territorio.test.ts",
+   "portal-web/e2e/crear-reporte.spec.ts"
+  ]
+ },
+ "WT1": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts"
+  ]
+ },
+ "WT2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts"
+  ]
+ },
+ "WT3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts"
+  ]
+ },
+ "WT4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/gestion.test.ts"
+  ]
+ },
+ "RI11-W": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/privacidad.test.ts"
+  ]
+ },
+ "DW1": {
+  "ok": 6,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/privacidad.test.ts"
+  ]
+ },
+ "RI7-W": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts",
+   "portal-web/e2e/crear-reporte.spec.ts"
+  ]
+ },
+ "MB3": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/reportes.test.ts"
+  ]
+ },
+ "MB2": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun"
+  ],
+  "archivos": [
+   "comun/test/territorio.test.ts"
+  ]
+ },
+ "WM2": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/territorio.test.ts",
+   "comun/test/tiempos.test.ts",
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WR5": {
+  "ok": 9,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/tiempos.test.ts",
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WE1": {
+  "ok": 3,
+  "mal": 0,
+  "origenes": [
+   "Paquete comun",
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "comun/test/tiempos.test.ts",
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "US04-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US05-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US07-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "WA7": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "PF3-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US02-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US03-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US01-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US08-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "WA4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "WA5": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "WA1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "AD1-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "US06-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/acceso.spec.ts"
+  ]
+ },
+ "WG1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "AD2-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "AD7-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG13": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG12": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts",
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WG9": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG7": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG6": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "WG8": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/admin-reportes.spec.ts"
+  ]
+ },
+ "AV1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts"
+  ]
+ },
+ "AV7": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts"
+  ]
+ },
+ "AV8": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/avisos.spec.ts"
+  ]
+ },
+ "WO1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WO2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WO5": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WO4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WK1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WK2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "WK3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/catalogos.spec.ts"
+  ]
+ },
+ "VC5-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts"
+  ]
+ },
+ "CT18": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/confianza.spec.ts"
+  ]
+ },
+ "WC2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/crear-reporte.spec.ts"
+  ]
+ },
+ "WC1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/crear-reporte.spec.ts"
+  ]
+ },
+ "WC3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/crear-reporte.spec.ts"
+  ]
+ },
+ "IN1-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/flujo-completo.spec.ts"
+  ]
+ },
+ "MS3-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/historial-rendimiento.spec.ts"
+  ]
+ },
+ "RI13-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/historial-rendimiento.spec.ts"
+  ]
+ },
+ "WG3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/historial-rendimiento.spec.ts"
+  ]
+ },
+ "MS7-W": {
+  "ok": 0,
+  "mal": 1,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/historial-rendimiento.spec.ts"
+  ]
+ },
+ "MS1-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts"
+  ]
+ },
+ "MS2-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts"
+  ]
+ },
+ "WB8": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts"
+  ]
+ },
+ "WB7": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts"
+  ]
+ },
+ "WB2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/mapa.spec.ts"
+  ]
+ },
+ "WA2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WA3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WM3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WF1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "PF1-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "PF2-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WF3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WA6": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "PA4-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/panel-y-perfil.spec.ts"
+  ]
+ },
+ "WR1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "AD9": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WR2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WR3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WR4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WP1": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WP2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WP3": {
+  "ok": 2,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/resumen-operador.spec.ts"
+  ]
+ },
+ "WS1": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/soporte.spec.ts"
+  ]
+ },
+ "WS2": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/soporte.spec.ts"
+  ]
+ },
+ "ATN2-W": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/soporte.spec.ts"
+  ]
+ },
+ "WS3": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/soporte.spec.ts"
+  ]
+ },
+ "WS4": {
+  "ok": 1,
+  "mal": 0,
+  "origenes": [
+   "Playwright (pantallas del portal)"
+  ],
+  "archivos": [
+   "portal-web/e2e/soporte.spec.ts"
+  ]
+ }
+}

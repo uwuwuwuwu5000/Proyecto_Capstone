@@ -1,0 +1,6 @@
+<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="25.783268999999997">
+<testsuite name="humo.spec.ts" timestamp="2026-10-23T23:09:37.697Z" hostname="chromium" tests="1" failures="0" skipped="0" time="9.164" errors="0">
+<testcase name="FASE1 · El portal abre sin conectarse a Firebase" classname="humo.spec.ts" time="9.164">
+</testcase>
+</testsuite>
+</testsuites>

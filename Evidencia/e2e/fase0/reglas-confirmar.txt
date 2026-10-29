@@ -1,0 +1,35 @@
+[36m[1mi [22m[39m Running script: [1mnpx vitest run --config vitest.reglas.config.ts rules-tests/confirmar.test.ts --reporter=verbose[22m
+ RUN  v4.1.12 D:/apps python/Ciudad_alerta_web/portal-web
+ ✓ rules-tests/confirmar.test.ts > confirmar con peso > un voto de nivel 0 suma 10 puntos y crea el contador del día 2085ms
+ ✓ rules-tests/confirmar.test.ts > confirmar con peso > un votante de nivel 4 pesa 20 427ms
+ ✓ rules-tests/confirmar.test.ts > confirmar con peso > con 95 puntos y 3 personas, el voto siguiente deja el reporte validado 457ms
+ ✓ rules-tests/confirmar.test.ts > confirmar con peso > un reporte antiguo sin el mapa validacion lo recibe con el primer voto 262ms
+ ✓ rules-tests/confirmar.test.ts > confirmar con peso > dos votantes a la vez: las sumas no se pisan 582ms
+ ✓ rules-tests/confirmar.test.ts > voto con peso 0 > correo sin verificar: se registra, no suma y cuenta el día 547ms
+ ✓ rules-tests/confirmar.test.ts > voto con peso 0 > cuenta de menos de 24 horas: pesa 0 269ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > no se confirma el propio reporte 165ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > no se confirma dos veces 307ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > confirmaciones suspendidas 220ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > límite diario (nivel 0: 5) 168ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > pausa de 20 segundos 207ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > el reporte no existe 185ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > un reporte «resuelto» ya no se confirma 222ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > un reporte «cerrado» ya no se confirma 291ms
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > un reporte con veredicto ya no se confirma 175ms
+stderr | rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > las reglas rechazan una confirmación de un reporte cerrado aunque el portal no la detecte
+false for 'create' @ L1070, false for 'create' @ L1437, false for 'update' @ L1088, false for 'update' @ L1437
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > las reglas rechazan una confirmación de un reporte cerrado aunque el portal no la detecte 157ms
+stderr | rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > una cuenta operador no confirma (lo rechazan las reglas)
+Confirmar: las reglas rechazaron la confirmación. [FirebaseError: 7 PERMISSION_DENIED: 
+evaluation error at L1070:26 for 'create' @ L1070, false for 'create' @ L1437, evaluation error at L989:24 for 'update' @ L989, false for 'update' @ L1437, evaluation error at L540:26 for 'create' @ L540, false for 'create' @ L1437, false for 'get' @ L523, false for 'get' @ L1437, false for 'create' @ L1070, false for 'create' @ L1437] {
+  code: 'permission-denied',
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+ ✓ rules-tests/confirmar.test.ts > casos que el portal detecta antes de escribir > una cuenta operador no confirma (lo rechazan las reglas) 245ms
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  16:39:39
+   Duration  12.94s (transform 213ms, setup 0ms, import 656ms, tests 11.95s, environment 0ms)
+[32m[1m+ [22m[39m Script exited successfully (code 0)
+[33m[1m! [22m[39m Firestore Emulator has exited upon receiving signal: SIGINT

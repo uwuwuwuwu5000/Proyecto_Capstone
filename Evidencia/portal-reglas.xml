@@ -1,0 +1,1002 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="238" failures="0" errors="0" time="40.7312699">
+    <testsuite name="rules-tests/avisos.test.ts" timestamp="2026-10-22T07:13:28.753Z" hostname="ESTEBAN-N" tests="14" failures="0" errors="0" skipped="0" time="0.0133993">
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; sin nada que avisar, lista vacía" time="0.0033275">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; validado por la comunidad" time="0.0017894">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; validado sin fecha no genera aviso (no se puede ordenar ni dar por visto)" time="0.0002784">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; veredicto real muestra los puntos" time="0.0003187">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; veredicto falso muestra el motivo y los puntos restados" time="0.0003287">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; sin cambio de puntos (piso o tope), no se menciona" time="0.0001837">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; validado y con veredicto: dos avisos" time="0.0002814">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="validación y veredicto &gt; la descripción larga se acorta" time="0.0003014">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; sin nivel anterior conocido, el texto es neutro" time="0.0004356">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; sin nivel anterior y en el nivel 0, no hay aviso" time="0.0002755">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; subió" time="0.0003873">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; bajó" time="0.0001312">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; igual al anterior, sin aviso" time="0.0001372">
+        </testcase>
+        <testcase classname="rules-tests/avisos.test.ts" name="nivel &gt; el nivel visto sale de los marcadores, sin contar el actual" time="0.0004998">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/base.test.ts" timestamp="2026-10-22T07:13:28.763Z" hostname="ESTEBAN-N" tests="15" failures="0" errors="0" skipped="0" time="2.2184383">
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; un ciudadano crea su reporte" time="0.2814703">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; no se crea un reporte a nombre de otro" time="0.1356799">
+            <system-err>
+[2026-10-22T07:13:23.533Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576b5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L755:24 for &apos;create&apos; @ L755, false for &apos;create&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L755, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; un ciudadano no cambia el estado" time="0.1291296">
+            <system-err>
+[2026-10-22T07:13:23.664Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576b7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; el operador asignado cambia el estado" time="0.0797326">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; el administrador cambia el estado" time="0.0828588">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; reportes &gt; una transición inválida se rechaza" time="0.1065412">
+            <system-err>
+[2026-10-22T07:13:23.933Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576bd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; confirmaciones (formato actual de la app) &gt; otro vecino confirma" time="0.0835905">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; confirmaciones (formato actual de la app) &gt; nadie confirma su propio reporte" time="0.0737549">
+            <system-err>
+[2026-10-22T07:13:24.091Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576c1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; confirmaciones (formato actual de la app) &gt; no se confirma dos veces" time="0.0753878">
+            <system-err>
+[2026-10-22T07:13:24.166Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576c3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; confirmaciones (formato actual de la app) &gt; un operador no confirma" time="0.088223">
+            <system-err>
+[2026-10-22T07:13:24.255Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576c5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; perfiles &gt; cada quien lee su perfil y no el de otro" time="0.1627989">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; perfiles &gt; un usuario no se sube el nivel" time="0.0745574">
+            <system-err>
+[2026-10-22T07:13:24.492Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576ca error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; perfiles &gt; un usuario no se hace administrador" time="0.0855117">
+            <system-err>
+[2026-10-22T07:13:24.578Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x20d576cc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; perfiles &gt; guarda qué avisos ya vio" time="0.0801947">
+        </testcase>
+        <testcase classname="rules-tests/base.test.ts" name="compatibilidad con firestore.rules &gt; historial de estados &gt; el operador asignado cambia estado y registra el historial en un lote" time="0.0914983">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/comun.test.ts" timestamp="2026-10-22T07:13:28.776Z" hostname="ESTEBAN-N" tests="11" failures="0" errors="0" skipped="0" time="0.0420509">
+        <testcase classname="rules-tests/comun.test.ts" name="estados &gt; el portal usa los de comun" time="0.0048613">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="estados &gt; «Resuelto» es verde, como en la app" time="0.0004407">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="estados &gt; largo de la descripción" time="0.0004156">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="sistema de confianza (el portal usa los cálculos de comun) &gt; nivel, peso y límite diario" time="0.0045041">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="sistema de confianza (el portal usa los cálculos de comun) &gt; número de día" time="0.000793">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="sistema de confianza (el portal usa los cálculos de comun) &gt; sumar un voto" time="0.0010941">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="sistema de confianza (el portal usa los cálculos de comun) &gt; puntos tras el veredicto" time="0.0006914">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="sistema de confianza (el portal usa los cálculos de comun) &gt; porcentaje de verificación" time="0.0004669">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="tiempos &gt; formato de la duración, mediana y promedio" time="0.0233337">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="tiempos &gt; primera atención y resolución con el historial ordenado" time="0.0005608">
+        </testcase>
+        <testcase classname="rules-tests/comun.test.ts" name="mapa de calor &gt; agrupación por comuna y tramos" time="0.0012078">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/confianza.test.ts" timestamp="2026-10-22T07:13:28.783Z" hostname="ESTEBAN-N" tests="64" failures="0" errors="0" skipped="0" time="18.912899">
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; un voto de nivel 0 con el peso exacto (10) se acepta" time="1.6562512">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; un peso inventado se rechaza" time="0.397206">
+            <system-err>
+[2026-10-22T07:12:46.793Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfae error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; un nivel falseado se rechaza (dice nivel 5 y su confianza es 0)" time="0.2549973">
+            <system-err>
+[2026-10-22T07:12:47.052Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfb0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; la suma del reporte debe ser la anterior más el peso" time="0.2371076">
+            <system-err>
+[2026-10-22T07:12:47.289Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfb2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; votos debe subir en 1" time="0.3070364">
+            <system-err>
+[2026-10-22T07:12:47.595Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfb4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; sin tocar validacion del reporte se rechaza" time="0.2121327">
+            <system-err>
+[2026-10-22T07:12:47.807Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfb6 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; sin escribir el contador del día se rechaza" time="0.1906297">
+            <system-err>
+[2026-10-22T07:12:48.000Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfb8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; el contador de otro día se rechaza" time="0.2092493">
+            <system-err>
+[2026-10-22T07:12:48.208Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfba error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; no se confirma el propio reporte" time="0.2196652">
+            <system-err>
+[2026-10-22T07:12:48.428Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfbc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; una cuenta operador no confirma" time="0.2263487">
+            <system-err>
+[2026-10-22T07:12:48.655Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfbe error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; no se confirma dos veces" time="0.363378">
+            <system-err>
+[2026-10-22T07:12:49.019Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfc1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="confirmar con peso &gt; un voto no puede sumar a nombre de otro usuario" time="0.1740422">
+            <system-err>
+[2026-10-22T07:12:49.194Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfc3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="peso 0 por correo o antigüedad &gt; con el correo sin verificar solo se acepta peso 0, sin sumar votos" time="0.300212">
+            <system-err>
+[2026-10-22T07:12:49.421Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfc5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="peso 0 por correo o antigüedad &gt; una cuenta de menos de 24 horas solo se acepta con peso 0" time="0.3039053">
+            <system-err>
+[2026-10-22T07:12:49.728Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfc8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="niveles &gt; un votante de nivel 4 pesa 20 y puede confirmar" time="0.1653711">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="niveles &gt; el nivel 10 pesa 34 (tope)" time="0.1736497">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="niveles &gt; el peso del nivel 10 no puede ser 35" time="0.1777458">
+            <system-err>
+[2026-10-22T07:12:50.317Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfcf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; nivel 0: la sexta confirmación del día se rechaza" time="0.1871973">
+            <system-err>
+[2026-10-22T07:12:50.504Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfd1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; nivel 0: la quinta confirmación del día se acepta" time="0.1693624">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; el contador no puede saltar de a más de uno" time="0.1905462">
+            <system-err>
+[2026-10-22T07:12:50.864Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfd5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; la pausa de 20 s: una segunda confirmación inmediata se rechaza" time="0.140761">
+            <system-err>
+[2026-10-22T07:12:51.005Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfd7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; pasada la pausa se acepta" time="0.2113383">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; con las confirmaciones suspendidas se rechaza" time="0.1996977">
+            <system-err>
+[2026-10-22T07:12:51.417Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfdb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="límites y suspensión &gt; un usuario no reinicia su contador del día" time="0.1729546">
+            <system-err>
+[2026-10-22T07:12:51.590Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfdd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="validación del reporte (sección 4.3) &gt; con 95 puntos y 3 votos, el voto que llega a 105 debe marcar validado" time="0.3534583">
+            <system-err>
+[2026-10-22T07:12:51.756Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfdf error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="validación del reporte (sección 4.3) &gt; no se marca validado con menos de 100 puntos" time="0.2219841">
+            <system-err>
+[2026-10-22T07:12:52.164Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfe3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="validación del reporte (sección 4.3) &gt; no se marca validado con menos de 3 personas, aunque sumen 100" time="0.1410325">
+            <system-err>
+[2026-10-22T07:12:52.307Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfe5 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="validación del reporte (sección 4.3) &gt; un voto de peso 0 no cuenta como persona" time="0.3172062">
+            <system-err>
+[2026-10-22T07:12:52.455Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfe7 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="reporte antiguo sin el mapa validacion &gt; la primera confirmación con peso crea el mapa" time="0.1506721">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="formato antiguo de confirmación (transición) &gt; se acepta sin peso y no toca la validación" time="0.1570309">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="formato antiguo de confirmación (transición) &gt; el formato antiguo no puede llevar un peso escondido" time="0.1520757">
+            <system-err>
+[2026-10-22T07:12:53.084Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dfef error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="formato antiguo de confirmación (transición) &gt; un voto sin el formato antiguo ni el nuevo no suma a la validación" time="0.1384699">
+            <system-err>
+[2026-10-22T07:12:53.223Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dff1 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: el autor sube de 0 a 10 PC y validatedReports a 1" time="0.1478031">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: con 35 PC pasa a 45 y sube al nivel 1" time="0.3108721">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: un nivel mal calculado se rechaza" time="0.2770867">
+            <system-err>
+[2026-10-22T07:12:53.960Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dff9 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: puntos que no son la suma exacta se rechazan" time="0.1703882">
+            <system-err>
+[2026-10-22T07:12:54.130Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2dffb error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: el tope de 760 (755 + 10 = 760)" time="0.3025176">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; real: pasar de 760 se rechaza" time="0.2427813">
+            <system-err>
+[2026-10-22T07:12:54.676Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e001 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; falso: con 20 PC baja a 5 y suma un falso" time="0.238718">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; falso: el piso es 0 (con 5 PC queda en 0 y se aplican -5)" time="0.2030677">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; falso: bajar de 0 se rechaza" time="0.229321">
+            <system-err>
+[2026-10-22T07:12:55.347Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e00a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; falso: sin comentario se rechaza" time="0.2073952">
+            <system-err>
+[2026-10-22T07:12:55.555Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e00d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; falso: el comentario no puede ser solo espacios" time="0.2429938">
+            <system-err>
+[2026-10-22T07:12:55.797Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e010 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; sin escribir los puntos del autor en el mismo lote se rechaza" time="0.1540913">
+            <system-err>
+[2026-10-22T07:12:55.953Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e012 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; el espejo en users debe coincidir con confianza/actual" time="0.2383208">
+            <system-err>
+[2026-10-22T07:12:56.191Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e015 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; un veredicto no se cambia una vez dado" time="0.1869156">
+            <system-err>
+[2026-10-22T07:12:56.379Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e018 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; un segundo veredicto sobre el mismo reporte se rechaza aunque no toque los puntos" time="0.282907">
+            <system-err>
+[2026-10-22T07:12:56.661Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e01b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; el administrador también da veredicto" time="0.1650018">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; un ciudadano no da veredicto" time="0.1240139">
+            <system-err>
+[2026-10-22T07:12:56.951Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e01f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; un operador de otro organismo no da veredicto" time="0.1749923">
+            <system-err>
+[2026-10-22T07:12:57.126Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e022 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; nadie da veredicto a su propio reporte" time="0.1638095">
+            <system-err>
+[2026-10-22T07:12:57.289Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e025 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="veredicto del operador &gt; el reporte de un autor que no es ciudadano no da puntos" time="0.2102128">
+            <system-err>
+[2026-10-22T07:12:57.501Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e028 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; el dueño lee la suya" time="0.22645">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; otro ciudadano no la lee (el nivel es privado)" time="0.1669645">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; un operador la lee" time="0.1414902">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; el dueño no la modifica" time="0.1087161">
+            <system-err>
+[2026-10-22T07:12:58.145Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e030 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; un operador no la modifica por su cuenta (sin veredicto)" time="0.1177508">
+            <system-err>
+[2026-10-22T07:12:58.263Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e032 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; el administrador suspende confirmaciones sin cambiar los puntos" time="0.1044663">
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="acceso a confianza/actual &gt; el administrador no puede cambiar los puntos al suspender" time="0.1459315">
+            <system-err>
+[2026-10-22T07:12:58.513Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e036 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="perfil y reportes &gt; createdAt no se puede cambiar (antigüedad de la cuenta)" time="0.1525693">
+            <system-err>
+[2026-10-22T07:12:58.666Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e038 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="perfil y reportes &gt; un perfil sin createdAt puede completarlo una vez, con la hora del servidor" time="0.182675">
+            <system-err>
+[2026-10-22T07:12:58.832Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e03b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="perfil y reportes &gt; al registrarse, createdAt debe ser la hora del servidor" time="0.1387824">
+            <system-err>
+[2026-10-22T07:12:58.977Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e03e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L374:24 for &apos;create&apos; @ L374, false for &apos;create&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L374, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="perfil y reportes &gt; un reporte nuevo no puede nacer con puntos o validado" time="0.1712856">
+            <system-err>
+[2026-10-22T07:12:59.132Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e041 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L755:24 for &apos;create&apos; @ L755, false for &apos;create&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L755, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/confianza.test.ts" name="perfil y reportes &gt; el autor no modifica la validación de su reporte" time="0.1041501">
+            <system-err>
+[2026-10-22T07:12:59.264Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x5af2e044 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/confirmar.test.ts" timestamp="2026-10-22T07:13:28.846Z" hostname="ESTEBAN-N" tests="14" failures="0" errors="0" skipped="0" time="2.6722683">
+        <testcase classname="rules-tests/confirmar.test.ts" name="confirmar con peso &gt; un voto de nivel 0 suma 10 puntos y crea el contador del día" time="0.4392648">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="confirmar con peso &gt; un votante de nivel 4 pesa 20" time="0.1114168">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="confirmar con peso &gt; con 95 puntos y 3 personas, el voto siguiente deja el reporte validado" time="0.1326544">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="confirmar con peso &gt; un reporte antiguo sin el mapa validacion lo recibe con el primer voto" time="0.1049033">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="confirmar con peso &gt; dos votantes a la vez: las sumas no se pisan" time="0.2231259">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="voto con peso 0 &gt; correo sin verificar: se registra, no suma y cuenta el día" time="0.2161754">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="voto con peso 0 &gt; cuenta de menos de 24 horas: pesa 0" time="0.1355477">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; no se confirma el propio reporte" time="0.0761318">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; no se confirma dos veces" time="0.1492192">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; confirmaciones suspendidas" time="0.0828551">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; límite diario (nivel 0: 5)" time="0.1014058">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; pausa de 20 segundos" time="0.0694612">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; el reporte no existe" time="0.0933336">
+        </testcase>
+        <testcase classname="rules-tests/confirmar.test.ts" name="casos que el portal detecta antes de escribir &gt; una cuenta operador no confirma (lo rechazan las reglas)" time="0.2077024">
+            <system-err>
+Confirmar: las reglas rechazaron la confirmación. [FirebaseError: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, false for &apos;get&apos; @ L409, false for &apos;get&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131] {
+  code: &apos;permission-denied&apos;,
+  customData: undefined,
+  toString: [Function (anonymous)]
+}
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/correcciones.test.ts" timestamp="2026-10-22T07:13:28.853Z" hostname="ESTEBAN-N" tests="14" failures="0" errors="0" skipped="0" time="0.0366394">
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; real" time="0.0034374">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; falso" time="0.0002625">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; sin veredicto: cualquier reporte que aún no tiene veredicto" time="0.0002126">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; por verificar sigue siendo validado y sin veredicto" time="0.0003192">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; real y falso se resuelven en el servidor; sin veredicto lo termina la página" time="0.0208848">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="filtro de veredicto &gt; la URL solo admite valores conocidos" time="0.0004846">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="el estado no cambia sin veredicto &gt; sin veredicto: bloqueado, y no hay estados siguientes" time="0.0003306">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="el estado no cambia sin veredicto &gt; con veredicto: se permiten las transiciones normales" time="0.0002816">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="el estado no cambia sin veredicto &gt; un reporte creado desde el portal por un administrador queda exento" time="0.000387">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="el estado no cambia sin veredicto &gt; el reporte propio de quien gestiona queda exento (nadie se da veredicto a sí mismo)" time="0.0003842">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="el estado no cambia sin veredicto &gt; en lote: solo cuentan los reportes con veredicto" time="0.0004948">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="avisos de soporte &gt; un aviso por conversación, que lleva a ella" time="0.0013061">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="avisos de soporte &gt; un mensaje nuevo cambia el id: vuelve a avisar aunque se hubiera visto" time="0.0016515">
+        </testcase>
+        <testcase classname="rules-tests/correcciones.test.ts" name="avisos de soporte &gt; sin fecha del último mensaje no hay aviso" time="0.0010048">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/filtros.test.ts" timestamp="2026-10-22T07:13:28.866Z" hostname="ESTEBAN-N" tests="5" failures="0" errors="0" skipped="0" time="0.027349">
+        <testcase classname="rules-tests/filtros.test.ts" name="filtro de verificación &gt; sin filtro, todos" time="0.0035421">
+        </testcase>
+        <testcase classname="rules-tests/filtros.test.ts" name="filtro de verificación &gt; validados: los que la comunidad validó, tengan o no veredicto" time="0.001371">
+        </testcase>
+        <testcase classname="rules-tests/filtros.test.ts" name="filtro de verificación &gt; por verificar: validados que aún no tienen veredicto" time="0.0002179">
+        </testcase>
+        <testcase classname="rules-tests/filtros.test.ts" name="filtro de verificación &gt; solo «por verificar» actúa sobre la página" time="0.0004489">
+        </testcase>
+        <testcase classname="rules-tests/filtros.test.ts" name="filtro de verificación &gt; el resumen explica qué se oculta" time="0.019852">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/mapa.test.ts" timestamp="2026-10-22T07:13:28.869Z" hostname="ESTEBAN-N" tests="13" failures="0" errors="0" skipped="0" time="0.0158979">
+        <testcase classname="rules-tests/mapa.test.ts" name="regiones &gt; un punto dentro de la caja da su región" time="0.0020202">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="regiones &gt; con cajas que se traslapan, gana la más chica" time="0.0003526">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="regiones &gt; fuera de todas, null" time="0.0001901">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="lectura por región &gt; parte una lista en tandas (las consultas «in» admiten 30)" time="0.0009458">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="lectura por región &gt; une la consulta de la región con los antiguos sin región, sin repetidos" time="0.0005023">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="lectura por región &gt; descarta los que dicen pertenecer a otra región" time="0.000209">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; con el mapa alejado, los reportes juntos forman un solo círculo con el total" time="0.0049782">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; al acercarse lo suficiente, se separan en pines sueltos" time="0.0010222">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; un reporte solo nunca se agrupa" time="0.0007833">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; reportes lejanos no se mezclan" time="0.0004841">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; dos reportes en el mismo punto no se separan ni con el acercamiento máximo" time="0.0006671">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; el número de un grupo no sirve en el índice nuevo (por eso el mapa no lo conserva al elegir un reporte)" time="0.0011165">
+        </testcase>
+        <testcase classname="rules-tests/mapa.test.ts" name="agrupación de reportes cercanos &gt; tamaño y texto del círculo" time="0.0004038">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/moderacion.test.ts" timestamp="2026-10-22T07:13:28.878Z" hostname="ESTEBAN-N" tests="9" failures="0" errors="0" skipped="0" time="2.2860002">
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; un administrador suspende a un usuario sin documento de confianza, y deja de poder confirmar" time="0.3148075">
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; al rehabilitarlo, vuelve a poder confirmar" time="0.1710317">
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; no toca los puntos, el nivel ni los contadores" time="0.1782262">
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; funciona aunque el usuario ya haya recibido un veredicto (su documento tiene ultimoReporteId)" time="0.1665656">
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; un operador no puede suspender" time="0.0898039">
+            <system-err>
+[2026-10-22T07:13:21.101Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x710b0779 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; un vecino no puede rehabilitarse a sí mismo" time="0.1676173">
+            <system-err>
+[2026-10-22T07:13:21.248Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x710b077c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="suspender y rehabilitar &gt; un vecino no puede suspender a otro" time="0.0783614">
+            <system-err>
+[2026-10-22T07:13:21.351Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x710b077f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="quiénes confirmaron un reporte &gt; lista a los confirmantes con su nivel, peso y si están suspendidos" time="0.3989179">
+        </testcase>
+        <testcase classname="rules-tests/moderacion.test.ts" name="quiénes confirmaron un reporte &gt; un reporte sin confirmaciones devuelve la lista vacía" time="0.1221026">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/paridad.test.ts" timestamp="2026-10-22T07:13:28.883Z" hostname="ESTEBAN-N" tests="51" failures="0" errors="0" skipped="0" time="11.9005214">
+        <testcase classname="rules-tests/paridad.test.ts" name="niveles &gt; cada umbral da su nivel y un punto menos da el anterior" time="0.0029156">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="niveles &gt; puntos para el siguiente nivel" time="0.0004694">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="peso y límites &gt; pesos de la sección 4.2" time="0.0004697">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="peso y límites &gt; límites diarios de la sección 4.5" time="0.0003565">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="peso y límites &gt; el voto pesa 0 sin correo verificado o con menos de 24 horas" time="0.000441">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="peso y límites &gt; el día cambia a las 00:00 de UTC-3" time="0.0004139">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="validación y veredicto &gt; suma de votos: 100 puntos y 3 personas" time="0.0019559">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="validación y veredicto &gt; veredicto real y falso, con piso y tope" time="0.0006396">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="validación y veredicto &gt; porcentaje de verificación" time="0.0003755">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="lectura de datos con ceros donde falte &gt; reporte antiguo sin validacion" time="0.0004139">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="lectura de datos con ceros donde falte &gt; usuario sin documento de confianza" time="0.0002727">
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 0: el peso 10 se acepta y otro se rechaza" time="0.4121668">
+            <system-err>
+[2026-10-22T07:13:01.450Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d591c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 0: el límite diario es 5" time="0.2258001">
+            <system-err>
+[2026-10-22T07:13:01.678Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5920 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 1: el peso 12.5 se acepta y otro se rechaza" time="0.2598045">
+            <system-err>
+[2026-10-22T07:13:01.937Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5924 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 1: el límite diario es 8" time="0.2636298">
+            <system-err>
+[2026-10-22T07:13:02.201Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5928 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 2: el peso 15 se acepta y otro se rechaza" time="0.3100563">
+            <system-err>
+[2026-10-22T07:13:02.511Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d592c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 2: el límite diario es 12" time="0.397745">
+            <system-err>
+[2026-10-22T07:13:02.909Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5930 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 3: el peso 17.5 se acepta y otro se rechaza" time="0.3102682">
+            <system-err>
+[2026-10-22T07:13:03.220Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5934 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 3: el límite diario es 12" time="0.3001004">
+            <system-err>
+[2026-10-22T07:13:03.519Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5938 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 4: el peso 20 se acepta y otro se rechaza" time="0.3524667">
+            <system-err>
+[2026-10-22T07:13:03.872Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d593c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 4: el límite diario es 20" time="0.3170735">
+            <system-err>
+[2026-10-22T07:13:04.190Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5940 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 5: el peso 22.5 se acepta y otro se rechaza" time="0.2168429">
+            <system-err>
+[2026-10-22T07:13:04.407Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5944 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 5: el límite diario es 20" time="0.2610373">
+            <system-err>
+[2026-10-22T07:13:04.668Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5948 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 6: el peso 25 se acepta y otro se rechaza" time="0.3092837">
+            <system-err>
+[2026-10-22T07:13:04.979Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d594c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 6: el límite diario es 20" time="0.2786493">
+            <system-err>
+[2026-10-22T07:13:05.257Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5950 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 7: el peso 27.5 se acepta y otro se rechaza" time="0.2208796">
+            <system-err>
+[2026-10-22T07:13:05.479Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5954 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 7: el límite diario es 30" time="0.2998627">
+            <system-err>
+[2026-10-22T07:13:05.778Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5958 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 8: el peso 30 se acepta y otro se rechaza" time="0.3491827">
+            <system-err>
+[2026-10-22T07:13:06.128Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d595c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 8: el límite diario es 30" time="0.2900028">
+            <system-err>
+[2026-10-22T07:13:06.418Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5960 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 9: el peso 32.5 se acepta y otro se rechaza" time="0.3280373">
+            <system-err>
+[2026-10-22T07:13:06.745Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5964 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 9: el límite diario es 30" time="0.3439831">
+            <system-err>
+[2026-10-22T07:13:07.090Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5968 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 10: el peso 34 se acepta y otro se rechaza" time="0.3210668">
+            <system-err>
+[2026-10-22T07:13:07.411Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d596c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L426:26 for &apos;create&apos; @ L426, false for &apos;create&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; nivel 10: el límite diario es 30" time="0.3391838">
+            <system-err>
+[2026-10-22T07:13:07.751Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5970 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L829:26 for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131, false for &apos;update&apos; @ L841, false for &apos;update&apos; @ L1131, evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L431:26 for &apos;update&apos; @ L431, false for &apos;update&apos; @ L1131, false for &apos;create&apos; @ L829, false for &apos;create&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 0 PC → 10 PC, nivel 0" time="0.2784184">
+            <system-err>
+[2026-10-22T07:13:08.030Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5974 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 35 PC → 45 PC, nivel 1" time="0.2952933">
+            <system-err>
+[2026-10-22T07:13:08.326Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5978 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 75 PC → 85 PC, nivel 2" time="0.3148223">
+            <system-err>
+[2026-10-22T07:13:08.640Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d597c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 125 PC → 135 PC, nivel 3" time="0.3052878">
+            <system-err>
+[2026-10-22T07:13:08.946Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5980 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 185 PC → 195 PC, nivel 4" time="0.2184335">
+            <system-err>
+[2026-10-22T07:13:09.165Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5984 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 255 PC → 265 PC, nivel 5" time="0.2298674">
+            <system-err>
+[2026-10-22T07:13:09.395Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5988 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 335 PC → 345 PC, nivel 6" time="0.2273641">
+            <system-err>
+[2026-10-22T07:13:09.622Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d598c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 425 PC → 435 PC, nivel 7" time="0.2775608">
+            <system-err>
+[2026-10-22T07:13:09.899Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5990 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 525 PC → 535 PC, nivel 8" time="0.2637094">
+            <system-err>
+[2026-10-22T07:13:10.164Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5994 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 635 PC → 645 PC, nivel 9" time="0.2371816">
+            <system-err>
+[2026-10-22T07:13:10.401Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d5998 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 755 PC → 760 PC, nivel 10" time="0.3167537">
+            <system-err>
+[2026-10-22T07:13:10.718Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d599c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto real con 760 PC → 760 PC, nivel 10" time="0.3037443">
+            <system-err>
+[2026-10-22T07:13:11.021Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59a0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 0 PC → 0 PC, nivel 0" time="0.2961769">
+            <system-err>
+[2026-10-22T07:13:11.319Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59a4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 5 PC → 0 PC, nivel 0" time="0.2697282">
+            <system-err>
+[2026-10-22T07:13:11.588Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59a8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 20 PC → 5 PC, nivel 0" time="0.2560289">
+            <system-err>
+[2026-10-22T07:13:11.846Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59ac error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 50 PC → 35 PC, nivel 0" time="0.1524883">
+            <system-err>
+[2026-10-22T07:13:11.998Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59b0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 135 PC → 120 PC, nivel 2" time="0.1435005">
+            <system-err>
+[2026-10-22T07:13:12.142Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59b4 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+        <testcase classname="rules-tests/paridad.test.ts" name="las reglas aceptan lo que calcula el portal &gt; veredicto falso con 760 PC → 745 PC, nivel 9" time="0.1369835">
+            <system-err>
+[2026-10-22T07:13:12.279Z]  @firebase/firestore: Firestore (12.18.0): GrpcConnection RPC &apos;Write&apos; stream 0x417d59b8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L802:24 for &apos;update&apos; @ L802, false for &apos;update&apos; @ L1131, evaluation error at L410:34 for &apos;create&apos; @ L410, false for &apos;create&apos; @ L1131, evaluation error at L410:34 for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131, evaluation error at L378:24 for &apos;update&apos; @ L378, false for &apos;update&apos; @ L1131, false for &apos;update&apos; @ L410, false for &apos;update&apos; @ L1131
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/tiempos.test.ts" timestamp="2026-10-22T07:13:28.951Z" hostname="ESTEBAN-N" tests="12" failures="0" errors="0" skipped="0" time="0.056829">
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; con el historial ordenado" time="0.0058076">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; con el historial en desorden, la primera atención sigue siendo el primer cambio" time="0.0007034">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; si el reporte guarda tiempoResolucionMs, ese es el dato oficial (igual que la app)" time="0.0003711">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; un reporte sin atender no tiene tiempos" time="0.0004825">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; sin fecha de creación solo vale el tiempo guardado" time="0.0005335">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="calcularTiempos &gt; un cambio anterior a la creación (reloj adelantado) no da un tiempo negativo" time="0.0005005">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; un reporte abierto no muestra nada" time="0.000728">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; resuelto con los datos guardados: fecha y tiempo" time="0.0415147">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; resuelto antes de existir esos datos: se deduce del historial y se dice" time="0.0006891">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; un reporte antiguo terminado espera a tener su historial antes de decir algo" time="0.0003804">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; cerrado sin pasar por resuelto" time="0.0006105">
+        </testcase>
+        <testcase classname="rules-tests/tiempos.test.ts" name="textoResolucion (fila «Resolución» del detalle) &gt; cerrado y sin historial: no se sabe si antes se resolvió" time="0.000241">
+        </testcase>
+    </testsuite>
+    <testsuite name="rules-tests/veredicto.test.ts" timestamp="2026-10-22T07:13:28.960Z" hostname="ESTEBAN-N" tests="16" failures="0" errors="0" skipped="0" time="2.5489772">
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto real &gt; el operador asignado suma 10 puntos a un autor sin historial" time="0.3843203">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto real &gt; sube de nivel: 35 + 10 = 45 PC → nivel 1, y el espejo en users lo refleja" time="0.2170624">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto real &gt; tope de 760: 755 + 10 aplica solo 5" time="0.1651113">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto real &gt; el administrador también da veredicto" time="0.0987549">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto falso &gt; con 20 PC baja a 5 y cuenta un reporte falso" time="0.1397606">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto falso &gt; piso en 0: con 5 PC se aplican −5" time="0.138418">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto falso &gt; puede bajar de nivel: 45 PC (nivel 1) → 30 PC (nivel 0)" time="0.1584094">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="veredicto falso &gt; sin comentario no se guarda" time="0.0664012">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; un veredicto no se cambia" time="0.1568908">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; no al reporte propio" time="0.0655607">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; los reportes creados desde el portal no dan puntos" time="0.1194731">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; un operador de otro organismo no puede" time="0.0822822">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; un ciudadano no puede" time="0.0923964">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; un reporte sin operador solo lo resuelve un administrador" time="0.2167536">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; el reporte no existe" time="0.0596015">
+        </testcase>
+        <testcase classname="rules-tests/veredicto.test.ts" name="casos que se rechazan &gt; un reporte antiguo sin el mapa validacion también se puede resolver" time="0.0934155">
+        </testcase>
+    </testsuite>
+</testsuites>

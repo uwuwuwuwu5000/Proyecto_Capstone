@@ -1,0 +1,397 @@
+﻿Origen;IDs del plan;Archivo de prueba;Prueba;Resultado;Segundos;Fecha de ejecución
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > sin nada que avisar, lista vacía;OK;0.0033275;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > validado por la comunidad;OK;0.0017894;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > validado sin fecha no genera aviso (no se puede ordenar ni dar por visto);OK;0.0002784;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > veredicto real muestra los puntos;OK;0.0003187;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > veredicto falso muestra el motivo y los puntos restados;OK;0.0003287;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > sin cambio de puntos (piso o tope), no se menciona;OK;0.0001837;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > validado y con veredicto: dos avisos;OK;0.0002814;26-10-2026
+Portal web (rules-tests);AV2,AV3;avisos.test.ts;validación y veredicto > la descripción larga se acorta;OK;0.0003014;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > sin nivel anterior conocido, el texto es neutro;OK;0.0004356;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > sin nivel anterior y en el nivel 0, no hay aviso;OK;0.0002755;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > subió;OK;0.0003873;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > bajó;OK;0.0001312;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > igual al anterior, sin aviso;OK;0.0001372;26-10-2026
+Portal web (rules-tests);AV4,PA3-W;avisos.test.ts;nivel > el nivel visto sale de los marcadores, sin contar el actual;OK;0.0004998;26-10-2026
+Portal web (rules-tests);RI8-W;base.test.ts;compatibilidad con firestore.rules > reportes > un ciudadano crea su reporte;OK;0.2814703;26-10-2026
+Portal web (rules-tests);RI2-W;base.test.ts;compatibilidad con firestore.rules > reportes > no se crea un reporte a nombre de otro;OK;0.1356799;26-10-2026
+Portal web (rules-tests);MS4-W;base.test.ts;compatibilidad con firestore.rules > reportes > un ciudadano no cambia el estado;OK;0.1291296;26-10-2026
+Portal web (rules-tests);MS4-W,AD8-W;base.test.ts;compatibilidad con firestore.rules > reportes > el operador asignado cambia el estado;OK;0.0797326;26-10-2026
+Portal web (rules-tests);MS4-W;base.test.ts;compatibilidad con firestore.rules > reportes > el administrador cambia el estado;OK;0.0828588;26-10-2026
+Portal web (rules-tests);MS5-W,WG10;base.test.ts;compatibilidad con firestore.rules > reportes > una transición inválida se rechaza;OK;0.1065412;26-10-2026
+Portal web (rules-tests);VC3-W,VC6-W;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > otro vecino confirma;OK;0.0835905;26-10-2026
+Portal web (rules-tests);VC7,SG7,CT9-W;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > nadie confirma su propio reporte;OK;0.0737549;26-10-2026
+Portal web (rules-tests);VC4-W,VC7,CT9-W;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > no se confirma dos veces;OK;0.0753878;26-10-2026
+Portal web (rules-tests);VC7,SG7,CT9-W;base.test.ts;compatibilidad con firestore.rules > confirmaciones (formato actual de la app) > un operador no confirma;OK;0.088223;26-10-2026
+Portal web (rules-tests);PF4;base.test.ts;compatibilidad con firestore.rules > perfiles > cada quien lee su perfil y no el de otro;OK;0.1627989;26-10-2026
+Portal web (rules-tests);SG1;base.test.ts;compatibilidad con firestore.rules > perfiles > un usuario no se sube el nivel;OK;0.0745574;26-10-2026
+Portal web (rules-tests);SG1;base.test.ts;compatibilidad con firestore.rules > perfiles > un usuario no se hace administrador;OK;0.0855117;26-10-2026
+Portal web (rules-tests);AV5;base.test.ts;compatibilidad con firestore.rules > perfiles > guarda qué avisos ya vio;OK;0.0801947;26-10-2026
+Portal web (rules-tests);AD8-W,MS4-W,MS6-W;base.test.ts;compatibilidad con firestore.rules > historial de estados > el operador asignado cambia estado y registra el historial en un lote;OK;0.0914983;26-10-2026
+Portal web (rules-tests);CM1-W;comun.test.ts;estados > el portal usa los de comun;OK;0.0048613;26-10-2026
+Portal web (rules-tests);CM1-W;comun.test.ts;estados > «Resuelto» es verde, como en la app;OK;0.0004407;26-10-2026
+Portal web (rules-tests);CM1-W,RI3-W,MB1;comun.test.ts;estados > largo de la descripción;OK;0.0004156;26-10-2026
+Portal web (rules-tests);CM3-W,CT1-W,CT2-W;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > nivel, peso y límite diario;OK;0.0045041;26-10-2026
+Portal web (rules-tests);CM3-W,CT1-W,CT2-W;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > número de día;OK;0.000793;26-10-2026
+Portal web (rules-tests);CM3-W,CT1-W,CT2-W;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > sumar un voto;OK;0.0010941;26-10-2026
+Portal web (rules-tests);CM3-W,CT1-W,CT2-W;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > puntos tras el veredicto;OK;0.0006914;26-10-2026
+Portal web (rules-tests);CM3-W,CT1-W,CT2-W;comun.test.ts;sistema de confianza (el portal usa los cálculos de comun) > porcentaje de verificación;OK;0.0004669;26-10-2026
+Portal web (rules-tests);CM2-W;comun.test.ts;tiempos > formato de la duración, mediana y promedio;OK;0.0233337;26-10-2026
+Portal web (rules-tests);CM2-W;comun.test.ts;tiempos > primera atención y resolución con el historial ordenado;OK;0.0005608;26-10-2026
+Portal web (rules-tests);WM1;comun.test.ts;mapa de calor > agrupación por comuna y tramos;OK;0.0012078;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > un voto de nivel 0 con el peso exacto (10) se acepta;OK;1.6562512;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > un peso inventado se rechaza;OK;0.397206;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > un nivel falseado se rechaza (dice nivel 5 y su confianza es 0);OK;0.2549973;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > la suma del reporte debe ser la anterior más el peso;OK;0.2371076;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > votos debe subir en 1;OK;0.3070364;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > sin tocar validacion del reporte se rechaza;OK;0.2121327;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > sin escribir el contador del día se rechaza;OK;0.1906297;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > el contador de otro día se rechaza;OK;0.2092493;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > no se confirma el propio reporte;OK;0.2196652;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > una cuenta operador no confirma;OK;0.2263487;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > no se confirma dos veces;OK;0.363378;26-10-2026
+Portal web (rules-tests);CT3-W,CT2-W,VC3-W,VC7;confianza.test.ts;confirmar con peso > un voto no puede sumar a nombre de otro usuario;OK;0.1740422;26-10-2026
+Portal web (rules-tests);CT5-W;confianza.test.ts;peso 0 por correo o antigüedad > con el correo sin verificar solo se acepta peso 0, sin sumar votos;OK;0.300212;26-10-2026
+Portal web (rules-tests);CT5-W;confianza.test.ts;peso 0 por correo o antigüedad > una cuenta de menos de 24 horas solo se acepta con peso 0;OK;0.3039053;26-10-2026
+Portal web (rules-tests);CT2-W;confianza.test.ts;niveles > un votante de nivel 4 pesa 20 y puede confirmar;OK;0.1653711;26-10-2026
+Portal web (rules-tests);CT2-W;confianza.test.ts;niveles > el nivel 10 pesa 34 (tope);OK;0.1736497;26-10-2026
+Portal web (rules-tests);CT2-W;confianza.test.ts;niveles > el peso del nivel 10 no puede ser 35;OK;0.1777458;26-10-2026
+Portal web (rules-tests);CT6-W;confianza.test.ts;límites y suspensión > nivel 0: la sexta confirmación del día se rechaza;OK;0.1871973;26-10-2026
+Portal web (rules-tests);CT6-W;confianza.test.ts;límites y suspensión > nivel 0: la quinta confirmación del día se acepta;OK;0.1693624;26-10-2026
+Portal web (rules-tests);CT6-W;confianza.test.ts;límites y suspensión > el contador no puede saltar de a más de uno;OK;0.1905462;26-10-2026
+Portal web (rules-tests);CT7-W;confianza.test.ts;límites y suspensión > la pausa de 20 s: una segunda confirmación inmediata se rechaza;OK;0.140761;26-10-2026
+Portal web (rules-tests);CT7-W;confianza.test.ts;límites y suspensión > pasada la pausa se acepta;OK;0.2113383;26-10-2026
+Portal web (rules-tests);CT8-W;confianza.test.ts;límites y suspensión > con las confirmaciones suspendidas se rechaza;OK;0.1996977;26-10-2026
+Portal web (rules-tests);CT6-W;confianza.test.ts;límites y suspensión > un usuario no reinicia su contador del día;OK;0.1729546;26-10-2026
+Portal web (rules-tests);CT4-W;confianza.test.ts;validación del reporte (sección 4.3) > con 95 puntos y 3 votos, el voto que llega a 105 debe marcar validado;OK;0.3534583;26-10-2026
+Portal web (rules-tests);CT4-W;confianza.test.ts;validación del reporte (sección 4.3) > no se marca validado con menos de 100 puntos;OK;0.2219841;26-10-2026
+Portal web (rules-tests);CT4-W;confianza.test.ts;validación del reporte (sección 4.3) > no se marca validado con menos de 3 personas, aunque sumen 100;OK;0.1410325;26-10-2026
+Portal web (rules-tests);CT4-W;confianza.test.ts;validación del reporte (sección 4.3) > un voto de peso 0 no cuenta como persona;OK;0.3172062;26-10-2026
+Portal web (rules-tests);CT14-W;confianza.test.ts;reporte antiguo sin el mapa validacion > la primera confirmación con peso crea el mapa;OK;0.1506721;26-10-2026
+Portal web (rules-tests);CT21-W;confianza.test.ts;formato antiguo de confirmación (transición) > se acepta sin peso y no toca la validación;OK;0.1570309;26-10-2026
+Portal web (rules-tests);CT21-W;confianza.test.ts;formato antiguo de confirmación (transición) > el formato antiguo no puede llevar un peso escondido;OK;0.1520757;26-10-2026
+Portal web (rules-tests);CT21-W;confianza.test.ts;formato antiguo de confirmación (transición) > un voto sin el formato antiguo ni el nuevo no suma a la validación;OK;0.1384699;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: el autor sube de 0 a 10 PC y validatedReports a 1;OK;0.1478031;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: con 35 PC pasa a 45 y sube al nivel 1;OK;0.3108721;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: un nivel mal calculado se rechaza;OK;0.2770867;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: puntos que no son la suma exacta se rechazan;OK;0.1703882;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: el tope de 760 (755 + 10 = 760);OK;0.3025176;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > real: pasar de 760 se rechaza;OK;0.2427813;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > falso: con 20 PC baja a 5 y suma un falso;OK;0.238718;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > falso: el piso es 0 (con 5 PC queda en 0 y se aplican -5);OK;0.2030677;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > falso: bajar de 0 se rechaza;OK;0.229321;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > falso: sin comentario se rechaza;OK;0.2073952;26-10-2026
+Portal web (rules-tests);CT10-W,CT11-W,CT12-W;confianza.test.ts;veredicto del operador > falso: el comentario no puede ser solo espacios;OK;0.2429938;26-10-2026
+Portal web (rules-tests);CT10-W;confianza.test.ts;veredicto del operador > sin escribir los puntos del autor en el mismo lote se rechaza;OK;0.1540913;26-10-2026
+Portal web (rules-tests);CT10-W;confianza.test.ts;veredicto del operador > el espejo en users debe coincidir con confianza/actual;OK;0.2383208;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > un veredicto no se cambia una vez dado;OK;0.1869156;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > un segundo veredicto sobre el mismo reporte se rechaza aunque no toque los puntos;OK;0.282907;26-10-2026
+Portal web (rules-tests);CT10-W;confianza.test.ts;veredicto del operador > el administrador también da veredicto;OK;0.1650018;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > un ciudadano no da veredicto;OK;0.1240139;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > un operador de otro organismo no da veredicto;OK;0.1749923;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > nadie da veredicto a su propio reporte;OK;0.1638095;26-10-2026
+Portal web (rules-tests);CT13-W;confianza.test.ts;veredicto del operador > el reporte de un autor que no es ciudadano no da puntos;OK;0.2102128;26-10-2026
+Portal web (rules-tests);SG9;confianza.test.ts;acceso a confianza/actual > el dueño lee la suya;OK;0.22645;26-10-2026
+Portal web (rules-tests);SG9;confianza.test.ts;acceso a confianza/actual > otro ciudadano no la lee (el nivel es privado);OK;0.1669645;26-10-2026
+Portal web (rules-tests);SG9;confianza.test.ts;acceso a confianza/actual > un operador la lee;OK;0.1414902;26-10-2026
+Portal web (rules-tests);SG9;confianza.test.ts;acceso a confianza/actual > el dueño no la modifica;OK;0.1087161;26-10-2026
+Portal web (rules-tests);SG9;confianza.test.ts;acceso a confianza/actual > un operador no la modifica por su cuenta (sin veredicto);OK;0.1177508;26-10-2026
+Portal web (rules-tests);CT17,SG11;confianza.test.ts;acceso a confianza/actual > el administrador suspende confirmaciones sin cambiar los puntos;OK;0.1044663;26-10-2026
+Portal web (rules-tests);CT17,SG11;confianza.test.ts;acceso a confianza/actual > el administrador no puede cambiar los puntos al suspender;OK;0.1459315;26-10-2026
+Portal web (rules-tests);SG10;confianza.test.ts;perfil y reportes > createdAt no se puede cambiar (antigüedad de la cuenta);OK;0.1525693;26-10-2026
+Portal web (rules-tests);SG10;confianza.test.ts;perfil y reportes > un perfil sin createdAt puede completarlo una vez, con la hora del servidor;OK;0.182675;26-10-2026
+Portal web (rules-tests);SG10;confianza.test.ts;perfil y reportes > al registrarse, createdAt debe ser la hora del servidor;OK;0.1387824;26-10-2026
+Portal web (rules-tests);SG1;confianza.test.ts;perfil y reportes > un reporte nuevo no puede nacer con puntos o validado;OK;0.1712856;26-10-2026
+Portal web (rules-tests);SG1;confianza.test.ts;perfil y reportes > el autor no modifica la validación de su reporte;OK;0.1041501;26-10-2026
+Portal web (rules-tests);CT3-W,VC3-W;confirmar.test.ts;confirmar con peso > un voto de nivel 0 suma 10 puntos y crea el contador del día;OK;0.4392648;26-10-2026
+Portal web (rules-tests);CT3-W,VC3-W;confirmar.test.ts;confirmar con peso > un votante de nivel 4 pesa 20;OK;0.1114168;26-10-2026
+Portal web (rules-tests);CT4-W;confirmar.test.ts;confirmar con peso > con 95 puntos y 3 personas, el voto siguiente deja el reporte validado;OK;0.1326544;26-10-2026
+Portal web (rules-tests);CT14-W;confirmar.test.ts;confirmar con peso > un reporte antiguo sin el mapa validacion lo recibe con el primer voto;OK;0.1049033;26-10-2026
+Portal web (rules-tests);CT20;confirmar.test.ts;confirmar con peso > dos votantes a la vez: las sumas no se pisan;OK;0.2231259;26-10-2026
+Portal web (rules-tests);CT5-W;confirmar.test.ts;voto con peso 0 > correo sin verificar: se registra, no suma y cuenta el día;OK;0.2161754;26-10-2026
+Portal web (rules-tests);CT5-W;confirmar.test.ts;voto con peso 0 > cuenta de menos de 24 horas: pesa 0;OK;0.1355477;26-10-2026
+Portal web (rules-tests);CT9-W;confirmar.test.ts;casos que el portal detecta antes de escribir > no se confirma el propio reporte;OK;0.0761318;26-10-2026
+Portal web (rules-tests);CT9-W;confirmar.test.ts;casos que el portal detecta antes de escribir > no se confirma dos veces;OK;0.1492192;26-10-2026
+Portal web (rules-tests);CT8-W;confirmar.test.ts;casos que el portal detecta antes de escribir > confirmaciones suspendidas;OK;0.0828551;26-10-2026
+Portal web (rules-tests);CT6-W;confirmar.test.ts;casos que el portal detecta antes de escribir > límite diario (nivel 0: 5);OK;0.1014058;26-10-2026
+Portal web (rules-tests);CT7-W;confirmar.test.ts;casos que el portal detecta antes de escribir > pausa de 20 segundos;OK;0.0694612;26-10-2026
+Portal web (rules-tests);CT9-W;confirmar.test.ts;casos que el portal detecta antes de escribir > el reporte no existe;OK;0.0933336;26-10-2026
+Portal web (rules-tests);CT9-W;confirmar.test.ts;casos que el portal detecta antes de escribir > una cuenta operador no confirma (lo rechazan las reglas);OK;0.2077024;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;filtro de veredicto > real;OK;0.0034374;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;filtro de veredicto > falso;OK;0.0002625;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;filtro de veredicto > sin veredicto: cualquier reporte que aún no tiene veredicto;OK;0.0002126;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;filtro de veredicto > por verificar sigue siendo validado y sin veredicto;OK;0.0003192;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;"filtro de veredicto > real y falso se resuelven en el servidor; sin veredicto lo termina la página";OK;0.0208848;26-10-2026
+Portal web (rules-tests);WG11;correcciones.test.ts;filtro de veredicto > la URL solo admite valores conocidos;OK;0.0004846;26-10-2026
+Portal web (rules-tests);CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > sin veredicto: bloqueado, y no hay estados siguientes;OK;0.0003306;26-10-2026
+Portal web (rules-tests);CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > con veredicto: se permiten las transiciones normales;OK;0.0002816;26-10-2026
+Portal web (rules-tests);CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > un reporte creado desde el portal por un administrador queda exento;OK;0.000387;26-10-2026
+Portal web (rules-tests);CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > el reporte propio de quien gestiona queda exento (nadie se da veredicto a sí mismo);OK;0.0003842;26-10-2026
+Portal web (rules-tests);CT15,WG5;correcciones.test.ts;el estado no cambia sin veredicto > en lote: solo cuentan los reportes con veredicto;OK;0.0004948;26-10-2026
+Portal web (rules-tests);AV6;correcciones.test.ts;avisos de soporte > un aviso por conversación, que lleva a ella;OK;0.0013061;26-10-2026
+Portal web (rules-tests);AV6;correcciones.test.ts;avisos de soporte > un mensaje nuevo cambia el id: vuelve a avisar aunque se hubiera visto;OK;0.0016515;26-10-2026
+Portal web (rules-tests);AV6;correcciones.test.ts;avisos de soporte > sin fecha del último mensaje no hay aviso;OK;0.0010048;26-10-2026
+Portal web (rules-tests);WG11;filtros.test.ts;filtro de verificación > sin filtro, todos;OK;0.0035421;26-10-2026
+Portal web (rules-tests);WG11;filtros.test.ts;filtro de verificación > validados: los que la comunidad validó, tengan o no veredicto;OK;0.001371;26-10-2026
+Portal web (rules-tests);WG11;filtros.test.ts;filtro de verificación > por verificar: validados que aún no tienen veredicto;OK;0.0002179;26-10-2026
+Portal web (rules-tests);WG11;filtros.test.ts;filtro de verificación > solo «por verificar» actúa sobre la página;OK;0.0004489;26-10-2026
+Portal web (rules-tests);WG11;filtros.test.ts;filtro de verificación > el resumen explica qué se oculta;OK;0.019852;26-10-2026
+Portal web (rules-tests);WB1;mapa.test.ts;regiones > un punto dentro de la caja da su región;OK;0.0020202;26-10-2026
+Portal web (rules-tests);WB1;mapa.test.ts;regiones > con cajas que se traslapan, gana la más chica;OK;0.0003526;26-10-2026
+Portal web (rules-tests);WB1;mapa.test.ts;regiones > fuera de todas, null;OK;0.0001901;26-10-2026
+Portal web (rules-tests);WB5,WB6;mapa.test.ts;lectura por región > parte una lista en tandas (las consultas «in» admiten 30);OK;0.0009458;26-10-2026
+Portal web (rules-tests);WB5,WB6;mapa.test.ts;lectura por región > une la consulta de la región con los antiguos sin región, sin repetidos;OK;0.0005023;26-10-2026
+Portal web (rules-tests);WB5,WB6;mapa.test.ts;lectura por región > descarta los que dicen pertenecer a otra región;OK;0.000209;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > con el mapa alejado, los reportes juntos forman un solo círculo con el total;OK;0.0049782;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > al acercarse lo suficiente, se separan en pines sueltos;OK;0.0010222;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > un reporte solo nunca se agrupa;OK;0.0007833;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > reportes lejanos no se mezclan;OK;0.0004841;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > dos reportes en el mismo punto no se separan ni con el acercamiento máximo;OK;0.0006671;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > el número de un grupo no sirve en el índice nuevo (por eso el mapa no lo conserva al elegir un reporte);OK;0.0011165;26-10-2026
+Portal web (rules-tests);WB3,WB4;mapa.test.ts;agrupación de reportes cercanos > tamaño y texto del círculo;OK;0.0004038;26-10-2026
+Portal web (rules-tests);CT8-W,CT17;moderacion.test.ts;suspender y rehabilitar > un administrador suspende a un usuario sin documento de confianza, y deja de poder confirmar;OK;0.3148075;26-10-2026
+Portal web (rules-tests);CT8-W,CT17;moderacion.test.ts;suspender y rehabilitar > al rehabilitarlo, vuelve a poder confirmar;OK;0.1710317;26-10-2026
+Portal web (rules-tests);CT8-W,CT17;moderacion.test.ts;suspender y rehabilitar > no toca los puntos, el nivel ni los contadores;OK;0.1782262;26-10-2026
+Portal web (rules-tests);CT8-W,CT17;moderacion.test.ts;suspender y rehabilitar > funciona aunque el usuario ya haya recibido un veredicto (su documento tiene ultimoReporteId);OK;0.1665656;26-10-2026
+Portal web (rules-tests);CT8-W,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un operador no puede suspender;OK;0.0898039;26-10-2026
+Portal web (rules-tests);CT8-W,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un vecino no puede rehabilitarse a sí mismo;OK;0.1676173;26-10-2026
+Portal web (rules-tests);CT8-W,CT17,SG11;moderacion.test.ts;suspender y rehabilitar > un vecino no puede suspender a otro;OK;0.0783614;26-10-2026
+Portal web (rules-tests);CT17;moderacion.test.ts;quiénes confirmaron un reporte > lista a los confirmantes con su nivel, peso y si están suspendidos;OK;0.3989179;26-10-2026
+Portal web (rules-tests);CT17;moderacion.test.ts;quiénes confirmaron un reporte > un reporte sin confirmaciones devuelve la lista vacía;OK;0.1221026;26-10-2026
+Portal web (rules-tests);CT1-W,PA2-W;paridad.test.ts;niveles > cada umbral da su nivel y un punto menos da el anterior;OK;0.0029156;26-10-2026
+Portal web (rules-tests);CT1-W,PA2-W;paridad.test.ts;niveles > puntos para el siguiente nivel;OK;0.0004694;26-10-2026
+Portal web (rules-tests);CT2-W,CT6-W,CT5-W;paridad.test.ts;peso y límites > pesos de la sección 4.2;OK;0.0004697;26-10-2026
+Portal web (rules-tests);CT2-W,CT6-W,CT5-W;paridad.test.ts;peso y límites > límites diarios de la sección 4.5;OK;0.0003565;26-10-2026
+Portal web (rules-tests);CT2-W,CT6-W,CT5-W;paridad.test.ts;peso y límites > el voto pesa 0 sin correo verificado o con menos de 24 horas;OK;0.000441;26-10-2026
+Portal web (rules-tests);CT2-W,CT6-W,CT5-W,CT19-W;paridad.test.ts;peso y límites > el día cambia a las 00:00 de UTC-3;OK;0.0004139;26-10-2026
+Portal web (rules-tests);CT4-W,CT10-W,CT12-W;paridad.test.ts;validación y veredicto > suma de votos: 100 puntos y 3 personas;OK;0.0019559;26-10-2026
+Portal web (rules-tests);CT4-W,CT10-W,CT12-W;paridad.test.ts;validación y veredicto > veredicto real y falso, con piso y tope;OK;0.0006396;26-10-2026
+Portal web (rules-tests);CT4-W,CT10-W,CT12-W;paridad.test.ts;validación y veredicto > porcentaje de verificación;OK;0.0003755;26-10-2026
+Portal web (rules-tests);CT14-W;paridad.test.ts;lectura de datos con ceros donde falte > reporte antiguo sin validacion;OK;0.0004139;26-10-2026
+Portal web (rules-tests);CT14-W;paridad.test.ts;lectura de datos con ceros donde falte > usuario sin documento de confianza;OK;0.0002727;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 0: el peso 10 se acepta y otro se rechaza;OK;0.4121668;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 0: el límite diario es 5;OK;0.2258001;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 1: el peso 12.5 se acepta y otro se rechaza;OK;0.2598045;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 1: el límite diario es 8;OK;0.2636298;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 2: el peso 15 se acepta y otro se rechaza;OK;0.3100563;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 2: el límite diario es 12;OK;0.397745;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 3: el peso 17.5 se acepta y otro se rechaza;OK;0.3102682;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 3: el límite diario es 12;OK;0.3001004;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 4: el peso 20 se acepta y otro se rechaza;OK;0.3524667;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 4: el límite diario es 20;OK;0.3170735;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 5: el peso 22.5 se acepta y otro se rechaza;OK;0.2168429;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 5: el límite diario es 20;OK;0.2610373;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 6: el peso 25 se acepta y otro se rechaza;OK;0.3092837;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 6: el límite diario es 20;OK;0.2786493;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 7: el peso 27.5 se acepta y otro se rechaza;OK;0.2208796;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 7: el límite diario es 30;OK;0.2998627;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 8: el peso 30 se acepta y otro se rechaza;OK;0.3491827;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 8: el límite diario es 30;OK;0.2900028;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 9: el peso 32.5 se acepta y otro se rechaza;OK;0.3280373;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 9: el límite diario es 30;OK;0.3439831;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 10: el peso 34 se acepta y otro se rechaza;OK;0.3210668;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > nivel 10: el límite diario es 30;OK;0.3391838;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 0 PC → 10 PC, nivel 0;OK;0.2784184;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 35 PC → 45 PC, nivel 1;OK;0.2952933;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 75 PC → 85 PC, nivel 2;OK;0.3148223;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 125 PC → 135 PC, nivel 3;OK;0.3052878;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 185 PC → 195 PC, nivel 4;OK;0.2184335;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 255 PC → 265 PC, nivel 5;OK;0.2298674;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 335 PC → 345 PC, nivel 6;OK;0.2273641;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 425 PC → 435 PC, nivel 7;OK;0.2775608;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 525 PC → 535 PC, nivel 8;OK;0.2637094;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 635 PC → 645 PC, nivel 9;OK;0.2371816;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 755 PC → 760 PC, nivel 10;OK;0.3167537;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto real con 760 PC → 760 PC, nivel 10;OK;0.3037443;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 0 PC → 0 PC, nivel 0;OK;0.2961769;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 5 PC → 0 PC, nivel 0;OK;0.2697282;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 20 PC → 5 PC, nivel 0;OK;0.2560289;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 50 PC → 35 PC, nivel 0;OK;0.1524883;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 135 PC → 120 PC, nivel 2;OK;0.1435005;26-10-2026
+Portal web (rules-tests);CT1-W,CT2-W,CT6-W,CT12-W,CM3-W;paridad.test.ts;las reglas aceptan lo que calcula el portal > veredicto falso con 760 PC → 745 PC, nivel 9;OK;0.1369835;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > con el historial ordenado;OK;0.0058076;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > con el historial en desorden, la primera atención sigue siendo el primer cambio;OK;0.0007034;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > si el reporte guarda tiempoResolucionMs, ese es el dato oficial (igual que la app);OK;0.0003711;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > un reporte sin atender no tiene tiempos;OK;0.0004825;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > sin fecha de creación solo vale el tiempo guardado;OK;0.0005335;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;calcularTiempos > un cambio anterior a la creación (reloj adelantado) no da un tiempo negativo;OK;0.0005005;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > un reporte abierto no muestra nada;OK;0.000728;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > resuelto con los datos guardados: fecha y tiempo;OK;0.0415147;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > resuelto antes de existir esos datos: se deduce del historial y se dice;OK;0.0006891;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > un reporte antiguo terminado espera a tener su historial antes de decir algo;OK;0.0003804;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > cerrado sin pasar por resuelto;OK;0.0006105;26-10-2026
+Portal web (rules-tests);WT5,CM2-W;tiempos.test.ts;textoResolucion (fila «Resolución» del detalle) > cerrado y sin historial: no se sabe si antes se resolvió;OK;0.000241;26-10-2026
+Portal web (rules-tests);CT10-W,PA1-W,PA3-W;veredicto.test.ts;veredicto real > el operador asignado suma 10 puntos a un autor sin historial;OK;0.3843203;26-10-2026
+Portal web (rules-tests);CT10-W,PA1-W,PA3-W;veredicto.test.ts;veredicto real > sube de nivel: 35 + 10 = 45 PC → nivel 1, y el espejo en users lo refleja;OK;0.2170624;26-10-2026
+Portal web (rules-tests);CT10-W,PA1-W,PA3-W;veredicto.test.ts;veredicto real > tope de 760: 755 + 10 aplica solo 5;OK;0.1651113;26-10-2026
+Portal web (rules-tests);CT10-W,PA1-W,PA3-W;veredicto.test.ts;veredicto real > el administrador también da veredicto;OK;0.0987549;26-10-2026
+Portal web (rules-tests);CT11-W,CT12-W;veredicto.test.ts;veredicto falso > con 20 PC baja a 5 y cuenta un reporte falso;OK;0.1397606;26-10-2026
+Portal web (rules-tests);CT11-W,CT12-W;veredicto.test.ts;veredicto falso > piso en 0: con 5 PC se aplican −5;OK;0.138418;26-10-2026
+Portal web (rules-tests);CT11-W,CT12-W;veredicto.test.ts;veredicto falso > puede bajar de nivel: 45 PC (nivel 1) → 30 PC (nivel 0);OK;0.1584094;26-10-2026
+Portal web (rules-tests);CT11-W,CT12-W;veredicto.test.ts;veredicto falso > sin comentario no se guarda;OK;0.0664012;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > un veredicto no se cambia;OK;0.1568908;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > no al reporte propio;OK;0.0655607;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > los reportes creados desde el portal no dan puntos;OK;0.1194731;26-10-2026
+Portal web (rules-tests);CT13-W,AD6-W;veredicto.test.ts;casos que se rechazan > un operador de otro organismo no puede;OK;0.0822822;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > un ciudadano no puede;OK;0.0923964;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > un reporte sin operador solo lo resuelve un administrador;OK;0.2167536;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > el reporte no existe;OK;0.0596015;26-10-2026
+Portal web (rules-tests);CT13-W;veredicto.test.ts;casos que se rechazan > un reporte antiguo sin el mapa validacion también se puede resolver;OK;0.0934155;26-10-2026
+Paquete comun;CT1-W,PA2-W;confianza.test.ts;confianza: igual que firestore.rules > nivel para 0 a 800 PC;OK;0.0278994;26-10-2026
+Paquete comun;CT2-W,CT6-W;confianza.test.ts;confianza: igual que firestore.rules > peso y límite diario para los niveles 0 a 10;OK;0.0010552;26-10-2026
+Paquete comun;CT19-W;confianza.test.ts;confianza: igual que firestore.rules > número de día con desfase UTC−3;OK;0.0020498;26-10-2026
+Paquete comun;CT1-W,PA2-W;confianza.test.ts;confianza: igual que firestore.rules > 11 niveles con umbrales crecientes y tope en el último;OK;0.0016543;26-10-2026
+Paquete comun;CT5-W;confianza.test.ts;confianza: voto y validación > sin correo verificado o con cuenta nueva el voto pesa 0;OK;0.0014745;26-10-2026
+Paquete comun;CT5-W;confianza.test.ts;confianza: voto y validación > la cuenta es antigua desde las 24 h exactas;OK;0.0008881;26-10-2026
+Paquete comun;CT4-W;confianza.test.ts;confianza: voto y validación > diez votos de nivel 0 validan en el décimo;OK;0.0005557;26-10-2026
+Paquete comun;CT4-W;confianza.test.ts;confianza: voto y validación > nunca valida una sola persona: tres votos de nivel 10;OK;0.0001976;26-10-2026
+Paquete comun;CT4-W;confianza.test.ts;confianza: voto y validación > un voto de peso 0 no cuenta como persona;OK;0.0009756;26-10-2026
+Paquete comun;CT4-W;confianza.test.ts;confianza: voto y validación > una vez validado, sigue validado;OK;0.0002928;26-10-2026
+Paquete comun;CT3-W,CT4-W;confianza.test.ts;confianza: voto y validación > porcentaje para la barra, con tope en 100;OK;0.0002928;26-10-2026
+Paquete comun;CT10-W,CT11-W,CT12-W,PA1-W;confianza.test.ts;"confianza: veredictos y progreso > real suma 10 con tope 760; falso resta 15 sin bajar de 0";OK;0.0002374;26-10-2026
+Paquete comun;CT16;confianza.test.ts;confianza: veredictos y progreso > progreso hacia el siguiente nivel;OK;0.0005739;26-10-2026
+Paquete comun;VC1;geo.test.ts;distancias > Maipú a Cerrillos, unos 4 km;OK;0.0034673;26-10-2026
+Paquete comun;VC1;geo.test.ts;distancias > el mismo punto está a 0 m y la distancia es simétrica;OK;0.0006238;26-10-2026
+Paquete comun;VC1;geo.test.ts;distancias > formato en metros o kilómetros;OK;0.0007081;26-10-2026
+Paquete comun;RI12-W;geo.test.ts;cajas > caja de puntos, unión y pertenencia;OK;0.0017741;26-10-2026
+Paquete comun;RI12-W;geo.test.ts;cajas > lee el formato [minLng, minLat, maxLng, maxLat] de GeoJSON;OK;0.0005277;26-10-2026
+Paquete comun;AD6-W,AD8-W,MS4-W;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un admin gestiona cualquier reporte;OK;0.0037283;26-10-2026
+Paquete comun;AD6-W,AD8-W,MS4-W;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un operador solo gestiona los reportes con su operadorId;OK;0.001749;26-10-2026
+Paquete comun;AD6-W,AD8-W,MS4-W;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un operador sin operadorId no gestiona aunque el reporte tampoco tenga;OK;0.0003215;26-10-2026
+Paquete comun;AD6-W,AD8-W,MS4-W;gestion.test.ts;permisoDeGestion (puedeGestionarReporte de las reglas) > un ciudadano o una sesión sin perfil no son gestores ni ven motivo;OK;0.0004735;26-10-2026
+Paquete comun;WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > al resolver envía el tiempo desde la creación;OK;0.0005135;26-10-2026
+Paquete comun;WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > nunca envía un tiempo negativo (reloj del autor adelantado);OK;0.000315;26-10-2026
+Paquete comun;WT1;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > sin fecha de creación no envía tiempo de resolución;OK;0.0005928;26-10-2026
+Paquete comun;WT2;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > al cerrar sin haber resuelto marca cerrado sin resolver;OK;0.0004058;26-10-2026
+Paquete comun;WT3;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > cerrar un reporte ya resuelto o avanzar entre estados abiertos no agrega nada;OK;0.0004872;26-10-2026
+Paquete comun;WT4;gestion.test.ts;resolucionDelCambio (cambioDeEstadoValido de las reglas) > la tolerancia es la de las reglas (900000 ms);OK;0.0004309;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: geometría > amplía el rostro hacia frente, cabello y mentón;OK;0.0052967;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: geometría > nunca se sale de la imagen;OK;0.0008724;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: geometría > la cabeza es la parte superior de la persona;OK;0.0007145;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: geometría > no difumina dos veces la cabeza de quien ya tiene el rostro detectado;OK;0.0020701;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: geometría > pixelado de entre 2 y 8 bloques a lo ancho;OK;0.0007378;26-10-2026
+Paquete comun;RI11-W,DW1;privacidad.test.ts;privacidad: parámetros > umbral bajo a propósito y versión según los modelos;OK;0.00073;26-10-2026
+Paquete comun;CM1-W;reportes.test.ts;estados > cada estado tiene etiqueta, color y transiciones;OK;0.0033451;26-10-2026
+Paquete comun;CM1-W,MS5-W,WG10;reportes.test.ts;estados > sigue el flujo de transicionValida() de las reglas;OK;0.0009083;26-10-2026
+Paquete comun;CM1-W,MS5-W,WG10;reportes.test.ts;estados > ningún estado vuelve hacia atrás en el flujo;OK;0.0004185;26-10-2026
+Paquete comun;CM1-W,MS5-W,WG10;reportes.test.ts;estados > todo estado puede terminar cerrado;OK;0.0002585;26-10-2026
+Paquete comun;CM1-W;reportes.test.ts;estados > reconoce estados y finalizados;OK;0.0004272;26-10-2026
+Paquete comun;CM1-W;reportes.test.ts;estados > resuelto se ve sobre un mapa claro (no es blanco);OK;0.0002738;26-10-2026
+Paquete comun;RI7-W,MB3;reportes.test.ts;categorías > son las 7 del piloto, sin repetir;OK;0.0008312;26-10-2026
+Paquete comun;RI7-W,MB3;reportes.test.ts;categorías > etiqueta legible y respaldo para ids desconocidos;OK;0.0002654;26-10-2026
+Paquete comun;RI3-W,MB1;reportes.test.ts;descripción > mismos límites que las reglas;OK;0.0003046;26-10-2026
+Paquete comun;RI3-W,MB1;reportes.test.ts;descripción > detecta vacía, corta y larga;OK;0.000405;26-10-2026
+Paquete comun;RI12-W,MB2;territorio.test.ts;nombres y códigos > normaliza nombres de comunas entre fuentes;OK;0.0039689;26-10-2026
+Paquete comun;RI12-W,MB2;territorio.test.ts;nombres y códigos > códigos CUT, región y municipalidad;OK;0.0010438;26-10-2026
+Paquete comun;RI12-W,MB2;territorio.test.ts;nombres y códigos > nombre corto de región;OK;0.0007447;26-10-2026
+Paquete comun;WM1,WM2;territorio.test.ts;mapa de calor por comuna > agrupa por municipalidad y, si no hay, por nombre;OK;0.0024439;26-10-2026
+Paquete comun;WM1,WM2;territorio.test.ts;mapa de calor por comuna > tramos de intensidad y leyenda;OK;0.0012126;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > primera atención y resolución desde la creación;OK;0.0060293;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > acepta el historial desordenado;OK;0.0006269;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;"tiempos de atención y resolución > abierto: sin tiempo de resolución; nunca atendido: sin primera atención";OK;0.0007452;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > usa el tiempoResolucionMs guardado si existe;OK;0.0004055;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > un reloj adelantado no da tiempos negativos;OK;0.0004597;26-10-2026
+Paquete comun;CM2-W,WM2,WR5;tiempos.test.ts;tiempos de atención y resolución > ignora cambios sin fecha y reportes sin fecha de creación;OK;0.0004139;26-10-2026
+Paquete comun;WR5,WE1;tiempos.test.ts;estadísticas y formato > mediana y promedio;OK;0.0009969;26-10-2026
+Paquete comun;WR5,WE1;tiempos.test.ts;estadísticas y formato > duraciones legibles;OK;0.0272007;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > usa tiempoResolucionMs cuando el reporte lo trae: es el dato oficial;OK;0.0006227;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > sin el campo, lo deduce del historial (reportes antiguos);OK;0.0004391;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > resuelto sin historial ni campo: se sabe que se resolvió, no cuánto tardó;OK;0.0002574;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > cerrado sin pasar por resuelto;OK;0.0002185;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > cerrado sin historial: no se puede saber si se resolvió;OK;0.0002904;26-10-2026
+Paquete comun;WT5,CM2-W;tiempos.test.ts;resolucionDeReporte (F12) > un reporte en curso está abierto;OK;0.000366;26-10-2026
+Paquete comun;;tiempos.test.ts;haceCuanto > en minutos, horas y días;OK;0.0005208;26-10-2026
+Paquete comun;;tiempos.test.ts;haceCuanto > una fecha en el futuro (reloj adelantado) es «recién»;OK;0.0002383;26-10-2026
+Playwright (pantallas del portal);US04-W;acceso.spec.ts;Sesión › US04 · Inicio de sesión exitoso;OK;1.631;26-10-2026
+Playwright (pantallas del portal);US05-W;acceso.spec.ts;Sesión › US05 · Contraseña incorrecta;OK;1.118;26-10-2026
+Playwright (pantallas del portal);US07-W;acceso.spec.ts;Sesión › US07 · Cerrar sesión termina en el inicio;OK;2.691;26-10-2026
+Playwright (pantallas del portal);WA7;acceso.spec.ts;Sesión › WA7 · Cerrar sesión desde el mapa, Mi perfil y un panel llega siempre al inicio;OK;7.116;26-10-2026
+Playwright (pantallas del portal);PF3-W;acceso.spec.ts;Sesión › PF3 · La sesión persiste al recargar;OK;2.314;26-10-2026
+Playwright (pantallas del portal);US02-W;acceso.spec.ts;Registro › US02 · Registro con email inválido;OK;1.278;26-10-2026
+Playwright (pantallas del portal);US03-W;acceso.spec.ts;Registro › US03 · Registro con correo existente;OK;1.289;26-10-2026
+Playwright (pantallas del portal);US01-W;acceso.spec.ts;Registro › US01 · Registro de usuario exitoso;OK;1.514;26-10-2026
+Playwright (pantallas del portal);US08-W;acceso.spec.ts;Rutas protegidas y redirección por rol › US08 · Sin sesión las rutas protegidas no muestran datos;OK;4.072;26-10-2026
+Playwright (pantallas del portal);WA4;acceso.spec.ts;Rutas protegidas y redirección por rol › WA4 · Los enlaces al mapa exigen registro;OK;1.76;26-10-2026
+Playwright (pantallas del portal);WA5;acceso.spec.ts;Rutas protegidas y redirección por rol › WA5 · La landing cambia según la sesión y el rol;OK;2.415;26-10-2026
+Playwright (pantallas del portal);WA1,AD1-W;acceso.spec.ts;Rutas protegidas y redirección por rol › WA1 / AD1 · Cada rol llega solo a su panel;OK;5.288;26-10-2026
+Playwright (pantallas del portal);US06-W;acceso.spec.ts;US06 · Recuperación de contraseña: se pide el enlace, el emulador lo genera y la clave nueva sirve;OK;1.599;26-10-2026
+Playwright (pantallas del portal);WG1;admin-reportes.spec.ts;Listado › WG1 · Paginación de 12, 24 (por defecto) y 48 reportes con total y navegación;OK;2.301;26-10-2026
+Playwright (pantallas del portal);WG2,AD2-W,AD7-W;admin-reportes.spec.ts;Listado › WG2 / AD2 / AD7 · Filtros combinados y «Limpiar filtros»;OK;1.991;26-10-2026
+Playwright (pantallas del portal);WG11,WG13;admin-reportes.spec.ts;Listado › WG11 / WG13 · Filtro de verificación e insignias de las tarjetas;OK;2.391;26-10-2026
+Playwright (pantallas del portal);WG12;admin-reportes.spec.ts;Listado › WG12 · «Por verificar» desde el menú lateral;OK;2.563;26-10-2026
+Playwright (pantallas del portal);WG9,MS6-W;admin-reportes.spec.ts;"Detalle, estado y veredicto › WG9 / MS6 · El historial muestra autor y comentario; el administrador no expone su nombre";OK;1.689;26-10-2026
+Playwright (pantallas del portal);CT15,CT10-W,PA1-W;admin-reportes.spec.ts;"Detalle, estado y veredicto › CT15 / CT10 / PA1 · Sin veredicto no hay cambio de estado; con veredicto «real» sí";OK;3.424;26-10-2026
+Playwright (pantallas del portal);CT11-W;admin-reportes.spec.ts;Detalle, estado y veredicto › CT11 · El veredicto «falso» exige un motivo y resta 15 puntos;OK;2.919;26-10-2026
+Playwright (pantallas del portal);CT13-W;admin-reportes.spec.ts;Detalle, estado y veredicto › CT13 · Un reporte con veredicto no admite otro;OK;1.612;26-10-2026
+Playwright (pantallas del portal);WG4,MS4-W,MS5-W;admin-reportes.spec.ts;Detalle, estado y veredicto › WG4 / MS4 / MS5 · Cambios de estado seguidos en el mismo detalle;OK;4.042;26-10-2026
+Playwright (pantallas del portal);WG5;admin-reportes.spec.ts;Acciones en lote, CSV y eliminación › WG5 · Cambio de estado en lote: omite el reporte sin veredicto;OK;4.286;26-10-2026
+Playwright (pantallas del portal);WG7;admin-reportes.spec.ts;Acciones en lote, CSV y eliminación › WG7 · Reasignar y quitar el operador de un reporte, en lote;OK;3.973;26-10-2026
+Playwright (pantallas del portal);WG6;admin-reportes.spec.ts;Acciones en lote, CSV y eliminación › WG6 · Exportar CSV con todos los reportes filtrados;OK;2.217;26-10-2026
+Playwright (pantallas del portal);WG8;admin-reportes.spec.ts;Acciones en lote, CSV y eliminación › WG8 · Eliminar un reporte borra también su historial;OK;2.941;26-10-2026
+Playwright (pantallas del portal);PA3-W;admin-reportes.spec.ts;PA3 · Al sumar puntos con un veredicto «real» el vecino sube de nivel;OK;4.009;26-10-2026
+Playwright (pantallas del portal);AV1,AV2,AV3,AV7;avisos.spec.ts;AV1 / AV2 / AV3 / AV7 · Avisos de estado, validación y veredicto (y ninguno por confirmaciones);OK;1.217;26-10-2026
+Playwright (pantallas del portal);AV5;avisos.spec.ts;AV5 · Marcar como vistos persiste al recargar;OK;2.057;26-10-2026
+Playwright (pantallas del portal);AV4;avisos.spec.ts;AV4 · Avisos de cambio de nivel: neutro, subida y bajada;OK;3.243;26-10-2026
+Playwright (pantallas del portal);AV6;avisos.spec.ts;AV6 · Avisos de soporte para el administrador: cada conversación abierta y los mensajes nuevos;OK;2.903;26-10-2026
+Playwright (pantallas del portal);AV8;avisos.spec.ts;AV8 · La campana la ven el vecino y el administrador, no el operador;OK;3.245;26-10-2026
+Playwright (pantallas del portal);WO1;catalogos.spec.ts;Organismos › WO1 · Tabla con paginación, búsqueda y filtros;OK;1.621;26-10-2026
+Playwright (pantallas del portal);WO2;catalogos.spec.ts;Organismos › WO2 · Desactivar y volver a activar un organismo;OK;1.647;26-10-2026
+Playwright (pantallas del portal);WO5;catalogos.spec.ts;Operadores y cuentas › WO5 · Operadores activos sin cuenta;OK;1.384;26-10-2026
+Playwright (pantallas del portal);WO4;catalogos.spec.ts;Operadores y cuentas › WO4 · Alta de un operador y de su cuenta, sin cerrar la sesión del administrador;OK;2.548;26-10-2026
+Playwright (pantallas del portal);WK1;catalogos.spec.ts;Categorías › WK1 · Crear y editar una categoría;OK;3.028;26-10-2026
+Playwright (pantallas del portal);WK2;catalogos.spec.ts;Categorías › WK2 · Desactivar una categoría sin perder la historia de sus reportes;OK;3.68;26-10-2026
+Playwright (pantallas del portal);WK3;catalogos.spec.ts;Categorías › WK3 · Reordenar con el teclado y ver cuántos reportes tiene cada categoría;OK;1.842;26-10-2026
+Playwright (pantallas del portal);CT3-W,VC3-W,VC4-W,CT7-W;confianza.spec.ts;Confirmar un reporte (vecino de nivel 0) › CT3 / VC3 / VC4 / CT7 · Confirmar con peso, no repetir y pausa de 20 s;OK;26.226;26-10-2026
+Playwright (pantallas del portal);VC5-W;confianza.spec.ts;Confirmar un reporte (vecino de nivel 0) › VC5 · El número de confirmaciones coincide y la barra usa puntos y personas;OK;5.122;26-10-2026
+Playwright (pantallas del portal);CT9-W;confianza.spec.ts;Casos especiales de quien confirma › CT9 · El autor ve «Este es tu reporte»;OK;5.307;26-10-2026
+Playwright (pantallas del portal);CT9-W;confianza.spec.ts;Casos especiales de quien confirma › CT9 · Un reporte con veredicto ya no se confirma;OK;5.608;26-10-2026
+Playwright (pantallas del portal);CT5-W;confianza.spec.ts;Casos especiales de quien confirma › CT5 · Con el correo sin verificar la confirmación pesa 0 y se avisa;OK;6.812;26-10-2026
+Playwright (pantallas del portal);CT5-W;confianza.spec.ts;Casos especiales de quien confirma › CT5 · Una cuenta de menos de 24 horas también pesa 0;OK;5.091;26-10-2026
+Playwright (pantallas del portal);CT6-W;confianza.spec.ts;Casos especiales de quien confirma › CT6 · Al llegar al límite diario el botón se reemplaza por un aviso;OK;5.333;26-10-2026
+Playwright (pantallas del portal);CT8-W,CT18;confianza.spec.ts;Casos especiales de quien confirma › CT8 / CT18 · Confirmaciones suspendidas: aviso en el reporte y en «Mi nivel»;OK;6.516;26-10-2026
+Playwright (pantallas del portal);CT16,PA2-W;confianza.spec.ts;Mi nivel › CT16 / PA2 · Nivel, puntos, siguiente nivel, peso del voto y tabla (nivel 4);OK;1.188;26-10-2026
+Playwright (pantallas del portal);CT16;confianza.spec.ts;Mi nivel › CT16 · Nivel máximo y nivel 0 sin datos;OK;2.2;26-10-2026
+Playwright (pantallas del portal);CT16;confianza.spec.ts;"Mi nivel › CT16 · Sin correo verificado ofrece «Ya verifiqué mi correo»; otros roles vuelven al inicio";OK;2.259;26-10-2026
+Playwright (pantallas del portal);VC6-W;confianza.spec.ts;VC6 · La confirmación de otro vecino suma al reporte y cada voto pesa según su nivel;OK;14.504;26-10-2026
+Playwright (pantallas del portal);RI7-W;crear-reporte.spec.ts;RI7 · Solo se ofrecen las categorías activas;OK;1.525;26-10-2026
+Playwright (pantallas del portal);WC2,RI3-W;crear-reporte.spec.ts;WC2 / RI3 · Coordenadas inválidas, punto sin comuna y campos obligatorios;OK;4.268;26-10-2026
+Playwright (pantallas del portal);WC1,RI2-W,RI8-W,RI12-W;crear-reporte.spec.ts;WC1 / RI2 / RI8 / RI12 · Crear un reporte con comuna, organismo y operador asignados;OK;4.736;26-10-2026
+Playwright (pantallas del portal);WC3;crear-reporte.spec.ts;WC3 · Comuna sin municipalidad activa: organismo genérico y sin operador;OK;4.565;26-10-2026
+Playwright (pantallas del portal);IN1-W;flujo-completo.spec.ts;IN1 · Flujo completo: confirmar, validar, veredicto, cambios de estado hasta cerrar y seguimiento del vecino;OK;24.649;26-10-2026
+Playwright (pantallas del portal);MS3-W;historial-rendimiento.spec.ts;MS3 · «Historial» lista solo los reportes del vecino con su estado;OK;2.649;26-10-2026
+Playwright (pantallas del portal);RI13-W;historial-rendimiento.spec.ts;Administrador › RI13 · El detalle muestra el nombre del creador del reporte;OK;1.563;26-10-2026
+Playwright (pantallas del portal);WG3;historial-rendimiento.spec.ts;Administrador › WG3 · Del mapa de calor al listado de reportes de una comuna;OK;2.735;26-10-2026
+Playwright (pantallas del portal);MS7-W;historial-rendimiento.spec.ts;Rendimiento del mapa › MS7 · El mapa con 500 reportes en la región carga con un P95 menor a 7 s;FALLÓ;33.624;26-10-2026
+Playwright (pantallas del portal);;humo.spec.ts;FASE1 · El portal abre sin conectarse a Firebase;OK;0.816;26-10-2026
+Playwright (pantallas del portal);MS1-W,WB1;mapa.spec.ts;Mapa público › MS1 / WB1 · Filtros de región, categoría y estado;OK;2.091;26-10-2026
+Playwright (pantallas del portal);WB6;mapa.spec.ts;Mapa público › WB6 · El reporte antiguo sin región aparece una sola vez;OK;2.855;26-10-2026
+Playwright (pantallas del portal);WB5;mapa.spec.ts;Mapa público › WB5 · La lectura se limita a 500 por región y lo avisa;FALLÓ;21.622;26-10-2026
+Playwright (pantallas del portal);WB1;mapa.spec.ts;Mapa público › WB1 · Al cambiar de región se muestran los pines sin tener que mover el mapa;FALLÓ;11.761;26-10-2026
+Playwright (pantallas del portal);MS2-W,WB8;mapa.spec.ts;Mapa público › MS2 / WB8 · Panel del reporte con foto, fecha, confirmaciones, verificación e historial;OK;4.866;26-10-2026
+Playwright (pantallas del portal);WB7;mapa.spec.ts;Mapa público › WB7 · El enlace de administración solo lo ve el administrador;OK;8.801;26-10-2026
+Playwright (pantallas del portal);WB3;mapa.spec.ts;Mapa público › WB3 · Los reportes cercanos se agrupan en un círculo con el total y se separan al acercar;OK;1.467;26-10-2026
+Playwright (pantallas del portal);WB4;mapa.spec.ts;Mapa público › WB4 · Tres reportes en el mismo punto: lista y «Ver detalle» sin errores;OK;6.287;26-10-2026
+Playwright (pantallas del portal);WB2;mapa.spec.ts;Mapa: ubicación › WB2 · «Mi región» usa la ubicación y, sin permiso, deja elegir una región;OK;1.604;26-10-2026
+Playwright (pantallas del portal);WA2;panel-y-perfil.spec.ts;Panel de administración › WA2 · Barra lateral: secciones, sección activa y contraer;OK;3.171;26-10-2026
+Playwright (pantallas del portal);WA3;panel-y-perfil.spec.ts;Panel de administración › WA3 · «Panel de administración» lleva al Resumen y la campana cuenta los avisos de soporte;OK;1.521;26-10-2026
+Playwright (pantallas del portal);WM2,WM3;panel-y-perfil.spec.ts;Panel de administración › WM2 / WM3 · Mapa de calor: detalle de una comuna y cambio de región;OK;1.624;26-10-2026
+Playwright (pantallas del portal);WE1;panel-y-perfil.spec.ts;Panel de administración › WE1 · Estadísticas globales por periodo;OK;1.679;26-10-2026
+Playwright (pantallas del portal);WF1,PF1-W,PF2-W;panel-y-perfil.spec.ts;Mi perfil › WF1 / PF1 / PF2 · Datos de la cuenta de un vecino y de un operador;OK;1.637;26-10-2026
+Playwright (pantallas del portal);WF3;panel-y-perfil.spec.ts;Mi perfil › WF3 · Recordatorio «Verificar correo» solo para el vecino sin verificar;OK;3.647;26-10-2026
+Playwright (pantallas del portal);WA6;panel-y-perfil.spec.ts;Adaptación a pantallas › WA6 · Sin desplazamiento horizontal en landing, Resumen, listado y mapa (1440, 1100 y 393 px);OK;25.217;26-10-2026
+Playwright (pantallas del portal);PA4-W;panel-y-perfil.spec.ts;PA4 · No hay ranking público: ninguna pantalla del vecino lista a otros vecinos con su nivel;OK;6.809;26-10-2026
+Playwright (pantallas del portal);WR1,AD9;resumen-operador.spec.ts;Resumen del administrador › WR1 / AD9 · Indicadores del día;OK;1.1;26-10-2026
+Playwright (pantallas del portal);WR2;resumen-operador.spec.ts;Resumen del administrador › WR2 · Alertas con enlace a la lista ya filtrada;OK;1.221;26-10-2026
+Playwright (pantallas del portal);WR3;resumen-operador.spec.ts;Resumen del administrador › WR3 · Estado de los reportes: porcentaje de cerrados y enlace por estado;OK;1.274;26-10-2026
+Playwright (pantallas del portal);WR4;resumen-operador.spec.ts;Resumen del administrador › WR4 · Actividad reciente: el detalle abre sobre el Resumen y permite cambiar el estado;OK;1.807;26-10-2026
+Playwright (pantallas del portal);WR5;resumen-operador.spec.ts;Resumen del administrador › WR5 · Resueltos del mes y tiempo promedio de resolución;OK;1.135;26-10-2026
+Playwright (pantallas del portal);WP1,AD6-W;resumen-operador.spec.ts;Panel del operador A › WP1 / AD6 · El operador ve solo los reportes asignados a su operador;OK;1.291;26-10-2026
+Playwright (pantallas del portal);WP2,AD8-W;resumen-operador.spec.ts;Panel del operador A › WP2 / AD8 · El operador cambia el estado de un reporte propio con veredicto;OK;1.621;26-10-2026
+Playwright (pantallas del portal);WG12;resumen-operador.spec.ts;Panel del operador A › WG12 · «Por verificar» desde la pestaña del operador;OK;1.494;26-10-2026
+Playwright (pantallas del portal);WP3;resumen-operador.spec.ts;Panel del operador A › WP3 · Estadísticas del operador: solo sus reportes;OK;1.117;26-10-2026
+Playwright (pantallas del portal);WP3;resumen-operador.spec.ts;Panel del operador A › WP3 · Mapa de gestión del operador;OK;1.099;26-10-2026
+Playwright (pantallas del portal);WP1;resumen-operador.spec.ts;WP1 · El operador B solo ve su único reporte;OK;1.517;26-10-2026
+Playwright (pantallas del portal);WS1;soporte.spec.ts;WS1 · Bandeja en tiempo real con filtros;OK;1.179;26-10-2026
+Playwright (pantallas del portal);WS2,ATN2-W;soporte.spec.ts;WS2 / ATN2 · Responder: el mensaje sale como equipo y el caso queda en atención;OK;1.732;26-10-2026
+Playwright (pantallas del portal);WS3;soporte.spec.ts;WS3 · Cerrar, reabrir y reabrir respondiendo;OK;2.354;26-10-2026
+Playwright (pantallas del portal);WS4;soporte.spec.ts;Teléfono (393 px) › WS4 · Una sola vista a la vez y conversación inexistente;OK;2.402;26-10-2026
