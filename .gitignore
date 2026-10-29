@@ -21,3 +21,9 @@ datos_prueba/
 # Plan de pruebas (Excel original, copia revisada y archivos temporales que Excel crea al abrirlos)
 Plan_de_Pruebas_*
 ~$Plan_de_Pruebas_*
+
+# Cualquier archivo de Excel (planes de prueba, reportes de unificación…): solo locales
+*.xlsx
+*.xlsm
+*.xls
+~$*
