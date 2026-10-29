@@ -34,3 +34,57 @@
 .leaflet-control-attribution a {
   color: var(--ca-signal);
 }
+
+/* Grupos de reportes cercanos del mapa público (los crea Leaflet, por eso es CSS global). */
+.grupo-incidencias {
+  background: none;
+  border: none;
+}
+
+.grupo-incidencias__burbuja {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: #1e1b4b;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.grupo-incidencias:hover .grupo-incidencias__burbuja {
+  background: #2e2a75;
+}
+
+.grupo-incidencias__lista {
+  max-height: 200px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.grupo-incidencias__lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--ca-line);
+  font-size: 0.82rem;
+}
+
+.grupo-incidencias__lista button {
+  flex: none;
+  padding: 3px 10px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ca-signal);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}

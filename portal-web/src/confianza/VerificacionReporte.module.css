@@ -1,0 +1,75 @@
+.raiz {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.boton {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--ca-signal);
+  border-radius: 10px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  background: var(--ca-signal-dark);
+}
+
+/* La pausa de 20 s va dentro del botón («Espera 8 s»), como en la app. */
+.boton:disabled {
+  background: rgba(28, 169, 201, 0.35);
+  border-color: rgba(28, 169, 201, 0.35);
+  color: var(--ca-ink);
+  cursor: not-allowed;
+}
+
+.nota,
+.hecho,
+.aviso,
+.ok,
+.error {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.nota {
+  color: var(--ca-muted);
+}
+
+.hecho {
+  color: #38b97a;
+  font-weight: 600;
+}
+
+.ok {
+  color: #38b97a;
+}
+
+.error {
+  color: var(--ca-danger);
+}
+
+.aviso {
+  padding: 8px 10px;
+  border: 1px solid #e0b43c;
+  border-radius: 8px;
+  background: rgba(224, 180, 60, 0.12);
+  color: #e0b43c;
+}
+
+.aviso a {
+  color: inherit;
+  font-weight: 700;
+}
+
+.enlace {
+  align-self: flex-start;
+  font-size: 0.82rem;
+  color: var(--ca-signal);
+}

@@ -11,12 +11,19 @@ interface Props {
 /** Avance de la verificación de la comunidad, con su validación y el veredicto del organismo. */
 export default function BarraVerificacion({ validacion, compacta = false }: Props) {
   const pct = porcentajeVerificacion(validacion.puntos)
+  const personas = `${validacion.votos} ${validacion.votos === 1 ? 'persona confirmó' : 'personas confirmaron'}`
   return (
     <div className={styles.raiz}>
-      <div className={styles.fila}>
-        {!compacta && <span className={styles.titulo}>Verificación de la comunidad</span>}
-        <span className={styles.pct}>{pct} %</span>
-      </div>
+      {compacta ? (
+        <div className={styles.fila}>
+          <span className={styles.pct}>{pct} %</span>
+        </div>
+      ) : (
+        <div className={styles.fila}>
+          <span className={styles.titulo}>Verificación de la comunidad</span>
+          {validacion.validado && <span className={styles.validado}>✓ Validado por la comunidad</span>}
+        </div>
+      )}
       <div
         className={`${styles.barra} ${validacion.validado ? styles.barraValidada : ''}`}
         role="progressbar"
@@ -27,8 +34,13 @@ export default function BarraVerificacion({ validacion, compacta = false }: Prop
       >
         <div className={styles.relleno} style={{ width: `${pct}%` }} />
       </div>
+      {!compacta && (
+        <p className={styles.cifras}>
+          {pct} % · {personas}
+        </p>
+      )}
       <div className={styles.insignias}>
-        {validacion.validado && <span className={styles.validado}>✓ Validado por la comunidad</span>}
+        {compacta && validacion.validado && <span className={styles.validado}>✓ Validado por la comunidad</span>}
         {validacion.veredicto === 'real' && <span className={styles.real}>Confirmado como real por el organismo</span>}
         {validacion.veredicto === 'falso' && <span className={styles.falso}>Marcado como falso por el organismo</span>}
       </div>

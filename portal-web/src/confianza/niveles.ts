@@ -1,19 +1,9 @@
 // Nombres y reconocimiento de cada nivel (sistema_confianza.md, secciones 4.1 y 4.6).
+import { NIVELES } from '@ciudad-alerta/comun'
 import { UMBRALES_NIVEL, limiteDiario, pesoDeNivel } from './reglas'
 
-export const NOMBRE_NIVEL = [
-  'Vecino nuevo',
-  'Vecino',
-  'Colaborador',
-  'Colaborador activo',
-  'Vigía',
-  'Vigía confiable',
-  'Guardián de barrio',
-  'Guardián confiable',
-  'Referente',
-  'Referente destacado',
-  'Guardián de la ciudad',
-] as const
+/** Nombre de cada nivel (índice = nivel), tomado de `comun`. */
+export const NOMBRE_NIVEL: readonly string[] = NIVELES.map((n) => n.nombre)
 
 /** Qué se reconoce al llegar a cada nivel (solo los que tienen algo nuevo). */
 export const RECONOCIMIENTO_NIVEL: Record<number, string> = {

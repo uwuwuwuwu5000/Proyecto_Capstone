@@ -9,38 +9,30 @@
 import type * as TF from '@tensorflow/tfjs-core'
 import type * as FaceDetection from '@tensorflow-models/face-detection'
 import type * as CocoSsd from '@tensorflow-models/coco-ssd'
+import {
+  CALIDAD_SALIDA,
+  CONFIANZA_PERSONA,
+  MAXIMO_PERSONAS,
+  tamanoReducido,
+  versionDeModelos,
+  zonasADifuminar,
+} from '@ciudad-alerta/comun'
+import type { Caja, InfoPrivacidad } from '@ciudad-alerta/comun'
 import { prepararTensorflow, resolverModulo } from './tensorflow'
+
+// Umbrales, márgenes y geometría del difuminado: viven en `comun/`, compartidos
+// con la app móvil, para que ambas difuminen exactamente igual.
+export type { InfoPrivacidad }
 
 const MODELO_LOCAL_PERSONAS = '/models/coco-ssd/model.json'
 const MODELO_LOCAL_ROSTROS = '/models/face-detection/model.json'
 
-/**
- * Umbral bajo a propósito: difuminar algo que no era una persona cuesta poco;
- * publicar un rostro sin difuminar es lo que se debe evitar.
- */
-const CONFIANZA_PERSONA = 0.35
-const CALIDAD_SALIDA = 0.6
-
-/** Igual que `InfoPrivacidad` de la app: lo exige la regla fotoProtegida(). */
-export interface InfoPrivacidad {
-  aplicada: boolean
-  rostros: number
-  personas: number
-  version: string
-}
 
 export interface FotoProtegida {
   dataUrl: string
   mimeType: 'image/jpeg'
   sizeBytes: number
   privacidad: InfoPrivacidad
-}
-
-interface Caja {
-  x: number
-  y: number
-  ancho: number
-  alto: number
 }
 
 export class PrivacidadError extends Error {
@@ -179,50 +171,6 @@ async function cargarModelos(): Promise<void> {
   await carga
 }
 
-function recortar(caja: Caja, lienzo: HTMLCanvasElement): Caja {
-  const x = Math.max(0, caja.x)
-  const y = Math.max(0, caja.y)
-  return {
-    x,
-    y,
-    ancho: Math.min(lienzo.width - x, caja.ancho - (x - caja.x)),
-    alto: Math.min(lienzo.height - y, caja.alto - (y - caja.y)),
-  }
-}
-
-/** La caja del detector se ajusta a los rasgos: se amplía a frente, cabello y mentón. */
-function ampliar(caja: Caja, lienzo: HTMLCanvasElement): Caja {
-  const margenX = caja.ancho * 0.3
-  const margenArriba = caja.alto * 0.45
-  const margenAbajo = caja.alto * 0.25
-  return recortar(
-    {
-      x: caja.x - margenX,
-      y: caja.y - margenArriba,
-      ancho: caja.ancho + margenX * 2,
-      alto: caja.alto + margenArriba + margenAbajo,
-    },
-    lienzo,
-  )
-}
-
-/** Cuarto superior y todo el ancho de la persona, para no fallar con personas agachadas o cortadas. */
-function zonaCabeza(persona: Caja, lienzo: HTMLCanvasElement): Caja {
-  return recortar(
-    {
-      x: persona.x,
-      y: persona.y - persona.alto * 0.03,
-      ancho: persona.ancho,
-      alto: persona.alto * 0.28,
-    },
-    lienzo,
-  )
-}
-
-function solapa(a: Caja, b: Caja): boolean {
-  return a.x < b.x + b.ancho && a.x + a.ancho > b.x && a.y < b.y + b.alto && a.y + a.alto > b.y
-}
-
 /**
  * Reduce la zona a muy pocos píxeles y la vuelve a ampliar con suavizado: lo
  * descartado al reducir no se puede recuperar, así que es irreversible.
@@ -235,8 +183,7 @@ function difuminar(
 ): void {
   if (zona.ancho < 2 || zona.alto < 2) return
 
-  const anchoReducido = Math.max(2, Math.min(8, Math.round(zona.ancho / 6)))
-  const altoReducido = Math.max(2, Math.round(anchoReducido * (zona.alto / zona.ancho)))
+  const { ancho: anchoReducido, alto: altoReducido } = tamanoReducido(zona)
 
   const reducido = document.createElement('canvas')
   reducido.width = anchoReducido
@@ -314,7 +261,7 @@ export async function anonimizar(dataUrl: string): Promise<FotoProtegida> {
               r.map(({ box }) => ({ x: box.xMin, y: box.yMin, ancho: box.width, alto: box.height })),
             )
           : Promise.resolve([] as Caja[]),
-        personasDetector.detect(lienzo, 30, CONFIANZA_PERSONA).then((objetos) =>
+        personasDetector.detect(lienzo, MAXIMO_PERSONAS, CONFIANZA_PERSONA).then((objetos) =>
           objetos
             .filter((o) => o.class === 'person')
             .map(({ bbox: [x, y, ancho, alto] }) => ({ x, y, ancho, alto })),
@@ -327,18 +274,12 @@ export async function anonimizar(dataUrl: string): Promise<FotoProtegida> {
     throw new PrivacidadError('No se pudo analizar la imagen. Inténtalo de nuevo.')
   }
 
-  for (const rostro of rostros) {
-    difuminar(contexto, lienzo, ampliar(rostro, lienzo), true)
-  }
-
-  // Personas: zona de la cabeza, salvo que ya se difuminó un rostro dentro.
-  let personasDifuminadas = 0
-  for (const persona of personas) {
-    const cabeza = zonaCabeza(persona, lienzo)
-    if (rostros.some((r) => solapa(r, cabeza))) continue
-    difuminar(contexto, lienzo, cabeza, false)
-    personasDifuminadas += 1
-  }
+  // Qué difuminar (cada rostro ampliado y la cabeza de cada persona sin rostro
+  // detectado) lo decide `comun`; aquí solo se pinta.
+  const zonas = zonasADifuminar(rostros, personas, lienzo)
+  for (const zona of zonas.rostros) difuminar(contexto, lienzo, zona, true)
+  for (const zona of zonas.cabezas) difuminar(contexto, lienzo, zona, false)
+  const personasDifuminadas = zonas.cabezas.length
 
   const salida = lienzo.toDataURL('image/jpeg', CALIDAD_SALIDA)
   return {
@@ -350,7 +291,7 @@ export async function anonimizar(dataUrl: string): Promise<FotoProtegida> {
       aplicada: true,
       rostros: rostros.length,
       personas: personasDifuminadas,
-      version: rostrosDetector ? 'mediapipe-face-full+coco-ssd-lite-v2' : 'coco-ssd-lite-v2',
+      version: versionDeModelos(!!rostrosDetector),
     },
   }
 }

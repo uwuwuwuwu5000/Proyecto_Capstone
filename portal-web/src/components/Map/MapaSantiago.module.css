@@ -403,3 +403,49 @@
 .enlaceAdmin:hover {
   background: rgba(28, 169, 201, 0.14);
 }
+
+/* Filtros del mapa público: región, categoría y estado (como la app móvil). */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--ca-line);
+  background: var(--ca-base);
+}
+
+.filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 180px;
+  min-width: 150px;
+  max-width: 280px;
+  font-size: 0.76rem;
+  color: var(--ca-muted);
+}
+
+.filtro select {
+  padding: 7px 9px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: var(--ca-surface-alt);
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.filtro select:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.filtro select:disabled {
+  opacity: 0.7;
+}
+
+/* En pantalla completa los textos de estado van alineados con los filtros. */
+.raizCompleta .status,
+.raizCompleta .statusError {
+  padding: 0 16px;
+}

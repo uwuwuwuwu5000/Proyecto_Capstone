@@ -1,8 +1,8 @@
 // Inicialización del SDK de Firebase.
 // Se usan Firebase Authentication y Cloud Firestore.
 import { getApps, initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+import { connectAuthEmulator, getAuth } from 'firebase/auth'
+import { connectFirestoreEmulator, getFirestore } from 'firebase/firestore'
 
 // Configuración del proyecto de Firebase "ciudadalerta".
 // Estos valores son públicos por diseño (identifican el proyecto en el cliente);
@@ -18,11 +18,22 @@ const firebaseConfig = {
   measurementId: "G-XT39KJ9704"
 };
 
-const app = initializeApp(firebaseConfig)
+// Pruebas de pantalla (Playwright): con VITE_USAR_EMULADOR=1 el portal se conecta a los
+// emuladores locales de Auth y Firestore y NUNCA al proyecto real. Ver e2e/LEEME.md.
+export const USAR_EMULADOR = import.meta.env.VITE_USAR_EMULADOR === '1'
+const configActiva = USAR_EMULADOR
+  ? { ...firebaseConfig, apiKey: 'demo-key', projectId: 'demo-ciudad-alerta' }
+  : firebaseConfig
+
+const app = initializeApp(configActiva)
 
 // Instancias únicas compartidas por toda la app.
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+if (USAR_EMULADOR) {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
+}
 
 // Sprint 4 · Al crear una cuenta de organismo desde el panel de admin,
 // createUserWithEmailAndPassword() iniciaría sesión como esa cuenta nueva en
@@ -33,6 +44,10 @@ const NOMBRE_APP_APROVISIONAMIENTO = 'aprovisionamiento-admin'
 export function getAuthAprovisionamiento() {
   const existente = getApps().find((a) => a.name === NOMBRE_APP_APROVISIONAMIENTO)
   const appSecundaria =
-    existente ?? initializeApp(firebaseConfig, NOMBRE_APP_APROVISIONAMIENTO)
-  return getAuth(appSecundaria)
+    existente ?? initializeApp(configActiva, NOMBRE_APP_APROVISIONAMIENTO)
+  const authSecundaria = getAuth(appSecundaria)
+  if (USAR_EMULADOR && !existente) {
+    connectAuthEmulator(authSecundaria, 'http://127.0.0.1:9099', { disableWarnings: true })
+  }
+  return authSecundaria
 }

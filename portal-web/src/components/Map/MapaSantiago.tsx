@@ -2,26 +2,19 @@ import L from 'leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, Marker, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import FotoReporte from '../Reportes/FotoReporte'
-import {
-  collection,
-  doc,
-  getCountFromServer,
-  getDoc,
-  onSnapshot,
-} from 'firebase/firestore'
+import { collection, doc, getCountFromServer, getDoc } from 'firebase/firestore'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
-import { db } from '../../firebase/config'
+import { USAR_EMULADOR, db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import { ESTADOS_EN_ORDEN, ETIQUETA_POR_ESTADO, COLOR_POR_ESTADO } from '../../constants/reportes'
 import { useCategorias } from '../../context/CategoriasContext'
-import BarraVerificacion from '../../confianza/BarraVerificacion'
+import VerificacionReporte from '../../confianza/VerificacionReporte'
 import { leerValidacion } from '../../confianza/tipos'
 import type { Validacion } from '../../confianza/tipos'
-import { ErrorConfirmacion, avisoPesoCero, confirmarReporte as confirmarConPeso, mensajeDeError } from '../../confianza/confirmar'
 import {
   ICONOS_POR_ESTADO,
   ICONOS_SELECCIONADOS_POR_ESTADO,
@@ -32,6 +25,12 @@ import { EstadoPildora } from '../Reportes/TarjetaReporte'
 import { formatearFecha } from '../Reportes/reporte'
 import { cargarHistorial } from '../Reportes/historial'
 import type { CambioEstado } from '../Reportes/historial'
+import CapaAgrupada, { ZOOM_MAXIMO } from './CapaAgrupada'
+import { REGION_INICIAL, cargarRegiones, regionDePunto } from './regiones'
+import type { Region } from './regiones'
+import { MAXIMO_POR_REGION, useReportesRegion } from './useReportesRegion'
+import { cajaDePuntos } from '@ciudad-alerta/comun'
+import type { CajaGeografica } from '@ciudad-alerta/comun'
 import styles from './MapaSantiago.module.css'
 
 // El ícono por defecto de Leaflet apunta a rutas relativas que Vite no
@@ -176,6 +175,40 @@ function ControlSeleccion({
   return null
 }
 
+/** Solo con los emuladores (pruebas de pantalla): deja el mapa a mano para ubicar un reporte. */
+function ExponerMapaParaPruebas() {
+  const map = useMap()
+  useEffect(() => {
+    if (USAR_EMULADOR) (window as unknown as { __mapa?: unknown }).__mapa = map
+  }, [map])
+  return null
+}
+
+/**
+ * Encuadra el mapa en la región o en los reportes filtrados cuando cambia la
+ * región, un filtro o termina de cargar. No vuelve a encuadrar con cada
+ * actualización en vivo: no debe mover el mapa mientras alguien lo explora.
+ */
+function ControlEncuadre({ caja, clave }: { caja: CajaGeografica | null; clave: string }) {
+  const map = useMap()
+  const cajaRef = useRef(caja)
+  cajaRef.current = caja
+
+  useEffect(() => {
+    const c = cajaRef.current
+    if (!c) return
+    map.fitBounds(
+      [
+        [c.minLat, c.minLng],
+        [c.maxLat, c.maxLng],
+      ],
+      { padding: [24, 24], maxZoom: 16 },
+    )
+  }, [map, clave])
+
+  return null
+}
+
 interface EstadoHistorial {
   cargando: boolean
   /** Estado del reporte cuando se leyó el historial. */
@@ -196,26 +229,20 @@ interface MapaSantiagoProps {
 export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps) {
   const completo = variante === 'pantallaCompleta'
   const { user, perfil, loading: sesionCargando } = useAuth()
-  const { etiqueta } = useCategorias()
-  // Las cuentas operador ven el mapa público, pero no confirman reportes:
-  // los gestionan (las reglas también se lo impiden).
-  const esOperador = perfil?.role === 'operador'
-
-  const [reportes, setReportes] = useState<Reporte[]>([])
-  const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState('')
+  const { etiqueta, categorias } = useCategorias()
+  // Región que se muestra (código de 2 dígitos, o 'actual' = donde está quien mira) y filtros.
+  const [regiones, setRegiones] = useState<Region[]>([])
+  const [errorRegiones, setErrorRegiones] = useState('')
+  const [seleccionRegion, setSeleccionRegion] = useState<string>(REGION_INICIAL)
+  const [regionActual, setRegionActual] = useState<Region | null>(null)
+  const [ubicando, setUbicando] = useState(false)
+  const [mensajeUbicacion, setMensajeUbicacion] = useState('')
+  const [filtroCategoria, setFiltroCategoria] = useState('todas')
+  const [filtroEstado, setFiltroEstado] = useState('todos')
   // Fotos cargadas bajo demanda (al abrir un marcador), cacheadas por id de reporte.
   const [fotos, setFotos] = useState<Record<string, EstadoFoto>>({})
   // Conteo de confirmaciones, también bajo demanda (ver EstadoConteo arriba).
   const [confirmaciones, setConfirmaciones] = useState<Record<string, EstadoConteo>>({})
-  // Reportes que el usuario actual ya confirmó en esta sesión (oculta el botón).
-  const [confirmados, setConfirmados] = useState<Record<string, boolean>>({})
-  // Reportes con una confirmación en curso (deshabilita el botón mientras espera).
-  const [confirmando, setConfirmando] = useState<Record<string, boolean>>({})
-  // Mensaje puntual tras intentar confirmar (p. ej. "Ya confirmaste este reporte").
-  const [mensajeConfirmacion, setMensajeConfirmacion] = useState<
-    Record<string, { texto: string; tipo: 'ok' | 'aviso' | 'error' }>
-  >({})
   // Historial de estados, pedido solo al apretar "Ver historial". Se guarda
   // con el estado que tenía el reporte al leerlo: si cambió, se vuelve a leer.
   const [historiales, setHistoriales] = useState<Record<string, EstadoHistorial>>({})
@@ -263,60 +290,6 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
           error: 'No se pudo cargar el historial.',
         },
       }))
-    }
-  }
-
-  async function confirmarReporte(reporte: Reporte) {
-    if (!user || confirmando[reporte.id] || confirmados[reporte.id]) {
-      return
-    }
-
-    setConfirmando((prev) => ({ ...prev, [reporte.id]: true }))
-    setMensajeConfirmacion((prev) => {
-      const { [reporte.id]: _quitado, ...resto } = prev
-      return resto
-    })
-    try {
-      // `email_verified` del token es lo que ven las reglas (el del perfil
-      // de Auth puede ir adelantado hasta que el token se renueva).
-      const token = await user.getIdTokenResult()
-      const resultado = await confirmarConPeso(db, {
-        reportId: reporte.id,
-        uid: user.uid,
-        correoVerificado: token.claims.email_verified === true,
-        creadaEnMs: perfil?.createdAt?.getTime() ?? null,
-      })
-
-      setConfirmados((prev) => ({ ...prev, [reporte.id]: true }))
-      setMensajeConfirmacion((prev) => ({
-        ...prev,
-        [reporte.id]: resultado.motivoPesoCero
-          ? { texto: avisoPesoCero(resultado.motivoPesoCero), tipo: 'aviso' }
-          : {
-              texto: resultado.recienValidado
-                ? 'Gracias. Tu confirmación dejó este reporte validado por la comunidad.'
-                : 'Gracias. Tu confirmación sumó a la verificación de la comunidad.',
-              tipo: 'ok',
-            },
-      }))
-      // Actualización optimista del conteo ya cargado, sin volver a consultar.
-      setConfirmaciones((prev) => {
-        const actual = prev[reporte.id]
-        if (!actual || actual.total === undefined) {
-          return prev
-        }
-        return { ...prev, [reporte.id]: { ...actual, total: actual.total + 1 } }
-      })
-    } catch (err) {
-      if (err instanceof ErrorConfirmacion && err.codigo === 'ya_confirmo') {
-        setConfirmados((prev) => ({ ...prev, [reporte.id]: true }))
-      }
-      setMensajeConfirmacion((prev) => ({
-        ...prev,
-        [reporte.id]: { texto: mensajeDeError(err), tipo: 'error' },
-      }))
-    } finally {
-      setConfirmando((prev) => ({ ...prev, [reporte.id]: false }))
     }
   }
 
@@ -375,42 +348,74 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
     }
   }
 
+  // Las 16 regiones (catálogo y límites del propio portal).
   useEffect(() => {
-    // Igual que la app móvil: leer /reports exige sesión iniciada.
-    if (sesionCargando) {
-      return
-    }
-    if (!user) {
-      setReportes([])
-      setCargando(false)
-      setError('')
-      return
-    }
+    cargarRegiones()
+      .then(setRegiones)
+      .catch((err) => {
+        console.error('Error al cargar las regiones:', err)
+        setErrorRegiones('No pudimos cargar la lista de regiones.')
+      })
+  }, [])
 
-    setCargando(true)
-    const unsubscribe = onSnapshot(
-      collection(db, 'reports'),
-      (snapshot) => {
-        const siguientes: Reporte[] = []
-        snapshot.forEach((docSnap) => {
-          const reporte = mapearReporte(docSnap)
-          if (reporte) {
-            siguientes.push(reporte)
-          }
-        })
-        setReportes(siguientes)
-        setCargando(false)
-        setError('')
+  const region = useMemo<Region | null>(
+    () =>
+      seleccionRegion === 'actual'
+        ? regionActual
+        : (regiones.find((r) => r.codigo === seleccionRegion) ?? null),
+    [seleccionRegion, regionActual, regiones],
+  )
+
+  // Leer /reports exige sesión iniciada. Solo la región elegida, no todo el país.
+  const datos = useReportesRegion<Reporte>(region, !!user && !sesionCargando, mapearReporte)
+  const reportes = datos.reportes
+  const cargando = datos.cargando
+  const error = datos.error || errorRegiones
+
+  const visibles = useMemo(
+    () =>
+      reportes.filter(
+        (r) =>
+          (filtroCategoria === 'todas' || r.categoria === filtroCategoria) &&
+          (filtroEstado === 'todos' || r.estado === filtroEstado),
+      ),
+    [reportes, filtroCategoria, filtroEstado],
+  )
+
+  /** «Mi región»: se pide la ubicación solo cuando se elige esa opción. */
+  function cambiarRegion(valor: string) {
+    setMensajeUbicacion('')
+    if (valor !== 'actual' || regionActual) {
+      setSeleccionRegion(valor)
+      return
+    }
+    if (!navigator.geolocation) {
+      setMensajeUbicacion('Tu navegador no permite obtener la ubicación. Elige una región en la lista.')
+      return
+    }
+    setUbicando(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUbicando(false)
+        const detectada = regionDePunto({ lat: pos.coords.latitude, lng: pos.coords.longitude }, regiones)
+        if (detectada) {
+          setRegionActual(detectada)
+          setSeleccionRegion('actual')
+        } else {
+          setMensajeUbicacion('No pudimos saber en qué región estás (¿estás fuera de Chile?). Elige una región en la lista.')
+        }
       },
-      (err) => {
-        console.error('Error al leer reports:', err)
-        setError('No pudimos cargar los reportes del mapa. Intenta más tarde.')
-        setCargando(false)
+      () => {
+        setUbicando(false)
+        setMensajeUbicacion('No pudimos obtener tu ubicación. Igual puedes elegir una región en la lista.')
       },
+      { timeout: 10_000 },
     )
+  }
 
-    return unsubscribe
-  }, [user, sesionCargando])
+  // Lo que el mapa debe mostrar completo: los reportes filtrados o, si no hay, la región entera.
+  const caja = useMemo<CajaGeografica | null>(() => cajaDePuntos(visibles) ?? region?.caja ?? null, [visibles, region])
+  const claveEncuadre = `${region?.codigo ?? ''}|${filtroCategoria}|${filtroEstado}|${cargando ? 'c' : 'l'}`
 
   function abrirDetalle(reporte: Reporte) {
     setSeleccionadoId(reporte.id)
@@ -425,13 +430,12 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
   const seleccionado = seleccionadoId
     ? reportes.find((r) => r.id === seleccionadoId) ?? null
     : null
+  // El reporte abierto se sigue viendo aunque un filtro lo oculte.
+  const puntosDelMapa = seleccionado && !visibles.some((r) => r.id === seleccionado.id) ? [...visibles, seleccionado] : visibles
 
   function renderDetalle(reporte: Reporte) {
     const estadoFoto = fotos[reporte.id]
     const estadoConteo = confirmaciones[reporte.id]
-    const esAutor = !!user && reporte.uid === user.uid
-    const yaConfirmado = !!confirmados[reporte.id]
-    const confirmandoAhora = !!confirmando[reporte.id]
     const historial = historiales[reporte.id]
     const verHistorial = !!historialAbierto[reporte.id]
 
@@ -477,38 +481,17 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
             </dd>
           </dl>
 
-          <BarraVerificacion validacion={reporte.validacion} />
-
-          {!esAutor && !esOperador && (
-            <div className={styles.confirmar}>
-              {yaConfirmado ? (
-                <span className={styles.confirmarHecho}>✓ Ya confirmaste este reporte</span>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.confirmarBoton}
-                  disabled={confirmandoAhora}
-                  onClick={() => confirmarReporte(reporte)}
-                >
-                  {confirmandoAhora ? 'Confirmando…' : 'Confirmar que existe'}
-                </button>
-              )}
-              {mensajeConfirmacion[reporte.id] && (
-                <p
-                  className={`${styles.confirmarMensaje} ${
-                    mensajeConfirmacion[reporte.id].tipo === 'aviso'
-                      ? styles.confirmarAviso
-                      : mensajeConfirmacion[reporte.id].tipo === 'ok'
-                        ? styles.confirmarOk
-                        : ''
-                  }`}
-                  role={mensajeConfirmacion[reporte.id].tipo === 'error' ? 'alert' : 'status'}
-                >
-                  {mensajeConfirmacion[reporte.id].texto}
-                </p>
-              )}
-            </div>
-          )}
+          <VerificacionReporte
+            reporte={reporte}
+            onConfirmado={() =>
+              // Actualización optimista del conteo ya cargado, sin volver a consultar.
+              setConfirmaciones((prev) => {
+                const actual = prev[reporte.id]
+                if (!actual || actual.total === undefined) return prev
+                return { ...prev, [reporte.id]: { ...actual, total: actual.total + 1 } }
+              })
+            }
+          />
 
           {/* El administrador pasa de aquí a la administración del mismo reporte (detalle, estado, veredicto, moderación). */}
           {perfil?.role === 'admin' && (
@@ -547,6 +530,51 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
 
   return (
     <div className={completo ? styles.raizCompleta : undefined}>
+      {completo && (
+        <div className={styles.filtros}>
+          <label className={styles.filtro}>
+            <span>Región</span>
+            <select
+              value={seleccionRegion}
+              disabled={ubicando}
+              onChange={(e) => cambiarRegion(e.target.value)}
+            >
+              <option value="actual">
+                {ubicando ? 'Buscando tu ubicación…' : `Mi región${regionActual ? ' · ' + regionActual.nombreCorto : ''}`}
+              </option>
+              {regiones.map((r) => (
+                <option key={r.codigo} value={r.codigo}>
+                  {r.nombreCorto}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.filtro}>
+            <span>Categoría</span>
+            <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+              <option value="todas">Todas</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombre}
+                  {c.activa ? '' : ' (inactiva)'}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.filtro}>
+            <span>Estado</span>
+            <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+              <option value="todos">Todos</option>
+              {ESTADOS_EN_ORDEN.map((estado) => (
+                <option key={estado} value={estado}>
+                  {ETIQUETA_POR_ESTADO[estado]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {mensajeUbicacion && <p className={styles.statusError}>{mensajeUbicacion}</p>}
       <div className={completo ? styles.mapaMarcoCompleto : styles.mapaMarco}>
         <MapContainer
           center={CENTRO_SANTIAGO}
@@ -555,60 +583,72 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
           // que el scroll del mouse haga zoom. Incrustado en la Landing se
           // desactiva para no secuestrar el scroll de la página.
           scrollWheelZoom={completo}
+          maxZoom={ZOOM_MAXIMO}
           className={completo ? styles.mapCompleto : styles.map}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            maxZoom={ZOOM_MAXIMO}
           />
+          <ExponerMapaParaPruebas />
+          <ControlEncuadre caja={caja} clave={claveEncuadre} />
           <ControlSeleccion
             lat={seleccionado?.lat ?? null}
             lng={seleccionado?.lng ?? null}
             onTocarMapa={cerrarDetalle}
           />
-          {reportes.map((reporte) => {
-            const esSeleccionado = reporte.id === seleccionadoId
-            const conteo = confirmaciones[reporte.id]
-            return (
-              <Marker
-                key={reporte.id}
-                position={[reporte.lat, reporte.lng]}
-                icon={
-                  esSeleccionado
-                    ? ICONOS_SELECCIONADOS_POR_ESTADO[reporte.estado] ??
-                      ICONOS_SELECCIONADOS_POR_ESTADO.reportado
-                    : ICONOS_POR_ESTADO[reporte.estado] ?? ICONO_ESTADO_DESCONOCIDO
-                }
-                zIndexOffset={esSeleccionado ? 1000 : 0}
-                eventHandlers={{
-                  click: () => abrirDetalle(reporte),
-                  // Las confirmaciones del resumen se piden la primera vez que
-                  // se pasa el mouse (y quedan guardadas para el detalle).
-                  mouseover: () => cargarConfirmaciones(reporte),
-                }}
-              >
-                {ADMITE_HOVER && !esSeleccionado && (
-                  <Tooltip direction="top" offset={[0, -10]}>
-                    {reporte.foto && (
-                      <div className={styles.tooltipFoto}>
-                        <FotoReporte foto={reporte.foto} inmediata />
-                      </div>
-                    )}
-                    <strong>{etiqueta(reporte.categoria)}</strong>
-                    {' · '}
-                    {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
-                    <br />
-                    {formatearFecha(reporte.fecha, true)}
-                    <br />
-                    Confirmaciones:{' '}
-                    {conteo?.total !== undefined ? conteo.total : conteo?.error ? '—' : '…'}
-                    <br />
-                    <em className={styles.tooltipAccion}>Clic para ver el detalle</em>
-                  </Tooltip>
-                )}
-              </Marker>
-            )
-          })}
+          {/* Los reportes muy cercanos se agrupan en un círculo con el total (como en la app). */}
+          <CapaAgrupada
+            puntos={puntosDelMapa}
+            seleccionadoId={seleccionadoId}
+            titulo={(r) => `${etiqueta(r.categoria)} · ${ETIQUETA_POR_ESTADO[r.estado] ?? r.estado}`}
+            onElegir={abrirDetalle}
+            renderPunto={(reporte) => {
+              const esSeleccionado = reporte.id === seleccionadoId
+              const conteo = confirmaciones[reporte.id]
+              return (
+                <Marker
+                  key={reporte.id}
+                  position={[reporte.lat, reporte.lng]}
+                  icon={
+                    esSeleccionado
+                      ? ICONOS_SELECCIONADOS_POR_ESTADO[reporte.estado] ?? ICONOS_SELECCIONADOS_POR_ESTADO.reportado
+                      : ICONOS_POR_ESTADO[reporte.estado] ?? ICONO_ESTADO_DESCONOCIDO
+                  }
+                  zIndexOffset={esSeleccionado ? 1000 : 0}
+                  eventHandlers={{
+                    // Permite a las pruebas de pantalla (Playwright) ubicar el pin de cada reporte.
+                    add: (e) => e.target.getElement()?.setAttribute('data-reporte-id', reporte.id),
+                    click: () => abrirDetalle(reporte),
+                    // Las confirmaciones del resumen se piden la primera vez que
+                    // se pasa el mouse (y quedan guardadas para el detalle).
+                    mouseover: () => cargarConfirmaciones(reporte),
+                  }}
+                >
+                  {ADMITE_HOVER && !esSeleccionado && (
+                    <Tooltip direction="top" offset={[0, -10]}>
+                      {reporte.foto && (
+                        <div className={styles.tooltipFoto}>
+                          <FotoReporte foto={reporte.foto} inmediata />
+                        </div>
+                      )}
+                      <strong>{etiqueta(reporte.categoria)}</strong>
+                      {' · '}
+                      {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
+                      <br />
+                      {formatearFecha(reporte.fecha, true)}
+                      <br />
+                      Confirmaciones:{' '}
+                      {conteo?.total !== undefined ? conteo.total : conteo?.error ? '—' : '…'}
+                      <br />
+                      <em className={styles.tooltipAccion}>Clic para ver el detalle</em>
+                    </Tooltip>
+                  )}
+                </Marker>
+              )
+            }}
+          />
         </MapContainer>
 
         {/* Fuera del MapContainer a propósito: así el zoom y el arrastre del
@@ -621,13 +661,21 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
           Inicia sesión para ver los reportes en el mapa.
         </p>
       )}
-      {user && cargando && <p className={styles.status}>Cargando reportes…</p>}
-      {user && !cargando && !error && reportes.length === 0 && (
-        <p className={styles.status}>Todavía no hay reportes para mostrar.</p>
+      {user && cargando && <p className={styles.status}>Cargando las incidencias de {region?.nombreCorto}…</p>}
+      {user && !cargando && !error && region && visibles.length === 0 && (
+        <p className={styles.status}>No hay incidencias en {region.nombreCorto} con estos filtros.</p>
+      )}
+      {user && !cargando && !error && visibles.length > 0 && (
+        <p className={styles.status}>
+          {visibles.length.toLocaleString('es-CL')} {visibles.length === 1 ? 'incidencia' : 'incidencias'} en{' '}
+          {region?.nombreCorto}, cada una en su ubicación. Las que están en el mismo lugar se juntan en un círculo con
+          el total: tócalo para acercarte.
+          {datos.hayMas && ` Se muestran las ${MAXIMO_POR_REGION} más recientes.`}
+        </p>
       )}
       {error && <p className={styles.statusError}>{error}</p>}
 
-      {user && reportes.length > 0 && (
+      {user && visibles.length > 0 && (
         <ul className={styles.leyenda}>
           {ESTADOS_EN_ORDEN.map((estado) => (
             <li key={estado} className={styles.leyendaItem}>

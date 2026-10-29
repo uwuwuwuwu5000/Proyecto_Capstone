@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
+import CuentaOrganismo from './components/CuentaOrganismo/CuentaOrganismo'
 import MiNivel from './pages/MiNivel/MiNivel'
 import MiPerfil from './pages/MiPerfil/MiPerfil'
 import { AvisosProvider } from './context/AvisosContext'
@@ -33,6 +34,10 @@ const OperadorEstadisticas = lazy(() => import('./pages/Operador/OperadorEstadis
 
 function Rutas() {
   const { pathname } = useLocation()
+  const { perfil } = useAuth()
+
+  // Una cuenta de organismo no tiene vista en el portal: sus consultas las niegan las reglas.
+  if (perfil?.role === 'organismo') return <CuentaOrganismo />
 
   return (
     // key: al navegar a otra ruta se reinicia el aviso de error, para que una

@@ -69,3 +69,9 @@
   color: var(--ca-danger);
   border-color: var(--ca-danger);
 }
+
+.cifras {
+  margin: 6px 0 0;
+  font-size: 0.84rem;
+  color: var(--ca-muted);
+}

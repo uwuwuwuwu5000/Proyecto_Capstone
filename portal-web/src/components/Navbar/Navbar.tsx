@@ -9,6 +9,7 @@ import styles from './Navbar.module.css'
 const ETIQUETA_ROL: Record<string, string> = {
   admin: 'Administrador',
   operador: 'Operador',
+  organismo: 'Organismo',
   ciudadano: 'Ciudadano',
 }
 
@@ -139,12 +140,15 @@ export default function Navbar() {
             className={`${styles.right} ${menuAbierto ? styles.rightAbierto : ''}`}
             aria-label="Principal"
           >
-            <NavLink to="/mapa" className={claseOpcion()}>
-              Mapas
-            </NavLink>
+            {/* Una cuenta de organismo no tiene vistas en el portal (ver CuentaOrganismo). */}
+            {perfil?.role !== 'organismo' && (
+              <NavLink to="/mapa" className={claseOpcion()}>
+                Mapas
+              </NavLink>
+            )}
 
-            {/* "Mis reportes" no aplica a una cuenta operador: no crea reportes. */}
-            {perfil?.role !== 'operador' && (
+            {/* "Mis reportes" no aplica a una cuenta operador ni de organismo: no crean reportes. */}
+            {perfil?.role !== 'operador' && perfil?.role !== 'organismo' && (
               <NavLink to="/historial" className={claseOpcion()}>
                 Historial
               </NavLink>

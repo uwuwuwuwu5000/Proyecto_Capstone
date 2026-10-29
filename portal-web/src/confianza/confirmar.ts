@@ -7,6 +7,7 @@
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import type { Firestore } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
+import { ESTADOS_FINALIZADOS } from '@ciudad-alerta/comun'
 import { PAUSA_ENTRE_CONFIRMACIONES_MS, limiteDiario, numeroDeDia, pesoDelVoto, sumarVoto } from './reglas'
 import { leerConfianza, leerValidacion } from './tipos'
 
@@ -17,6 +18,10 @@ export type CodigoErrorConfirmacion =
   | 'suspendido'
   | 'limite'
   | 'pausa'
+  /** El reporte ya está resuelto o cerrado (incluye los retirados por su autor). */
+  | 'finalizado'
+  /** Un operador ya dio su veredicto: no hace falta confirmarlo. */
+  | 'con_veredicto'
   | 'rechazada'
   | 'desconocido'
 
@@ -69,6 +74,10 @@ export function mensajeDeError(error: unknown): string {
       return `Espera ${error.segundos ?? 20} segundos antes de confirmar otro reporte.`
     case 'no_existe':
       return 'Este reporte ya no existe.'
+    case 'finalizado':
+      return 'Este reporte ya está resuelto o cerrado: ya no se puede confirmar.'
+    case 'con_veredicto':
+      return 'Un operador ya revisó este reporte: no hace falta confirmarlo.'
     case 'rechazada':
       return 'No pudimos registrar tu confirmación. Espera unos segundos e inténtalo de nuevo.'
     default:
@@ -100,6 +109,9 @@ async function intentar(db: Firestore, pedido: PedidoConfirmacion): Promise<Resu
     ])
 
     if (!reporte.exists()) throw new ErrorConfirmacion('no_existe')
+    // Las reglas (1.1) rechazan estas dos: se avisan aquí con un mensaje claro.
+    if ((ESTADOS_FINALIZADOS as readonly string[]).includes(reporte.data().estado)) throw new ErrorConfirmacion('finalizado')
+    if (leerValidacion(reporte.data().validacion).veredicto !== null) throw new ErrorConfirmacion('con_veredicto')
     if (reporte.data().uid === pedido.uid) throw new ErrorConfirmacion('propio')
     if (yaConfirmo.exists()) throw new ErrorConfirmacion('ya_confirmo')
 

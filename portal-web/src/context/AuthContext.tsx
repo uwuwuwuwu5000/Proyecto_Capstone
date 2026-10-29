@@ -43,6 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [perfil, setPerfil] = useState<PerfilUsuario | null>(null)
   const [perfilCargando, setPerfilCargando] = useState(true)
+  // De qué cuenta es el perfil que ya se resolvió (acierto o error). Mientras no coincida con la sesión,
+  // el perfil sigue cargándose: sin esto, durante un render había sesión, perfil null y «cargado»,
+  // y las pantallas protegidas redirigían al inicio (DEF-006).
+  const [perfilUid, setPerfilUid] = useState<string | null>(null)
 
   useEffect(() => {
     // Mantiene la sesión sincronizada, incluso tras recargar la página.
@@ -78,11 +82,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               }
             : null,
         )
+        setPerfilUid(user.uid)
         setPerfilCargando(false)
       },
       (err) => {
         console.error('Error al leer el perfil del usuario:', err)
         setPerfil(null)
+        setPerfilUid(user.uid)
         setPerfilCargando(false)
       },
     )
@@ -94,10 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       perfil,
-      perfilCargando,
+      perfilCargando: perfilCargando || (!!user && perfilUid !== user.uid),
       logout: () => signOut(auth),
     }),
-    [user, loading, perfil, perfilCargando],
+    [user, loading, perfil, perfilCargando, perfilUid],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
