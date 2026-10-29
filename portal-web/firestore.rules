@@ -25,7 +25,10 @@ service cloud.firestore {
      * actualizar ambos archivos y volver a desplegar.
      */
     function esCorreoAdministrador() {
+      // DIAG-2 · Solo con el correo verificado: si no, quien registrara
+      // primero un correo de la lista (sin ser su dueño) nacería admin.
       return estaAutenticado()
+        && request.auth.token.email_verified == true
         && request.auth.token.email in [
              'es.ibarra@duocuc.cl',
              'cla.torres@duocuc.cl',
@@ -70,6 +73,33 @@ service cloud.firestore {
     function esCuentaOperador() {
       let perfil = /databases/$(database)/documents/users/$(request.auth.uid);
       return exists(perfil) && get(perfil).data.role == 'operador';
+    }
+
+    /**
+     * 1.2 · Cuenta de organismo (role 'organismo', con organismoId): la
+     * municipalidad que recibe los reportes ya validados por la comunidad. Es
+     * de solo lectura: no reporta, no confirma ni gestiona, y solo ve los
+     * reportes de su organismo con validacion.validado == true. A diferencia
+     * del operador, no cambia estados ni da veredictos.
+     *
+     * Todas las comprobaciones leen el mismo documento (el perfil propio), que
+     * Firestore cuenta una sola vez por operación.
+     */
+    function rutaPerfilPropio() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function esCuentaDeOrganismo() {
+      return exists(rutaPerfilPropio()) && get(rutaPerfilPropio()).data.role == 'organismo';
+    }
+
+    /**
+     * Lo que una cuenta de organismo puede leer de un reporte. En un listado,
+     * la consulta debe filtrar por organismo.id y validacion.validado.
+     */
+    function visibleParaOrganismo(reporte) {
+      return reporte.organismo.id == get(rutaPerfilPropio()).data.organismoId
+        && reporte.validacion.validado == true;
     }
 
     // ======================================================================
@@ -307,6 +337,11 @@ service cloud.firestore {
     function camposProtegidosIntactos() {
       return request.resource.data.trustLevel == resource.data.trustLevel
         && request.resource.data.validatedReports == resource.data.validatedReports
+        // DIAG-1 · El operadorId lo asigna un admin al crear la cuenta: si el
+        // operador pudiera cambiárselo, gestionaría reportes de otra comuna.
+        && request.resource.data.get('operadorId', null) == resource.data.get('operadorId', null)
+        // 1.2 · Lo mismo para una cuenta de organismo: no se cambia de municipalidad.
+        && request.resource.data.get('organismoId', null) == resource.data.get('organismoId', null)
         && (
              request.resource.data.role == resource.data.role
              // Única promoción de rol admitida: una cuenta de la lista de
@@ -323,24 +358,77 @@ service cloud.firestore {
      * campo no cambia, la condición no interviene, para no bloquear otras
      * actualizaciones del perfil.
      */
+    /**
+     * 1.0 · Aceptación de los términos y la privacidad: la versión es un texto
+     * corto y la fecha, la del servidor. Si no cambian, no intervienen.
+     */
+    function aceptacionDeTerminosValida() {
+      let cambios = request.resource.data.diff(resource.data).affectedKeys();
+      return (!cambios.hasAny(['terminosVersion'])
+              || (request.resource.data.terminosVersion is string
+                  && request.resource.data.terminosVersion.size() <= 20))
+        && (!cambios.hasAny(['terminosAceptadosAt'])
+            || request.resource.data.terminosAceptadosAt == request.time);
+    }
+
     function verificacionCoherente() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['emailVerified'])
         || request.resource.data.emailVerified == request.auth.token.email_verified;
     }
 
     function creacionConValoresIniciales(userId) {
-      return request.resource.data.uid == userId
-        && request.resource.data.trustLevel == 0
-        && request.resource.data.validatedReports == 0
+      let datos = request.resource.data;
+      return datos.uid == userId
+        // 1.1 · Lista blanca: los campos que escriben la app (createUserDocument)
+        // y el registro del portal. Sin operadorId: esa cuenta la crea un admin.
+        && datos.keys().hasOnly([
+             'uid', 'email', 'displayName', 'role', 'trustLevel', 'validatedReports',
+             'emailVerified', 'terminosVersion', 'terminosAceptadosAt', 'createdAt', 'updatedAt'
+           ])
+        && datos.trustLevel == 0
+        && datos.validatedReports == 0
         // La antigüedad de la cuenta cuenta para el peso del voto: no se puede falsear.
-        && request.resource.data.createdAt == request.time
+        && datos.createdAt == request.time
+        && (!('updatedAt' in datos) || datos.updatedAt == request.time)
         // Un correo de la lista puede nacer con rol admin; cualquier otro, no.
         && (
-             request.resource.data.role == 'ciudadano'
-             || (request.resource.data.role == 'admin' && esCorreoAdministrador())
+             datos.role == 'ciudadano'
+             || (datos.role == 'admin' && esCorreoAdministrador())
            )
-        && request.resource.data.email is string
-        && request.resource.data.displayName is string;
+        && datos.email is string
+        && datos.email.size() <= 254
+        // 1.1 · Mismo tope que autorNombre en los reportes: un nombre más largo
+        // impedía después crear reportes (la app lo recortaba a 60).
+        && datos.displayName is string
+        && datos.displayName.size() >= 1
+        && datos.displayName.size() <= 60
+        // Nadie nace «verificado» si el token no lo dice.
+        && (datos.get('emailVerified', false) == false
+            || datos.emailVerified == request.auth.token.email_verified)
+        && (!('terminosVersion' in datos)
+            || (datos.terminosVersion is string && datos.terminosVersion.size() <= 20))
+        && (!('terminosAceptadosAt' in datos) || datos.terminosAceptadosAt == request.time);
+    }
+
+    /**
+     * 1.1 · El nombre y el correo del perfil no se cambian a mano: solo al
+     * eliminar la cuenta («Cuenta eliminada», correo vacío) o para completar un
+     * perfil antiguo que no los tenía. Sin esto, cualquiera podía ponerse el
+     * nombre de otra persona (con el que firma sus reportes) o uno enorme.
+     */
+    function nombreYCorreoDePerfilValidos() {
+      let nuevo = request.resource.data;
+      let antes = resource.data;
+      let nombreAntes = antes.get('displayName', null);
+      let nombre = nuevo.get('displayName', null);
+      let correoAntes = antes.get('email', null);
+      let correo = nuevo.get('email', null);
+      return (
+               nombre == nombreAntes
+               || nombre == 'Cuenta eliminada'
+               || (!(nombreAntes is string) && nombre is string && nombre.size() >= 1 && nombre.size() <= 60)
+             )
+        && (correo == correoAntes || correo == '' || correo == request.auth.token.email);
     }
 
     /**
@@ -361,6 +449,29 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/operadores/$(datos.operadorId));
     }
 
+    /**
+     * 1.2 · Alta de una cuenta de organismo (role 'organismo') por un admin:
+     * la misma forma que escribe scripts/crear-cuentas-municipales.mjs. El
+     * organismo debe existir en el catálogo.
+     */
+    function creacionCuentaOrganismo(userId) {
+      let datos = request.resource.data;
+      return datos.keys().hasOnly([
+               'uid', 'email', 'displayName', 'role', 'organismoId', 'trustLevel',
+               'validatedReports', 'emailVerified', 'createdAt', 'updatedAt'
+             ])
+        && datos.uid == userId
+        && datos.role == 'organismo'
+        && datos.trustLevel == 0
+        && datos.validatedReports == 0
+        && datos.email is string
+        && datos.displayName is string
+        && datos.displayName.size() >= 1
+        && datos.displayName.size() <= 60
+        && datos.organismoId is string
+        && exists(/databases/$(database)/documents/organismos/$(datos.organismoId));
+    }
+
     // --- Perfiles de usuario ----------------------------------------------
 
     match /users/{userId} {
@@ -372,7 +483,7 @@ service cloud.firestore {
       // cuenta de organismo la hace un admin desde el panel, firmando con su
       // propia sesión (por eso esa rama no exige esPropietario).
       allow create: if (esPropietario(userId) && creacionConValoresIniciales(userId))
-        || (esAdministrador() && creacionCuentaOperador(userId));
+        || (esAdministrador() && (creacionCuentaOperador(userId) || creacionCuentaOrganismo(userId)));
       // BUG 64 · Lista blanca explícita: sin ella, un usuario podía agregar
       // campos arbitrarios a su propio documento.
       allow update: if (esPropietario(userId)
@@ -383,10 +494,13 @@ service cloud.firestore {
             || (resource.data.get('createdAt', null) == null
                 && request.resource.data.createdAt == request.time))
         && verificacionCoherente()
+        && aceptacionDeTerminosValida()
+        && nombreYCorreoDePerfilValidos()
         && request.resource.data.keys().hasOnly([
              'uid', 'email', 'displayName', 'role', 'trustLevel',
              'validatedReports', 'emailVerified', 'ultimoReporteAt',
-             'operadorId', 'createdAt', 'updatedAt'
+             'operadorId', 'organismoId', 'terminosVersion', 'terminosAceptadosAt',
+             'createdAt', 'updatedAt'
            ]))
         // Veredicto de un gestor: el espejo de nivel y reportes validados.
         || espejoDeConfianzaValido(userId);
@@ -748,14 +862,84 @@ service cloud.firestore {
         && operador.organismoId == datos.organismo.id;
     }
 
+    /**
+     * 1.1 · Lista blanca de la creación: los campos que escriben la app
+     * (createReport) y el portal (crearReporteAdmin). Sin ella se podía nacer
+     * con campos de resolución o de retiro (resueltoAt, tiempoResolucionMs,
+     * retiradoPorAutor…) y falsear las métricas desde el primer minuto.
+     */
+    function camposDeReporteNuevo() {
+      let datos = request.resource.data;
+      return datos.keys().hasOnly([
+               'uid', 'autorNombre', 'estado', 'confirmaciones', 'descripcion', 'categoria',
+               'ubicacion', 'geohash', 'comuna', 'region', 'comunaFuente', 'organismo',
+               'operadorId', 'foto', 'embedding', 'validacion', 'origen', 'createdAt', 'updatedAt'
+             ])
+        && datos.ubicacion.keys().hasOnly(['lat', 'lng', 'accuracy', 'fuente'])
+        && (!('fuente' in datos.ubicacion) || datos.ubicacion.fuente in ['gps', 'mapa'])
+        && (!('updatedAt' in datos) || datos.updatedAt == request.time)
+        // Solo el panel de administración marca sus reportes.
+        && (!('origen' in datos) || (datos.origen == 'portal_admin' && esAdministrador()));
+    }
+
+    /**
+     * 1.1 · La foto de un reporte es la suya: `reportPhotos/{id del reporte}`,
+     * subida por quien reporta en el mismo lote (o, con Cloud Storage, su
+     * archivo `reports/{uid}/{id}.jpg|png`). Antes se podía apuntar a la foto
+     * de otro reporte sin subir ninguna.
+     */
+    function referenciaDeFotoValida(reportId) {
+      let foto = request.resource.data.get('foto', null);
+      let base = 'reports/' + request.auth.uid + '/' + reportId;
+      return foto == null
+        || (
+             foto.kind == 'firestore'
+             && foto.path == 'reportPhotos/' + reportId
+             && getAfter(/databases/$(database)/documents/reportPhotos/$(reportId)).data.ownerUid == request.auth.uid
+           )
+        || (foto.kind == 'cloud-storage' && foto.path in [base + '.jpg', base + '.png']);
+    }
+
+    /**
+     * 1.1 · El nombre del organismo es el del catálogo: el de su documento en
+     * `organismos` o, para los genéricos, el mismo de ORGANISMOS en
+     * models/organismo.model.ts (y del portal). Antes solo se validaba el id y
+     * el reporte podía mostrar cualquier nombre.
+     */
+    function organismoCoincideConCatalogo() {
+      let org = request.resource.data.organismo;
+      let genericos = {
+        'muni_aseo': 'Dirección de Aseo y Ornato',
+        'muni_obras': 'Dirección de Obras Municipales',
+        'muni_oirs': 'OIRS Municipal',
+        'elec_dist': 'Empresa distribuidora eléctrica',
+        'sanitaria': 'Empresa sanitaria'
+      };
+      return org.keys().hasOnly(['id', 'nombre', 'tipo', 'comuna'])
+        && org.nombre is string
+        && (
+             org.id in genericos
+               ? org.nombre == genericos[org.id]
+               : org.nombre == get(/databases/$(database)/documents/organismos/$(org.id)).data.nombre
+           );
+    }
+
     match /reports/{reportId} {
       // El mapa público del MVP es visible para cualquier usuario autenticado.
-      allow read: if estaAutenticado();
+      // 1.2 · Salvo una cuenta de organismo, que solo ve los reportes de su
+      // organismo ya validados por la comunidad.
+      allow read: if estaAutenticado()
+        && (!esCuentaDeOrganismo() || visibleParaOrganismo(resource.data));
 
       allow create: if estaAutenticado()
+        // 1.2 · Una cuenta de organismo recibe reportes; no los crea.
+        && !esCuentaDeOrganismo()
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.estado == 'reportado'
         && request.resource.data.confirmaciones == 0
+        // La fecha la pone el servidor: sin esto se podían crear reportes
+        // con fecha falsa (y saltarse los tiempos de respuesta).
+        && request.resource.data.createdAt == request.time
         && descripcionValida()
         && categoriaValida()
         && ubicacionValida()
@@ -764,8 +948,11 @@ service cloud.firestore {
         && comunaValida()
         && autorNombreValido()
         && organismoReporteValido()
+        && organismoCoincideConCatalogo()
         && operadorReporteValido()
         && fotoProtegida()
+        && referenciaDeFotoValida(reportId)
+        && camposDeReporteNuevo()
         && (!('validacion' in request.resource.data) || validacionInicial(request.resource.data.validacion))
         && respetaIntervaloDeReporte();
 
@@ -808,7 +995,60 @@ service cloud.firestore {
         // Sistema de confianza: veredicto de un gestor.
         || (puedeGestionarReporte(resource.data) && veredictoValido(reportId))
         // Sistema de confianza: un vecino suma su confirmación.
-        || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId));
+        || (estaAutenticado() && !esCuentaOperador() && sumaDeConfirmacionValida(reportId))
+        // 1.0 · Al eliminar su cuenta, el autor deja anónimos sus reportes.
+        || anonimizacionDelAutorValida()
+        // 1.0 · Mientras nadie lo revise, el autor corrige la descripción o lo retira.
+        || edicionDelAutorValida()
+        || retiroDelAutorValido();
+
+      /**
+       * 1.0 · Eliminar la cuenta: el autor cambia su nombre por «Cuenta
+       * eliminada» en sus reportes, y nada más. El reporte se conserva.
+       */
+      function anonimizacionDelAutorValida() {
+        return estaAutenticado()
+          && resource.data.uid == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autorNombre'])
+          && request.resource.data.autorNombre == 'Cuenta eliminada';
+      }
+
+      /** El autor, mientras el reporte siga en «reportado». */
+      function esAutorSinRevisar() {
+        return estaAutenticado()
+          && resource.data.uid == request.auth.uid
+          && resource.data.estado == 'reportado';
+      }
+
+      /**
+       * 1.0 · Corregir la descripción: solo ese campo, con su largo y la hora del servidor.
+       * 1.1 · Y solo mientras nadie lo haya confirmado con peso: si no, el autor
+       * podía cambiar el texto por el que otros vecinos ya votaron.
+       */
+      function edicionDelAutorValida() {
+        return esAutorSinRevisar()
+          && validacionDe(resource.data).get('votos', 0) == 0
+          && validacionDe(resource.data).get('puntos', 0) == 0
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['descripcion', 'updatedAt', 'editadoAt'])
+          && descripcionValida()
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.editadoAt == request.time;
+      }
+
+      /**
+       * 1.0 · Retirar: pasa a «cerrado» con la hora del servidor y la marca
+       * retiradoPorAutor. La entrada del historial la valida statusHistory.
+       */
+      function retiroDelAutorValido() {
+        return esAutorSinRevisar()
+          && request.resource.data.estado == 'cerrado'
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['estado', 'updatedAt', 'cerradoSinResolverAt', 'retiradoPorAutor'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.cerradoSinResolverAt == request.time
+          && request.resource.data.retiradoPorAutor == true;
+      }
 
       // Solo un admin elimina, desde el panel "Administrar reportes". El
       // panel borra en el mismo lote la foto y las subcolecciones, para no
@@ -819,7 +1059,8 @@ service cloud.firestore {
       // confirma, así que un segundo intento sería un update y queda denegado:
       // la unicidad la garantizan la estructura y estas reglas, no el cliente.
       match /confirmations/{userId} {
-        allow read: if estaAutenticado();
+        allow read: if estaAutenticado()
+          && (!esCuentaDeOrganismo() || visibleParaOrganismo(datosReporte(reportId)));
 
         // BUG 25 · El reporte debe existir; BUG 10 · nadie confirma lo propio.
         // Dos formatos. El antiguo (solo uid, reportId y createdAt) sigue
@@ -832,7 +1073,13 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
           && datosReporte(reportId).uid != request.auth.uid
+          // 1.1 · Igual que motivoDeBloqueo() de la app: un reporte resuelto,
+          // cerrado (o retirado) o con veredicto ya no se confirma.
+          && !(datosReporte(reportId).estado in ['resuelto', 'cerrado'])
+          && validacionDe(datosReporte(reportId)).get('veredicto', null) == null
           && !esCuentaOperador()
+          // 1.2 · Los organismos reciben los reportes ya validados: no votan.
+          && !esCuentaDeOrganismo()
           && (
                request.resource.data.keys().hasOnly(['uid', 'reportId', 'createdAt'])
                || confirmacionConPesoValida(reportId, userId)
@@ -845,7 +1092,8 @@ service cloud.firestore {
 
       // HU-28 · Bitácora de cambios de estado. Inmutable una vez escrita.
       match /statusHistory/{cambioId} {
-        allow read: if estaAutenticado();
+        allow read: if estaAutenticado()
+          && (!esCuentaDeOrganismo() || visibleParaOrganismo(datosReporte(reportId)));
 
         /**
          * BUG 15 · `desde` debe coincidir con el estado que el reporte tiene
@@ -856,15 +1104,31 @@ service cloud.firestore {
          * BUG 23 · El comentario se acota también en servidor.
          */
         allow create: if request.resource.data.autorUid == request.auth.uid
+          // 1.1 · Lista blanca: lo que escriben CambioEstadoService, el retiro
+          // del autor (MiReporteService) y el portal (reporte.ts).
+          && request.resource.data.keys().hasOnly(['reportId', 'desde', 'hacia', 'autorUid', 'autorRol', 'autorNombre', 'comentario', 'createdAt'])
           && request.resource.data.reportId == reportId
           && request.resource.data.createdAt == request.time
           && reporteExiste(reportId)
-          && puedeGestionarReporte(datosReporte(reportId))
           && request.resource.data.desde == datosReporte(reportId).estado
-          && transicionValida(request.resource.data.desde, request.resource.data.hacia)
           && request.resource.data.comentario is string
           && request.resource.data.comentario.size() <= 512
-          && firmaHistorialValida();
+          && firmaHistorialValida()
+          && (
+               // 1.1 · La entrada viaja con el cambio de estado: al final del
+               // lote el reporte debe quedar en «hacia». Sin esto, un gestor
+               // podía anotar (y notificar) un cambio que nunca hizo.
+               (puedeGestionarReporte(datosReporte(reportId))
+                 && transicionValida(request.resource.data.desde, request.resource.data.hacia)
+                 && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.estado == request.resource.data.hacia)
+               // 1.0 · El autor retira su reporte mientras nadie lo ha revisado,
+               // en el mismo lote que lo cierra (getAfter ve el resultado).
+               || (datosReporte(reportId).uid == request.auth.uid
+                 && request.resource.data.desde == 'reportado'
+                 && request.resource.data.hacia == 'cerrado'
+                 && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.estado == 'cerrado'
+                 && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.get('retiradoPorAutor', false) == true)
+             );
 
         allow update: if false;
         // Solo al eliminar el reporte completo desde el panel de admin.
@@ -876,25 +1140,34 @@ service cloud.firestore {
      * Fotografías guardadas en Firestore mientras el proyecto siga en el plan
      * Spark. El id del documento coincide con el del reporte.
      *
-     * BUG 24 · La fotografía y el reporte se escriben ahora en un mismo lote
-     * (BUG 61). Dentro de un lote cada escritura se evalúa contra el estado
-     * previo, así que el reporte todavía no existe al validar la imagen y no se
-     * puede exigir su existencia aquí. Lo que sí se garantiza es la
-     * atomicidad: ninguna de las dos queda sin la otra.
+     * BUG 24 · La fotografía y el reporte se escriben en un mismo lote (BUG
+     * 61). 1.1 · getAfter() ve el resultado del lote: la foto solo se acepta si
+     * al final existe su reporte y es de quien la sube. Antes se podían subir
+     * fotos sueltas, sin reporte, hasta llenar la cuota.
      */
     match /reportPhotos/{reportId} {
-      allow read: if estaAutenticado();
+      // 1.2 · Una cuenta de organismo, solo la foto de un reporte que puede ver.
+      allow read: if estaAutenticado()
+        && (!esCuentaDeOrganismo()
+            || visibleParaOrganismo(get(/databases/$(database)/documents/reports/$(reportId)).data));
 
       allow create: if estaAutenticado()
+        && request.resource.data.keys().hasOnly(['reportId', 'ownerUid', 'mimeType', 'dataUrl', 'sizeBytes', 'createdAt'])
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.reportId == reportId
         && request.resource.data.mimeType in ['image/jpeg', 'image/png', 'image/webp']
         && request.resource.data.dataUrl is string
-        && request.resource.data.dataUrl.size() < 950000;
+        && request.resource.data.dataUrl.size() < 950000
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/reports/$(reportId))
+        && getAfter(/databases/$(database)/documents/reports/$(reportId)).data.uid == request.auth.uid;
 
-      // El autor puede borrarla, para permitir revertir un reporte fallido; un
-      // admin también, al eliminar el reporte completo.
-      allow delete: if (estaAutenticado() && resource.data.ownerUid == request.auth.uid)
+      // Un admin la borra al eliminar el reporte completo. El autor solo puede
+      // limpiar una foto que quedó sin reporte (1.1: antes podía borrar la de
+      // un reporte publicado y dejarlo apuntando a una imagen inexistente).
+      allow delete: if (estaAutenticado()
+            && resource.data.ownerUid == request.auth.uid
+            && !exists(/databases/$(database)/documents/reports/$(reportId)))
         || esAdministrador();
       allow update: if false;
     }
@@ -1025,15 +1298,28 @@ service cloud.firestore {
     }
 
     function ticketValido() {
-      return request.resource.data.uid == request.auth.uid
-        && request.resource.data.tipo in ['queja', 'sugerencia']
-        && request.resource.data.estado == 'abierto'
-        && request.resource.data.asignadoA == null
-        && request.resource.data.asunto is string
-        && request.resource.data.asunto.size() >= 5
-        && request.resource.data.asunto.size() <= 120
-        && request.resource.data.lastMessagePreview is string
-        && request.resource.data.lastMessagePreview.size() <= 100;
+      let datos = request.resource.data;
+      return datos.uid == request.auth.uid
+        // 1.1 · Lista blanca: los campos de crearTicket() en support.service.ts.
+        && datos.keys().hasOnly([
+             'uid', 'autorNombre', 'autorEmail', 'tipo', 'estado', 'asignadoA', 'asunto',
+             'lastMessagePreview', 'lastMessageAt', 'createdAt', 'updatedAt'
+           ])
+        && datos.tipo in ['queja', 'sugerencia']
+        && datos.estado == 'abierto'
+        && datos.asignadoA == null
+        && datos.asunto is string
+        && datos.asunto.size() >= 5
+        && datos.asunto.size() <= 120
+        && datos.lastMessagePreview is string
+        && datos.lastMessagePreview.size() <= 100
+        // 1.1 · Las fechas son las del servidor (ordenan la bandeja del soporte).
+        && datos.createdAt == request.time
+        && datos.lastMessageAt == request.time
+        && (!('updatedAt' in datos) || datos.updatedAt == request.time)
+        && (!('autorNombre' in datos) || (datos.autorNombre is string && datos.autorNombre.size() <= 120))
+        // 1.1 · El correo de contacto es el de la sesión: el soporte responde ahí.
+        && (!('autorEmail' in datos) || datos.autorEmail == '' || datos.autorEmail == request.auth.token.email);
     }
 
     /**
@@ -1042,11 +1328,30 @@ service cloud.firestore {
      * ni el asunto.
      */
     function actualizacionDeActividad() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly(['lastMessageAt', 'lastMessagePreview', 'updatedAt', 'estado', 'asignadoA'])
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.tipo == resource.data.tipo
-        && request.resource.data.asunto == resource.data.asunto;
+      let datos = request.resource.data;
+      let cambios = datos.diff(resource.data).affectedKeys();
+      return cambios.hasOnly(['lastMessageAt', 'lastMessagePreview', 'updatedAt', 'estado', 'asignadoA'])
+        && datos.uid == resource.data.uid
+        && datos.tipo == resource.data.tipo
+        && datos.asunto == resource.data.asunto
+        // 1.1 · El mismo tope que al crear, y fechas del servidor.
+        && (!cambios.hasAny(['lastMessagePreview'])
+            || (datos.lastMessagePreview is string && datos.lastMessagePreview.size() <= 100))
+        && (!cambios.hasAny(['lastMessageAt']) || datos.lastMessageAt == request.time)
+        && (!cambios.hasAny(['updatedAt']) || datos.updatedAt == request.time);
+    }
+
+    /**
+     * 1.0 · Eliminar la cuenta: el autor deja sus tickets sin datos de
+     * contacto («Cuenta eliminada», sin correo), como promete la página
+     * /eliminar-cuenta. Nada más del ticket cambia.
+     */
+    function anonimizacionDeTicketValida() {
+      return estaAutenticado()
+        && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autorNombre', 'autorEmail'])
+        && request.resource.data.autorNombre == 'Cuenta eliminada'
+        && request.resource.data.autorEmail == '';
     }
 
     function transicionTicketValida(desde, hacia) {
@@ -1072,16 +1377,19 @@ service cloud.firestore {
 
       // El autor solo mueve la actividad al escribir; el estado lo cambia el
       // equipo de soporte.
-      allow update: if actualizacionDeActividad()
-        && transicionTicketValida(resource.data.estado, request.resource.data.estado)
-        && (
-             esGestor()
-             || (
-                  resource.data.uid == request.auth.uid
-                  && request.resource.data.estado == resource.data.estado
-                  && request.resource.data.asignadoA == resource.data.asignadoA
+      allow update: if (
+             actualizacionDeActividad()
+             && transicionTicketValida(resource.data.estado, request.resource.data.estado)
+             && (
+                  esGestor()
+                  || (
+                       resource.data.uid == request.auth.uid
+                       && request.resource.data.estado == resource.data.estado
+                       && request.resource.data.asignadoA == resource.data.asignadoA
+                     )
                 )
-           );
+           )
+        || anonimizacionDeTicketValida();
 
       // Las conversaciones no se borran: son evidencia de la atención prestada.
       allow delete: if false;
@@ -1091,33 +1399,31 @@ service cloud.firestore {
 
         /**
          * El primer mensaje viaja en el mismo lote que la creación del ticket.
-         * Dentro de un lote cada escritura se evalúa contra el estado PREVIO,
-         * así que en ese momento el ticket todavía no existe y `esAutorDelTicket`
-         * fallaría al hacer get() sobre un documento inexistente, denegando toda
-         * apertura de conversación.
+         * 1.1 · getAfter() ve el ticket tal como queda al final del lote, así
+         * que sirve igual para el primer mensaje y para los siguientes. Antes se
+         * admitía cualquier mensaje mientras el ticket no existiera (mensajes en
+         * tickets inexistentes).
          *
-         * Por eso se admite el mensaje cuando el ticket aún no existe, siempre
-         * que el autor sea quien escribe y firme como ciudadano. El lote
-         * garantiza que ambas escrituras se confirman juntas.
+         * La firma es la del rol real: «staff» solo el equipo de soporte y
+         * «ciudadano» solo quien abrió el ticket (antes un gestor podía firmar
+         * como el vecino).
          */
-        allow create: if (
-             esGestor()
-             || esAutorDelTicket(ticketId)
-             || (
-                  estaAutenticado()
-                  && !exists(/databases/$(database)/documents/supportTickets/$(ticketId))
-                  && request.resource.data.autorRol == 'ciudadano'
-                )
-           )
+        allow create: if estaAutenticado()
+          && request.resource.data.keys().hasOnly(['ticketId', 'autorUid', 'autorNombre', 'autorRol', 'texto', 'createdAt'])
           && request.resource.data.autorUid == request.auth.uid
           && request.resource.data.ticketId == ticketId
           && request.resource.data.createdAt == request.time
           && request.resource.data.texto is string
           && request.resource.data.texto.size() >= 2
           && request.resource.data.texto.size() <= 1000
-          && request.resource.data.autorRol in ['ciudadano', 'staff']
-          // Solo el equipo de soporte puede firmar como soporte.
-          && (request.resource.data.autorRol == 'ciudadano' || esGestor());
+          && (!('autorNombre' in request.resource.data)
+              || (request.resource.data.autorNombre is string && request.resource.data.autorNombre.size() <= 120))
+          && existsAfter(/databases/$(database)/documents/supportTickets/$(ticketId))
+          && (
+               (request.resource.data.autorRol == 'staff' && esGestor())
+               || (request.resource.data.autorRol == 'ciudadano'
+                   && getAfter(/databases/$(database)/documents/supportTickets/$(ticketId)).data.uid == request.auth.uid)
+             );
 
         // Los mensajes son inmutables: nadie reescribe lo que ya dijo.
         allow update, delete: if false;
