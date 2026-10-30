@@ -7,7 +7,8 @@
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import type { Firestore } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
-import { ESTADOS_FINALIZADOS } from '@ciudad-alerta/comun'
+import { motivoDeBloqueo } from '@ciudad-alerta/comun'
+import type { MotivoBloqueo } from '@ciudad-alerta/comun'
 import { PAUSA_ENTRE_CONFIRMACIONES_MS, limiteDiario, numeroDeDia, pesoDelVoto, sumarVoto } from './reglas'
 import { leerConfianza, leerValidacion } from './tipos'
 
@@ -92,6 +93,28 @@ export function avisoPesoCero(motivo: 'correo' | 'antiguedad'): string {
     : 'Tu confirmación ha sido registrada. Tu cuenta debe tener más de 24 horas para que tu validación tenga peso.'
 }
 
+/** El error de confirmación que corresponde a un motivo de bloqueo de `comun`. */
+function errorDeBloqueo(motivo: MotivoBloqueo, pausaRestanteMs: number): ErrorConfirmacion {
+  switch (motivo) {
+    case 'propio':
+      return new ErrorConfirmacion('propio')
+    case 'cerrado':
+      return new ErrorConfirmacion('finalizado')
+    case 'revisado':
+      return new ErrorConfirmacion('con_veredicto')
+    case 'suspendido':
+      return new ErrorConfirmacion('suspendido')
+    case 'limite':
+      return new ErrorConfirmacion('limite')
+    case 'pausa':
+      return new ErrorConfirmacion('pausa', Math.ceil(pausaRestanteMs / 1000))
+    case 'confirmado':
+      return new ErrorConfirmacion('ya_confirmo')
+    default:
+      return new ErrorConfirmacion('rechazada')
+  }
+}
+
 async function intentar(db: Firestore, pedido: PedidoConfirmacion): Promise<ResultadoConfirmacion> {
   const ahora = Date.now()
   const dia = String(numeroDeDia(ahora))
@@ -109,24 +132,30 @@ async function intentar(db: Firestore, pedido: PedidoConfirmacion): Promise<Resu
     ])
 
     if (!reporte.exists()) throw new ErrorConfirmacion('no_existe')
-    // Las reglas (1.1) rechazan estas dos: se avisan aquí con un mensaje claro.
-    if ((ESTADOS_FINALIZADOS as readonly string[]).includes(reporte.data().estado)) throw new ErrorConfirmacion('finalizado')
-    if (leerValidacion(reporte.data().validacion).veredicto !== null) throw new ErrorConfirmacion('con_veredicto')
-    if (reporte.data().uid === pedido.uid) throw new ErrorConfirmacion('propio')
-    if (yaConfirmo.exists()) throw new ErrorConfirmacion('ya_confirmo')
 
     const confianza = leerConfianza(confianzaSnap.data())
-    if (confianza.confirmacionesSuspendidas) throw new ErrorConfirmacion('suspendido')
-
     const nivel = confianza.trustLevel
     const hechasHoy = limite.exists() && typeof limite.data().confirmaciones === 'number' ? limite.data().confirmaciones : 0
-    if (hechasHoy >= limiteDiario(nivel)) throw new ErrorConfirmacion('limite')
-
     const ultima = limite.data()?.ultimaAt
     const ultimaMs = typeof ultima?.toMillis === 'function' ? ultima.toMillis() : null
-    if (ultimaMs !== null && ahora - ultimaMs < PAUSA_ENTRE_CONFIRMACIONES_MS) {
-      throw new ErrorConfirmacion('pausa', Math.ceil((PAUSA_ENTRE_CONFIRMACIONES_MS - (ahora - ultimaMs)) / 1000))
-    }
+    const pausaRestanteMs = ultimaMs === null ? 0 : Math.max(0, PAUSA_ENTRE_CONFIRMACIONES_MS - (ahora - ultimaMs))
+
+    // La decisión es la misma que toman las reglas y la app (comun/confianza/bloqueo.ts). Las cuentas
+    // operador y de organismo no se comprueban aquí: no se lee su perfil y las reglas las rechazan.
+    const bloqueo = motivoDeBloqueo({
+      propio: reporte.data().uid === pedido.uid,
+      operador: false,
+      estadoReporte: reporte.data().estado,
+      conVeredicto: leerValidacion(reporte.data().validacion).veredicto !== null,
+      suspendido: confianza.confirmacionesSuspendidas,
+      restantesHoy: limiteDiario(nivel) - hechasHoy,
+      pausaRestanteMs,
+    })
+    // «Ya confirmó» se dice después de lo que impide confirmar a cualquiera y antes de lo personal del día.
+    const impideATodos: readonly MotivoBloqueo[] = ['propio', 'operador', 'organismo', 'cerrado', 'revisado']
+    if (bloqueo && impideATodos.includes(bloqueo)) throw errorDeBloqueo(bloqueo, pausaRestanteMs)
+    if (yaConfirmo.exists()) throw new ErrorConfirmacion('ya_confirmo')
+    if (bloqueo) throw errorDeBloqueo(bloqueo, pausaRestanteMs)
 
     const peso = pesoDelVoto(nivel, pedido.correoVerificado, pedido.creadaEnMs, ahora)
     const antes = leerValidacion(reporte.data().validacion)

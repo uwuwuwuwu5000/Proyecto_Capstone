@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { esCuentaDeOrganismo } from '@ciudad-alerta/comun'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
 import CuentaOrganismo from './components/CuentaOrganismo/CuentaOrganismo'
@@ -37,7 +38,7 @@ function Rutas() {
   const { perfil } = useAuth()
 
   // Una cuenta de organismo no tiene vista en el portal: sus consultas las niegan las reglas.
-  if (perfil?.role === 'organismo') return <CuentaOrganismo />
+  if (esCuentaDeOrganismo(perfil?.role)) return <CuentaOrganismo />
 
   return (
     // key: al navegar a otra ruta se reinicia el aviso de error, para que una

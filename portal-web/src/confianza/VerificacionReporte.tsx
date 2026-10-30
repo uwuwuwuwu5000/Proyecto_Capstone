@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { doc, getDoc } from 'firebase/firestore'
-import { ESTADOS_FINALIZADOS, inicioDeDia, numeroDeDia as numeroDeDiaComun } from '@ciudad-alerta/comun'
+import { esCuentaDeOrganismo, inicioDeDia, motivoDeBloqueo, numeroDeDia as numeroDeDiaComun } from '@ciudad-alerta/comun'
 import { db } from '../firebase/config'
 import { useAuth } from '../context/AuthContext'
 import BarraVerificacion from './BarraVerificacion'
@@ -127,6 +127,18 @@ export default function VerificacionReporte({ reporte, onConfirmado }: Props) {
   }
 
   const v = reporte.validacion
+  // La misma decisión que toman las reglas y la app (comun/confianza/bloqueo.ts). La pausa de 20 s no
+  // entra aquí: se ve como cuenta regresiva dentro del botón.
+  const bloqueo = motivoDeBloqueo({
+    propio: esAutor,
+    operador: esOperador,
+    organismo: esCuentaDeOrganismo(perfil?.role),
+    estadoReporte: reporte.estado,
+    conVeredicto: v.veredicto !== null,
+    suspendido: confianza.confirmacionesSuspendidas,
+    restantesHoy: restantes,
+    pausaRestanteMs: 0,
+  })
   let accion: React.ReactNode
   if (propia === null || cargando) {
     accion = <p className={styles.nota}>Comprobando si puedes confirmar…</p>
@@ -136,22 +148,24 @@ export default function VerificacionReporte({ reporte, onConfirmado }: Props) {
         ✓ Ya confirmaste este reporte{propia.peso ? ` · aportaste ${formatoPeso(propia.peso)} puntos` : ''}
       </p>
     )
-  } else if (esAutor) {
+  } else if (bloqueo === 'propio') {
     accion = <p className={styles.nota}>Este es tu reporte: lo confirman otros vecinos.</p>
-  } else if (esOperador) {
+  } else if (bloqueo === 'operador') {
     accion = <p className={styles.nota}>Las cuentas de operador gestionan reportes; no los confirman.</p>
-  } else if ((ESTADOS_FINALIZADOS as readonly string[]).includes(reporte.estado)) {
+  } else if (bloqueo === 'organismo') {
+    accion = <p className={styles.nota}>Las cuentas de organismo reciben los reportes validados; no los confirman.</p>
+  } else if (bloqueo === 'cerrado') {
     // Las reglas no aceptan confirmaciones en un reporte resuelto o cerrado (también los retirados por su autor).
     accion = <p className={styles.nota}>Este reporte ya está resuelto o cerrado: ya no se puede confirmar.</p>
-  } else if (v.veredicto !== null) {
+  } else if (bloqueo === 'revisado') {
     accion = <p className={styles.nota}>Un operador ya revisó este reporte: no hace falta confirmarlo.</p>
-  } else if (confianza.confirmacionesSuspendidas) {
+  } else if (bloqueo === 'suspendido') {
     accion = (
       <p className={styles.aviso}>
         Tus confirmaciones están suspendidas por un administrador. Si crees que es un error, escríbenos en Soporte.
       </p>
     )
-  } else if (restantes === 0) {
+  } else if (bloqueo === 'limite') {
     accion = (
       <p className={styles.aviso}>
         Llegaste a tus {limite} confirmaciones de hoy. Se reinician a las {horaReinicio}.

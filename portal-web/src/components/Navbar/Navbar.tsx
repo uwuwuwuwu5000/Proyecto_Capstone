@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { esCuentaDeOrganismo } from '@ciudad-alerta/comun'
 import { useAuth } from '../../context/AuthContext'
 import { useSoporte } from '../../context/SoporteContext'
 import CampanaAvisos from '../Avisos/CampanaAvisos'
@@ -141,14 +142,14 @@ export default function Navbar() {
             aria-label="Principal"
           >
             {/* Una cuenta de organismo no tiene vistas en el portal (ver CuentaOrganismo). */}
-            {perfil?.role !== 'organismo' && (
+            {!esCuentaDeOrganismo(perfil?.role) && (
               <NavLink to="/mapa" className={claseOpcion()}>
                 Mapas
               </NavLink>
             )}
 
             {/* "Mis reportes" no aplica a una cuenta operador ni de organismo: no crean reportes. */}
-            {perfil?.role !== 'operador' && perfil?.role !== 'organismo' && (
+            {perfil?.role !== 'operador' && !esCuentaDeOrganismo(perfil?.role) && (
               <NavLink to="/historial" className={claseOpcion()}>
                 Historial
               </NavLink>
