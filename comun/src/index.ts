@@ -14,10 +14,15 @@ export * from './reportes/descripcion';
 export * from './reportes/tiempos';
 export * from './reportes/gestion';
 export * from './reportes/contacto';
+export * from './reportes/veredictos';
 
 // Sistema de confianza
 export * from './confianza/parametros';
 export * from './confianza/calculos';
+export * from './confianza/bloqueo';
+
+// Usuarios
+export * from './usuarios/roles';
 
 // Territorio y geografía
 export * from './territorio/texto';

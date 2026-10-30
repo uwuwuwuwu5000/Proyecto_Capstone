@@ -12,6 +12,9 @@ Es **TypeScript puro**: no importa Angular, React, Ionic ni Firebase, y no tiene
 | `reportes/tiempos.ts` | Tiempo de primera atención y de resolución, mediana, promedio, «2 h 15 min» | **portal** (`components/Reportes/tiempos.ts`) |
 | `reportes/gestion.ts` | Quién puede cambiar el estado de un reporte y qué datos de resolución acompañan al cambio (`resueltoAt`, `tiempoResolucionMs`, `cerradoSinResolverAt`) | app y portal (`components/Reportes/reporte.ts`) |
 | `confianza/` | Niveles, pesos, límites diarios, día con desfase UTC−3, validación, veredictos, progreso | app (módulo confianza) |
+| `confianza/bloqueo.ts` | Por qué una cuenta no puede confirmar un reporte (`motivoDeBloqueo`: propio, cerrado, con veredicto, suspendida, límite, pausa…) | app (`confianza.service.ts`) |
+| `usuarios/roles.ts` | Tipo `UserRole` y `esCuentaDeOrganismo` / `esCuentaInstitucional` | app (`user-profile.model.ts`) |
+| `reportes/veredictos.ts` | «Por veredicto»: reportes pendientes, espera, «demorado» (48 h), tiempo hasta el veredicto, de «En revisión» a cierre | **portal** (`pages/Operador/veredictos.ts`) |
 | `territorio/` | Normalizar nombres de comunas, códigos CUT, nombre corto de región | app y portal |
 | `territorio/mapa-calor.ts` | Agrupación de reportes por comuna y tramos de intensidad | **portal** (`pages/Admin/mapaCalor.ts`) |
 | `geo/` | Distancia en metros, cajas geográficas, «1,2 km» | app |
