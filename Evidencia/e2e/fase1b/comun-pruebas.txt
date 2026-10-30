@@ -1,0 +1,3 @@
+ Test Files  12 passed (12)
+      Tests  126 passed (126)
+tipos ok

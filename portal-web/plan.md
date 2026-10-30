@@ -27,7 +27,8 @@ Al final (fase 11) va el cierre y, después, las **historias de usuario**.
 | Fase | Qué | Esfuerzo | Estado |
 |---|---|---|---|
 | 0 | Dejar el portal al día con `comun` y las reglas | S | Hecha; falta que el equipo haga los commit y el push (tarea 0.9) |
-| 1 | Cálculos y datos de «Por veredicto» | M | [ ] Pendiente |
+| 1 | Cálculos y datos de «Por veredicto» | M | Hecha; falta que el equipo haga los commit y el push (tarea 1.7) |
+| 1B | Pasar a `comun` la lógica compartida (bloqueo, roles y cálculos de veredicto) | M | Hecha; falta que el equipo haga los commit y el push (tarea 1B.8) |
 | 2 | Pantalla «Por veredicto» (indicadores, filtros y lista) | M | [ ] Pendiente |
 | 3 | Tiempos de revisión a cierre (desde el historial) | M | [ ] Pendiente |
 | 4 | Dar el veredicto desde la sección | S | [ ] Pendiente |
@@ -157,34 +158,182 @@ Notas: `git status` debería quedar limpio salvo `comun/package-lock.json` (solo
 
 **Listo cuando:** `npm run build` y `npm run test:reglas` pasan, y el E2E no tiene fallos nuevos (los 3 conocidos por DEF-001 y DEF-002 siguen). **Cumplido.**
 
+**Historias de usuario de esta fase**
+
+**I7 · Mensaje de seguridad para organismo.** Como equipo, quiero que una cuenta de organismo que entre al portal vea un mensaje claro, para que no se encuentre con errores de permiso. 1. Ve «Esta cuenta se usa desde la app móvil» y puede cerrar sesión. 2. No se ejecuta ninguna consulta de reportes.
+*Estado: Hecho (prueba WX2).*
+
 ---
 
 ## Fase 1 · Cálculos y datos de «Por veredicto»
 
 Sin pantalla todavía. Todo lo que luego usa la sección, separado y probado.
 
-- [ ] **1.1** Crear `pages/Operador/veredictos.ts` con funciones puras:
-  - `esPendienteDeVeredicto(reporte)` (I1),
-  - `esperaActual(reporte, ahora)` (I2),
-  - `tiempoHastaVeredicto(reporte)` (I3),
-  - `tiempoRevisionACierre(cambios)` (I4, a partir del historial),
-  - `UMBRAL_DEMORADO_HORAS = 48`: una **constante**, no un campo (decisión D3: la pantalla calcula `ahora − validadoAt` al mostrar la lista; no se guarda nada ni cambian las reglas).
+- [x] **1.1** Escribir primero las pruebas (`rules-tests/veredictos.test.ts`) y verlas fallar; después crear `pages/Operador/veredictos.ts` con funciones puras:
+  - `esPendienteDeVeredicto(reporte)` (I1): `validado`, sin veredicto y no «Resuelto» ni «Cerrado». **No excluye** los reportes creados desde el panel (`origen == 'portal_admin'`): se muestran igual, porque ese comportamiento se corregirá después (decisión D11).
+  - `esperaActual(reporte, ahora)` (I2): `ahora − validadoAt`; sin `validadoAt` devuelve `null`.
+  - `tiempoHastaVeredicto(reporte)` (I3): `veredictoAt − validadoAt`, nunca negativo.
+  - `tiempoRevisionACierre(cambios)` (I4, a partir del historial).
+  - `resumenDeTiempos(valores)`: mediana, promedio, cuántos entran y cuántos quedan fuera.
+  - `UMBRAL_DEMORADO_HORAS = 48`: una **constante**, no un campo (decisión D3).
   Reutilizan `mediana`, `promedio` y `formatearDuracion` de `comun`. — **M**
-- [ ] **1.2** Crear el hook `useReportesPorVeredicto(operadorId)` con una escucha en vivo (`onSnapshot`) a `reports` donde `operadorId == X`, `validacion.validado == true` y `validacion.veredicto == null`, con `limit(200)`.
+- [x] **1.2** Funciones puras de filtro y orden (`filtrarPendientes`, `ordenarPendientes`) y su lectura y escritura en la URL (`?cat=&comuna=&espera=&orden=&q=&foto=`), con sus pruebas. — **S**
+- [x] **1.3** Crear el hook `useReportesPorVeredicto(operadorId)` con una escucha en vivo (`onSnapshot`) a `reports` donde `operadorId == X`, `validacion.validado == true` y `validacion.veredicto == null`, con `limit(200)`.
   - Solo igualdades: **no necesita un índice nuevo**.
   - El orden y todos los filtros de la sección se aplican en el navegador (sin campos ni índices nuevos).
-  - Si hay más de 200, se muestra «200+» y el conteo exacto con `getCountFromServer`. — **M**
-- [ ] **1.3** Crear el hook `useReportesConVeredicto(operadorId, periodo)` para I3: reportes con `veredicto != null` del operador en el periodo, reutilizando `rangoDePeriodo` de `periodos.ts`. — **S**
-- [ ] **1.4** Funciones puras de filtro y orden (`filtrarPendientes`, `ordenarPendientes`) y su lectura/escritura en la URL (`?cat=&comuna=&espera=&orden=&q=&foto=`). — **S**
+  - Si llega a 200, se muestra «200+» y el conteo exacto con `getCountFromServer`. — **M**
+- [x] **1.4** Crear el hook `useReportesConVeredicto(operadorId, periodo)` para el tiempo hasta el veredicto: reportes del operador con `veredicto` real o falso, con tope de 500. El periodo se aplica según la **fecha del veredicto** (`veredictoAt`), no la de creación (decisión D13), reutilizando `rangoDePeriodo` de `periodos.ts`. Si llega al tope, se avisa. — **S**
+- [x] **1.5** Prueba contra el emulador de Firestore: un operador obtiene solo sus pendientes y no los de otro; las reglas aceptan las dos consultas. Se registra en el plan de pruebas como prueba de «Reglas de Firestore» (adelanta la tarea 5.4). — **S**
+- [x] **1.6** Verificación completa y evidencia: `tsc`, `npm run build`, `npm run test:reglas` y E2E completo (sin fallos nuevos) en `Evidencia/e2e/fase1/`. — **S**
+- [ ] **1.7** *(Equipo)* Hacer los `commit` y el `push` de la fase. — **S**
 
 > **Comentarios:**
 >
+
+**Resultado de las pruebas**
+
+| Prueba | Antes | Ahora |
+|---|---|---|
+| `tsc` y `npm run build` | En verde | En verde |
+| `npm run test:reglas` | 242 de 242 | **300 de 300** (+51 de los cálculos y filtros, +7 de las consultas contra el emulador) |
+| E2E completo | 96 pruebas: 93 OK, 3 NOK | **96 pruebas: 93 OK, 3 NOK** (sin cambios: la fase no toca pantallas; los NOK son los ya registrados WB1, WB5 y MS7) |
+
+Se agregó al plan de pruebas la fila **WV11** (reglas: el operador lee solo sus pendientes y sus reportes con veredicto; una cuenta de organismo no puede). Las pruebas de las funciones puras (`veredictos.test.ts`) no van al plan de pruebas, según el criterio acordado (solo pantalla, componente y reglas). Evidencia: `Evidencia/e2e/fase1/`.
+
+**Qué se construyó**
+
+| Archivo | Qué contiene |
+|---|---|
+| `src/pages/Operador/veredictos.ts` | *(Desde la Fase 1B los cálculos viven en `comun/src/reportes/veredictos.ts` y este archivo los vuelve a exportar; aquí quedan los filtros, el orden y la URL.)* `esPendienteDeVeredicto` (no excluye los reportes del panel ni los sin `validadoAt`: decisiones D11 y D12), `esperaActual`, `estaDemorado` (constante `UMBRAL_DEMORADO_HORAS = 48`), `tiempoHastaVeredicto`, `tiempoRevisionACierre`, `resumenDeTiempos`, `veredictoEnRango` (periodo por fecha del veredicto, D13), `filtrarPendientes`, `ordenarPendientes` y la lectura y escritura de los filtros en la URL. |
+| `src/pages/Operador/useReportesPorVeredicto.ts` | `useReportesPorVeredicto(operadorId)`: escucha en vivo con tope de 200 y total exacto si se alcanza. `useReportesConVeredicto(operadorId, rango)`: lee los reportes con veredicto real o falso (tope de 500 por cada uno), aplica el periodo sin volver a leer y permite recargar. Solo igualdades: sin índices nuevos. |
+| `rules-tests/veredictos.test.ts` | 51 casos de los cálculos, filtros, orden y URL. |
+| `rules-tests/veredictos-consultas.test.ts` | 7 casos de las consultas contra las reglas (un operador solo lee lo suyo; el organismo queda fuera). |
+
+**Límites que conviene conocer**
+
+- La consulta de pendientes no filtra por estado (para no necesitar un índice): un reporte validado, sin veredicto y ya cerrado se lee y se descarta en el navegador. Si un operador tuviera 200 de ese tipo, podrían quedar fuera pendientes reales. Es improbable; el aviso «200+» y el total lo dejarían a la vista.
+- El emulador no valida índices. Las consultas son solo de igualdad, que Firestore resuelve con sus índices automáticos; se confirmará con datos reales en la Fase 2.
 
 **Errores encontrados y cómo corregirlos**
 
 Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué falló, por qué y cómo corregirlo), se registra en la «Lista de defectos» y en el plan de pruebas **antes** de corregirlo.
 
-**Listo cuando:** las funciones puras cubren los casos límite (sin `validadoAt`, veredicto antes de validar, reloj adelantado → `max(0, …)`, historial sin «En revisión»).
+**Qué puedes probar tú en el portal**
+
+Esta fase **no agrega nada visible**: son los cálculos y las consultas que usará la pantalla de la Fase 2. Para comprobarla:
+
+1. Desde `portal-web`: `npm run test:reglas` debe terminar con **300 de 300**.
+2. Para ver solo lo nuevo: `npx firebase emulators:exec --only firestore --project demo-ciudad-alerta "npx vitest run --config vitest.reglas.config.ts rules-tests/veredictos.test.ts rules-tests/veredictos-consultas.test.ts"`. Requiere Java 21 en el `PATH`.
+3. En el portal todo se ve igual que antes. La pantalla «Por veredicto» llega en la Fase 2.
+
+**Commits y push de la Fase 1**
+
+Desde la raíz del repositorio, en la rama `main-web`:
+
+```cmd
+git status
+
+git add portal-web/src/pages/Operador/veredictos.ts portal-web/src/pages/Operador/useReportesPorVeredicto.ts
+git commit -m "feat(portal): cálculos, filtros y consultas de «Por veredicto» (Fase 1)"
+
+git add portal-web/rules-tests/veredictos.test.ts portal-web/rules-tests/veredictos-consultas.test.ts
+git commit -m "test(portal): pruebas de los cálculos y las consultas de «Por veredicto»"
+
+git add Evidencia portal-web/plan.md
+git commit -m "docs: plan y evidencia de la Fase 1"
+
+git fetch origin
+git pull --rebase origin main-web
+git push origin main-web
+```
+
+**Listo cuando:** las funciones puras cubren los casos límite (sin `validadoAt`, veredicto antes de validar, reloj adelantado → `max(0, …)`, historial sin «En revisión»). **Cumplido.**
+
+**Historias de usuario de esta fase**
+
+Esta fase **no cierra ninguna historia por sí sola**: prepara la lógica y las consultas de **I1** (confirmados sin veredicto), **I2** (filtrar y ordenar) e **I4** (tiempo hasta el veredicto). Sus textos y criterios están al final de la Fase 2, donde se verifican con la pantalla.
+
+---
+
+## Fase 1B · Pasar a `comun` la lógica compartida
+
+Se hizo **solo en la rama `main-web`**: de `main-mobile` solo se leyó. Es un paso previo a la pantalla de la Fase 2.
+
+- [x] **1B.1** Comprobar si Firebase acepta que `firebase.json` apunte a `../comun/firebase/`. **No lo acepta** («is outside of project directory»). Lo probado: un `firebase.json` propio dentro de `comun/firebase/`, usado con `--config`, sí carga las reglas en el emulador. Decisión (D15): **no mover las reglas ni los índices por ahora**; se deja lo creado en `comun/firebase/` fuera del cambio. — **S**
+- [x] **1B.2** Revisar qué tiene la app móvil (`origin/main-mobile`, sin cambios desde `bbcfbc5`). **Nada de esto estaba en su `comun`**: el bloqueo de confirmación y los roles existen dentro de su app Angular y los cálculos de «Por veredicto» solo en el portal. — **S**
+- [x] **1B.3** Escribir primero las pruebas de `comun` (portadas de la prueba de la app y de la Fase 1) y verlas fallar (48 fallos). — **S**
+- [x] **1B.4** Agregar a `comun` (solo archivos nuevos y las líneas de `index.ts`):
+  - `confianza/bloqueo.ts`: `motivoDeBloqueo`, `MotivoBloqueo`, `estaCerrado`, portados de `confianza.service.ts` de la app.
+  - `usuarios/roles.ts`: `UserRole`, `esCuentaDeOrganismo`, `esCuentaInstitucional`.
+  - `reportes/veredictos.ts`: los cálculos de «Por veredicto» (con tipos mínimos, sin depender del portal).
+  - Pruebas en `comun/test/` (bloqueo, roles y veredictos) y nota en `comun/LEEME.md`. — **M**
+- [x] **1B.5** El portal usa `comun`: `confirmar.ts` y `VerificacionReporte.tsx` deciden con `motivoDeBloqueo` (se agrega el mensaje para una cuenta de organismo), `App.tsx` y `Navbar.tsx` usan `esCuentaDeOrganismo`, y `pages/Operador/veredictos.ts` re-exporta los cálculos. Las pruebas de los cálculos pasaron a `comun`; en el portal quedan las de filtros, orden y URL. — **M**
+- [x] **1B.6** Verificación completa y evidencia en `Evidencia/e2e/fase1b/`. — **S**
+- [x] **1B.7** Avisar al equipo móvil de lo que pueden adoptar (ver más abajo). — **S**
+- [ ] **1B.8** *(Equipo)* Hacer los `commit` y el `push`: ver «Commits y push». — **S**
+
+> **Comentarios:**
+>
+
+**Resultado de las pruebas**
+
+| Prueba | Antes | Ahora |
+|---|---|---|
+| `comun`: `npm test` y `npm run tipos` | 78 pruebas | **126 de 126** (+48) y tipos en verde |
+| `tsc` y `npm run build` del portal | En verde | En verde |
+| `npm run test:reglas` | 300 de 300 | **266 de 266** (las pruebas de los cálculos se movieron a `comun`) |
+| E2E completo | 96 pruebas: 93 OK, 3 NOK | **96 pruebas: 93 OK, 3 NOK** (WB1, WB5 y MS7, los ya registrados; la corrida tardó 15,8 min por la carga del equipo) |
+
+No se agregan filas al plan de pruebas: las pruebas de `comun` son de funciones puras (no van al Excel, por el criterio acordado) y no hay pantallas nuevas. La conducta visible (WX1, WX2 y WX4) sigue pasando con el código nuevo.
+
+**Errores encontrados y cómo corregirlos**
+
+Ningún defecto. Una limitación de la herramienta, no del código: Firebase no acepta rutas fuera de la carpeta del proyecto en `firebase.json`. Si más adelante se quieren compartir las reglas y los índices por `comun`, la salida verificada es un `firebase.json` propio en `comun/firebase/`, usado con `--config` en los comandos del emulador y del despliegue. El despliegue con `--config` no se probó (habría que desplegar de verdad).
+
+**Qué cambió para ti en el portal** (`npm run dev`)
+
+1. **Confirmar con un reporte cerrado:** se ve igual que en la Fase 0 («Este reporte ya está resuelto o cerrado…»; con veredicto: «Un operador ya revisó este reporte»).
+2. **Cuenta de operador:** sigue viendo «Las cuentas de operador gestionan reportes; no los confirman».
+3. **Cuenta de organismo** que llegara a abrir un reporte: ve «Las cuentas de organismo reciben los reportes validados; no los confirman» (mensaje nuevo).
+4. Fuera de eso el portal se ve y se comporta igual.
+
+**Qué puede adoptar el equipo móvil** (cuando quiera; no se tocó su rama)
+
+- Pasar los commits que solo tocan `comun/` a `main-mobile` con `git cherry-pick`.
+- En su app, reemplazar sus copias por imports: `motivoDeBloqueo` y `estaCerrado` (en `confianza.service.ts`), `UserRole`, `esCuentaDeOrganismo` y `esCuentaInstitucional` (en `user-profile.model.ts`). Sus pruebas de esas funciones ya están portadas a `comun/test/`.
+- Si algún día se quiere compartir `firestore.rules` e índices: ver la limitación de arriba; los índices del portal son la unión de 14 (3 más que los de la app).
+
+**Commits y push (Fase 1 y Fase 1B juntas)**
+
+La Fase 1 aún no se había subido, así que se incluye aquí. Desde la raíz del repositorio, en la rama `main-web`. **Primero lo de `comun/`, en un commit aparte** (para que el equipo móvil pueda pasarlo con `cherry-pick`):
+
+```cmd
+git status
+
+:: 1. Solo comun/ (no mezclar con el portal)
+git add comun/src comun/test comun/LEEME.md
+git commit -m "feat(comun): bloqueo de confirmación, roles y cálculos de «Por veredicto»"
+
+:: 2. Portal
+git add portal-web/src
+git commit -m "feat(portal): cálculos, filtros y consultas de «Por veredicto» y uso de comun (Fases 1 y 1B)"
+
+:: 3. Pruebas del portal
+git add portal-web/rules-tests
+git commit -m "test(portal): pruebas de filtros y de las consultas de «Por veredicto»"
+
+:: 4. Plan y evidencia
+git add Evidencia portal-web/plan.md
+git commit -m "docs: plan y evidencia de las Fases 1 y 1B"
+
+git fetch origin
+git pull --rebase origin main-web
+git push origin main-web
+```
+
+`comun/package-lock.json` sigue modificado solo por `npm install`: no hace falta subirlo.
+
+**Listo cuando:** `comun` pasa sus pruebas y sus tipos, el portal usa `comun` y el E2E no tiene fallos nuevos. **Cumplido.**
 
 ---
 
@@ -217,6 +366,20 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** un operador ve solo sus pendientes, filtra y ordena sin esperas, y la lista y el contador se actualizan solos al dar un veredicto.
 
+**Historias de usuario de esta fase**
+
+**I1 · Ver los confirmados sin veredicto.** Como operador, quiero ver solo los reportes de mi operador que la comunidad ya confirmó y que aún no tienen veredicto, para decidir sobre ellos. 1. *Dado* un reporte con `validado` y sin veredicto, no resuelto ni cerrado, *entonces* aparece en la lista. 2. *Dado* un reporte de otro operador, con veredicto o cerrado, *entonces* no aparece. 3. La lista se actualiza sola al dar un veredicto.
+*Estado: Pendiente.*
+
+**I2 · Filtrar y ordenar.** Como operador, quiero filtrar por categoría, comuna, tiempo de espera, texto y foto, y ordenar por antigüedad, votos o fecha, para priorizar. 1. Los filtros se combinan y se limpian con un botón. 2. El orden por defecto es el más antiguo primero. 3. Los filtros quedan en la URL y se restauran al recargar.
+*Estado: Pendiente.*
+
+**I3 · Cuántos hay y cuánto llevan esperando.** Como operador, quiero ver cuántos pendientes hay, la espera mediana y el más antiguo, para saber cuán atrasado voy. 1. El contador coincide con la lista. 2. Los que pasan 48 horas se marcan como demorados.
+*Estado: Pendiente.*
+
+**I4 · Cuánto tardan en tomarse en cuenta.** Como operador, quiero ver el tiempo mediano desde que un reporte se valida hasta que doy el veredicto, para medir mi respuesta. 1. Se calcula como `veredictoAt − validadoAt` en el periodo elegido (por defecto «Este mes»). 2. Se informa cuántos reportes no tienen `validadoAt` y quedan fuera.
+*Estado: Pendiente.*
+
 ---
 
 ## Fase 3 · Tiempos de revisión a cierre
@@ -236,6 +399,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** con datos de prueba conocidos, los valores coinciden con el cálculo a mano y cambiar de periodo no repite lecturas ya hechas.
 
+**Historias de usuario de esta fase**
+
+**I5 · Cuánto tarda la revisión hasta el cierre.** Como operador, quiero ver cuánto tardan los reportes en pasar de «En revisión» a «Cerrado» (y a «Resuelto»), para ver mi tiempo de resolución. 1. Se calcula con el historial de estados. 2. Se informa cuántos reportes no pasaron por «En revisión» y se excluyen.
+*Estado: Pendiente.*
+
 ---
 
 ## Fase 4 · Dar el veredicto desde la sección
@@ -252,6 +420,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué falló, por qué y cómo corregirlo), se registra en la «Lista de defectos» y en el plan de pruebas **antes** de corregirlo.
 
 **Listo cuando:** el flujo completo (ver pendiente → veredicto → desaparece de la lista) funciona sin salir de la sección.
+
+**Historias de usuario de esta fase**
+
+**I6 · Dar el veredicto sin salir de la sección.** Como operador, quiero marcar «real» o «falso» desde la lista, para resolver rápido. 1. «Falso» exige un motivo. 2. Al guardar, el reporte sale de la lista y los indicadores se recalculan.
+*Estado: Pendiente.*
 
 ---
 
@@ -286,6 +459,10 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** el E2E completo termina sin fallos nuevos y el plan de pruebas refleja WV1 a WV10.
 
+**Historias de usuario de esta fase**
+
+Esta fase no agrega historias: verifica las de las fases 1 a 4 (I1 a I6).
+
 ---
 
 ## Fase 6 · Términos y privacidad
@@ -308,6 +485,11 @@ Paridad con la app móvil (historia G3). Una sola copia del texto: `@ciudad-aler
 Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué falló, por qué y cómo corregirlo), se registra en la «Lista de defectos» y en el plan de pruebas **antes** de corregirlo.
 
 **Listo cuando:** una cuenta nueva no se puede crear sin aceptar, y una cuenta antigua acepta una sola vez al entrar.
+
+**Historias de usuario de esta fase**
+
+**J1 · Términos y privacidad.** Como persona que se registra, quiero leer y aceptar los términos y la política de privacidad, para saber qué se hace con mis datos. 1. *Dado* el registro, *entonces* la casilla es obligatoria y se guardan `terminosVersion` y `terminosAceptadosAt`. 2. *Dado* una cuenta sin la versión vigente, *cuando* entra, *entonces* acepta antes de seguir. 3. `/terminos` se abre sin sesión.
+*Estado: Pendiente.*
 
 ---
 
@@ -337,6 +519,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** tras eliminar, el historial de reportes se conserva sin datos personales y la cuenta no puede volver a entrar.
 
+**Historias de usuario de esta fase**
+
+**J2 · Eliminar mi cuenta.** Como vecino, quiero eliminar mi cuenta desde el portal, para que no queden mis datos personales. 1. Pide la contraseña. 2. Los reportes quedan como «Cuenta eliminada» y no se borran. 3. La cuenta no puede volver a entrar.
+*Estado: Pendiente.*
+
 ---
 
 ## Fase 8 · Corregir o retirar un reporte propio
@@ -362,6 +549,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** un vecino corrige o retira su reporte antes de que lo revisen, y los retirados no afectan los tiempos del organismo.
 
+**Historias de usuario de esta fase**
+
+**J3 · Corregir o retirar un reporte propio.** Como vecino, quiero corregir o retirar mi reporte mientras nadie lo revisa. 1. Solo mientras esté «Reportado»; corregir, además, solo sin confirmaciones con peso. 2. Retirar deja el reporte «Cerrado» con una entrada «Quien lo reportó» y no cuenta en los tiempos de resolución.
+*Estado: Pendiente.*
+
 ---
 
 ## Fase 9 · Aviso de emergencia y contacto al organismo
@@ -381,6 +573,14 @@ Paridad con la app (historias G1 y G2). Todo sale de `@ciudad-alerta/comun` → 
 Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué falló, por qué y cómo corregirlo), se registra en la «Lista de defectos» y en el plan de pruebas **antes** de corregirlo.
 
 **Listo cuando:** un vecino puede llamar o escribir al organismo desde su reporte, y el administrador ve el aviso de emergencia al crear uno de riesgo.
+
+**Historias de usuario de esta fase**
+
+**J4 · Aviso de emergencia.** Como administrador que crea un reporte de riesgo, quiero ver los teléfonos de emergencia, para recordar que Ciudad Alerta no atiende emergencias. 1. Aparece solo en las categorías de riesgo, con 133, 132 y 131 como enlaces `tel:`. 2. *Dado* un reporte propio de una categoría de riesgo, *entonces* el detalle que ve el vecino muestra el mismo aviso.
+*Estado: Pendiente.*
+
+**J5 · Contactar al organismo.** Como vecino, quiero llamar o escribir al organismo desde mi reporte. 1. «Llamar» y «Escribir» usan los datos del operador asignado. 2. Sin operador, el detalle lo dice.
+*Estado: Pendiente.*
 
 ---
 
@@ -416,6 +616,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 
 **Listo cuando:** una foto subida en el portal sale difuminada desde el servicio, el portal pesa 19 MB menos y una falla del servicio nunca publica una foto sin proteger.
 
+**Historias de usuario de esta fase**
+
+**J6 · Fotos protegidas en la nube.** Como administrador, quiero que la foto de un reporte se difumine en el servicio de privacidad, para igualar a la app y aliviar el portal. 1. La foto sale con rostros y personas difuminados y `privacidad.aplicada`. 2. Hay avisos de espera, cancelar y reintentar. 3. Nunca se publica una foto sin proteger.
+*Estado: Pendiente.*
+
 ---
 
 ## Fase 11 · Cierre y despliegue
@@ -448,6 +653,11 @@ Ninguno todavía. Si aparece un defecto en esta fase se documenta aquí (qué fa
 | D8 | ¿Dónde va el aviso de emergencia? | **Respondida: opción C**, en los dos lugares (crear reporte desde el panel y detalle del vecino). |
 | D9 | ¿Quién agrega el origen del portal en Render (`ORIGENES`) y confirma la URL? | *Pendiente:* depende del equipo móvil. |
 | D10 | ¿Guardar el vector de la foto (`embedding`) en los reportes del portal? | *Propuesta:* dejarlo para después. |
+| D11 | ¿Los reportes creados desde el panel de administración aparecen como pendientes de veredicto? | **Sí, se muestran.** El portal hoy no les da veredicto, pero ese comportamiento se corregirá después. El operador no crea reportes, así que no se ve afectado. |
+| D12 | Reportes validados sin `validadoAt` (anteriores a ese campo) | **Se muestran** en la lista, se **excluyen** de las medianas de espera y se informa cuántos son. |
+| D13 | Periodo del tiempo hasta el veredicto | **Según la fecha del veredicto** (`veredictoAt`). Lo que se mide es el tiempo de respuesta desde que la comunidad valida un reporte hasta que el organismo encargado lo da como real o falso. |
+| D14 | Topes de lectura | **200** pendientes y **500** reportes con veredicto por periodo; si se superan, se avisa. |
+| D15 | ¿Mover `firestore.rules` y `firestore.indexes.json` a `comun/firebase/`? | **No por ahora.** Firebase no acepta rutas fuera de la carpeta del proyecto en `firebase.json`. Se podría con un `firebase.json` propio en `comun/` y `--config`, pero requiere acuerdo con el equipo móvil. Mientras tanto, copias idénticas y los índices del portal como unión (14). |
 
 Filtros de «Por veredicto» (respondido): categoría y comuna, tiempo de espera, orden, y búsqueda con foto. Periodo por defecto de los indicadores de tiempo: **Este mes**.
 
@@ -460,6 +670,8 @@ Filtros de «Por veredicto» (respondido): categoría y comuna, tiempo de espera
 - Umbral de «demorado» editable por un administrador (requiere un documento de ajustes y reglas coordinadas con la app móvil).
 - **Cuenta de organismo en el portal:** descartada. Solo lee, y la app móvil ya la atiende; el portal solo muestra el mensaje de la tarea 0.4.
 - Guardar el vector de la foto (tarea 10.6).
+- **Reglas e índices compartidos por `comun`** (ver D15): `firebase.json` propio en `comun/firebase/` usado con `--config`, a coordinar con el equipo móvil (su Docker, sus scripts de diagnóstico y `firebase.json` leen el archivo desde la raíz de la app).
+- **Pasar a `comun` al empezar su fase** (hoy están en la app móvil): `tieneVotosConPeso` y los predicados de corregir o retirar (Fases 7 y 8), `contactoDeOperador` (Fase 9) y `PARAMETROS_PRIVACIDAD` con la validación de la respuesta del servicio (Fase 10).
 - **Mensaje claro cuando se rechaza un veredicto (mejora pendiente, no es un defecto).** Las reglas solo permiten dar veredicto, y por tanto confirmar, a reportes cuyo autor es una cuenta de **ciudadano**: un reporte creado con una cuenta de administrador u operador no admite veredicto. El portal no puede saberlo de antemano (no puede leer el perfil de otras cuentas) y hoy responde con el mensaje genérico «No tienes permiso para dar un veredicto a este reporte». La mejora sería un mensaje que lo explique («El autor del reporte no es un ciudadano, o el operador asignado está inactivo») en `confianza/veredicto.ts` (`mensajeDeErrorVeredicto`). Confirmado por el equipo el 2026-10-29; queda anotada solo como mejora.
 
 ---
@@ -503,6 +715,8 @@ Fuente: `sistema_confianza.md` §10 y la trazabilidad de la app (`ciudad-alerta-
 | F12 | Tiempo de resolución | CP-EST-14 a 19 |
 
 ## Parte 2 · Historias de lo último implementado
+
+Las épicas **G** (app móvil) y **H** (portal ya hecho) quedan aquí. Las épicas **I** y **J** son del trabajo de este plan y sus textos están al final de cada fase.
 
 ### Épica G · App móvil 1.0 a 1.2 (ya implementada)
 
@@ -599,7 +813,9 @@ Fuente: `sistema_confianza.md` §10 y la trazabilidad de la app (`ciudad-alerta-
 
 **H9 · Suite de pruebas de punta a punta.** Como equipo, queremos pruebas automáticas del portal, para detectar fallos antes de entregar. 1. 93 pruebas con Playwright contra los emuladores de Auth y Firestore, con evidencia en `Evidencia/e2e`. 2. Los fallos reales quedan registrados como defectos (DEF-001 y DEF-002) sin corregir el código hasta indicarlo.
 
-### Épica I · Sección «Por veredicto» (pendiente)
+### Épica I · Sección «Por veredicto»
+
+El texto y los criterios de cada historia están **al final de la fase** indicada en la columna «Fase».
 
 | ID | Historia | Plataforma | Prioridad | Fase | Estado |
 |---|---|---|---|---|---|
@@ -611,21 +827,9 @@ Fuente: `sistema_confianza.md` §10 y la trazabilidad de la app (`ciudad-alerta-
 | I6 | Dar el veredicto sin salir de la sección | W | M | 4 | Pendiente |
 | I7 | Mensaje de seguridad para cuentas de organismo | W | S | 0 | Hecho (WX2) |
 
-**I1 · Ver los confirmados sin veredicto.** Como operador, quiero ver solo los reportes de mi operador que la comunidad ya confirmó y que aún no tienen veredicto, para decidir sobre ellos. 1. *Dado* un reporte con `validado` y sin veredicto, no resuelto ni cerrado, *entonces* aparece en la lista. 2. *Dado* un reporte de otro operador, con veredicto o cerrado, *entonces* no aparece. 3. La lista se actualiza sola al dar un veredicto.
+### Épica J · Paridad con la app (fases 6 a 10)
 
-**I2 · Filtrar y ordenar.** Como operador, quiero filtrar por categoría, comuna, tiempo de espera, texto y foto, y ordenar por antigüedad, votos o fecha, para priorizar. 1. Los filtros se combinan y se limpian con un botón. 2. El orden por defecto es el más antiguo primero. 3. Los filtros quedan en la URL y se restauran al recargar.
-
-**I3 · Cuántos hay y cuánto llevan esperando.** Como operador, quiero ver cuántos pendientes hay, la espera mediana y el más antiguo, para saber cuán atrasado voy. 1. El contador coincide con la lista. 2. Los que pasan 48 horas se marcan como demorados.
-
-**I4 · Cuánto tardan en tomarse en cuenta.** Como operador, quiero ver el tiempo mediano desde que un reporte se valida hasta que doy el veredicto, para medir mi respuesta. 1. Se calcula como `veredictoAt − validadoAt` en el periodo elegido (por defecto «Este mes»). 2. Se informa cuántos reportes no tienen `validadoAt` y quedan fuera.
-
-**I5 · Cuánto tarda la revisión hasta el cierre.** Como operador, quiero ver cuánto tardan los reportes en pasar de «En revisión» a «Cerrado» (y a «Resuelto»), para ver mi tiempo de resolución. 1. Se calcula con el historial de estados. 2. Se informa cuántos reportes no pasaron por «En revisión» y se excluyen.
-
-**I6 · Dar el veredicto sin salir de la sección.** Como operador, quiero marcar «real» o «falso» desde la lista, para resolver rápido. 1. «Falso» exige un motivo. 2. Al guardar, el reporte sale de la lista y los indicadores se recalculan.
-
-**I7 · Mensaje de seguridad para organismo.** Como equipo, quiero que una cuenta de organismo que entre al portal vea un mensaje claro, para que no se encuentre con errores de permiso. 1. Ve «Esta cuenta se usa desde la app móvil» y puede cerrar sesión. 2. No se ejecuta ninguna consulta de reportes.
-
-### Épica J · Paridad con la app (pendiente, fases 6 a 10)
+El texto y los criterios de cada historia están **al final de la fase** indicada en la columna «Fase».
 
 | ID | Historia | Plataforma | Prioridad | Fase | Estado |
 |---|---|---|---|---|---|
@@ -636,14 +840,3 @@ Fuente: `sistema_confianza.md` §10 y la trazabilidad de la app (`ciudad-alerta-
 | J5 | Contactar al organismo desde mi reporte | W | S | 9 | Pendiente |
 | J6 | Fotos protegidas en la nube | W | S | 10 | Pendiente |
 
-**J1 · Términos y privacidad.** Como persona que se registra, quiero leer y aceptar los términos y la política de privacidad, para saber qué se hace con mis datos. 1. *Dado* el registro, *entonces* la casilla es obligatoria y se guardan `terminosVersion` y `terminosAceptadosAt`. 2. *Dado* una cuenta sin la versión vigente, *cuando* entra, *entonces* acepta antes de seguir. 3. `/terminos` se abre sin sesión.
-
-**J2 · Eliminar mi cuenta.** Como vecino, quiero eliminar mi cuenta desde el portal, para que no queden mis datos personales. 1. Pide la contraseña. 2. Los reportes quedan como «Cuenta eliminada» y no se borran. 3. La cuenta no puede volver a entrar.
-
-**J3 · Corregir o retirar un reporte propio.** Como vecino, quiero corregir o retirar mi reporte mientras nadie lo revisa. 1. Solo mientras esté «Reportado»; corregir, además, solo sin confirmaciones con peso. 2. Retirar deja el reporte «Cerrado» con una entrada «Quien lo reportó» y no cuenta en los tiempos de resolución.
-
-**J4 · Aviso de emergencia.** Como administrador que crea un reporte de riesgo, quiero ver los teléfonos de emergencia, para recordar que Ciudad Alerta no atiende emergencias. 1. Aparece solo en las categorías de riesgo, con 133, 132 y 131 como enlaces `tel:`. 2. *Dado* un reporte propio de una categoría de riesgo, *entonces* el detalle que ve el vecino muestra el mismo aviso.
-
-**J5 · Contactar al organismo.** Como vecino, quiero llamar o escribir al organismo desde mi reporte. 1. «Llamar» y «Escribir» usan los datos del operador asignado. 2. Sin operador, el detalle lo dice.
-
-**J6 · Fotos protegidas en la nube.** Como administrador, quiero que la foto de un reporte se difumine en el servicio de privacidad, para igualar a la app y aliviar el portal. 1. La foto sale con rostros y personas difuminados y `privacidad.aplicada`. 2. Hay avisos de espera, cancelar y reintentar. 3. Nunca se publica una foto sin proteger.

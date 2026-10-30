@@ -1,0 +1,60 @@
+ ✓ rules-tests/veredictos-consultas.test.ts > consulta de pendientes de veredicto > el operador recibe solo los validados sin veredicto de su operador 502ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consulta de pendientes de veredicto > otro operador recibe solo los suyos 74ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consulta de pendientes de veredicto > un administrador también puede ejecutarla 62ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consulta de pendientes de veredicto > una cuenta de organismo no puede ejecutarla (las reglas solo le dejan ver lo validado de su organismo) 60ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consultas de reportes con veredicto > juntas devuelven los reportes con veredicto real o falso del operador 59ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consultas de reportes con veredicto > no incluyen los de otro operador 64ms
+ ✓ rules-tests/veredictos-consultas.test.ts > consultas de reportes con veredicto > una cuenta de organismo no puede ejecutarlas 41ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > un reporte validado, sin veredicto y en curso está pendiente 2ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > no si la comunidad aún no lo valida 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > no si ya tiene veredicto, real o falso 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > no si está «resuelto» (también un reporte retirado por su autor) 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > no si está «cerrado» (también un reporte retirado por su autor) 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > sí si está «reportado» 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > sí si está «en_revision» 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > sí si está «derivado» 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > sí si está «en_proceso» 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > un reporte creado desde el panel de administración también aparece (decisión D11) 0ms
+ ✓ rules-tests/veredictos.test.ts > esPendienteDeVeredicto (I1) > un reporte validado antes de existir validadoAt también aparece (decisión D12) 0ms
+ ✓ rules-tests/veredictos.test.ts > esperaActual y estaDemorado (I2) > es el tiempo desde que se validó 0ms
+ ✓ rules-tests/veredictos.test.ts > esperaActual y estaDemorado (I2) > sin fecha de validación no hay espera que calcular 0ms
+ ✓ rules-tests/veredictos.test.ts > esperaActual y estaDemorado (I2) > un reloj adelantado (validado «en el futuro») no da una espera negativa 0ms
+ ✓ rules-tests/veredictos.test.ts > esperaActual y estaDemorado (I2) > se marca demorado desde las 48 horas 0ms
+ ✓ rules-tests/veredictos.test.ts > esperaActual y estaDemorado (I2) > sin fecha de validación no se puede marcar demorado 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoHastaVeredicto (tiempo en ser tomado en cuenta) > es la diferencia entre el veredicto y la validación 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoHastaVeredicto (tiempo en ser tomado en cuenta) > sin veredicto no hay tiempo 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoHastaVeredicto (tiempo en ser tomado en cuenta) > sin fecha de validación o de veredicto queda fuera 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoHastaVeredicto (tiempo en ser tomado en cuenta) > un veredicto «anterior» a la validación (reloj desfasado) da 0, no un valor negativo 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > mide desde «En revisión» hasta «Cerrado» y hasta «Resuelto» 1ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > funciona con el historial en desorden 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > un reporte que no pasó por «En revisión» queda fuera 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > si aún no se cierra, no hay tiempo de cierre 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > un cierre anterior a la revisión no cuenta 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > ignora los cambios sin fecha 0ms
+ ✓ rules-tests/veredictos.test.ts > tiempoRevisionACierre > sin historial no hay nada que medir 0ms
+ ✓ rules-tests/veredictos.test.ts > resumenDeTiempos > sin valores no hay mediana ni promedio 0ms
+ ✓ rules-tests/veredictos.test.ts > resumenDeTiempos > calcula con los valores y cuenta los que quedan fuera 0ms
+ ✓ rules-tests/veredictos.test.ts > resumenDeTiempos > con todos los valores nulos, todos quedan fuera 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > sin filtros devuelve todos 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > por categoría 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > por comuna 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > por tiempo de espera, sin contar los que no tienen fecha de validación 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > por texto, sin distinguir mayúsculas ni tildes 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > con o sin foto 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > los filtros se combinan 0ms
+ ✓ rules-tests/veredictos.test.ts > filtrarPendientes > no modifica la lista original 0ms
+ ✓ rules-tests/veredictos.test.ts > ordenarPendientes > más antiguos primero (los que esperan hace más), y al final los sin fecha 0ms
+ ✓ rules-tests/veredictos.test.ts > ordenarPendientes > más votos primero: por puntos y, si empatan, por votos 0ms
+ ✓ rules-tests/veredictos.test.ts > ordenarPendientes > más recientes primero, y al final los sin fecha 0ms
+ ✓ rules-tests/veredictos.test.ts > ordenarPendientes > no modifica la lista original 0ms
+ ✓ rules-tests/veredictos.test.ts > filtros en la URL > sin parámetros da los filtros vacíos 1ms
+ ✓ rules-tests/veredictos.test.ts > filtros en la URL > ida y vuelta 1ms
+ ✓ rules-tests/veredictos.test.ts > filtros en la URL > no escribe los valores por defecto 1ms
+ ✓ rules-tests/veredictos.test.ts > filtros en la URL > ignora valores que no existen 1ms
+ ✓ rules-tests/veredictos.test.ts > filtros en la URL > hayFiltrosActivos ignora el orden 0ms
+ ✓ rules-tests/veredictos.test.ts > veredictoEnRango (el periodo se mide por la fecha del veredicto) > entra si el veredicto cae dentro del periodo, aunque el reporte sea mucho más antiguo 0ms
+ ✓ rules-tests/veredictos.test.ts > veredictoEnRango (el periodo se mide por la fecha del veredicto) > no entra si el veredicto cae antes o después del periodo 0ms
+ ✓ rules-tests/veredictos.test.ts > veredictoEnRango (el periodo se mide por la fecha del veredicto) > sin límites (periodo «Todo») entran todos los que tienen veredicto 0ms
+ ✓ rules-tests/veredictos.test.ts > veredictoEnRango (el periodo se mide por la fecha del veredicto) > sin fecha de veredicto no entra a un periodo con límites 0ms
+ Test Files  2 passed (2)
+      Tests  58 passed (58)
