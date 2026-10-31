@@ -32,6 +32,7 @@ const AdminSoporte = lazy(() => import('./pages/Admin/AdminSoporte'))
 const OperadorMapa = lazy(() => import('./pages/Operador/OperadorMapa'))
 const OperadorReportes = lazy(() => import('./pages/Operador/OperadorReportes'))
 const OperadorEstadisticas = lazy(() => import('./pages/Operador/OperadorEstadisticas'))
+const OperadorVeredictos = lazy(() => import('./pages/Operador/OperadorVeredictos'))
 
 function Rutas() {
   const { pathname } = useLocation()
@@ -69,6 +70,7 @@ function Rutas() {
           </Route>
           <Route path="/operador" element={<OperadorMapa />} />
           <Route path="/operador/reportes" element={<OperadorReportes />} />
+          <Route path="/operador/veredictos" element={<OperadorVeredictos />} />
           <Route path="/operador/estadisticas" element={<OperadorEstadisticas />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

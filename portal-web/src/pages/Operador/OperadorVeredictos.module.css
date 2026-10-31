@@ -1,0 +1,163 @@
+/* «Por veredicto»: indicadores, filtros y lista de reportes que esperan veredicto. */
+
+/* Al recalcular un indicador se mantiene lo anterior, atenuado: sin saltos ni parpadeos. */
+.recalculando {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.periodo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.periodoEtiqueta {
+  font-size: 0.78rem;
+  color: var(--ca-muted);
+}
+
+.notaTiempos {
+  margin: -8px 0 0;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
+.resumen {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ca-muted);
+}
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 24px;
+  background: var(--ca-surface);
+  border: 1px dashed var(--ca-line);
+  border-radius: 12px;
+  color: var(--ca-muted);
+}
+
+.vacio p {
+  margin: 0;
+}
+
+/* ---- Lista ---- */
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+}
+
+.item {
+  min-width: 0;
+}
+
+.tarjeta {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  height: 100%;
+  padding: 14px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+/* Los que llevan mucho esperando se distinguen con un borde, además de la etiqueta. */
+.tarjetaDemorada {
+  border-color: var(--ca-danger);
+}
+
+.foto {
+  width: 112px;
+  align-self: start;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+.categoria {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ca-ink);
+}
+
+.comuna {
+  font-size: 0.85rem;
+  color: var(--ca-muted);
+}
+
+.demorado {
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ca-danger);
+  border: 1px solid var(--ca-danger);
+  border-radius: 999px;
+}
+
+.descripcion {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--ca-ink);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.espera {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.apoyo {
+  font-weight: 400;
+  color: var(--ca-muted);
+}
+
+.acciones {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 480px) {
+  .tarjeta {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .foto {
+    width: 88px;
+  }
+}

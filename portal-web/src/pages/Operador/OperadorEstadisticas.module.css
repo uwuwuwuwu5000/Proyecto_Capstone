@@ -235,12 +235,15 @@
 @media (max-width: 860px) {
   .dosColumnas,
   .dosColumnasAncha {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr): con «1fr» suelto la columna no baja del ancho de la tabla y arrastra la página. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
 .tablaScroll {
   overflow-x: auto;
+  /* El texto «solo lector» de las celdas es absoluto: sin esto escapa del recuadro y ensancha toda la página. */
+  position: relative;
 }
 
 .tabla {
