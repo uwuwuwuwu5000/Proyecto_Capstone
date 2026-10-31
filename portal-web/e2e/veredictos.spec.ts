@@ -46,6 +46,34 @@ test.beforeAll(async () => {
   ])
 })
 
+// Cerrados del operador B con su historial (cuarta tarjeta: de «En revisión» hasta «Cerrado»).
+test.beforeAll(async () => {
+  const HORAS_POR_DIA = 24
+  const crear = async (id: string, descripcion: string, cierreHaceHoras: number, pasos: Array<[string, number]>) => {
+    // pasos: [estado al que pasa, horas antes de ahora]; el último es el cierre.
+    await bd.doc(`reports/${id}`).set(
+      reporte({ id, descripcion, comuna: CERRILLOS, estado: 'cerrado', validacion: val(null, { validado: false, puntos: 0, votos: 0 }), extra: { updatedAt: hace(cierreHaceHoras) } }),
+    )
+    let desde = 'reportado'
+    for (const [i, [hacia, horas]] of pasos.entries()) {
+      await bd.doc(`reports/${id}/statusHistory/h${i + 1}`).set({
+        reportId: id, desde, hacia, comentario: '', autorNombre: 'Municipalidad de Cerrillos', autorRol: 'operador', createdAt: hace(horas),
+      })
+      desde = hacia
+    }
+  }
+  await Promise.all([
+    // 12 h desde «En revisión» hasta «Cerrado».
+    crear('cb_1', 'E2E cerrado en 12 horas', 18, [['en_revision', 30], ['derivado', 28], ['cerrado', 18]]),
+    // 24 h hasta «Cerrado» y 18 h hasta «Resuelto».
+    crear('cb_2', 'E2E cerrado en 24 horas', 2, [['en_revision', 26], ['resuelto', 8], ['cerrado', 2]]),
+    // No pasó por «En revisión»: no se puede medir.
+    crear('cb_3', 'E2E cerrado sin revisión', 5, [['derivado', 10], ['cerrado', 5]]),
+    // Cerrado hace 200 días, 72 h después de «En revisión»: solo entra en el periodo «Todo».
+    crear('cb_4', 'E2E cerrado hace mucho', 200 * HORAS_POR_DIA, [['en_revision', 203 * HORAS_POR_DIA], ['cerrado', 200 * HORAS_POR_DIA]]),
+  ])
+})
+
 const tarjetas = (page: Page) => page.getByRole('article')
 const tarjeta = (page: Page, texto: string) => tarjetas(page).filter({ hasText: texto })
 const filtro = (page: Page, nombre: string) => page.getByRole('combobox', { name: nombre })
@@ -201,6 +229,32 @@ test('WV5 · El tiempo hasta el veredicto se mide desde que la comunidad validó
   // aquí basta comprobar que el selector existe, que parte en «Este mes» y que «Todo» no quita ninguno.
   await expect(indicador(page, 'Tiempo hasta el veredicto')).not.toContainText('2 reportes')
   await page.context().close()
+})
+
+test('WV6 · La revisión hasta el cierre se mide desde «En revisión» y se informa de los que no pasaron por ella', async ({ browser }) => {
+  const page = await paginaDe(browser, 'operadorB')
+  await abrir(page, '/operador/veredictos', 1)
+  const revision = indicador(page, 'Revisión hasta el cierre')
+
+  // Todo el historial: 12 h, 24 h y 72 h. Mediana 1 día y promedio 1,5 días; 18 h hasta resolver; uno sin «En revisión».
+  await filtro(page, 'Periodo de los tiempos').selectOption({ label: 'Todo' })
+  await expect(revision).toContainText('1 día')
+  await expect(revision).toContainText('Promedio 1,5 días · 3 reportes')
+  await expect(revision).toContainText('1 sin «En revisión»')
+  await expect(revision).toContainText('Hasta resolver: mediana 18 h')
+
+  // Últimos 6 meses: el cerrado hace 200 días queda fuera (se mide por la fecha del cierre). Mediana y promedio de 12 h y 24 h: 18 h.
+  await filtro(page, 'Periodo de los tiempos').selectOption({ label: 'Últimos 6 meses' })
+  await expect(revision).toContainText('Promedio 18 h · 2 reportes')
+  await expect(revision).toContainText('1 sin «En revisión»')
+  await page.context().close()
+
+  // Un operador sin cerrados con historial no tiene nada que medir.
+  const sin = await paginaDe(browser, 'operadorA')
+  await abrir(sin)
+  await filtro(sin, 'Periodo de los tiempos').selectOption({ label: 'Todo' })
+  await expect(indicador(sin, 'Revisión hasta el cierre')).toContainText('Aún no hay reportes cerrados con revisión')
+  await sin.context().close()
 })
 
 test('WV7 · Un operador no ve los pendientes de otro', async ({ browser }) => {

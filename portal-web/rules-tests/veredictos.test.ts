@@ -7,12 +7,16 @@ import {
   filtrarPendientes,
   filtrosAUrl,
   filtrosDeUrl,
+  MAXIMO_HISTORIALES_REVISION,
+  candidatosDeRevision,
   hayFiltrosActivos,
   ordenarPendientes,
+  revisionACierreDelPeriodo,
 } from '../src/pages/Operador/veredictos'
 import { VALIDACION_VACIA } from '../src/confianza/tipos'
 import type { Validacion } from '../src/confianza/tipos'
 import type { Reporte } from '../src/components/Reportes/reporte'
+import type { CambioEstado } from '../src/components/Reportes/historial'
 
 const HORA = 3_600_000
 const AHORA = new Date('2026-10-30T12:00:00Z').getTime()
@@ -114,3 +118,83 @@ describe('filtros en la URL', () => {
   })
 })
 
+
+// ---- Revisión a cierre (cuarta tarjeta) ----
+
+const cambioDe = (hacia: string, fecha: Date | null): CambioEstado =>
+  ({ id: `${hacia}-${fecha?.getTime()}`, desde: '', hacia, comentario: '', fecha, autorNombre: null, autorRol: null })
+
+const cerrado = (id: string, actualizadoHace: number | null): Reporte =>
+  reporte({ id, estado: 'cerrado', actualizadoAt: actualizadoHace === null ? null : hace(actualizadoHace) })
+
+describe('candidatosDeRevision (qué cerrados se leen para medir la revisión a cierre)', () => {
+  const sinLimite = { inicio: null, fin: null }
+
+  it('deja fuera los cerrados que se actualizaron antes del periodo', () => {
+    const lista = [cerrado('viejo', 500), cerrado('reciente', 5), cerrado('medio', 100)]
+    const r = candidatosDeRevision(lista, { inicio: hace(200), fin: null })
+    expect(r.candidatos.map((x) => x.id)).toEqual(['reciente', 'medio'])
+    expect(r.hayMas).toBe(false)
+  })
+  it('sin periodo (Todo) entran todos, de los más recientes a los más antiguos', () => {
+    const lista = [cerrado('a', 300), cerrado('b', 10), cerrado('c', 100)]
+    expect(candidatosDeRevision(lista, sinLimite).candidatos.map((x) => x.id)).toEqual(['b', 'c', 'a'])
+  })
+  it('un cerrado sin fecha de actualización no se descarta, queda al final', () => {
+    const lista = [cerrado('sin', null), cerrado('con', 10)]
+    expect(candidatosDeRevision(lista, { inicio: hace(200), fin: null }).candidatos.map((x) => x.id)).toEqual(['con', 'sin'])
+  })
+  it('lee como máximo los más recientes y avisa que hay más', () => {
+    const lista = Array.from({ length: MAXIMO_HISTORIALES_REVISION + 20 }, (_, i) => cerrado(`r${i}`, i + 1))
+    const r = candidatosDeRevision(lista, sinLimite)
+    expect(r.candidatos).toHaveLength(MAXIMO_HISTORIALES_REVISION)
+    expect(r.candidatos[0].id).toBe('r0')
+    expect(r.hayMas).toBe(true)
+  })
+  it('un tope más pequeño se puede pedir', () => {
+    const r = candidatosDeRevision([cerrado('a', 1), cerrado('b', 2), cerrado('c', 3)], sinLimite, 2)
+    expect(r.candidatos.map((x) => x.id)).toEqual(['a', 'b'])
+    expect(r.hayMas).toBe(true)
+  })
+})
+
+describe('revisionACierreDelPeriodo', () => {
+  const t0 = new Date('2026-10-20T10:00:00Z')
+  const en = (horas: number) => new Date(t0.getTime() + horas * HORA)
+  const reportes = ['r1', 'r2', 'r3', 'r4'].map((id) => cerrado(id, 1))
+  // r1: revisión → cerrado en 12 h. r2: revisión → resuelto 18 h → cerrado 24 h. r3: sin revisión. r4: cerrado fuera del periodo.
+  const historiales = new Map<string, CambioEstado[]>([
+    ['r1', [cambioDe('en_revision', t0), cambioDe('cerrado', en(12))]],
+    ['r2', [cambioDe('en_revision', en(1)), cambioDe('resuelto', en(19)), cambioDe('cerrado', en(25))]],
+    ['r3', [cambioDe('derivado', t0), cambioDe('cerrado', en(3))]],
+    ['r4', [cambioDe('en_revision', new Date('2026-01-01T00:00:00Z')), cambioDe('cerrado', new Date('2026-01-04T00:00:00Z'))]],
+  ])
+
+  it('con todo el periodo: mediana y promedio, los que no pasaron por revisión se informan aparte', () => {
+    const r = revisionACierreDelPeriodo(historiales, reportes, { inicio: null, fin: null })
+    expect(r.enPeriodo).toBe(4)
+    expect(r.sinRevision).toBe(1)
+    expect(r.cierre).toEqual({ cantidad: 3, excluidos: 0, mediana: 24 * HORA, promedio: 36 * HORA })
+    expect(r.resuelto).toEqual({ cantidad: 1, excluidos: 0, mediana: 18 * HORA, promedio: 18 * HORA })
+  })
+  it('el periodo se mide por la fecha del cierre, no por la de creación', () => {
+    const r = revisionACierreDelPeriodo(historiales, reportes, { inicio: new Date('2026-10-01T00:00:00Z'), fin: null })
+    expect(r.enPeriodo).toBe(3)
+    expect(r.cierre).toEqual({ cantidad: 2, excluidos: 0, mediana: 18 * HORA, promedio: 18 * HORA })
+  })
+  it('un reporte cuyo historial aún no se leyó no cuenta', () => {
+    const r = revisionACierreDelPeriodo(new Map([['r1', historiales.get('r1')!]]), reportes, { inicio: null, fin: null })
+    expect(r.enPeriodo).toBe(1)
+    expect(r.cierre.cantidad).toBe(1)
+  })
+  it('un cerrado sin entrada de cierre en el historial se excluye', () => {
+    const r = revisionACierreDelPeriodo(new Map([['r1', [cambioDe('en_revision', t0)]]]), [reportes[0]], { inicio: null, fin: null })
+    expect(r.enPeriodo).toBe(0)
+    expect(r.sinRevision).toBe(0)
+    expect(r.cierre.cantidad).toBe(0)
+  })
+  it('sin reportes no hay nada que medir', () => {
+    const r = revisionACierreDelPeriodo(new Map(), [], { inicio: null, fin: null })
+    expect(r).toMatchObject({ enPeriodo: 0, sinRevision: 0, cierre: { cantidad: 0, mediana: null } })
+  })
+})
