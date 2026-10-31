@@ -18,6 +18,9 @@ datos_prueba/
 # (portal-web/README.md no se ignora: es del proyecto)
 /*.md
 
+# Plan de implementación del portal (documento de trabajo, solo local)
+portal-web/plan.md
+
 # Plan de pruebas (Excel original, copia revisada y archivos temporales que Excel crea al abrirlos)
 Plan_de_Pruebas_*
 ~$Plan_de_Pruebas_*
