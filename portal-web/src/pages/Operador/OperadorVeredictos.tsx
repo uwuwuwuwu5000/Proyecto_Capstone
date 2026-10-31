@@ -22,10 +22,12 @@ import {
   ordenarPendientes,
   resumenDeTiempos,
   tiempoHastaVeredicto,
+  MAXIMO_HISTORIALES_REVISION,
   UMBRAL_DEMORADO_HORAS,
 } from './veredictos'
 import type { FiltrosPendientes } from './veredictos'
 import { MAXIMO_CON_VEREDICTO, useReportesConVeredicto, useReportesPorVeredicto } from './useReportesPorVeredicto'
+import { useRevisionACierre } from './useRevisionACierre'
 import comun from '../../components/Reportes/Reportes.module.css'
 import estadisticas from './OperadorEstadisticas.module.css'
 import styles from './OperadorVeredictos.module.css'
@@ -56,6 +58,7 @@ export default function OperadorVeredictos() {
   const pendientes = useReportesPorVeredicto(idOperador)
   const rango = useMemo(() => rangoDePeriodo(periodo, '', ''), [periodo])
   const conVeredicto = useReportesConVeredicto(idOperador, rango)
+  const revision = useRevisionACierre(idOperador, rango)
 
   // `ahora` se fija al cargar la lista: las esperas no «corren» con cada tecla.
   const ahora = useMemo(() => Date.now(), [pendientes.reportes])
@@ -98,6 +101,16 @@ export default function OperadorVeredictos() {
         </div>
 
         {/* Indicadores */}
+        <label className={styles.periodo}>
+          <span className={styles.periodoEtiqueta}>Periodo de los tiempos</span>
+          <select className={comun.entrada} value={periodo} onChange={(e) => setPeriodo(e.target.value as Periodo)}>
+            {PERIODOS_FIJOS.map(({ clave, etiqueta: texto }) => (
+              <option key={clave} value={clave}>
+                {texto}
+              </option>
+            ))}
+          </select>
+        </label>
         <section className={estadisticas.kpis} aria-label="Indicadores">
           <div className={estadisticas.kpi} role="group" aria-label="Confirmados sin veredicto">
             <span className={estadisticas.kpiEtiqueta}>Confirmados sin veredicto</span>
@@ -139,26 +152,34 @@ export default function OperadorVeredictos() {
               {tiempos.excluidos > 0 && ` · ${tiempos.excluidos} sin fechas`}
               {conVeredicto.hayMas && ' · hay más antiguos sin contar'}
             </span>
-            <label className={styles.periodo}>
-              <span className={styles.periodoEtiqueta}>Periodo de los tiempos</span>
-              <select
-                className={comun.entrada}
-                value={periodo}
-                onChange={(e) => setPeriodo(e.target.value as Periodo)}
-              >
-                {PERIODOS_FIJOS.map(({ clave, etiqueta: texto }) => (
-                  <option key={clave} value={clave}>
-                    {texto}
-                  </option>
-                ))}
-              </select>
-            </label>
+          </div>
+
+          <div
+            className={`${estadisticas.kpi} ${revision.cargando ? styles.recalculando : ''}`}
+            role="group"
+            aria-label="Revisión hasta el cierre"
+            aria-busy={revision.cargando}
+          >
+            <span className={estadisticas.kpiEtiqueta}>Revisión hasta el cierre</span>
+            <span className={estadisticas.kpiValor}>
+              {revision.cargando && revision.cierre.cantidad === 0 ? '…' : revision.cierre.mediana !== null ? formatearDuracion(revision.cierre.mediana) : '—'}
+            </span>
+            <span className={estadisticas.kpiNota}>
+              {revision.cierre.promedio !== null
+                ? `Promedio ${formatearDuracion(revision.cierre.promedio)} · ${plural(revision.cierre.cantidad, 'reporte', 'reportes')}`
+                : 'Aún no hay reportes cerrados con revisión'}
+              {revision.sinRevision > 0 && ` · ${revision.sinRevision} sin «En revisión»`}
+              {revision.resuelto.mediana !== null && ` · Hasta resolver: mediana ${formatearDuracion(revision.resuelto.mediana)}`}
+              {revision.hayMas && ` · se midieron los ${MAXIMO_HISTORIALES_REVISION} cerrados más recientes del periodo`}
+            </span>
           </div>
         </section>
         {conVeredicto.error && <p className={comun.errorTexto}>{conVeredicto.error}</p>}
+        {revision.error && <p className={comun.errorTexto}>{revision.error}</p>}
         <p className={styles.notaTiempos}>
-          El tiempo se mide desde que la comunidad confirma el reporte hasta que se da el veredicto, según la fecha del veredicto
-          (hasta {MAXIMO_CON_VEREDICTO} reportes por resultado).
+          El tiempo hasta el veredicto se mide desde que la comunidad confirma el reporte, según la fecha del veredicto
+          (hasta {MAXIMO_CON_VEREDICTO} reportes por resultado). La revisión hasta el cierre, desde que el reporte pasa a
+          «En revisión» hasta que se cierra, según la fecha del cierre.
         </p>
 
         {/* Filtros */}
