@@ -85,6 +85,14 @@ export function veredictoEnRango(reporte: ReporteConValidacion, { inicio, fin }:
   return (!inicio || veredictoAt >= inicio) && (!fin || veredictoAt <= fin);
 }
 
+/** La fecha en que el reporte pasó por primera vez a `estado`; null si nunca pasó o el cambio no tiene fecha. */
+export function fechaDeEstado(cambios: readonly CambioConFecha[], estado: string): Date | null {
+  const fechas = cambios
+    .filter((c): c is CambioConFecha & { fecha: Date } => c.hacia === estado && c.fecha !== null)
+    .map((c) => c.fecha);
+  return fechas.length ? new Date(Math.min(...fechas.map((f) => f.getTime()))) : null;
+}
+
 export interface TiempoRevisionACierre {
   /** El reporte tiene una entrada «En revisión» con fecha; si no, no se puede medir. */
   pasoPorRevision: boolean;

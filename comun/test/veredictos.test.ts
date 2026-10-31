@@ -5,6 +5,7 @@ import {
   esPendienteDeVeredicto,
   esperaActual,
   estaDemorado,
+  fechaDeEstado,
   resumenDeTiempos,
   tiempoHastaVeredicto,
   tiempoRevisionACierre,
@@ -159,5 +160,26 @@ describe('veredictoEnRango (el periodo se mide por la fecha del veredicto)', () 
   });
   it('sin fecha de veredicto no entra a un periodo con límites', () => {
     expect(veredictoEnRango(conVeredicto(null), rango)).toBe(false);
+  });
+});
+
+describe('fechaDeEstado (cuándo pasó el reporte a un estado)', () => {
+  const t0 = new Date('2026-10-20T10:00:00Z');
+  const en = (horas: number) => new Date(t0.getTime() + horas * HORA);
+
+  it('devuelve la primera vez que pasó al estado', () => {
+    const cambios = [cambio('en_revision', t0), cambio('cerrado', en(30)), cambio('cerrado', en(50))];
+    expect(fechaDeEstado(cambios, 'cerrado')).toEqual(en(30));
+  });
+  it('funciona con el historial en desorden', () => {
+    expect(fechaDeEstado([cambio('cerrado', en(30)), cambio('en_revision', t0)], 'en_revision')).toEqual(t0);
+  });
+  it('null si nunca pasó por ese estado', () => {
+    expect(fechaDeEstado([cambio('en_revision', t0)], 'cerrado')).toBeNull();
+    expect(fechaDeEstado([], 'cerrado')).toBeNull();
+  });
+  it('ignora los cambios sin fecha', () => {
+    expect(fechaDeEstado([cambio('cerrado', null)], 'cerrado')).toBeNull();
+    expect(fechaDeEstado([cambio('cerrado', null), cambio('cerrado', en(5))], 'cerrado')).toEqual(en(5));
   });
 });
