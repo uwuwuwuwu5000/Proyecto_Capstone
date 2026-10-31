@@ -99,10 +99,10 @@ test.describe('Panel del operador A', () => {
     expect(historial.docs[0].data()).toMatchObject({ autorNombre: 'Municipalidad de Maipú', autorRol: 'operador', hacia: 'en_revision' })
   })
 
-  test('WG12 · «Por verificar» desde la pestaña del operador', async ({ page }) => {
-    await page.goto('/operador')
-    await page.getByRole('navigation', { name: 'Panel de operador' }).getByRole('link', { name: 'Por verificar' }).click()
-    await expect(page).toHaveURL(/verificacion=por_verificar/)
+  // La pestaña «Por verificar» fue reemplazada por «Por veredicto»: su prueba (WG12) está en e2e/veredictos.spec.ts.
+  // El filtro «Por verificar» sigue disponible dentro de «Reportes».
+  test('WG12 · El filtro «Por verificar» de «Reportes» muestra los validados sin veredicto', async ({ page }) => {
+    await page.goto('/operador/reportes?verificacion=por_verificar')
     await expect(tarjeta(page, R.validado)).toBeVisible()
     await expect(page.getByRole('article')).toHaveCount(1)
   })
@@ -119,6 +119,17 @@ test.describe('Panel del operador A', () => {
     await expect(page.getByRole('heading', { name: 'Mis reportes' })).toBeVisible()
     await expect(page.locator('.leaflet-container')).toBeVisible()
   })
+})
+
+test('WA8 · Estadísticas del operador sin desplazamiento horizontal en teléfono (393 px)', async ({ browser }) => {
+  const contexto = await browser.newContext({ storageState: rutaSesion('operadorA'), baseURL: 'http://localhost:5174', viewport: { width: 393, height: 851 } })
+  const page = await contexto.newPage()
+  await page.goto('/operador/estadisticas')
+  await expect(page.getByRole('region', { name: 'Resumen' })).toBeVisible({ timeout: 20_000 })
+  await page.waitForTimeout(1500)
+  const desborde = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+  expect(desborde).toBeLessThanOrEqual(1)
+  await contexto.close()
 })
 
 test('WP1 · El operador B solo ve su único reporte', async ({ browser }) => {
