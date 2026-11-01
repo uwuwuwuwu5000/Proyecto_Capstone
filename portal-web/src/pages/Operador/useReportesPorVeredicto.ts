@@ -2,6 +2,10 @@
 // veredicto, y los que ya lo tienen (para medir cuánto tardó). Solo consultas con igualdades: se apoyan
 // en los índices de un solo campo que Firestore crea solo, así que no necesitan índices nuevos. El orden
 // y los filtros se aplican en el navegador (ver veredictos.ts).
+//
+// La app móvil nunca escribe `validacion.veredicto` (solo lo escribe el veredicto del operador), y en
+// Firestore `== null` no encuentra los documentos donde el campo no existe. Por eso los pendientes se
+// piden como «validados» y se separan aquí con `esPendienteDeVeredicto` (DEF-010).
 import { useCallback, useEffect, useState } from 'react'
 import { collection, getCountFromServer, getDocs, limit, onSnapshot, query, where } from 'firebase/firestore'
 import type { Firestore, Query } from 'firebase/firestore'
@@ -11,23 +15,39 @@ import type { Reporte } from '../../components/Reportes/reporte'
 import { esPendienteDeVeredicto, veredictoEnRango } from './veredictos'
 import type { RangoDeFechas } from './veredictos'
 
-/** Tope de reportes pendientes que se leen. Si se alcanza, se avisa y se muestra el total. */
-export const MAXIMO_PENDIENTES = 200
+/** Tope de reportes validados que se leen (incluye los que ya tienen veredicto). Si se alcanza, se avisa y se muestra el total. */
+export const MAXIMO_VALIDADOS = 1000
 /** Tope de reportes con veredicto que se leen (por cada resultado, real y falso). */
 export const MAXIMO_CON_VEREDICTO = 500
 
-/** Reportes del operador que la comunidad validó y que aún no tienen veredicto (sin límite). */
-function pendientesSinLimite(firestore: Firestore, operadorId: string): Query {
+/** Reportes del operador que la comunidad validó, con o sin veredicto (sin límite). */
+function validadosSinLimite(firestore: Firestore, operadorId: string): Query {
   return query(
     collection(firestore, 'reports'),
     where('operadorId', '==', operadorId),
     where('validacion.validado', '==', true),
-    where('validacion.veredicto', '==', null),
   )
 }
 
+/** Los validados del operador, entre los que están los pendientes de veredicto (los separa `esPendienteDeVeredicto`). */
 export function consultaPendientes(firestore: Firestore, operadorId: string): Query {
-  return query(pendientesSinLimite(firestore, operadorId), limit(MAXIMO_PENDIENTES))
+  return query(validadosSinLimite(firestore, operadorId), limit(MAXIMO_VALIDADOS))
+}
+
+/**
+ * Tres conteos para el total de pendientes cuando se alcanza el tope: validados, con veredicto «real» y con
+ * veredicto «falso». Pendientes = validados − reales − falsos.
+ */
+export function conteosDePendientes(firestore: Firestore, operadorId: string): Query[] {
+  return [
+    validadosSinLimite(firestore, operadorId),
+    ...(['real', 'falso'] as const).map((veredicto) =>
+      query(
+        validadosSinLimite(firestore, operadorId),
+        where('validacion.veredicto', '==', veredicto),
+      ),
+    ),
+  ]
 }
 
 /** Los reportes del operador con veredicto `real` o `falso`: dos consultas, cada una de una sola igualdad. */
@@ -49,7 +69,7 @@ export interface PendientesDeVeredicto {
   error: string
   /** Se alcanzó el tope de lectura: puede haber más. */
   hayMas: boolean
-  /** Con el tope alcanzado, el total que informa Firestore (incluye reportes ya cerrados sin veredicto); si no, null. */
+  /** Con el tope alcanzado, el total que calcula Firestore (incluye reportes ya cerrados sin veredicto); si no, null. */
   total: number | null
 }
 
@@ -74,7 +94,7 @@ export function useReportesPorVeredicto(operadorId: string | null): PendientesDe
       consultaPendientes(db, operadorId),
       (snap) => {
         if (!vigente) return
-        const alTope = snap.size >= MAXIMO_PENDIENTES
+        const alTope = snap.size >= MAXIMO_VALIDADOS
         setEstado((previo) => ({
           reportes: snap.docs.map(mapearReporte).filter(esPendienteDeVeredicto),
           cargando: false,
@@ -83,8 +103,11 @@ export function useReportesPorVeredicto(operadorId: string | null): PendientesDe
           total: alTope ? previo.total : null,
         }))
         if (alTope) {
-          getCountFromServer(pendientesSinLimite(db, operadorId))
-            .then((r) => vigente && setEstado((previo) => ({ ...previo, total: r.data().count })))
+          Promise.all(conteosDePendientes(db, operadorId).map((c) => getCountFromServer(c)))
+            .then(([validados, reales, falsos]) => {
+              const total = validados.data().count - reales.data().count - falsos.data().count
+              if (vigente) setEstado((previo) => ({ ...previo, total }))
+            })
             .catch((err) => console.error('Error al contar los reportes pendientes de veredicto:', err))
         }
       },

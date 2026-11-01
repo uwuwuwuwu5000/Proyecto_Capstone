@@ -7,10 +7,16 @@ import { COMENTARIO_MAXIMO, darVeredicto, mensajeDeErrorVeredicto } from './vere
 import { NOMBRE_NIVEL } from './niveles'
 import styles from './VeredictoReporte.module.css'
 
+/** Lo que se dio: el veredicto y los puntos que realmente se sumaron o restaron al autor. */
+export interface ResultadoAplicado {
+  veredicto: 'real' | 'falso'
+  aplicados: number
+}
+
 interface Props {
   reporte: Reporte
-  /** Se llama tras guardar, para que el detalle vuelva a leer el reporte. */
-  onAplicado: () => void
+  /** Se llama tras guardar, para que el detalle vuelva a leer el reporte y quien lo abrió sepa qué pasó. */
+  onAplicado: (resultado: ResultadoAplicado) => void
 }
 
 /**
@@ -45,9 +51,10 @@ export default function VeredictoReporte({ reporte, onAplicado }: Props) {
       setResultado(
         `Veredicto guardado (${cambio}). El autor ahora tiene ${r.puntos} puntos, nivel ${r.nivel} · ${NOMBRE_NIVEL[r.nivel]}.`,
       )
+      const dado = modo
       setModo(null)
       setComentario('')
-      onAplicado()
+      onAplicado({ veredicto: dado, aplicados: r.aplicados })
     } catch (err) {
       setError(mensajeDeErrorVeredicto(err))
     } finally {

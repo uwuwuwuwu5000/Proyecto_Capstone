@@ -17,6 +17,7 @@ import HistorialEstados from './HistorialEstados'
 import type { CambioEstado } from './historial'
 import BarraVerificacion from '../../confianza/BarraVerificacion'
 import VeredictoReporte from '../../confianza/VeredictoReporte'
+import type { ResultadoAplicado } from '../../confianza/VeredictoReporte'
 import ModeracionReporte from '../../confianza/ModeracionReporte'
 import styles from './Reportes.module.css'
 
@@ -24,6 +25,8 @@ interface DetalleReporteProps {
   reporte: Reporte
   operadorNombre: string | null
   onCerrar: () => void
+  /** Se llama cuando se da el veredicto desde este detalle (con lo que se dio). */
+  onVeredicto?: (resultado: ResultadoAplicado) => void
   /** Muestra el cambio rápido de estado (las reglas deciden si se permite). */
   gestionable?: boolean
   /**
@@ -43,6 +46,7 @@ export default function DetalleReporte({
   reporte: reporteDelPadre,
   operadorNombre,
   onCerrar,
+  onVeredicto,
   gestionable = false,
   organismoNombre = null,
   vista = 'gestion',
@@ -309,7 +313,8 @@ export default function DetalleReporte({
             {gestionable && vista === 'gestion' && (
               <VeredictoReporte
                 reporte={reporte}
-                onAplicado={() => {
+                onAplicado={(resultado) => {
+                  onVeredicto?.(resultado)
                   void cargarReporte(reporte.id)
                     .then((fresco) => fresco && setRefrescado(fresco))
                     .catch((e) => console.error('No se pudo refrescar el reporte:', e))

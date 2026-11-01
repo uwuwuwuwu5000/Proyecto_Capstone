@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import { formatearDuracion, mediana } from '../../components/Reportes/tiempos'
 import { useRequiereOperador } from '../../hooks/useRequiereOperador'
@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar/Navbar'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
 import FotoReporte from '../../components/Reportes/FotoReporte'
 import { EstadoPildora } from '../../components/Reportes/TarjetaReporte'
+import type { ResultadoAplicado } from '../../confianza/VeredictoReporte'
 import type { Reporte } from '../../components/Reportes/reporte'
 import { useCategorias } from '../../context/CategoriasContext'
 import OperadorTabs from './OperadorTabs'
@@ -35,6 +36,16 @@ import styles from './OperadorVeredictos.module.css'
 /** Los periodos fijos de Estadísticas; el personalizado no se ofrece aquí. */
 const PERIODOS_FIJOS = PERIODOS.filter((p) => p.clave !== 'personalizado')
 
+/** Cuánto se queda el aviso «Veredicto guardado» antes de cerrarse solo (también se puede cerrar antes con su botón). */
+const DURACION_AVISO_MS = 8_000
+/** Cuánto dura la salida animada de una tarjeta que recibió su veredicto. */
+const DURACION_SALIDA_MS = 250
+
+const reducirMovimiento = () =>
+  typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+const corto = (texto: string, largo = 60) => (texto.length > largo ? `${texto.slice(0, largo - 1)}…` : texto)
+
 const plural = (n: number, uno: string, varios: string) => `${n.toLocaleString('es-CL')} ${n === 1 ? uno : varios}`
 
 /**
@@ -46,7 +57,14 @@ export default function OperadorVeredictos() {
   const { etiqueta, categorias } = useCategorias()
   const [params, setParams] = useSearchParams()
   const [periodo, setPeriodo] = useState<Periodo>('mes')
-  const [detalleId, setDetalleId] = useState<string | null>(null)
+  // Copia del reporte al abrir el detalle: aunque reciba su veredicto y salga de la lista en vivo, el detalle sigue
+  // abierto y muestra el resultado hasta que se cierre.
+  const [detalle, setDetalle] = useState<Reporte | null>(null)
+  const [dado, setDado] = useState<ResultadoAplicado | null>(null)
+  const [aviso, setAviso] = useState<{ texto: string; id: number } | null>(null)
+  const avisoRef = useRef<HTMLDivElement>(null)
+  const anteriores = useRef<Map<string, Reporte> | null>(null)
+  const [saliendo, setSaliendo] = useState<Map<string, { reporte: Reporte; indice: number }>>(new Map())
 
   const filtros = useMemo(() => filtrosDeUrl(params), [params])
   // El estado de la pantalla vive en la URL: se puede compartir y sobrevive a recargar.
@@ -78,7 +96,65 @@ export default function OperadorVeredictos() {
   const sinFecha = pendientes.reportes.length - esperas.length
   const tiempos = useMemo(() => resumenDeTiempos(conVeredicto.reportes.map(tiempoHastaVeredicto)), [conVeredicto.reportes])
 
-  const reporteDetalle = detalleId ? pendientes.reportes.find((r) => r.id === detalleId) ?? null : null
+  // Un pendiente que sale de la lista recibió su veredicto: se vuelven a leer los tiempos (para que lo incluyan) y, si
+  // se puede, la tarjeta se desvanece en vez de desaparecer de golpe. Un reporte que sale por un filtro no cuenta.
+  const { recargar } = conVeredicto
+  useEffect(() => {
+    if (pendientes.cargando) return
+    const actuales = new Map(pendientes.reportes.map((r) => [r.id, r]))
+    const previos = anteriores.current
+    anteriores.current = actuales
+    if (!previos) return // primera carga
+    const salieron = [...previos.values()].filter((r) => !actuales.has(r.id))
+    if (salieron.length === 0) return
+    recargar()
+    if (reducirMovimiento()) return
+    const ordenPrevio = ordenarPendientes(filtrarPendientes([...previos.values()], filtros, ahora), filtros.orden).map((r) => r.id)
+    const visiblesQueSalen = salieron.filter((r) => ordenPrevio.includes(r.id))
+    if (visiblesQueSalen.length === 0) return
+    setSaliendo((m) => {
+      const nuevo = new Map(m)
+      for (const r of visiblesQueSalen) nuevo.set(r.id, { reporte: r, indice: ordenPrevio.indexOf(r.id) })
+      return nuevo
+    })
+    const t = window.setTimeout(() => {
+      setSaliendo((m) => {
+        const nuevo = new Map(m)
+        for (const r of visiblesQueSalen) nuevo.delete(r.id)
+        return nuevo
+      })
+    }, DURACION_SALIDA_MS)
+    return () => window.clearTimeout(t)
+    // Solo cuando cambian los datos: los filtros y la hora se leen tal como estaban.
+  }, [pendientes.reportes, pendientes.cargando]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Lo que se pinta: la lista visible y, en su lugar, las tarjetas que se están yendo.
+  const lista = useMemo(() => {
+    const filas = visibles.map((reporte) => ({ reporte, saliendo: false }))
+    const yendose = [...saliendo.values()].sort((a, b) => a.indice - b.indice)
+    for (const e of yendose) filas.splice(Math.min(e.indice, filas.length), 0, { reporte: e.reporte, saliendo: true })
+    return filas
+  }, [visibles, saliendo])
+
+  // El aviso se cierra solo; al aparecer recibe el foco para que quien usa teclado o lector de pantalla no pierda el lugar.
+  useEffect(() => {
+    if (!aviso) return
+    avisoRef.current?.focus()
+    const t = window.setTimeout(() => setAviso(null), DURACION_AVISO_MS)
+    return () => window.clearTimeout(t)
+  }, [aviso])
+
+  function cerrarDetalle() {
+    const abierto = detalle
+    setDetalle(null)
+    if (abierto && dado) {
+      setAviso({
+        texto: `Veredicto «${dado.veredicto}» guardado para «${corto(abierto.descripcion)}»: el reporte salió de la lista.`,
+        id: Date.now(),
+      })
+    }
+    setDado(null)
+  }
 
   if (!cargando && !autorizado) {
     return <Navigate to="/" replace />
@@ -99,6 +175,15 @@ export default function OperadorVeredictos() {
             Reportes de {operadorNombre ?? 'tu operador'} que la comunidad ya confirmó y esperan tu veredicto: real o falso.
           </p>
         </div>
+
+        {aviso && (
+          <div key={aviso.id} ref={avisoRef} className={styles.aviso} role="status" tabIndex={-1}>
+            <span>{aviso.texto}</span>
+            <button type="button" className={styles.avisoCerrar} aria-label="Cerrar aviso" onClick={() => setAviso(null)}>
+              ×
+            </button>
+          </div>
+        )}
 
         {/* Indicadores */}
         <label className={styles.periodo}>
@@ -284,24 +369,28 @@ export default function OperadorVeredictos() {
         )}
 
         <ul className={styles.lista} aria-label="Reportes pendientes de veredicto">
-          {visibles.map((reporte) => (
-            <li key={reporte.id} className={styles.item}>
+          {lista.map(({ reporte, saliendo: yendose }) => (
+            <li key={reporte.id} className={`${styles.item} ${yendose ? styles.itemSaliendo : ''}`} aria-hidden={yendose || undefined}>
               <TarjetaPendiente
                 reporte={reporte}
                 ahora={ahora}
                 categoria={etiqueta(reporte.categoria)}
-                onAbrir={() => setDetalleId(reporte.id)}
+                onAbrir={() => {
+                  setDado(null)
+                  setDetalle(reporte)
+                }}
               />
             </li>
           ))}
         </ul>
       </main>
 
-      {reporteDetalle && (
+      {detalle && (
         <DetalleReporte
-          reporte={reporteDetalle}
+          reporte={detalle}
           operadorNombre={operadorNombre}
-          onCerrar={() => setDetalleId(null)}
+          onCerrar={cerrarDetalle}
+          onVeredicto={setDado}
           gestionable
           organismoNombre={organismoNombre}
         />

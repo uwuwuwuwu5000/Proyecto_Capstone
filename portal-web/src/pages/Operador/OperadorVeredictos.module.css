@@ -161,3 +161,61 @@
     width: 88px;
   }
 }
+
+/* ---- Aviso «Veredicto guardado» ---- */
+
+.aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 0.92rem;
+  color: var(--ca-ink);
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-signal);
+  border-radius: 10px;
+}
+
+.aviso:focus-visible {
+  outline: 3px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
+.avisoCerrar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--ca-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.avisoCerrar:hover {
+  color: var(--ca-ink);
+}
+
+/* ---- Salida de una tarjeta que recibió su veredicto ---- */
+
+.itemSaliendo {
+  pointer-events: none;
+  animation: salirTarjeta 250ms ease forwards;
+}
+
+@keyframes salirTarjeta {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .itemSaliendo {
+    animation: none;
+  }
+}

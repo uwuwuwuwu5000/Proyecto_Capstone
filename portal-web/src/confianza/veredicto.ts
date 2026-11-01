@@ -7,10 +7,10 @@
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
 import type { Firestore } from 'firebase/firestore'
 import { FirebaseError } from 'firebase/app'
-import { aplicarVeredicto } from './reglas'
+import { MOTIVO_VEREDICTO_MAXIMO, efectoDeVeredicto, motivoDeVeredicto } from '@ciudad-alerta/comun'
 import { leerConfianza, leerValidacion } from './tipos'
 
-export const COMENTARIO_MAXIMO = 512
+export const COMENTARIO_MAXIMO = MOTIVO_VEREDICTO_MAXIMO
 
 export type CodigoErrorVeredicto =
   | 'no_existe'
@@ -70,9 +70,10 @@ export function mensajeDeErrorVeredicto(error: unknown): string {
 }
 
 export async function darVeredicto(db: Firestore, pedido: PedidoVeredicto): Promise<ResultadoVeredicto> {
-  const comentario = pedido.comentario.trim()
-  if (pedido.veredicto === 'falso' && comentario.length === 0) throw new ErrorVeredicto('sin_comentario')
-  if (comentario.length > COMENTARIO_MAXIMO) throw new ErrorVeredicto('desconocido')
+  // La misma validación que la app: «falso» exige un motivo y el largo máximo lo fijan las reglas.
+  const { motivo, error } = motivoDeVeredicto(pedido.veredicto, pedido.comentario)
+  if (error) throw new ErrorVeredicto(pedido.veredicto === 'falso' && !pedido.comentario.trim() ? 'sin_comentario' : 'desconocido')
+  const comentario = motivo ?? ''
 
   const refReporte = doc(db, 'reports', pedido.reportId)
 
@@ -89,40 +90,39 @@ export async function darVeredicto(db: Firestore, pedido: PedidoVeredicto): Prom
 
       const refConfianza = doc(db, 'users', autor, 'confianza', 'actual')
       const confianza = leerConfianza((await tx.get(refConfianza)).data())
-      const esReal = pedido.veredicto === 'real'
-      const r = aplicarVeredicto(confianza.puntosConfianza, pedido.veredicto)
-      const validados = confianza.validatedReports + (esReal ? 1 : 0)
+      // Puntos, nivel y contadores del autor: la misma función que usa la app (comun/confianza/calculos.ts).
+      const efecto = efectoDeVeredicto(confianza, pedido.veredicto)
 
       tx.update(refReporte, {
         'validacion.veredicto': pedido.veredicto,
         'validacion.veredictoPor': pedido.gestorUid,
         'validacion.veredictoAt': serverTimestamp(),
-        'validacion.veredictoPuntos': r.aplicados,
+        'validacion.veredictoPuntos': efecto.veredictoPuntos,
         ...(comentario ? { 'validacion.veredictoComentario': comentario } : {}),
         updatedAt: serverTimestamp(),
       })
       tx.set(refConfianza, {
-        puntosConfianza: r.puntos,
-        trustLevel: r.nivel,
-        validatedReports: validados,
-        reportesFalsos: confianza.reportesFalsos + (esReal ? 0 : 1),
-        confirmacionesSuspendidas: confianza.confirmacionesSuspendidas,
+        puntosConfianza: efecto.puntosConfianza,
+        trustLevel: efecto.trustLevel,
+        validatedReports: efecto.validatedReports,
+        reportesFalsos: efecto.reportesFalsos,
+        confirmacionesSuspendidas: efecto.confirmacionesSuspendidas,
         ultimoReporteId: pedido.reportId,
         updatedAt: serverTimestamp(),
       })
       // Espejo para la app actual, que todavía lee el nivel de users/{uid}.
       tx.update(doc(db, 'users', autor), {
-        trustLevel: r.nivel,
-        validatedReports: validados,
+        trustLevel: efecto.trustLevel,
+        validatedReports: efecto.validatedReports,
         updatedAt: serverTimestamp(),
       })
 
       return {
-        puntosAntes: confianza.puntosConfianza,
-        puntos: r.puntos,
+        puntosAntes: efecto.puntosAntes,
+        puntos: efecto.puntosConfianza,
         nivelAntes: confianza.trustLevel,
-        nivel: r.nivel,
-        aplicados: r.aplicados,
+        nivel: efecto.trustLevel,
+        aplicados: efecto.veredictoPuntos,
       }
     })
   } catch (error) {
