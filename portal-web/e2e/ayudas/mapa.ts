@@ -38,11 +38,16 @@ export async function pinDe(page: Page, id: string) {
   return pin
 }
 
-/** Abre el panel de detalle de un reporte desde su pin. */
+/**
+ * Abre el panel de detalle de un reporte desde su pin. El mapa puede reencuadrarse justo después de cargar o de
+ * cerrar otro detalle y el clic caer en el vacío: si el panel no se abre, se vuelve a buscar el pin y se repite.
+ */
 export async function abrirDetalle(page: Page, id: string): Promise<void> {
-  const pin = await pinDe(page, id)
-  await pin.click()
-  await expect(page.getByRole('complementary', { name: /.+/ })).toBeVisible()
+  await expect(async () => {
+    const pin = await pinDe(page, id)
+    await pin.click()
+    await expect(page.getByRole('complementary', { name: /.+/ })).toBeVisible({ timeout: 3_000 })
+  }).toPass({ timeout: 40_000 })
 }
 
 export const filtro = (page: Page, etiqueta: 'Región' | 'Categoría' | 'Estado') => page.getByRole('combobox', { name: etiqueta })

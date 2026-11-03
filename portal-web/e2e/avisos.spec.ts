@@ -48,11 +48,12 @@ test('AV5 · Marcar como vistos persiste al recargar', async ({ browser }) => {
   await campana(page).click()
   await panel(page).getByRole('button', { name: 'Marcar todos como vistos' }).click()
   await expect(campana(page)).toHaveAccessibleName('Avisos')
+  // La pantalla se actualiza al instante y la escritura llega después al servidor: se espera a que esté
+  // guardada antes de recargar y de comprobar la base (si no, la prueba era intermitente).
+  await expect.poll(async () => (await bd.doc('users/vec4/avisos/estado').get()).data()?.vistosHasta).toBeTruthy()
   await page.reload()
   await expect(campana(page)).toBeVisible()
   await expect(campana(page)).toHaveAccessibleName('Avisos')
-  const estado = (await bd.doc('users/vec4/avisos/estado').get()).data()
-  expect(estado?.vistosHasta).toBeTruthy()
 })
 
 test('AV4 · Avisos de cambio de nivel: neutro, subida y bajada', async ({ browser }) => {
