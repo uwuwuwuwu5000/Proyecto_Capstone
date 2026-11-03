@@ -74,6 +74,7 @@ test.describe('Registro', () => {
     await page.getByLabel('Correo electrónico').fill(CUENTAS.vecino1.correo)
     await page.getByLabel('Contraseña', { exact: true }).fill(CLAVE)
     await page.getByLabel('Confirmar contraseña').fill(CLAVE)
+    await page.getByLabel(/Acepto los términos/).check()
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page.getByText('Ya existe una cuenta con este correo.')).toBeVisible()
   })
@@ -84,6 +85,7 @@ test.describe('Registro', () => {
     await page.getByLabel('Correo electrónico').fill('nuevo@prueba.cl')
     await page.getByLabel('Contraseña', { exact: true }).fill(CLAVE)
     await page.getByLabel('Confirmar contraseña').fill(CLAVE)
+    await page.getByLabel(/Acepto los términos/).check()
     await page.getByRole('button', { name: 'Crear cuenta' }).click()
     await expect(page).toHaveURL('/')
     await expect

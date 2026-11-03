@@ -7,6 +7,8 @@ import { getAuth } from 'firebase-admin/auth'
 import { getFirestore, Timestamp } from 'firebase-admin/firestore'
 import { geohashForLocation } from 'geofire-common'
 
+// Debe ser la versión vigente de comun/src/legal/terminos.ts: las cuentas con otra no pasan de la pantalla de aceptación.
+export const VERSION_TERMINOS = '2026-11'
 export const PROYECTO = 'demo-ciudad-alerta'
 export const CLAVE = 'Prueba123!'
 const HORA = 3_600_000
@@ -38,6 +40,8 @@ export const CUENTAS = {
   nivelMaximo: { uid: 'vec8', correo: 'maximo@prueba.cl', nombre: 'Nivel Maximo', role: 'ciudadano' },
   // Cuenta de organismo (rol de la app móvil, solo lectura): el portal solo le muestra un mensaje.
   organismo: { uid: 'org1', correo: 'organismo@prueba.cl', nombre: 'Organismo Maipú', role: 'organismo', organismoId: 'muni_13119' },
+  // Cuenta anterior a los términos: no tiene `terminosVersion` y debe aceptarlos al entrar (Fase 6).
+  sinTerminos: { uid: 'vec9', correo: 'sin-terminos@prueba.cl', nombre: 'Sin Terminos', role: 'ciudadano', sinTerminos: true },
 } as const
 
 interface Comuna {
@@ -168,6 +172,7 @@ export async function sembrar(conCuentas = false): Promise<void> {
       uid: c.uid, displayName: c.nombre, email: c.correo, emailVerified: verificado, role: c.role,
       ...('operadorId' in c ? { operadorId: c.operadorId } : {}),
       ...('organismoId' in c ? { organismoId: c.organismoId } : {}),
+      ...('sinTerminos' in c ? {} : { terminosVersion: VERSION_TERMINOS, terminosAceptadosAt: hace(antig) }),
       trustLevel: 0, validatedReports: 0, createdAt: hace(antig), updatedAt: hace(antig),
     })
   }
