@@ -1,0 +1,28 @@
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.entrada {
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--ca-ink);
+  background: var(--ca-surface-alt);
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+}
+
+.entrada:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-danger);
+}

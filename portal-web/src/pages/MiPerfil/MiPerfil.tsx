@@ -6,6 +6,8 @@ import { doc, getDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navbar/Navbar'
+import DialogoEliminarCuenta from '../../components/Perfil/DialogoEliminarCuenta'
+import { eliminarCuenta } from '../../components/Perfil/eliminarCuenta'
 import { NOMBRE_NIVEL } from '../../confianza/niveles'
 import { nivelDePuntos } from '../../confianza/reglas'
 import { useConfianza } from '../../confianza/useConfianza'
@@ -38,6 +40,9 @@ export default function MiPerfil() {
   const [comprobando, setComprobando] = useState(false)
   const [aviso, setAviso] = useState<{ texto: string; tipo: 'ok' | 'error' } | null>(null)
   const [operadorNombre, setOperadorNombre] = useState<string | null>(null)
+  const [dialogoEliminar, setDialogoEliminar] = useState(false)
+  // Mientras se elimina la cuenta, al quedar sin sesión se vuelve al inicio (y no al login) con un aviso.
+  const [eliminando, setEliminando] = useState(false)
 
   const operadorId = perfil?.operadorId ?? null
   useEffect(() => {
@@ -54,7 +59,13 @@ export default function MiPerfil() {
     }
   }, [operadorId])
 
-  if (!loading && !user) return <Navigate to="/login" replace />
+  if (!loading && !user) {
+    return eliminando ? (
+      <Navigate to="/" replace state={{ cuentaEliminada: true }} />
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  }
 
   const correoVerificado = verificado ?? user?.emailVerified ?? false
 
@@ -101,6 +112,16 @@ export default function MiPerfil() {
       setAviso({ texto: 'No pudimos comprobar la verificación.', tipo: 'error' })
     } finally {
       setComprobando(false)
+    }
+  }
+
+  async function eliminar(contrasena: string) {
+    setEliminando(true)
+    try {
+      await eliminarCuenta(contrasena)
+    } catch (err) {
+      setEliminando(false)
+      throw err
     }
   }
 
@@ -217,6 +238,24 @@ export default function MiPerfil() {
             <button type="button" className={styles.salir} onClick={cerrarSesion}>
               Cerrar sesión
             </button>
+
+            {perfil?.role === 'ciudadano' && (
+              <section className={styles.eliminar} aria-labelledby="titulo-eliminar">
+                <h2 id="titulo-eliminar" className={styles.eliminarTitulo}>
+                  Eliminar mi cuenta
+                </h2>
+                <p className={styles.nota}>
+                  Se borran tu correo, tu nombre y tu acceso. Tus reportes se conservan como «Cuenta eliminada», porque
+                  son parte del historial del barrio. No se puede deshacer.
+                </p>
+                <button type="button" className={styles.salir} onClick={() => setDialogoEliminar(true)}>
+                  Eliminar mi cuenta
+                </button>
+              </section>
+            )}
+            {dialogoEliminar && (
+              <DialogoEliminarCuenta onConfirmar={eliminar} onCerrar={() => setDialogoEliminar(false)} />
+            )}
           </>
         )}
       </main>

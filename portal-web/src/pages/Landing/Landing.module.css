@@ -6,6 +6,38 @@
   min-height: 100vh;
 }
 
+/* ---- Aviso al eliminar la cuenta ---- */
+
+.avisoCuenta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--ca-surface);
+  border-bottom: 1px solid var(--ca-line);
+  color: var(--ca-ink);
+  font-size: 0.92rem;
+}
+
+.avisoCuentaCerrar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.avisoCuentaCerrar:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 2px;
+}
+
 /* ---- Secciones ---- */
 
 .seccion {

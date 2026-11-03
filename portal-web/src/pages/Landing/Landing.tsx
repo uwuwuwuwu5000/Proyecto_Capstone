@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import Navbar from '../../components/Navbar/Navbar'
 import Logo from '../../components/Marca/Logo'
@@ -134,6 +135,17 @@ function Fila({
 
 export default function Landing() {
   const { user, perfil, loading } = useAuth()
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Al eliminar la cuenta se llega aquí con este aviso; se limpia del historial para que no reaparezca al recargar.
+  const [cuentaEliminada, setCuentaEliminada] = useState(
+    () => (location.state as { cuentaEliminada?: boolean } | null)?.cuentaEliminada === true,
+  )
+  useEffect(() => {
+    if ((location.state as { cuentaEliminada?: boolean } | null)?.cuentaEliminada) {
+      navigate('.', { replace: true, state: null })
+    }
+  }, [location.state, navigate])
   const mapa = useAparicion<HTMLDivElement>()
   // El mapa es solo para cuentas registradas: sin sesión, los enlaces llevan al registro.
   const rutaMapa = user ? '/mapa' : '/registro'
@@ -151,6 +163,15 @@ export default function Landing() {
   return (
     <div className={styles.page}>
       <Navbar />
+
+      {cuentaEliminada && (
+        <div className={styles.avisoCuenta} role="status">
+          <span>Tu cuenta fue eliminada. Tus reportes se conservan sin tu nombre.</span>
+          <button type="button" className={styles.avisoCuentaCerrar} onClick={() => setCuentaEliminada(false)} aria-label="Cerrar aviso">
+            ×
+          </button>
+        </div>
+      )}
 
       <main>
         {/* Inicio */}
