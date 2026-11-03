@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { esCuentaDeOrganismo } from '@ciudad-alerta/comun'
+import { POLITICA_DE_PRIVACIDAD, TERMINOS_DE_USO, esCuentaDeOrganismo, terminosAceptados } from '@ciudad-alerta/comun'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CategoriasProvider } from './context/CategoriasContext'
 import CuentaOrganismo from './components/CuentaOrganismo/CuentaOrganismo'
+import AceptarTerminos from './components/AceptarTerminos/AceptarTerminos'
 import MiNivel from './pages/MiNivel/MiNivel'
 import MiPerfil from './pages/MiPerfil/MiPerfil'
 import { AvisosProvider } from './context/AvisosContext'
@@ -17,6 +18,7 @@ import ErrorDeCarga from './components/Carga/ErrorDeCarga'
 const Landing = lazy(() => import('./pages/Landing/Landing'))
 const Login = lazy(() => import('./pages/Login/Login'))
 const Registro = lazy(() => import('./pages/Registro/Registro'))
+const Terminos = lazy(() => import('./pages/Terminos/Terminos'))
 const Historial = lazy(() => import('./pages/Historial/Historial'))
 const Mapa = lazy(() => import('./pages/Mapa/Mapa'))
 const Admin = lazy(() => import('./pages/Admin/Admin'))
@@ -41,6 +43,11 @@ function Rutas() {
   // Una cuenta de organismo no tiene vista en el portal: sus consultas las niegan las reglas.
   if (esCuentaDeOrganismo(perfil?.role)) return <CuentaOrganismo />
 
+  // Una cuenta que no aceptó la versión vigente de los términos debe hacerlo antes de usar el portal.
+  // Los dos documentos se pueden leer sin aceptar.
+  const esDocumentoLegal = pathname === '/terminos' || pathname === '/privacidad'
+  if (perfil && !terminosAceptados(perfil.terminosVersion) && !esDocumentoLegal) return <AceptarTerminos />
+
   return (
     // key: al navegar a otra ruta se reinicia el aviso de error, para que una
     // página que no cargó no deje bloqueado el resto del portal.
@@ -50,6 +57,8 @@ function Rutas() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/terminos" element={<Terminos documento={TERMINOS_DE_USO} />} />
+          <Route path="/privacidad" element={<Terminos documento={POLITICA_DE_PRIVACIDAD} />} />
           <Route path="/historial" element={<Historial />} />
           <Route path="/mi-nivel" element={<MiNivel />} />
           <Route path="/mi-perfil" element={<MiPerfil />} />

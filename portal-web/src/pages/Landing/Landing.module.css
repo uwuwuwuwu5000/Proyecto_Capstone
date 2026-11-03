@@ -688,7 +688,8 @@
 
   .footerColumnas {
     justify-content: flex-start;
-    gap: 48px;
+    flex-wrap: wrap;
+    gap: 24px 40px;
   }
 }
 

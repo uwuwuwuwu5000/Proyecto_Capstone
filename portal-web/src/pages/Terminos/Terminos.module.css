@@ -1,0 +1,62 @@
+.pagina {
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px 64px;
+}
+
+.documento {
+  width: 100%;
+  max-width: 720px;
+  padding: 32px 28px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+  color: var(--ca-ink);
+}
+
+.version {
+  margin: 0 0 24px;
+  font-size: 0.88rem;
+  color: var(--ca-muted);
+}
+
+.seccion {
+  margin-bottom: 20px;
+}
+
+.subtitulo {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  color: var(--ca-ink);
+}
+
+.parrafo {
+  margin: 0 0 10px;
+  line-height: 1.6;
+  color: var(--ca-muted);
+  overflow-wrap: anywhere;
+}
+
+.otro {
+  margin: 28px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--ca-line);
+  color: var(--ca-muted);
+}
+
+.otro a {
+  color: var(--ca-signal);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .documento {
+    padding: 24px 18px;
+  }
+}

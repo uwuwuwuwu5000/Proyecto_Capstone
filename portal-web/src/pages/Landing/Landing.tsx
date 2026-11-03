@@ -347,6 +347,11 @@ export default function Landing() {
               <a href="#municipal">Soy municipal</a>
               <a href={ENLACE_CONTACTO}>Contáctanos</a>
             </div>
+            <div>
+              <h2 className={styles.footerTitulo}>Legal</h2>
+              <Link to="/terminos">Términos de uso</Link>
+              <Link to="/privacidad">Política de privacidad</Link>
+            </div>
           </nav>
 
           <div className={styles.footerInferior}>

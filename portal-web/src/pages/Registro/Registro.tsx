@@ -5,6 +5,7 @@ import { FirebaseError } from 'firebase/app'
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth'
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { auth, db } from '../../firebase/config'
+import { VERSION_TERMINOS } from '@ciudad-alerta/comun'
 import { useAuth } from '../../context/AuthContext'
 import styles from './Registro.module.css'
 
@@ -17,6 +18,7 @@ interface CamposError {
   correo?: string
   password?: string
   confirm?: string
+  terminos?: string
 }
 
 /** Traduce los códigos de error de Firebase Auth al crear la cuenta. */
@@ -39,6 +41,7 @@ export default function Registro() {
   const [correo, setCorreo] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [aceptaTerminos, setAceptaTerminos] = useState(false)
   const [errores, setErrores] = useState<CamposError>({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -77,6 +80,9 @@ export default function Registro() {
     } else if (confirm !== password) {
       nuevosErrores.confirm = 'Las contraseñas no coinciden.'
     }
+    if (!aceptaTerminos) {
+      nuevosErrores.terminos = 'Debes aceptar los términos y la política de privacidad para crear tu cuenta.'
+    }
 
     setErrores(nuevosErrores)
     setErrorGeneral('')
@@ -105,6 +111,8 @@ export default function Registro() {
           role: 'ciudadano',
           trustLevel: 0,
           validatedReports: 0,
+          terminosVersion: VERSION_TERMINOS,
+          terminosAceptadosAt: serverTimestamp(),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         })
@@ -207,6 +215,27 @@ export default function Registro() {
               <span className={styles.fieldError}>{errores.confirm}</span>
             )}
           </label>
+
+          <div className={styles.field}>
+            <label className={styles.aceptar}>
+              <input
+                type="checkbox"
+                checked={aceptaTerminos}
+                onChange={(e) => setAceptaTerminos(e.target.checked)}
+              />
+              <span>
+                Acepto los{' '}
+                <a href="/terminos" target="_blank" rel="noopener noreferrer" className={styles.footerLink}>
+                  términos de uso
+                </a>{' '}
+                y la{' '}
+                <a href="/privacidad" target="_blank" rel="noopener noreferrer" className={styles.footerLink}>
+                  política de privacidad
+                </a>
+              </span>
+            </label>
+            {errores.terminos && <span className={styles.fieldError}>{errores.terminos}</span>}
+          </div>
 
           {errorGeneral && <p className={styles.error}>{errorGeneral}</p>}
 

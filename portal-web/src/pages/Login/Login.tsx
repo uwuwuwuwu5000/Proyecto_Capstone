@@ -153,6 +153,15 @@ export default function Login() {
                 Regístrate
               </Link>
             </p>
+            <p className={styles.registerHint}>
+              <Link to="/terminos" className={styles.registerLink}>
+                Términos de uso
+              </Link>
+              {' · '}
+              <Link to="/privacidad" className={styles.registerLink}>
+                Política de privacidad
+              </Link>
+            </p>
           </>
         ) : (
           <>

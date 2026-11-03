@@ -210,6 +210,10 @@ export default function MiPerfil() {
               <p className={styles.nota}>Si escribes a soporte, el identificador nos ayuda a encontrar tu cuenta.</p>
             </section>
 
+            <p className={styles.nota}>
+              <Link to="/terminos">Términos de uso</Link> · <Link to="/privacidad">Política de privacidad</Link>
+            </p>
+
             <button type="button" className={styles.salir} onClick={cerrarSesion}>
               Cerrar sesión
             </button>

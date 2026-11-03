@@ -117,3 +117,21 @@
   font-weight: 600;
   text-decoration: underline;
 }
+
+.aceptar {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ca-muted);
+  cursor: pointer;
+}
+
+.aceptar input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: var(--ca-signal);
+}

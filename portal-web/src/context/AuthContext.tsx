@@ -21,6 +21,8 @@ export interface PerfilUsuario {
   operadorId: string | null
   /** Cuándo se creó el perfil (cuenta de menos de 24 h: su voto pesa 0). */
   createdAt: Date | null
+  /** Versión de los términos y la política de privacidad que aceptó (null si nunca aceptó ninguna). */
+  terminosVersion: string | null
 }
 
 interface AuthContextValue {
@@ -79,6 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   typeof data.operadorId === 'string' ? data.operadorId : null,
                 createdAt:
                   typeof data.createdAt?.toDate === 'function' ? data.createdAt.toDate() : null,
+                terminosVersion:
+                  typeof data.terminosVersion === 'string' ? data.terminosVersion : null,
               }
             : null,
         )
