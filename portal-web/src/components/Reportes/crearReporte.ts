@@ -4,7 +4,7 @@
 // report.service.ts de main-mobile), para que pase la misma regla de creación
 // y el resto del sistema no distinga su origen salvo por el campo `origen`.
 //
-// La fotografía es opcional y llega ya difuminada (privacidad/privacidad.ts):
+// La fotografía es opcional y llega ya difuminada (privacidad/protector.ts):
 // la regla fotoProtegida() exige `foto.privacidad.aplicada`. Se guarda igual
 // que en la app: imagen en `reportPhotos/{id}` y referencia en `reports/{id}`,
 // las dos en un mismo lote para que no quede una sin la otra.
@@ -12,7 +12,7 @@ import { collection, doc, getDoc, serverTimestamp, updateDoc, writeBatch } from 
 import { FirebaseError } from 'firebase/app'
 import { geohashForLocation } from 'geofire-common'
 import { db } from '../../firebase/config'
-import type { FotoProtegida } from '../../privacidad/privacidad'
+import type { FotoProtegida } from '../../privacidad/tipos'
 import { LIMITE_DATA_URL } from '../../privacidad/comprimir'
 import { VALIDACION_INICIAL } from '../../confianza/tipos'
 import { calcularAsignacion } from './asignacion'

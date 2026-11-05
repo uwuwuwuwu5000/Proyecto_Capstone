@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { comprimirImagen } from '../../privacidad/comprimir'
-import type { FotoProtegida } from '../../privacidad/privacidad'
+import { obtenerProtector } from '../../privacidad/protector'
+import type { FotoProtegida } from '../../privacidad/protector'
 import type { ClipboardEvent, FormEvent, KeyboardEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
@@ -213,8 +214,8 @@ export default function AdminCrearReporte() {
     try {
       const comprimida = await comprimirImagen(archivo)
       // Los modelos (~19 MB) solo se descargan la primera vez que se elige una foto.
-      const { anonimizar } = await import('../../privacidad/privacidad')
-      setFoto(await anonimizar(comprimida))
+      const protector = await obtenerProtector()
+      setFoto(await protector.anonimizar(comprimida))
     } catch (err) {
       setErrorFoto(err instanceof Error ? err.message : 'No se pudo procesar la foto.')
     } finally {

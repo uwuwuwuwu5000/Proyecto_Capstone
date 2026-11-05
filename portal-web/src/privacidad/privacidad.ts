@@ -13,34 +13,21 @@ import {
   CALIDAD_SALIDA,
   CONFIANZA_PERSONA,
   MAXIMO_PERSONAS,
+  infoDeProteccion,
   tamanoReducido,
-  versionDeModelos,
   zonasADifuminar,
 } from '@ciudad-alerta/comun'
-import type { Caja, InfoPrivacidad } from '@ciudad-alerta/comun'
+import type { Caja } from '@ciudad-alerta/comun'
 import { prepararTensorflow, resolverModulo } from './tensorflow'
+import { PrivacidadError } from './tipos'
+import type { FotoProtegida, ProtectorDeFotos } from './tipos'
 
-// Umbrales, márgenes y geometría del difuminado: viven en `comun/`, compartidos
-// con la app móvil, para que ambas difuminen exactamente igual.
-export type { InfoPrivacidad }
+// Umbrales, márgenes, geometría del difuminado y lo que se guarda en `foto.privacidad`: viven en `comun/`,
+// compartidos con la app móvil, para que ambas difuminen y registren exactamente igual.
 
 const MODELO_LOCAL_PERSONAS = '/models/coco-ssd/model.json'
 const MODELO_LOCAL_ROSTROS = '/models/face-detection/model.json'
 
-
-export interface FotoProtegida {
-  dataUrl: string
-  mimeType: 'image/jpeg'
-  sizeBytes: number
-  privacidad: InfoPrivacidad
-}
-
-export class PrivacidadError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'PrivacidadError'
-  }
-}
 
 let detectorRostros: FaceDetection.FaceDetector | null = null
 let detectorPersonas: CocoSsd.ObjectDetection | null = null
@@ -279,7 +266,6 @@ export async function anonimizar(dataUrl: string): Promise<FotoProtegida> {
   const zonas = zonasADifuminar(rostros, personas, lienzo)
   for (const zona of zonas.rostros) difuminar(contexto, lienzo, zona, true)
   for (const zona of zonas.cabezas) difuminar(contexto, lienzo, zona, false)
-  const personasDifuminadas = zonas.cabezas.length
 
   const salida = lienzo.toDataURL('image/jpeg', CALIDAD_SALIDA)
   return {
@@ -287,11 +273,9 @@ export async function anonimizar(dataUrl: string): Promise<FotoProtegida> {
     mimeType: 'image/jpeg',
     // Tamaño aproximado de los bytes a partir del base64.
     sizeBytes: Math.floor(((salida.length - salida.indexOf(',') - 1) * 3) / 4),
-    privacidad: {
-      aplicada: true,
-      rostros: rostros.length,
-      personas: personasDifuminadas,
-      version: versionDeModelos(!!rostrosDetector),
-    },
+    privacidad: infoDeProteccion(zonas, !!rostrosDetector),
   }
 }
+
+/** Lo que usa el resto del portal (ver `protector.ts`). */
+export const protectorEnNavegador: ProtectorDeFotos = { anonimizar }
