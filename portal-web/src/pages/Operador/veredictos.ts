@@ -203,6 +203,8 @@ export function revisionACierreDelPeriodo(
   let enPeriodo = 0
   let sinRevision = 0
   for (const reporte of candidatos) {
+    // Retirado por su autor: nadie del organismo lo atendió, no hay revisión que medir.
+    if (reporte.retiradoPorAutor) continue
     const cambios = historiales.get(reporte.id)
     if (!cambios) continue
     const cerradoEn = fechaDeEstado(cambios, 'cerrado')

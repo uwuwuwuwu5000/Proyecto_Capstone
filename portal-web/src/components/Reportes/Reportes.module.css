@@ -301,6 +301,12 @@
   overflow-wrap: anywhere;
 }
 
+.editado {
+  margin: -6px 0 0;
+  font-size: 0.8rem;
+  color: var(--ca-muted);
+}
+
 .historialTitulo {
   margin: 6px 0 0;
   font-size: 1rem;

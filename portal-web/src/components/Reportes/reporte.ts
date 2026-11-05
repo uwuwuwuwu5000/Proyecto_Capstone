@@ -37,6 +37,10 @@ export interface Reporte {
   tiempoResolucionMs?: number | null
   /** Cuándo se cerró sin haber pasado por «Resuelto» (solo reportes posteriores al campo). */
   cerradoSinResolverAt?: Date | null
+  /** true si quien lo reportó lo retiró mientras estaba en «Reportado»: no cuenta contra el organismo. */
+  retiradoPorAutor?: boolean
+  /** Cuándo el autor corrigió la descripción; null si nunca. */
+  editadoAt?: Date | null
   /** Última vez que se actualizó el reporte (cada cambio de estado la renueva); en un reporte cerrado, aproxima cuándo se cerró. */
   actualizadoAt?: Date | null
   /** Verificación comunitaria y veredicto. Un reporte antiguo no lo tiene: se lee con ceros. */
@@ -86,6 +90,8 @@ export function mapearReporte(docSnap: QueryDocumentSnapshot): Reporte {
     tiempoResolucionMs: typeof data.tiempoResolucionMs === 'number' ? data.tiempoResolucionMs : null,
     cerradoSinResolverAt:
       typeof data.cerradoSinResolverAt?.toDate === 'function' ? data.cerradoSinResolverAt.toDate() : null,
+    retiradoPorAutor: data.retiradoPorAutor === true,
+    editadoAt: typeof data.editadoAt?.toDate === 'function' ? data.editadoAt.toDate() : null,
     actualizadoAt: typeof data.updatedAt?.toDate === 'function' ? data.updatedAt.toDate() : null,
     validacion: leerValidacion(data.validacion),
   }

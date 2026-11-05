@@ -1,0 +1,111 @@
+.tarjeta {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface-alt);
+}
+
+.titulo {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.texto {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--ca-muted);
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boton,
+.peligro {
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.boton:hover:not(:disabled) {
+  border-color: var(--ca-signal);
+}
+
+.peligro {
+  color: var(--ca-danger);
+}
+
+.peligro:hover:not(:disabled) {
+  border-color: var(--ca-danger);
+}
+
+.boton:disabled,
+.peligro:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.boton:focus-visible,
+.peligro:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ca-ink);
+}
+
+.entrada {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  font-weight: 400;
+  color: var(--ca-ink);
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-line);
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.entrada:focus-visible {
+  outline: 2px solid var(--ca-signal);
+  outline-offset: 1px;
+}
+
+.contador {
+  align-self: flex-end;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--ca-muted);
+}
+
+.contadorLargo {
+  color: var(--ca-danger);
+}
+
+.error {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--ca-danger);
+}

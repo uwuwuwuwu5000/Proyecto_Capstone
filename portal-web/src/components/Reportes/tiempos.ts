@@ -20,7 +20,12 @@ export type { TiemposReporte }
 
 export const ESTADOS_FINALIZADOS: ReadonlySet<string> = new Set(ESTADOS_FINALIZADOS_COMUN)
 
+/**
+ * Un reporte que su autor retiró queda con una entrada «Reportado → Cerrado» en el historial, pero nadie del
+ * organismo lo atendió: no tiene primera atención ni resolución, para no bajar sus tiempos.
+ */
 export function calcularTiempos(reporte: Reporte, cambios: CambioEstado[]): TiemposReporte {
+  if (reporte.retiradoPorAutor) return { primeraAtencionMs: null, resolucionMs: null }
   return calcularTiemposComun(reporte.fecha, cambios, reporte.tiempoResolucionMs ?? null)
 }
 
@@ -52,6 +57,9 @@ export function textoResolucion(reporte: Reporte, cambios: CambioEstado[] | null
         (r.segun === 'historial' ? ' (según el historial)' : '')
       )
     case 'cerrado_sin_resolver':
+      if (reporte.retiradoPorAutor) {
+        return 'Retirado por quien lo reportó' + (reporte.cerradoSinResolverAt ? ` el ${formatearFecha(reporte.cerradoSinResolverAt, true)}` : '')
+      }
       return (
         'Cerrado sin resolver' +
         (reporte.cerradoSinResolverAt ? ` el ${formatearFecha(reporte.cerradoSinResolverAt, true)}` : '')

@@ -6,7 +6,11 @@ import { useAuth } from '../../context/AuthContext'
 import { ETIQUETA_POR_ESTADO, TRANSICIONES } from '../../constants/reportes'
 import { ErrorSinVeredicto, motivoSinVeredicto, siguientesEstados } from '../../confianza/exigirVeredicto'
 import { useCategorias } from '../../context/CategoriasContext'
+import { puedeModificarReporte } from '@ciudad-alerta/comun'
+import { MENSAJE_YA_REVISADO } from './miReporte'
 import FotoReporte from './FotoReporte'
+import TuReporte from './TuReporte'
+import type { ResultadoMiReporte } from './TuReporte'
 import { EstadoPildora } from './TarjetaReporte'
 import { cambiarEstadoReporte, formatearFecha } from './reporte'
 import type { Reporte } from './reporte'
@@ -81,6 +85,8 @@ export default function DetalleReporte({
   const [guardando, setGuardando] = useState(false)
   const [errorCambio, setErrorCambio] = useState('')
   const [avisoCambio, setAvisoCambio] = useState('')
+  // Lo que dice el detalle después de corregir o retirar el reporte propio (o de enterarse de que ya no se puede).
+  const [avisoMiReporte, setAvisoMiReporte] = useState<ResultadoMiReporte | null>(null)
 
   // Al cambiar el estado (aquí o desde otra pestaña) se reinicia la selección
   // a la primera transición disponible desde el estado nuevo.
@@ -137,6 +143,28 @@ export default function DetalleReporte({
     } finally {
       setGuardando(false)
     }
+  }
+
+  // Si el reporte deja de estar en «Reportado» mientras el autor lo mira (el organismo lo empezó a revisar), la
+  // tarjeta «Tu reporte» y su diálogo desaparecen: se le explica por qué.
+  const estabaReportado = useRef(reporte.estado === 'reportado')
+  useEffect(() => {
+    if (vista === 'ciudadano' && estabaReportado.current && reporte.estado !== 'reportado' && !reporte.retiradoPorAutor) {
+      setAvisoMiReporte((previo) => previo ?? { aviso: MENSAJE_YA_REVISADO, error: true })
+    }
+    estabaReportado.current = reporte.estado === 'reportado'
+  }, [reporte.estado, reporte.retiradoPorAutor, vista])
+
+  // Tras corregir o retirar, se vuelve a leer el reporte: aparece el texto nuevo o el cierre sin esperar al listado.
+  function alTerminarMiReporte(resultado: ResultadoMiReporte) {
+    setAvisoMiReporte(resultado)
+    void cargarReporte(reporte.id)
+      .then((fresco) => {
+        if (!fresco) return
+        setRefrescado(fresco)
+        setEstadoActual(fresco.estado)
+      })
+      .catch((e) => console.error('No se pudo refrescar el reporte:', e))
   }
 
   useEffect(() => {
@@ -201,6 +229,17 @@ export default function DetalleReporte({
             <p className={styles.descripcionCompleta}>
               {reporte.descripcion || 'Sin descripción'}
             </p>
+            {reporte.editadoAt && (
+              <p className={styles.editado}>Editado el {formatearFecha(reporte.editadoAt, true)}</p>
+            )}
+            {vista === 'ciudadano' && avisoMiReporte && (
+              <p
+                className={avisoMiReporte.error ? styles.errorTexto : styles.avisoTexto}
+                role={avisoMiReporte.error ? 'alert' : 'status'}
+              >
+                {avisoMiReporte.aviso}
+              </p>
+            )}
 
             <dl className={styles.datos}>
               <dt>Autor</dt>
@@ -258,6 +297,10 @@ export default function DetalleReporte({
                 </>
               )}
             </dl>
+
+            {vista === 'ciudadano' && user && puedeModificarReporte(reporte, user.uid) && (
+              <TuReporte reporte={reporte} uid={user.uid} onResultado={alTerminarMiReporte} />
+            )}
 
             {gestionable && (
               <div className={styles.cambioRapido}>
