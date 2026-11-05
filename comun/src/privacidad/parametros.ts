@@ -43,3 +43,21 @@ export interface InfoPrivacidad {
 export function versionDeModelos(conDetectorDeRostros: boolean): string {
   return conDetectorDeRostros ? 'mediapipe-face-full+coco-ssd-lite-v2' : 'coco-ssd-lite-v2';
 }
+
+/**
+ * Lo que se guarda en `foto.privacidad` a partir de lo que se difuminó: cuántos
+ * rostros y cuántas personas lejanas (cuya cabeza se difuminó sin detectar su rostro).
+ * Quien difumina (el navegador o un servicio) calcula las zonas con `zonasADifuminar`
+ * y aquí se arma el registro que exige la regla `fotoProtegida()`.
+ */
+export function infoDeProteccion(
+  zonas: { rostros: readonly unknown[]; cabezas: readonly unknown[] },
+  conDetectorDeRostros: boolean,
+): InfoPrivacidad {
+  return {
+    aplicada: true,
+    rostros: zonas.rostros.length,
+    personas: zonas.cabezas.length,
+    version: versionDeModelos(conDetectorDeRostros),
+  };
+}

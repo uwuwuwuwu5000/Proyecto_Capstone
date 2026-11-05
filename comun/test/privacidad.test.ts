@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CONFIANZA_PERSONA, ampliarRostro, recortar, seSolapan, tamanoReducido, versionDeModelos, zonaCabeza, zonasADifuminar } from '../src';
+import { CONFIANZA_PERSONA, ampliarRostro, infoDeProteccion, recortar, seSolapan, tamanoReducido, versionDeModelos, zonaCabeza, zonasADifuminar } from '../src';
 
 const lienzo = { width: 1000, height: 800 };
 
@@ -45,5 +45,33 @@ describe('privacidad: parámetros', () => {
     expect(CONFIANZA_PERSONA).toBeLessThan(0.5);
     expect(versionDeModelos(true)).toBe('mediapipe-face-full+coco-ssd-lite-v2');
     expect(versionDeModelos(false)).toBe('coco-ssd-lite-v2');
+  });
+});
+
+describe('privacidad: lo que se guarda en el reporte', () => {
+  const rostro = { x: 100, y: 100, ancho: 100, alto: 100 };
+
+  it('cuenta lo difuminado y marca la protección como aplicada', () => {
+    const zonas = zonasADifuminar([rostro], [{ x: 700, y: 300, ancho: 30, alto: 120 }], lienzo);
+    expect(infoDeProteccion(zonas, true)).toEqual({
+      aplicada: true,
+      rostros: 1,
+      personas: 1,
+      version: 'mediapipe-face-full+coco-ssd-lite-v2',
+    });
+  });
+
+  it('una foto sin personas queda protegida con ceros', () => {
+    expect(infoDeProteccion(zonasADifuminar([], [], lienzo), true)).toMatchObject({ aplicada: true, rostros: 0, personas: 0 });
+  });
+
+  it('sin el detector de rostros lo dice en la versión', () => {
+    expect(infoDeProteccion({ rostros: [], cabezas: [] }, false).version).toBe('coco-ssd-lite-v2');
+  });
+
+  it('una persona con rostro detectado no se cuenta dos veces', () => {
+    const persona = { x: 80, y: 90, ancho: 140, alto: 500 };
+    const zonas = zonasADifuminar([rostro], [persona], lienzo);
+    expect(infoDeProteccion(zonas, true)).toMatchObject({ rostros: 1, personas: 0 });
   });
 });
