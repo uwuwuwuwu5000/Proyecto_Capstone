@@ -4,10 +4,23 @@ import { expect, test } from '@playwright/test'
 import { MAIPU, bd, reporte, sembrar } from './datos/semilla'
 import { Timestamp } from 'firebase-admin/firestore'
 import { paginaDe } from './ayudas/sesion'
-import type { Page } from '@playwright/test'
+import type { Browser, Page } from '@playwright/test'
+import type { Cuenta } from './ayudas/sesion'
 
 test.beforeAll(async () => {
   await sembrar()
+})
+
+// Cada página abre su propio contexto de navegador: se cierran al terminar cada prueba, porque si quedan abiertos
+// (con sus escuchas de Firestore) la prueba siguiente de otro archivo falla al cerrar su traza (WX2).
+const abiertas: Page[] = []
+async function pagina(browser: Browser, cuenta: Cuenta): Promise<Page> {
+  const p = await paginaDe(browser, cuenta)
+  abiertas.push(p)
+  return p
+}
+test.afterEach(async () => {
+  for (const p of abiertas.splice(0)) await p.context().close().catch(() => undefined)
 })
 
 const DETALLE = '[aria-labelledby="detalle-reporte-titulo"]'
@@ -29,7 +42,7 @@ async function abrir(page: Page, descripcion: string) {
 
 test('WL11 · El autor corrige la descripción de su reporte en «Reportado» y queda marcado como editado', async ({ browser }) => {
   const original = await crear('mr1')
-  const page = await paginaDe(browser, 'vecino1')
+  const page = await pagina(browser, 'vecino1')
   const detalle = await abrir(page, original)
   await expect(detalle.getByRole('heading', { name: 'Tu reporte' })).toBeVisible()
   await expect(detalle.getByText(/Editado/)).toHaveCount(0)
@@ -58,7 +71,7 @@ test('WL11 · El autor corrige la descripción de su reporte en «Reportado» y 
 
 test('WL12 · El autor retira su reporte con un motivo: queda cerrado, firmado «Quien lo reportó» y sin más acciones', async ({ browser }) => {
   const descripcion = await crear('mr2')
-  const page = await paginaDe(browser, 'vecino1')
+  const page = await pagina(browser, 'vecino1')
   const detalle = await abrir(page, descripcion)
 
   await detalle.getByRole('button', { name: 'Retirar reporte' }).click()
@@ -94,7 +107,7 @@ test('WL12 · El autor retira su reporte con un motivo: queda cerrado, firmado �
 test.describe('WL13 · Cuando el organismo ya lo revisa, no se corrige ni se retira', () => {
   test('un reporte «En revisión» no ofrece las acciones', async ({ browser }) => {
     const descripcion = await crear('mr3', { estado: 'en_revision' })
-    const page = await paginaDe(browser, 'vecino1')
+    const page = await pagina(browser, 'vecino1')
     const detalle = await abrir(page, descripcion)
     await expect(detalle.getByText('En revisión').first()).toBeVisible()
     await expect(detalle.getByRole('heading', { name: 'Tu reporte' })).toHaveCount(0)
@@ -104,7 +117,7 @@ test.describe('WL13 · Cuando el organismo ya lo revisa, no se corrige ni se ret
 
   test('si pasa a «En revisión» con el diálogo abierto, el diálogo se cierra, se avisa y no se retira nada', async ({ browser }) => {
     const descripcion = await crear('mr4')
-    const page = await paginaDe(browser, 'vecino1')
+    const page = await pagina(browser, 'vecino1')
     const detalle = await abrir(page, descripcion)
     await detalle.getByRole('button', { name: 'Retirar reporte' }).click()
     const dialogo = page.getByRole('dialog', { name: 'Retirar mi reporte' })
@@ -125,7 +138,7 @@ test('WL14 · Con confirmaciones de vecinos se puede retirar pero ya no corregir
   const descripcion = await crear('mr5', {
     validacion: { puntos: 3, votos: 2, validado: false, validadoAt: null, veredicto: null },
   })
-  const page = await paginaDe(browser, 'vecino1')
+  const page = await pagina(browser, 'vecino1')
   const detalle = await abrir(page, descripcion)
   await expect(detalle.getByRole('heading', { name: 'Tu reporte' })).toBeVisible()
   await expect(detalle.getByRole('button', { name: 'Corregir descripción' })).toHaveCount(0)
@@ -137,7 +150,7 @@ test.describe('WL15 · Solo quien lo reportó ve las acciones, y los retirados s
   test('el administrador ve un reporte retirado como tal y no las acciones del autor', async ({ browser }) => {
     const descripcion = await crear('mr6')
     await bd.doc('reports/mr6').update({ estado: 'cerrado', retiradoPorAutor: true, cerradoSinResolverAt: Timestamp.now() })
-    const page = await paginaDe(browser, 'admin')
+    const page = await pagina(browser, 'admin')
     await page.goto('/admin/reportes?reporte=mr6')
     const detalle = page.locator(DETALLE)
     await expect(detalle.getByText(descripcion)).toBeVisible()
@@ -147,7 +160,7 @@ test.describe('WL15 · Solo quien lo reportó ve las acciones, y los retirados s
 
   test('el administrador ve un reporte propio de otra persona sin las acciones', async ({ browser }) => {
     const descripcion = await crear('mr7')
-    const page = await paginaDe(browser, 'admin')
+    const page = await pagina(browser, 'admin')
     await page.goto('/admin/reportes?reporte=mr7')
     const detalle = page.locator(DETALLE)
     await expect(detalle.getByText(descripcion)).toBeVisible()
@@ -157,7 +170,7 @@ test.describe('WL15 · Solo quien lo reportó ve las acciones, y los retirados s
 
   test('otra vecina no tiene el reporte en su historial', async ({ browser }) => {
     const descripcion = await crear('mr8')
-    const page = await paginaDe(browser, 'vecino2')
+    const page = await pagina(browser, 'vecino2')
     await page.goto('/historial')
     await expect(page.getByRole('heading', { name: 'Mi historial de reportes' })).toBeVisible()
     await expect(page.locator('tbody tr').first()).toBeVisible({ timeout: 20_000 })

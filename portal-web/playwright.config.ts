@@ -6,6 +6,7 @@ const carpetaEvidencia = process.env.EVIDENCIA_DIR // si existe, el reporte JUni
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: '**/manual.spec.ts', // el entorno de `npm run manual`, no una prueba
   globalSetup: './e2e/global-setup.ts',
   // Las pruebas comparten un único emulador y los mismos datos: se ejecutan en serie.
   fullyParallel: false,
