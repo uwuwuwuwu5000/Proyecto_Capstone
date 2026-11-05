@@ -15,6 +15,7 @@ export * from './reportes/tiempos';
 export * from './reportes/gestion';
 export * from './reportes/contacto';
 export * from './reportes/veredictos';
+export * from './reportes/mi-reporte';
 
 // Sistema de confianza
 export * from './confianza/parametros';

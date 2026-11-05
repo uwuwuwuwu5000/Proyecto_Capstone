@@ -14,6 +14,7 @@ Es **TypeScript puro**: no importa Angular, React, Ionic ni Firebase, y no tiene
 | `confianza/` | Niveles, pesos, límites diarios, día con desfase UTC−3, validación, veredictos, progreso | app (módulo confianza) |
 | `confianza/bloqueo.ts` | Por qué una cuenta no puede confirmar un reporte (`motivoDeBloqueo`: propio, cerrado, con veredicto, suspendida, límite, pausa…) | app (`confianza.service.ts`) |
 | `usuarios/roles.ts` | Tipo `UserRole` y `esCuentaDeOrganismo` / `esCuentaInstitucional` | app (`user-profile.model.ts`) |
+| `reportes/mi-reporte.ts` | Corregir o retirar el reporte propio: quién puede (`puedeModificarReporte`, `puedeCorregirReporte`), `tieneVotosConPeso`, firma y comentario del retiro | app (`mi-reporte.service.ts`, que hoy tiene su copia) y **portal** (`components/Reportes/miReporte.ts`) |
 | `reportes/veredictos.ts` | «Por veredicto»: reportes pendientes, espera, «demorado» (48 h), tiempo hasta el veredicto, de «En revisión» a cierre | **portal** (`pages/Operador/veredictos.ts`) |
 | `territorio/` | Normalizar nombres de comunas, códigos CUT, nombre corto de región | app y portal |
 | `territorio/mapa-calor.ts` | Agrupación de reportes por comuna y tramos de intensidad | **portal** (`pages/Admin/mapaCalor.ts`) |
