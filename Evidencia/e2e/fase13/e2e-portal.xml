@@ -1,0 +1,332 @@
+<testsuites id="" name="" tests="140" failures="0" skipped="0" errors="0" time="1009.2694419999999">
+<testsuite name="acceso.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="13" failures="0" skipped="0" time="33.133" errors="0">
+<testcase name="Sesión › US04 · Inicio de sesión exitoso" classname="acceso.spec.ts" time="1.291">
+</testcase>
+<testcase name="Sesión › US05 · Contraseña incorrecta" classname="acceso.spec.ts" time="1.244">
+</testcase>
+<testcase name="Sesión › US07 · Cerrar sesión termina en el inicio" classname="acceso.spec.ts" time="2.697">
+</testcase>
+<testcase name="Sesión › WA7 · Cerrar sesión desde el mapa, Mi perfil y un panel llega siempre al inicio" classname="acceso.spec.ts" time="6.467">
+</testcase>
+<testcase name="Sesión › PF3 · La sesión persiste al recargar" classname="acceso.spec.ts" time="2.271">
+</testcase>
+<testcase name="Registro › US02 · Registro con email inválido" classname="acceso.spec.ts" time="1.118">
+</testcase>
+<testcase name="Registro › US03 · Registro con correo existente" classname="acceso.spec.ts" time="1.169">
+</testcase>
+<testcase name="Registro › US01 · Registro de usuario exitoso" classname="acceso.spec.ts" time="1.448">
+</testcase>
+<testcase name="Rutas protegidas y redirección por rol › US08 · Sin sesión las rutas protegidas no muestran datos" classname="acceso.spec.ts" time="4.274">
+</testcase>
+<testcase name="Rutas protegidas y redirección por rol › WA4 · Los enlaces al mapa exigen registro" classname="acceso.spec.ts" time="1.86">
+</testcase>
+<testcase name="Rutas protegidas y redirección por rol › WA5 · La landing cambia según la sesión y el rol" classname="acceso.spec.ts" time="2.274">
+</testcase>
+<testcase name="Rutas protegidas y redirección por rol › WA1 / AD1 · Cada rol llega solo a su panel" classname="acceso.spec.ts" time="5.69">
+</testcase>
+<testcase name="US06 · Recuperación de contraseña: se pide el enlace, el emulador lo genera y la clave nueva sirve" classname="acceso.spec.ts" time="1.33">
+</testcase>
+</testsuite>
+<testsuite name="admin-reportes.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="14" failures="0" skipped="0" time="45.324" errors="0">
+<testcase name="Listado › WG1 · Paginación de 12, 24 (por defecto) y 48 reportes con total y navegación" classname="admin-reportes.spec.ts" time="2.352">
+</testcase>
+<testcase name="Listado › WG2 / AD2 / AD7 · Filtros combinados y «Limpiar filtros»" classname="admin-reportes.spec.ts" time="1.841">
+</testcase>
+<testcase name="Listado › WG11 / WG13 · Filtro de verificación e insignias de las tarjetas" classname="admin-reportes.spec.ts" time="2.346">
+</testcase>
+<testcase name="Listado › WG12 · «Por verificar» desde el menú lateral" classname="admin-reportes.spec.ts" time="2.186">
+</testcase>
+<testcase name="Detalle, estado y veredicto › WG9 / MS6 · El historial muestra autor y comentario; el administrador no expone su nombre" classname="admin-reportes.spec.ts" time="1.707">
+</testcase>
+<testcase name="Detalle, estado y veredicto › CT15 / CT10 / PA1 · Sin veredicto no hay cambio de estado; con veredicto «real» sí" classname="admin-reportes.spec.ts" time="3.347">
+</testcase>
+<testcase name="Detalle, estado y veredicto › CT11 · El veredicto «falso» exige un motivo y resta 15 puntos" classname="admin-reportes.spec.ts" time="3.417">
+</testcase>
+<testcase name="Detalle, estado y veredicto › CT13 · Un reporte con veredicto no admite otro" classname="admin-reportes.spec.ts" time="1.593">
+</testcase>
+<testcase name="Detalle, estado y veredicto › WG4 / MS4 / MS5 · Cambios de estado seguidos en el mismo detalle" classname="admin-reportes.spec.ts" time="4.838">
+</testcase>
+<testcase name="Acciones en lote, CSV y eliminación › WG5 · Cambio de estado en lote: omite el reporte sin veredicto" classname="admin-reportes.spec.ts" time="4.419">
+</testcase>
+<testcase name="Acciones en lote, CSV y eliminación › WG7 · Reasignar y quitar el operador de un reporte, en lote" classname="admin-reportes.spec.ts" time="5.191">
+</testcase>
+<testcase name="Acciones en lote, CSV y eliminación › WG6 · Exportar CSV con todos los reportes filtrados" classname="admin-reportes.spec.ts" time="2.426">
+</testcase>
+<testcase name="Acciones en lote, CSV y eliminación › WG8 · Eliminar un reporte borra también su historial" classname="admin-reportes.spec.ts" time="3.933">
+</testcase>
+<testcase name="PA3 · Al sumar puntos con un veredicto «real» el vecino sube de nivel" classname="admin-reportes.spec.ts" time="5.728">
+</testcase>
+</testsuite>
+<testsuite name="avisos.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="5" failures="0" skipped="0" time="17.697" errors="0">
+<testcase name="AV1 / AV2 / AV3 / AV7 · Avisos de estado, validación y veredicto (y ninguno por confirmaciones)" classname="avisos.spec.ts" time="1.555">
+</testcase>
+<testcase name="AV5 · Marcar como vistos persiste al recargar" classname="avisos.spec.ts" time="2.383">
+</testcase>
+<testcase name="AV4 · Avisos de cambio de nivel: neutro, subida y bajada" classname="avisos.spec.ts" time="5.371">
+</testcase>
+<testcase name="AV6 · Avisos de soporte para el administrador: cada conversación abierta y los mensajes nuevos" classname="avisos.spec.ts" time="3.86">
+</testcase>
+<testcase name="AV8 · La campana la ven el vecino y el administrador, no el operador" classname="avisos.spec.ts" time="4.528">
+</testcase>
+</testsuite>
+<testsuite name="catalogos.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="7" failures="0" skipped="0" time="15.103" errors="0">
+<testcase name="Organismos › WO1 · Tabla con paginación, búsqueda y filtros" classname="catalogos.spec.ts" time="2.078">
+</testcase>
+<testcase name="Organismos › WO2 · Desactivar y volver a activar un organismo" classname="catalogos.spec.ts" time="1.893">
+</testcase>
+<testcase name="Operadores y cuentas › WO5 · Operadores activos sin cuenta" classname="catalogos.spec.ts" time="1.188">
+</testcase>
+<testcase name="Operadores y cuentas › WO4 · Alta de un operador y de su cuenta, sin cerrar la sesión del administrador" classname="catalogos.spec.ts" time="2.433">
+</testcase>
+<testcase name="Categorías › WK1 · Crear y editar una categoría" classname="catalogos.spec.ts" time="2.95">
+</testcase>
+<testcase name="Categorías › WK2 · Desactivar una categoría sin perder la historia de sus reportes" classname="catalogos.spec.ts" time="3.065">
+</testcase>
+<testcase name="Categorías › WK3 · Reordenar con el teclado y ver cuántos reportes tiene cada categoría" classname="catalogos.spec.ts" time="1.496">
+</testcase>
+</testsuite>
+<testsuite name="confianza.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="13" failures="0" skipped="0" time="97.565" errors="0">
+<testcase name="Confirmar un reporte (vecino de nivel 0) › CT3 / VC3 / VC4 / CT7 · Confirmar con peso, no repetir y pausa de 20 s" classname="confianza.spec.ts" time="23.933">
+</testcase>
+<testcase name="Confirmar un reporte (vecino de nivel 0) › VC5 · El número de confirmaciones coincide y la barra usa puntos y personas" classname="confianza.spec.ts" time="5.172">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT9 · El autor ve «Este es tu reporte»" classname="confianza.spec.ts" time="3.194">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT9 · Un reporte con veredicto ya no se confirma" classname="confianza.spec.ts" time="5.354">
+</testcase>
+<testcase name="Casos especiales de quien confirma › WX1 · Un reporte resuelto o cerrado (también el retirado por su autor) no ofrece «Confirmar»" classname="confianza.spec.ts" time="15.038">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT5 · Con el correo sin verificar la confirmación pesa 0 y se avisa" classname="confianza.spec.ts" time="8.627">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT5 · Una cuenta de menos de 24 horas también pesa 0" classname="confianza.spec.ts" time="3.753">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT6 · Al llegar al límite diario el botón se reemplaza por un aviso" classname="confianza.spec.ts" time="5.347">
+</testcase>
+<testcase name="Casos especiales de quien confirma › CT8 / CT18 · Confirmaciones suspendidas: aviso en el reporte y en «Mi nivel»" classname="confianza.spec.ts" time="6.646">
+</testcase>
+<testcase name="Mi nivel › CT16 / PA2 · Nivel, puntos, siguiente nivel, peso del voto y tabla (nivel 4)" classname="confianza.spec.ts" time="1.143">
+</testcase>
+<testcase name="Mi nivel › CT16 · Nivel máximo y nivel 0 sin datos" classname="confianza.spec.ts" time="2.329">
+</testcase>
+<testcase name="Mi nivel › CT16 · Sin correo verificado ofrece «Ya verifiqué mi correo»; otros roles vuelven al inicio" classname="confianza.spec.ts" time="2.101">
+</testcase>
+<testcase name="VC6 · La confirmación de otro vecino suma al reporte y cada voto pesa según su nivel" classname="confianza.spec.ts" time="14.928">
+</testcase>
+</testsuite>
+<testsuite name="crear-reporte.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="4" failures="0" skipped="0" time="18.217" errors="0">
+<testcase name="RI7 · Solo se ofrecen las categorías activas" classname="crear-reporte.spec.ts" time="1.643">
+</testcase>
+<testcase name="WC2 / RI3 · Coordenadas inválidas, punto sin comuna y campos obligatorios" classname="crear-reporte.spec.ts" time="4">
+</testcase>
+<testcase name="WC1 / RI2 / RI8 / RI12 · Crear un reporte con comuna, organismo y operador asignados" classname="crear-reporte.spec.ts" time="6.425">
+</testcase>
+<testcase name="WC3 · Comuna sin municipalidad activa: organismo genérico y sin operador" classname="crear-reporte.spec.ts" time="6.149">
+</testcase>
+</testsuite>
+<testsuite name="eliminar-cuenta.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="7" failures="0" skipped="0" time="47.357" errors="0">
+<testcase name="WL6 · Con una contraseña incorrecta no se borra nada y la sesión sigue" classname="eliminar-cuenta.spec.ts" time="9.419">
+</testcase>
+<testcase name="WL7 · Al eliminar la cuenta, los reportes quedan como «Cuenta eliminada» y el perfil sin correo ni nombre" classname="eliminar-cuenta.spec.ts" time="13.803">
+</testcase>
+<testcase name="WL8 · Una cuenta eliminada no puede volver a iniciar sesión" classname="eliminar-cuenta.spec.ts" time="13.275">
+</testcase>
+<testcase name="WL9 · Solo los ciudadanos ven «Eliminar mi cuenta» › un ciudadano la ve" classname="eliminar-cuenta.spec.ts" time="1.272">
+</testcase>
+<testcase name="WL9 · Solo los ciudadanos ven «Eliminar mi cuenta» › operadorA no la ve" classname="eliminar-cuenta.spec.ts" time="1.405">
+</testcase>
+<testcase name="WL9 · Solo los ciudadanos ven «Eliminar mi cuenta» › admin no la ve" classname="eliminar-cuenta.spec.ts" time="1.268">
+</testcase>
+<testcase name="WL10 · «Mi perfil», el diálogo y el aviso de cuenta eliminada no se desplazan en horizontal en un teléfono (393 px)" classname="eliminar-cuenta.spec.ts" time="6.915">
+</testcase>
+</testsuite>
+<testsuite name="flujo-completo.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="29.303" errors="0">
+<testcase name="IN1 · Flujo completo: confirmar, validar, veredicto, cambios de estado hasta cerrar y seguimiento del vecino" classname="flujo-completo.spec.ts" time="29.303">
+</testcase>
+</testsuite>
+<testsuite name="fotos-privacidad.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="4" failures="0" skipped="0" time="93.528" errors="0">
+<testcase name="WL18 · Una foto con una persona sale con el rostro difuminado y se guarda esa versión (Web)" classname="fotos-privacidad.spec.ts" time="22.164">
+</testcase>
+<testcase name="WL19 · Una foto sin personas queda como protegida, con cero rostros" classname="fotos-privacidad.spec.ts" time="20.572">
+</testcase>
+<testcase name="WL20 · Si la protección no puede cargar, la foto no se adjunta ni se publica sin proteger" classname="fotos-privacidad.spec.ts" time="6.4">
+</testcase>
+<testcase name="WL21 · Quitar o cambiar la foto antes de crear el reporte no deja restos" classname="fotos-privacidad.spec.ts" time="44.392">
+</testcase>
+</testsuite>
+<testsuite name="historial-rendimiento.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="4" failures="0" skipped="0" time="50.417" errors="0">
+<testcase name="MS3 · «Historial» lista solo los reportes del vecino con su estado" classname="historial-rendimiento.spec.ts" time="2.333">
+</testcase>
+<testcase name="Administrador › RI13 · El detalle muestra el nombre del creador del reporte" classname="historial-rendimiento.spec.ts" time="1.499">
+</testcase>
+<testcase name="Administrador › WG3 · Del mapa de calor al listado de reportes de una comuna" classname="historial-rendimiento.spec.ts" time="2.698">
+</testcase>
+<testcase name="Rendimiento del mapa › MS7 · El mapa con 500 reportes en la región carga con un P95 menor a 7 s" classname="historial-rendimiento.spec.ts" time="43.887">
+<system-out>
+<![CDATA[MS7 tiempos (ms): 2013, 2014, 2032, 2053, 2062, 2120, 2128, 2139, 2143, 2184, 2187, 2197, 2203, 2214, 2273, 2276, 2279, 2283, 2298, 2386 · P95 = 2298 ms
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="humo.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.897" errors="0">
+<testcase name="FASE1 · El portal abre sin conectarse a Firebase" classname="humo.spec.ts" time="0.897">
+</testcase>
+</testsuite>
+<testsuite name="landing.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="8.974" errors="0">
+<testcase name="WA9 · Las fotos del landing cargan en WebP, con su descripción, y no desbordan en escritorio ni en teléfono" classname="landing.spec.ts" time="8.974">
+</testcase>
+</testsuite>
+<testsuite name="mapa.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="11" failures="0" skipped="0" time="57.849" errors="0">
+<testcase name="Mapa público › MS1 / WB1 · Filtros de región, categoría y estado" classname="mapa.spec.ts" time="1.815">
+</testcase>
+<testcase name="Mapa público › WB6 · El reporte antiguo sin región aparece una sola vez" classname="mapa.spec.ts" time="2.766">
+</testcase>
+<testcase name="Mapa público › WB5 · La lectura se limita a 500 por región y lo avisa" classname="mapa.spec.ts" time="2.559">
+</testcase>
+<testcase name="Mapa público › WB1 · Al cambiar de región se muestran los pines sin tener que mover el mapa" classname="mapa.spec.ts" time="2.586">
+</testcase>
+<testcase name="Mapa público › WB10 · El tope de 500 es exacto aunque haya reportes antiguos sin región (DEF-001)" classname="mapa.spec.ts" time="21.798">
+</testcase>
+<testcase name="Mapa público › WB9 · Cambiar de región ida y vuelta muestra los pines cada vez, sin mover el mapa (DEF-002)" classname="mapa.spec.ts" time="3.118">
+</testcase>
+<testcase name="Mapa público › MS2 / WB8 · Panel del reporte con foto, fecha, confirmaciones, verificación e historial" classname="mapa.spec.ts" time="4.212">
+</testcase>
+<testcase name="Mapa público › WB7 · El enlace de administración solo lo ve el administrador" classname="mapa.spec.ts" time="8.164">
+</testcase>
+<testcase name="Mapa público › WB3 · Los reportes cercanos se agrupan en un círculo con el total y se separan al acercar" classname="mapa.spec.ts" time="1.861">
+</testcase>
+<testcase name="Mapa público › WB4 · Tres reportes en el mismo punto: lista y «Ver detalle» sin errores" classname="mapa.spec.ts" time="6.213">
+</testcase>
+<testcase name="Mapa: ubicación › WB2 · «Mi región» usa la ubicación y, sin permiso, deja elegir una región" classname="mapa.spec.ts" time="2.757">
+</testcase>
+</testsuite>
+<testsuite name="mi-reporte.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="9" failures="0" skipped="0" time="99.258" errors="0">
+<testcase name="WL11 · El autor corrige la descripción de su reporte en «Reportado» y queda marcado como editado" classname="mi-reporte.spec.ts" time="17.307">
+</testcase>
+<testcase name="WL12 · El autor retira su reporte con un motivo: queda cerrado, firmado «Quien lo reportó» y sin más acciones" classname="mi-reporte.spec.ts" time="18.026">
+</testcase>
+<testcase name="WL13 · Cuando el organismo ya lo revisa, no se corrige ni se retira › un reporte «En revisión» no ofrece las acciones" classname="mi-reporte.spec.ts" time="7.913">
+</testcase>
+<testcase name="WL13 · Cuando el organismo ya lo revisa, no se corrige ni se retira › si pasa a «En revisión» con el diálogo abierto, el diálogo se cierra, se avisa y no se retira nada" classname="mi-reporte.spec.ts" time="16.992">
+</testcase>
+<testcase name="WL14 · Con confirmaciones de vecinos se puede retirar pero ya no corregir la descripción" classname="mi-reporte.spec.ts" time="8.527">
+</testcase>
+<testcase name="WL15 · Solo quien lo reportó ve las acciones, y los retirados se distinguen › el administrador ve un reporte retirado como tal y no las acciones del autor" classname="mi-reporte.spec.ts" time="10.105">
+</testcase>
+<testcase name="WL15 · Solo quien lo reportó ve las acciones, y los retirados se distinguen › el administrador ve un reporte propio de otra persona sin las acciones" classname="mi-reporte.spec.ts" time="5.542">
+</testcase>
+<testcase name="WL15 · Solo quien lo reportó ve las acciones, y los retirados se distinguen › otra vecina no tiene el reporte en su historial" classname="mi-reporte.spec.ts" time="5.241">
+</testcase>
+<testcase name="WL16 · El detalle con las acciones, el editor y el diálogo no se desplazan en horizontal en un teléfono (393 px)" classname="mi-reporte.spec.ts" time="9.605">
+</testcase>
+</testsuite>
+<testsuite name="organismo.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="3.315" errors="0">
+<testcase name="WX2 · Una cuenta de organismo ve el mensaje de la app móvil, sin errores de permiso" classname="organismo.spec.ts" time="3.315">
+</testcase>
+</testsuite>
+<testsuite name="panel-y-perfil.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="8" failures="0" skipped="0" time="46.223" errors="0">
+<testcase name="Panel de administración › WA2 · Barra lateral: secciones, sección activa y contraer" classname="panel-y-perfil.spec.ts" time="3.045">
+</testcase>
+<testcase name="Panel de administración › WA3 · «Panel de administración» lleva al Resumen y la campana cuenta los avisos de soporte" classname="panel-y-perfil.spec.ts" time="1.327">
+</testcase>
+<testcase name="Panel de administración › WM2 / WM3 · Mapa de calor: detalle de una comuna y cambio de región" classname="panel-y-perfil.spec.ts" time="1.54">
+</testcase>
+<testcase name="Panel de administración › WE1 · Estadísticas globales por periodo" classname="panel-y-perfil.spec.ts" time="2.209">
+</testcase>
+<testcase name="Mi perfil › WF1 / PF1 / PF2 · Datos de la cuenta de un vecino y de un operador" classname="panel-y-perfil.spec.ts" time="1.71">
+</testcase>
+<testcase name="Mi perfil › WF3 · Recordatorio «Verificar correo» solo para el vecino sin verificar" classname="panel-y-perfil.spec.ts" time="4.047">
+</testcase>
+<testcase name="Adaptación a pantallas › WA6 · Sin desplazamiento horizontal en landing, Resumen, listado y mapa (1440, 1100 y 393 px)" classname="panel-y-perfil.spec.ts" time="25.596">
+</testcase>
+<testcase name="PA4 · No hay ranking público: ninguna pantalla del vecino lista a otros vecinos con su nivel" classname="panel-y-perfil.spec.ts" time="6.749">
+</testcase>
+</testsuite>
+<testsuite name="resumen-operador.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="12" failures="0" skipped="0" time="23.749" errors="0">
+<testcase name="Resumen del administrador › WR1 / AD9 · Indicadores del día" classname="resumen-operador.spec.ts" time="1.097">
+</testcase>
+<testcase name="Resumen del administrador › WR2 · Alertas con enlace a la lista ya filtrada" classname="resumen-operador.spec.ts" time="1.195">
+</testcase>
+<testcase name="Resumen del administrador › WR3 · Estado de los reportes: porcentaje de cerrados y enlace por estado" classname="resumen-operador.spec.ts" time="1.46">
+</testcase>
+<testcase name="Resumen del administrador › WR4 · Actividad reciente: el detalle abre sobre el Resumen y permite cambiar el estado" classname="resumen-operador.spec.ts" time="1.567">
+</testcase>
+<testcase name="Resumen del administrador › WR5 · Resueltos del mes y tiempo promedio de resolución" classname="resumen-operador.spec.ts" time="1.438">
+</testcase>
+<testcase name="Panel del operador A › WP1 / AD6 · El operador ve solo los reportes asignados a su operador" classname="resumen-operador.spec.ts" time="1.625">
+</testcase>
+<testcase name="Panel del operador A › WP2 / AD8 · El operador cambia el estado de un reporte propio con veredicto" classname="resumen-operador.spec.ts" time="2.174">
+</testcase>
+<testcase name="Panel del operador A › WG12 · El filtro «Por verificar» de «Reportes» muestra los validados sin veredicto" classname="resumen-operador.spec.ts" time="6.291">
+</testcase>
+<testcase name="Panel del operador A › WP3 · Estadísticas del operador: solo sus reportes" classname="resumen-operador.spec.ts" time="1.445">
+</testcase>
+<testcase name="Panel del operador A › WP3 · Mapa de gestión del operador" classname="resumen-operador.spec.ts" time="1.422">
+</testcase>
+<testcase name="WA8 · Estadísticas del operador sin desplazamiento horizontal en teléfono (393 px)" classname="resumen-operador.spec.ts" time="2.962">
+</testcase>
+<testcase name="WP1 · El operador B solo ve su único reporte" classname="resumen-operador.spec.ts" time="1.073">
+</testcase>
+</testsuite>
+<testsuite name="sesion.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="43.89" errors="0">
+<testcase name="WX3 · Abrir directamente una pantalla de administración con la sesión guardada no redirige al inicio" classname="sesion.spec.ts" time="43.89">
+</testcase>
+</testsuite>
+<testsuite name="soporte.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="4" failures="0" skipped="0" time="4.84" errors="0">
+<testcase name="WS1 · Bandeja en tiempo real con filtros" classname="soporte.spec.ts" time="1.035">
+</testcase>
+<testcase name="WS2 / ATN2 · Responder: el mensaje sale como equipo y el caso queda en atención" classname="soporte.spec.ts" time="0.96">
+</testcase>
+<testcase name="WS3 · Cerrar, reabrir y reabrir respondiendo" classname="soporte.spec.ts" time="1.46">
+</testcase>
+<testcase name="Teléfono (393 px) › WS4 · Una sola vista a la vez y conversación inexistente" classname="soporte.spec.ts" time="1.385">
+</testcase>
+</testsuite>
+<testsuite name="terminos.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="5" failures="0" skipped="0" time="11.029" errors="0">
+<testcase name="WL1 · El registro exige aceptar los términos y la política de privacidad" classname="terminos.spec.ts" time="0.826">
+</testcase>
+<testcase name="WL2 · Al registrarse queda guardada la versión de los términos y la hora en que se aceptaron" classname="terminos.spec.ts" time="0.961">
+</testcase>
+<testcase name="WL3 · Una cuenta que no aceptó la versión vigente la acepta una sola vez al entrar" classname="terminos.spec.ts" time="1.565">
+</testcase>
+<testcase name="WL4 · Los términos y la política de privacidad se leen sin iniciar sesión" classname="terminos.spec.ts" time="1.671">
+</testcase>
+<testcase name="WL5 · Las pantallas de términos y privacidad no se desplazan en horizontal en un teléfono (393 px)" classname="terminos.spec.ts" time="6.006">
+</testcase>
+</testsuite>
+<testsuite name="veredicto-campo.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="1" failures="0" skipped="0" time="1.239" errors="0">
+<testcase name="WV16 · «Por veredicto» muestra los validados por la app, que no traen el campo veredicto" classname="veredicto-campo.spec.ts" time="1.239">
+</testcase>
+</testsuite>
+<testsuite name="veredicto-seccion.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="2" failures="0" skipped="0" time="17.279" errors="0">
+<testcase name="WV4 · Dar el veredicto «real» desde la lista: el detalle muestra el resultado, la tarjeta sale y los indicadores se actualizan" classname="veredicto-seccion.spec.ts" time="12.812">
+</testcase>
+<testcase name="WV15 · El veredicto «falso» exige un motivo; el aviso se cierra con su botón" classname="veredicto-seccion.spec.ts" time="4.467">
+</testcase>
+</testsuite>
+<testsuite name="veredictos.spec.ts" timestamp="2026-11-05T22:36:32.010Z" hostname="chromium" tests="12" failures="0" skipped="0" time="19.602" errors="0">
+<testcase name="Operador A › WV1 · La lista muestra solo los confirmados sin veredicto del operador" classname="veredictos.spec.ts" time="1.224">
+</testcase>
+<testcase name="Operador A › WV2 · El contador y la espera coinciden con la lista" classname="veredictos.spec.ts" time="1.158">
+</testcase>
+<testcase name="Operador A › WV3 · Orden por antigüedad de la validación y marca de «Demorado»" classname="veredictos.spec.ts" time="1.065">
+</testcase>
+<testcase name="Operador A › WV8 · Los filtros se combinan y «Limpiar filtros» los quita" classname="veredictos.spec.ts" time="1.663">
+</testcase>
+<testcase name="Operador A › WV9 · El orden por votos y por fecha cambia la lista" classname="veredictos.spec.ts" time="1.289">
+</testcase>
+<testcase name="Operador A › WV10 · Los filtros quedan en la URL y se restauran al recargar" classname="veredictos.spec.ts" time="2.306">
+</testcase>
+<testcase name="Operador A › WV14 · La pestaña «Por veredicto» reemplaza a «Por verificar» en el panel del operador" classname="veredictos.spec.ts" time="2.506">
+</testcase>
+<testcase name="Operador A › WV13 · En teléfono (393 px) no hay desplazamiento horizontal" classname="veredictos.spec.ts" time="0.991">
+</testcase>
+<testcase name="WV5 · El tiempo hasta el veredicto se mide desde que la comunidad validó el reporte" classname="veredictos.spec.ts" time="1.192">
+</testcase>
+<testcase name="WV6 · La revisión hasta el cierre se mide desde «En revisión» y se informa de los que no pasaron por ella" classname="veredictos.spec.ts" time="2.206">
+</testcase>
+<testcase name="WV7 · Un operador no ve los pendientes de otro" classname="veredictos.spec.ts" time="2.163">
+</testcase>
+<testcase name="WV12 · Quien no es operador no entra a «Por veredicto»" classname="veredictos.spec.ts" time="1.839">
+</testcase>
+</testsuite>
+</testsuites>

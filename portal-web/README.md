@@ -121,6 +121,18 @@ firebase deploy --only hosting --project ciudadalerta
 Si algo sale mal, en Firebase → Hosting → historial de versiones se puede volver a la versión anterior
 («Rollback»).
 
+## Fotos del landing
+
+El inicio, la sección del mapa y la de municipios usan fotos en formato **WebP** guardadas en
+`src/assets/landing/` (`barrio.webp`, `mapa.webp`, `municipio.webp`, de 120 a 190 KB cada una). Las demás secciones
+siguen con sus ilustraciones SVG (`src/pages/Landing/ilustraciones.tsx`). La captura del mapa muestra la atribución
+de OpenStreetMap, que su licencia exige.
+
+Para cambiar una foto: dejar el original en `src/assets/landing/originales/` (esa carpeta no se sube a Git),
+convertirlo a WebP (por ejemplo con Squoosh, calidad 75 a 85, 1200 px de ancho o menos y menos de 200 KB) y
+reemplazar el archivo de `src/assets/landing/` conservando el nombre. La prueba `WA9` comprueba que las fotos
+cargan, tienen descripción y no desbordan el ancho de un teléfono.
+
 ## Fotos de los reportes
 
 Al crear un reporte desde el panel, la foto se difumina **en el navegador** (rostros y personas) antes de
@@ -130,10 +142,8 @@ privacidad de la nube (Render) sin tocar las pantallas.
 
 ## Limitaciones conocidas
 
-- **Mapa, DEF-001:** con más de 500 reportes en una región, el mapa muestra más de esos 500 (debería limitarse y
-  avisarlo). Lo registra la prueba WB5.
-- **Mapa, DEF-002:** al cambiar de región, a veces el mapa queda sin pines hasta que se mueve o se acerca. Lo
-  registran las pruebas WB1 y MS7.
-- **Aplazado:** el aviso de emergencia y el contacto al organismo desde el reporte (historias J4 y J5), y el uso
+No hay defectos conocidos del portal abiertos. Lo que sigue son funciones aplazadas:
+
+- El aviso de emergencia y el contacto al organismo desde el reporte (historias J4 y J5), y el uso
   del servicio de fotos en la nube. Los reportes creados desde el portal no guardan el vector de la foto, así que
   la app no detecta sus duplicados.
