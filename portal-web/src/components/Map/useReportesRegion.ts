@@ -41,22 +41,30 @@ export function partir<T>(lista: readonly T[], tamano: number): T[][] {
   return partes
 }
 
+/** createdAt en milisegundos; un reporte sin fecha cuenta como el más antiguo. */
+function milisDe(d: QueryDocumentSnapshot): number {
+  const creado = d.data().createdAt
+  return typeof creado?.toMillis === 'function' ? creado.toMillis() : 0
+}
+
 /**
- * Une la consulta principal con los reportes encontrados por comuna: sin
- * repetidos y descartando los que dicen pertenecer a otra región.
+ * Une la consulta principal con los reportes antiguos encontrados por comuna: sin repetidos y solo los que no
+ * tienen el campo `region`. Los que sí lo tienen y llegan por comuna son justo los que quedaron fuera del tope de
+ * la consulta principal (DEF-001): sumarlos mostraba más de `maximo` reportes. El resultado queda ordenado del más
+ * reciente al más antiguo y limitado a `maximo`, así el aviso «las 500 más recientes» es siempre cierto.
  */
 export function unirReportesDeRegion(
   principales: readonly QueryDocumentSnapshot[],
   porComuna: readonly QueryDocumentSnapshot[],
-  nombreRegion: string,
+  maximo: number = MAXIMO_POR_REGION,
 ): QueryDocumentSnapshot[] {
   const vistos = new Set(principales.map((d) => d.id))
-  const extras = porComuna.filter((d) => {
+  const antiguos = porComuna.filter((d) => {
     if (vistos.has(d.id)) return false
     const region = d.data().region
-    return region === undefined || region === null || region === '' || region === nombreRegion
+    return region === undefined || region === null || region === ''
   })
-  return [...principales, ...extras]
+  return [...principales, ...antiguos].sort((a, b) => milisDe(b) - milisDe(a)).slice(0, maximo)
 }
 
 interface Estado<T> {
@@ -92,7 +100,7 @@ export function useReportesRegion<T>(
     let porComuna: QueryDocumentSnapshot[] = []
     const emitir = () => {
       if (!vigente) return
-      const docs = unirReportesDeRegion(principales, porComuna, nombre)
+      const docs = unirReportesDeRegion(principales, porComuna)
       const reportes: T[] = []
       for (const d of docs) {
         const r = mapear(d)

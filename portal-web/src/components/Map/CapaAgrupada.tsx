@@ -56,10 +56,17 @@ export default function CapaAgrupada<T extends PuntoAgrupable>({
   const [vista, setVista] = useState<Vista>(() => leerVista(mapa))
   const [grupoAbierto, setGrupoAbierto] = useState<GrupoAbierto | null>(null)
 
-  useMapEvents({
-    moveend: () => setVista(leerVista(mapa)),
-    zoomend: () => setVista(leerVista(mapa)),
-  })
+  // Los manejadores tienen que ser el mismo objeto en cada render (DEF-002): con uno nuevo cada vez, React-Leaflet
+  // los quita y los vuelve a poner, y el `moveend` del reencuadre al cambiar de región (de zoom 8 a 13, sin
+  // animación) caía justo en ese intervalo y se perdía: la vista quedaba con el encuadre anterior y no se dibujaba nada.
+  const alMoverElMapa = useMemo(
+    () => ({
+      moveend: () => setVista(leerVista(mapa)),
+      zoomend: () => setVista(leerVista(mapa)),
+    }),
+    [mapa],
+  )
+  useMapEvents(alMoverElMapa)
 
   // Un cambio de filtros o de región deja de lado el grupo abierto.
   useEffect(() => setGrupoAbierto(null), [puntos, seleccionadoId])
