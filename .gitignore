@@ -18,6 +18,9 @@ datos_prueba/
 # (portal-web/README.md no se ignora: es del proyecto)
 /*.md
 
+# Fotos originales del landing (pesan varios MB): solo se versionan las WebP ya optimizadas de portal-web/src/assets/landing/
+portal-web/src/assets/landing/originales/
+
 # Plan de implementación del portal (documento de trabajo, solo local)
 portal-web/plan.md
 

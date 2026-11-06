@@ -88,6 +88,45 @@
   width: 100%;
   padding: 0;
   margin-bottom: 32px;
+  position: relative;
+}
+
+/* Marco de una foto: sin el relleno de las ilustraciones, la imagen llega hasta el borde. */
+.marcoFoto {
+  padding: 0;
+}
+
+.imagen {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Foto que va sin marco (el inicio): lleva su propio borde y sombra. */
+.foto {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(28, 169, 201, 0.28);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Atribución de OpenStreetMap, como en el mapa real. */
+.atribucion {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  color: #333;
+  background: rgba(255, 255, 255, 0.8);
+  border-top-left-radius: 6px;
+}
+
+.atribucion a {
+  color: #0078a8;
 }
 
 /* ---- Textos ---- */
@@ -722,6 +761,15 @@
     justify-content: flex-start;
     flex-wrap: wrap;
     gap: 24px 40px;
+  }
+}
+
+/* En un teléfono la captura del mapa (3,2:1) quedaría muy baja y no se leería: se recorta a 16:9 centrada en el reporte abierto. */
+@media (max-width: 600px) {
+  .marcoMapa .imagen {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: 45% 50%;
   }
 }
 

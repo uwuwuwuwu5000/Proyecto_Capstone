@@ -6,13 +6,13 @@ import Logo from '../../components/Marca/Logo'
 import { useAuth } from '../../context/AuthContext'
 import {
   IconoPaso,
-  IlustracionMapa,
-  IlustracionMunicipio,
-  IlustracionReportar,
   IlustracionSeguimiento,
   IlustracionVerificar,
   NodoRadar,
 } from './ilustraciones'
+import fotoBarrio from '../../assets/landing/barrio.webp'
+import fotoMapa from '../../assets/landing/mapa.webp'
+import fotoMunicipio from '../../assets/landing/municipio.webp'
 import { useAparicion } from './useAparicion'
 import styles from './Landing.module.css'
 
@@ -175,7 +175,22 @@ export default function Landing() {
 
       <main>
         {/* Inicio */}
-        <Fila textoIzquierda medio={() => <IlustracionReportar />}>
+        <Fila
+          textoIzquierda
+          conMarco={false}
+          medio={() => (
+            // Es lo primero que se ve: se carga con prioridad (sin `loading="lazy"`).
+            <img
+              className={styles.foto}
+              src={fotoBarrio}
+              alt="Vista de un barrio de la ciudad desde las alturas, con edificios y la cordillera al fondo"
+              width={1200}
+              height={900}
+              fetchPriority="high"
+              decoding="async"
+            />
+          )}
+        >
           <Sobretitulo>Tu ciudad, en tus manos</Sobretitulo>
           <h1 className={styles.titulo}>
             Hagamos de nuestro barrio <span className={styles.acento}>un lugar mejor.</span>
@@ -282,7 +297,19 @@ export default function Landing() {
               Todos los reportes en un mapa, con colores según su estado.
             </p>
             <div className={`${styles.marco} ${styles.marcoMapa}`}>
-              <IlustracionMapa />
+              <img
+                className={styles.imagen}
+                src={fotoMapa}
+                alt="Mapa de la ciudad con los reportes de la comunidad; uno abierto muestra la foto de una calle deteriorada, su estado y sus confirmaciones"
+                width={1600}
+                height={500}
+                loading="lazy"
+                decoding="async"
+              />
+              {/* Los mapas de OpenStreetMap se pueden usar si se indica su origen (licencia ODbL). */}
+              <p className={styles.atribucion}>
+                © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">colaboradores de OpenStreetMap</a>
+              </p>
             </div>
             <Link to={rutaMapa} className={styles.cta}>
               {user ? 'Ir al mapa' : 'Crear cuenta para ver el mapa'} <Flecha />
@@ -296,8 +323,16 @@ export default function Landing() {
             ref={municipal.ref}
             className={`${styles.fila} ${styles.revelar} ${municipal.visible ? styles.visible : ''}`}
           >
-            <div className={`${styles.marco} ${styles.medioPrimero}`}>
-              <IlustracionMunicipio />
+            <div className={`${styles.marco} ${styles.marcoFoto} ${styles.medioPrimero}`}>
+              <img
+                className={styles.imagen}
+                src={fotoMunicipio}
+                alt="Edificio de una municipalidad, de estilo clásico, con banderas en su fachada"
+                width={1060}
+                height={700}
+                loading="lazy"
+                decoding="async"
+              />
             </div>
             <div className={styles.texto}>
               <Sobretitulo numero="05">Para gobiernos locales</Sobretitulo>
