@@ -1,6 +1,6 @@
 // Fase 7: eliminar la cuenta desde «Mi perfil» (historia J2). Cada prueba crea su propia cuenta, porque
 // eliminar es destructivo y la sesión guardada de las cuentas de prueba dejaría de servir.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { CLAVE, MAIPU, VERSION_TERMINOS, autenticacion, bd, reporte, sembrar } from './datos/semilla'
 import { Timestamp } from 'firebase-admin/firestore'

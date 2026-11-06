@@ -1,6 +1,6 @@
 // Fase 12 (parte 2): campana de avisos. Se usa el vecino 4, que no tiene reportes propios,
 // para controlar exactamente qué avisos debe ver.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { Timestamp } from 'firebase-admin/firestore'
 import { MAIPU, FALSO, VALIDADO, bd, reporte, sembrar } from './datos/semilla'

@@ -1,5 +1,5 @@
 // Sesión guardada y pantallas protegidas: abrir una URL del panel directamente no debe sacar a la cuenta administradora.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { sembrar } from './datos/semilla'
 import { paginaDe } from './ayudas/sesion'
 

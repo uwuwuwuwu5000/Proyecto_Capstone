@@ -1,5 +1,5 @@
 // Fase 12 (parte 3) y 13: historial del vecino, autor del reporte, enlace del mapa de calor y rendimiento del mapa.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { R, bd, sembrar } from './datos/semilla'
 import { bloquearMosaicos, filtro } from './ayudas/mapa'
 import { paginaDe, rutaSesion } from './ayudas/sesion'

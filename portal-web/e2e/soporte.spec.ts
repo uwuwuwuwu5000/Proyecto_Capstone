@@ -1,5 +1,5 @@
 // Fase 11 (parte 2): soporte del administrador (/admin/soporte).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { Timestamp } from 'firebase-admin/firestore'
 import { bd, sembrar } from './datos/semilla'

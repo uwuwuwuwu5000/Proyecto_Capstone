@@ -1,5 +1,5 @@
 // Fase 2: pantalla «Por veredicto» del operador (reportes confirmados por la comunidad que esperan veredicto).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { Timestamp } from 'firebase-admin/firestore'
 import { CERRILLOS, MAIPU, R, bd, reporte, sembrar } from './datos/semilla'

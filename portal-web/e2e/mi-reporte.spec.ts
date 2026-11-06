@@ -1,6 +1,6 @@
 // Fase 8: corregir o retirar un reporte propio desde «Historial» (historia J3). Cada prueba crea su propio
 // reporte, porque corregir y retirar cambian el reporte para siempre.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { MAIPU, bd, reporte, sembrar } from './datos/semilla'
 import { Timestamp } from 'firebase-admin/firestore'
 import { paginaDe } from './ayudas/sesion'

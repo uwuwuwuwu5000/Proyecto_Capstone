@@ -1,5 +1,5 @@
 // Fase 6: términos de uso y política de privacidad (historia J1). El texto sale de comun/src/legal/terminos.ts.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { FieldValue } from 'firebase-admin/firestore'
 import { CLAVE, CUENTAS, VERSION_TERMINOS, bd, sembrar } from './datos/semilla'
 import { paginaDe, rutaSesion } from './ayudas/sesion'

@@ -1,5 +1,5 @@
 // Fase 11 (parte 1): organismos, operadores, cuentas y categorías.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { CLAVE, bd, sembrar } from './datos/semilla'
 import { rutaSesion } from './ayudas/sesion'

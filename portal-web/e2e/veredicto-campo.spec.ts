@@ -1,6 +1,6 @@
 // DEF-010: la app móvil nunca escribe `validacion.veredicto` (ni al crear el reporte ni al confirmarlo), así que los
 // reportes validados por la comunidad no traen ese campo. «Por veredicto» debe mostrarlos igual que a los que lo traen en null.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { Timestamp } from 'firebase-admin/firestore'
 import { MAIPU, R, bd, reporte, sembrar } from './datos/semilla'
 import { rutaSesion } from './ayudas/sesion'

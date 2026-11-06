@@ -1,5 +1,5 @@
 // Fase 4: dar el veredicto desde «Por veredicto» sin salir de la sección.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { Timestamp } from 'firebase-admin/firestore'
 import { CERRILLOS, MAIPU, bd, reporte, sembrar } from './datos/semilla'

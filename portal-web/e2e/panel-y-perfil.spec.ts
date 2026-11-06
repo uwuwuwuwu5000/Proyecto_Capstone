@@ -1,5 +1,5 @@
 // Fase 12 (parte 1): navegación del panel, mapa de calor, estadísticas, perfil y adaptación a pantallas.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { CUENTAS, bd, sembrar } from './datos/semilla'
 import { paginaDe, rutaSesion } from './ayudas/sesion'

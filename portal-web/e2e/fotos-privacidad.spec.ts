@@ -3,7 +3,7 @@
 // probaba a mano (DW1 a DW4). Se usa una foto de dominio público (Eileen Collins, NASA), la misma con que el
 // servicio de privacidad prueba sus modelos, así el criterio de «difuminado» es el mismo.
 import { readFileSync } from 'node:fs'
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { FieldValue } from 'firebase-admin/firestore'
 import { bd, sembrar } from './datos/semilla'

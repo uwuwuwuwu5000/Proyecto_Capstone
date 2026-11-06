@@ -1,6 +1,6 @@
 // Fase 0.6: una cuenta de organismo (rol de la app móvil, solo lectura) no tiene vista en el portal.
 // Debe ver un mensaje claro, sin errores de permiso, y poder cerrar la sesión.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { sembrar } from './datos/semilla'
 import { paginaDe } from './ayudas/sesion'
 

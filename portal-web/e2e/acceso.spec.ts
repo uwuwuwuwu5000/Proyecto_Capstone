@@ -1,5 +1,5 @@
 // Fases 4 y 5: acceso, registro, sesión y navegación por rol.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { CLAVE, CUENTAS, autenticacion, bd, sembrar } from './datos/semilla'
 import { iniciarSesion, paginaDe } from './ayudas/sesion'
 

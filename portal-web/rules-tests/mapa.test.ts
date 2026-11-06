@@ -6,8 +6,15 @@ import type { Region } from '../src/components/Map/regiones'
 import { partir, unirReportesDeRegion } from '../src/components/Map/useReportesRegion'
 import { ZOOM_MAXIMO, crearIndice, diametroDeGrupo, textoDeGrupo } from '../src/components/Map/agrupacion'
 
-const doc = (id: string, region?: string | null): QueryDocumentSnapshot =>
-  ({ id, data: () => ({ ...(region === undefined ? {} : { region }) }) }) as unknown as QueryDocumentSnapshot
+/** `creado`: milisegundos de createdAt (sin él, el reporte no tiene fecha). */
+const doc = (id: string, region?: string | null, creado?: number): QueryDocumentSnapshot =>
+  ({
+    id,
+    data: () => ({
+      ...(region === undefined ? {} : { region }),
+      ...(creado === undefined ? {} : { createdAt: { toMillis: () => creado } }),
+    }),
+  }) as unknown as QueryDocumentSnapshot
 
 describe('regiones', () => {
   const metropolitana: Region = {
@@ -41,13 +48,34 @@ describe('lectura por región', () => {
 
   it('une la consulta de la región con los antiguos sin región, sin repetidos', () => {
     const principales = [doc('a', 'Región X'), doc('b', 'Región X')]
-    const porComuna = [doc('b', 'Región X'), doc('c'), doc('d', null), doc('e', ''), doc('f', 'Región X')]
-    expect(unirReportesDeRegion(principales, porComuna, 'Región X').map((d) => d.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f'])
+    const porComuna = [doc('b', 'Región X'), doc('c'), doc('d', null), doc('e', '')]
+    expect(unirReportesDeRegion(principales, porComuna).map((d) => d.id)).toEqual(['a', 'b', 'c', 'd', 'e'])
+  })
+
+  it('DEF-001: un reporte con región que llega solo por comuna quedó fuera del tope y no se suma', () => {
+    const r = unirReportesDeRegion([doc('a', 'Región X')], [doc('f', 'Región X'), doc('w')])
+    expect(r.map((d) => d.id)).toEqual(['a', 'w'])
   })
 
   it('descarta los que dicen pertenecer a otra región', () => {
-    const r = unirReportesDeRegion([doc('a', 'Región X')], [doc('z', 'Región Y'), doc('w')], 'Región X')
+    const r = unirReportesDeRegion([doc('a', 'Región X')], [doc('z', 'Región Y'), doc('w')])
     expect(r.map((d) => d.id)).toEqual(['a', 'w'])
+  })
+
+  it('D26: nunca devuelve más que el tope, y deja los más recientes', () => {
+    const principales = [doc('a', 'Región X', 300), doc('b', 'Región X', 200), doc('c', 'Región X', 100)]
+    const antiguos = [doc('d', undefined, 50), doc('e', undefined, 10)]
+    expect(unirReportesDeRegion(principales, antiguos, 3).map((d) => d.id)).toEqual(['a', 'b', 'c'])
+  })
+
+  it('D26: un reporte sin región más reciente que el último del tope entra y deja fuera al más antiguo', () => {
+    const principales = [doc('a', 'Región X', 300), doc('b', 'Región X', 200), doc('c', 'Región X', 100)]
+    expect(unirReportesDeRegion(principales, [doc('x', undefined, 150)], 3).map((d) => d.id)).toEqual(['a', 'b', 'x'])
+  })
+
+  it('D26: sin fecha cuenta como el más antiguo', () => {
+    const principales = [doc('a', 'Región X', 300), doc('b', 'Región X', 200)]
+    expect(unirReportesDeRegion(principales, [doc('s')], 2).map((d) => d.id)).toEqual(['a', 'b'])
   })
 })
 

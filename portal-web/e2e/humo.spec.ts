@@ -1,6 +1,6 @@
 // Fase 1: comprueba que Playwright, el navegador y el servidor del portal funcionan.
 // No toca ninguna base de datos: se bloquean todas las llamadas a Firebase.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 
 test('FASE1 · El portal abre sin conectarse a Firebase', async ({ page }) => {
   const bloqueadas: string[] = []

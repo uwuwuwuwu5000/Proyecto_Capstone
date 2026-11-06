@@ -1,6 +1,6 @@
 // Fase 10: crear un reporte desde el portal (administrador), sin fotografía.
 // El difuminado de la foto se prueba a mano (DW1 a DW4).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { FieldValue } from 'firebase-admin/firestore'
 import { bd, sembrar } from './datos/semilla'

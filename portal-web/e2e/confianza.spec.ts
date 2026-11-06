@@ -1,5 +1,5 @@
 // Fase 7: sistema de confianza en pantalla (confirmar con peso, barra de verificación, «Mi nivel»).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import { Timestamp } from 'firebase-admin/firestore'
 import { MAIPU, POSICION, R, bd, reporte, sembrar } from './datos/semilla'
 import { abrirDetalle, abrirMapa } from './ayudas/mapa'

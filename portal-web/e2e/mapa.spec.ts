@@ -1,6 +1,6 @@
 // Fase 6: mapa público (vecino con sesión). Los mosaicos de OpenStreetMap se bloquean.
-import { expect, test } from '@playwright/test'
-import { POSICION, R, sembrar } from './datos/semilla'
+import { expect, test } from './ayudas/prueba'
+import { LA_SERENA, POSICION, R, bd, reporte, sembrar } from './datos/semilla'
 import { abrirDetalle, abrirMapa, acercarA, filtro, pinDe } from './ayudas/mapa'
 import { paginaDe, rutaSesion } from './ayudas/sesion'
 
@@ -42,6 +42,47 @@ test.describe('Mapa público', () => {
     await filtro(page, 'Región').selectOption({ label: 'Coquimbo' })
     await expect(page.getByText(/incidencias en Coquimbo/)).toBeVisible({ timeout: 20_000 })
     await expect(page.locator('.leaflet-marker-icon').first()).toBeAttached({ timeout: 10_000 })
+  })
+
+  test('WB10 · El tope de 500 es exacto aunque haya reportes antiguos sin región (DEF-001)', async ({ page }) => {
+    // Tres reportes de La Serena de hace más de un año, sin el campo región. Su id va antes que los demás:
+    // la lectura por comuna los encuentra y, antes de la corrección, se sumaban a los 500 (523 en total).
+    const ids = [1, 2, 3].map((n) => `a10_antiguo${n}`)
+    await Promise.all(
+      ids.map((id, i) =>
+        bd.doc(`reports/${id}`).set(
+          reporte({ id, descripcion: `E2E antiguo sin región ${i + 1}`, comuna: LA_SERENA, sinRegion: true, operadorId: null, minutosAtras: 600 * 24 * 60 + i }),
+        ),
+      ),
+    )
+    try {
+      await abrirMapa(page)
+      await filtro(page, 'Región').selectOption({ label: 'Coquimbo' })
+      await expect(page.getByText(/500 incidencias en Coquimbo/)).toBeVisible({ timeout: 20_000 })
+      await expect(page.getByText(/Se muestran las 500 más recientes/)).toBeVisible()
+      await expect(page.getByText(/5[0-9]{2} incidencias en Coquimbo/).filter({ hasNotText: /^500 / })).toHaveCount(0)
+    } finally {
+      await Promise.all(ids.map((id) => bd.doc(`reports/${id}`).delete()))
+    }
+  })
+
+  test('WB9 · Cambiar de región ida y vuelta muestra los pines cada vez, sin mover el mapa (DEF-002)', async ({ page }) => {
+    await abrirMapa(page)
+    const inicial = await filtro(page, 'Región').inputValue()
+    // Un pin o grupo que de verdad se ve dentro del mapa (no uno que quedó de la región anterior, fuera de la vista).
+    const marcadoresEnPantalla = () =>
+      page.evaluate(() => {
+        const caja = document.querySelector('.leaflet-container')!.getBoundingClientRect()
+        return [...document.querySelectorAll('.leaflet-marker-icon')].filter((m) => {
+          const r = m.getBoundingClientRect()
+          return r.right > caja.left && r.left < caja.right && r.bottom > caja.top && r.top < caja.bottom
+        }).length
+      })
+    for (const destino of [{ label: 'Coquimbo' }, inicial, { label: 'Coquimbo' }]) {
+      await filtro(page, 'Región').selectOption(destino)
+      await expect(page.getByText(/incidencias? en /)).toBeVisible({ timeout: 20_000 })
+      await expect.poll(marcadoresEnPantalla, { timeout: 10_000, message: 'pines o grupos visibles tras cambiar de región' }).toBeGreaterThan(0)
+    }
   })
 
   test('MS2 / WB8 · Panel del reporte con foto, fecha, confirmaciones, verificación e historial', async ({ page }) => {

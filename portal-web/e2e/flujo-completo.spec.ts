@@ -2,7 +2,7 @@
 // El vecino crea sus reportes desde la app; aquí el reporte ya existe y se prueba todo lo que sigue en el portal:
 // otros vecinos lo confirman hasta validarlo, el operador da el veredicto, avanza el estado hasta cerrarlo
 // y la persona que reportó ve el resultado en su historial y en sus avisos.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { MAIPU, POSICION, bd, reporte, sembrar } from './datos/semilla'
 import { abrirDetalle, abrirMapa } from './ayudas/mapa'

@@ -1,5 +1,5 @@
 // Fase 9: Resumen del administrador y panel del operador.
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { R, bd, sembrar } from './datos/semilla'
 import { bloquearMosaicos } from './ayudas/mapa'

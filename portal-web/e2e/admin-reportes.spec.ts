@@ -1,5 +1,5 @@
 // Fase 8: administrar reportes (paginación, filtros, estado, veredicto, lote, CSV, eliminar).
-import { expect, test } from '@playwright/test'
+import { expect, test } from './ayudas/prueba'
 import type { Page } from '@playwright/test'
 import { readFileSync } from 'node:fs'
 import { MAIPU, R, bd, reporte, sembrar } from './datos/semilla'
