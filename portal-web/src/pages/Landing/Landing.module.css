@@ -75,11 +75,38 @@
 
 /* ---- Marco de la ilustración ---- */
 
+/*
+ * Tarjetas e ilustraciones del landing en tema claro (plomo), sobre el fondo oscuro de la página: así resaltan sin
+ * ser un blanco puro y mantienen la familia fría del resto del portal. Se redefinen aquí las variables que usan sus
+ * textos y trazos, para no tocar el resto del portal:
+ *  - superficie plomo y fondo interior un tono más oscuro, para que la tarjeta interior se distinga;
+ *  - texto #0f172a y secundario #334155 (contrastes 12:1 y 6,6:1 sobre el plomo);
+ *  - el celeste de la marca (#1ca9c9) sobre plomo da solo 2,1:1; se usa #0a6f87 (3,9:1) para trazos e iconos,
+ *    que mantiene el tono de la marca y cumple los 3:1 que pide WCAG para gráficos;
+ *  - el aro de los hitos de la línea de tiempo pasa a gris azulado (#475569), para que los estados claros se distingan.
+ * El borde sigue siendo el celeste translúcido de siempre: `background-clip: padding-box` hace que se vea sobre el
+ * fondo oscuro de la página, como antes, y no sobre el plomo.
+ * Alternativa en crema: surface #efe8d8, surface-alt #e3dac4, ink #1f2937, muted #4b5563, signal #0b7a94,
+ * anillo #6b7280, trazo-fino rgba(75, 85, 99, 0.3).
+ */
+.marco,
+.paso {
+  --ca-surface: #cfd5dc;
+  --ca-surface-alt: #bcc5ce;
+  --ca-ink: #0f172a;
+  --ca-muted: #334155;
+  --ca-signal: #0a6f87;
+  --ca-base: #ffffff;
+  --ca-anillo: #475569;
+  --ca-trazo-fino: rgba(51, 65, 85, 0.3);
+}
+
 .marco {
   padding: 16px;
   border: 1px solid rgba(28, 169, 201, 0.28);
   border-radius: 12px;
   background: var(--ca-surface);
+  background-clip: padding-box;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
@@ -289,6 +316,8 @@
   border: 1px solid rgba(28, 169, 201, 0.28);
   border-radius: 12px;
   background: var(--ca-surface);
+  background-clip: padding-box;
+  color: var(--ca-ink);
 }
 
 /* Segunda columna más abajo: efecto escalonado, sin inclinar nada. */
@@ -541,7 +570,7 @@
 }
 
 .tzFino {
-  stroke: rgba(165, 180, 195, 0.3);
+  stroke: var(--ca-trazo-fino, rgba(165, 180, 195, 0.3));
   stroke-width: 1.5;
 }
 
@@ -604,7 +633,7 @@
 }
 
 .bordePin {
-  stroke: var(--ca-base);
+  stroke: var(--ca-anillo, var(--ca-base));
   stroke-width: 2.5;
 }
 
