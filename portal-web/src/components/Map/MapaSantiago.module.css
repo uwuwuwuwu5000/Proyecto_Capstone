@@ -405,15 +405,6 @@
 }
 
 /* Filtros del mapa público: región, categoría y estado (como la app móvil). */
-.filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--ca-line);
-  background: var(--ca-base);
-}
-
 .filtro {
   display: flex;
   flex-direction: column;
@@ -448,4 +439,156 @@
 .raizCompleta .status,
 .raizCompleta .statusError {
   padding: 0 16px;
+}
+
+/* ---- Pantalla completa: filtros y resumen flotan sobre el mapa, que ocupa todo el alto ---- */
+
+.filtrosFlotantes {
+  position: absolute;
+  z-index: 1050;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: calc(100% - 24px);
+}
+
+.grupoFiltros,
+.resumenFlotante,
+.botonFiltros,
+.errorFlotante {
+  background: rgba(17, 24, 39, 0.9);
+  border: 1px solid rgba(165, 180, 195, 0.25);
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.grupoFiltros {
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px 10px;
+}
+
+.grupoFiltros .filtro {
+  flex: 0 0 auto;
+  gap: 3px;
+  width: 150px;
+  min-width: 0;
+  max-width: none;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.grupoFiltros .filtro:first-child {
+  width: 232px;
+}
+
+.grupoFiltros .filtro select {
+  padding: 5px 8px;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* El botón solo existe en un teléfono. */
+.botonFiltros {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.contadorFiltros {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--ca-base);
+  background: var(--ca-signal);
+}
+
+.errorFlotante {
+  margin: 0;
+  padding: 6px 10px;
+  max-width: 420px;
+  font-size: 0.82rem;
+  color: var(--ca-danger);
+}
+
+.resumenFlotante {
+  position: absolute;
+  z-index: 1050;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: min(640px, calc(100% - 90px));
+  padding: 8px 12px;
+}
+
+/* Sin texto ni leyenda (por ejemplo, sin sesión) no hay nada que mostrar. */
+.resumenFlotante:not(:has(*)) {
+  display: none;
+}
+
+.resumenTexto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ca-ink);
+}
+
+.resumenError {
+  color: var(--ca-danger);
+}
+
+.leyendaFlotante {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 640px) {
+  .botonFiltros {
+    display: inline-flex;
+  }
+
+  .grupoFiltros {
+    display: none;
+    flex-direction: column;
+    width: min(280px, calc(100vw - 24px));
+  }
+
+  .grupoFiltros.grupoAbierto {
+    display: flex;
+  }
+
+  .grupoFiltros .filtro,
+  .grupoFiltros .filtro:first-child {
+    width: 100%;
+  }
+
+  .resumenFlotante {
+    right: 62px;
+    max-width: none;
+    padding: 6px 10px;
+  }
+
+  .resumenTexto {
+    font-size: 0.8rem;
+  }
 }

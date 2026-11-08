@@ -4,8 +4,9 @@
   min-height: 100vh;
 }
 
+/* Más ancho que antes (1080 px): la tabla tiene siete columnas y la fecha quedaba fuera de la pantalla. */
 .main {
-  max-width: 1080px;
+  max-width: 1280px;
   width: 100%;
   margin: 0 auto;
   padding: 40px 24px 64px;
@@ -33,62 +34,129 @@
   color: var(--ca-danger);
 }
 
+/*
+ * Contenedor de la tabla. En escritorio ancho no se desplaza (cabe entera) y recorta con `overflow: clip`, que a
+ * diferencia de `auto` no crea un contenedor de desplazamiento: así el encabezado puede quedarse fijo bajo la barra de
+ * navegación al bajar por la página. En anchos medios sí puede desplazarse, por si algo no cupiera.
+ */
 .tableWrapper {
   overflow-x: auto;
   border: 1px solid var(--ca-line);
   border-radius: 12px;
+  background: var(--ca-surface);
   box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 1000px) {
+  .tableWrapper {
+    overflow: clip;
+  }
 }
 
 .table {
   width: 100%;
-  min-width: 720px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: var(--ca-surface);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .table th,
 .table td {
-  padding: 12px 16px;
+  padding: 12px 14px;
   text-align: left;
-  border-bottom: 1px solid var(--ca-line);
+  border-bottom: 1px solid rgba(92, 103, 125, 0.45);
   color: var(--ca-ink);
   white-space: nowrap;
 }
 
 .table th {
-  font-size: 0.78rem;
+  position: sticky;
+  top: var(--alto-navbar, 65px);
+  z-index: 1;
+  font-size: 0.74rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   color: var(--ca-muted);
   background: var(--ca-surface-alt);
+}
+
+.table tbody tr {
+  transition: background 0.12s ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(28, 169, 201, 0.07);
 }
 
 .table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.descripcion {
+/* Categoría: icono en un círculo de color y su nombre. */
+.categoriaCelda {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+/* La descripción se corta a dos líneas; el texto completo está en el detalle y al pasar el cursor. */
+/* `.table td` fija nowrap y tiene más peso que `.descripcion`: por eso lleva también `td`. */
+.table td.descripcion {
   white-space: normal;
-  max-width: 320px;
+  width: 28%;
+  min-width: 200px;
+  max-width: 340px;
   color: var(--ca-muted);
 }
 
+.descripcionTexto {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  line-height: 1.4;
+}
+
+/* Estado: etiqueta con un punto del color del estado. */
 .badge {
-  display: inline-block;
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 11px 3px 9px;
   border: 1px solid currentColor;
   border-radius: 999px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
+.puntoEstado {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.table td:nth-child(4) {
+  white-space: normal;
+  max-width: 210px;
+}
+
+.fecha {
+  color: var(--ca-muted);
+}
+
 .detalleBoton {
-  padding: 5px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
   border: 1px solid var(--ca-line);
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--ca-signal);
   font-size: 0.82rem;
@@ -106,11 +174,38 @@
   outline-offset: 2px;
 }
 
-/* ---- Teléfono: cada reporte es una tarjeta en vez de una fila ----
-   La tabla de 7 columnas no cabe en 393 px y el botón "Ver detalle" quedaba
-   fuera de la pantalla, a la derecha. Cada celda muestra su rótulo a partir
-   del atributo data-label. */
-@media (max-width: 640px) {
+@media print {
+  .badge,
+  .puntoEstado {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ---- Menos columnas en anchos menores ---- */
+
+/* El organismo es lo menos urgente: se quita primero... */
+@media (max-width: 1179px) {
+  .colOrganismo {
+    display: none;
+  }
+}
+
+/* ...y luego las confirmaciones. */
+@media (max-width: 959px) {
+  .colConfirmaciones {
+    display: none;
+  }
+
+  .table td.descripcion {
+    min-width: 170px;
+  }
+}
+
+/* ---- Teléfono: cada reporte es una tarjeta apilada en vez de una fila ----
+   La tabla no cabe en 393 px y el botón «Ver detalle» quedaba fuera de la pantalla, a la derecha. Cada celda muestra
+   su rótulo a partir del atributo data-label. Aquí no se quitan columnas: la tarjeta tiene sitio para todo. */
+@media (max-width: 760px) {
   .main {
     padding: 28px 16px 48px;
   }
@@ -123,11 +218,11 @@
     overflow: visible;
     border: none;
     border-radius: 0;
+    background: transparent;
     box-shadow: none;
   }
 
   .table {
-    min-width: 0;
     background: transparent;
   }
 
@@ -157,11 +252,22 @@
     box-shadow: var(--shadow-card);
   }
 
+  .table tbody tr:hover {
+    background: var(--ca-surface);
+  }
+
+  /* Las columnas que se quitan en anchos medios vuelven a mostrarse: en la tarjeta caben. */
+  .colOrganismo,
+  .colConfirmaciones {
+    display: flex;
+  }
+
   .table td {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 12px;
+    max-width: none;
     padding: 6px 0;
     border-bottom: none;
     white-space: normal;
@@ -179,6 +285,7 @@
 
   /* La categoría hace de título de la tarjeta, sin rótulo. */
   .table td.categoria {
+    align-items: center;
     padding-top: 0;
     font-size: 1rem;
     font-weight: 700;
@@ -189,9 +296,11 @@
     content: none;
   }
 
-  /* La descripción va completa debajo, a lo ancho, sin rótulo. */
+  /* La descripción va completa debajo, a lo ancho, sin rótulo y sin cortar. */
   .table td.descripcion {
     display: block;
+    width: 100%;
+    min-width: 0;
     max-width: none;
     padding-bottom: 8px;
     text-align: left;
@@ -200,6 +309,12 @@
 
   .table td.descripcion::before {
     content: none;
+  }
+
+  .descripcionTexto {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    display: block;
   }
 
   .table td.celdaDetalle {
@@ -213,6 +328,7 @@
   .detalleBoton {
     width: 100%;
     min-height: 42px;
+    justify-content: center;
     font-size: 0.92rem;
   }
 }

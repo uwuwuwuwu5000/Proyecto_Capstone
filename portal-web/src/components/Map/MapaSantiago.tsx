@@ -4,7 +4,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapContainer, Marker, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, Tooltip, ZoomControl, useMap, useMapEvents } from 'react-leaflet'
 import FotoReporte from '../Reportes/FotoReporte'
 import { collection, doc, getCountFromServer, getDoc } from 'firebase/firestore'
 import type { QueryDocumentSnapshot } from 'firebase/firestore'
@@ -239,6 +239,8 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
   const [mensajeUbicacion, setMensajeUbicacion] = useState('')
   const [filtroCategoria, setFiltroCategoria] = useState('todas')
   const [filtroEstado, setFiltroEstado] = useState('todos')
+  // En un teléfono los filtros se pliegan tras un botón; en escritorio siempre se ven (ver el CSS).
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
   // Fotos cargadas bajo demanda (al abrir un marcador), cacheadas por id de reporte.
   const [fotos, setFotos] = useState<Record<string, EstadoFoto>>({})
   // Conteo de confirmaciones, también bajo demanda (ver EstadoConteo arriba).
@@ -528,53 +530,11 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
     )
   }
 
+  const filtrosActivos = [seleccionRegion !== REGION_INICIAL, filtroCategoria !== 'todas', filtroEstado !== 'todos'].filter(Boolean).length
+
   return (
     <div className={completo ? styles.raizCompleta : undefined}>
-      {completo && (
-        <div className={styles.filtros}>
-          <label className={styles.filtro}>
-            <span>Región</span>
-            <select
-              value={seleccionRegion}
-              disabled={ubicando}
-              onChange={(e) => cambiarRegion(e.target.value)}
-            >
-              <option value="actual">
-                {ubicando ? 'Buscando tu ubicación…' : `Mi región${regionActual ? ' · ' + regionActual.nombreCorto : ''}`}
-              </option>
-              {regiones.map((r) => (
-                <option key={r.codigo} value={r.codigo}>
-                  {r.nombreCorto}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.filtro}>
-            <span>Categoría</span>
-            <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
-              <option value="todas">Todas</option>
-              {categorias.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nombre}
-                  {c.activa ? '' : ' (inactiva)'}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={styles.filtro}>
-            <span>Estado</span>
-            <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
-              <option value="todos">Todos</option>
-              {ESTADOS_EN_ORDEN.map((estado) => (
-                <option key={estado} value={estado}>
-                  {ETIQUETA_POR_ESTADO[estado]}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-      {mensajeUbicacion && <p className={styles.statusError}>{mensajeUbicacion}</p>}
+      {!completo && mensajeUbicacion && <p className={styles.statusError}>{mensajeUbicacion}</p>}
       <div className={completo ? styles.mapaMarcoCompleto : styles.mapaMarco}>
         <MapContainer
           center={CENTRO_SANTIAGO}
@@ -584,8 +544,11 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
           // desactiva para no secuestrar el scroll de la página.
           scrollWheelZoom={completo}
           maxZoom={ZOOM_MAXIMO}
+          // En pantalla completa los filtros flotan arriba a la izquierda: el zoom pasa abajo a la derecha.
+          zoomControl={!completo}
           className={completo ? styles.mapCompleto : styles.map}
         >
+          {completo && <ZoomControl position="bottomright" />}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -654,39 +617,136 @@ export default function MapaSantiago({ variante = 'tarjeta' }: MapaSantiagoProps
         {/* Fuera del MapContainer a propósito: así el zoom y el arrastre del
             mapa no lo afectan (ver .panel en el CSS). */}
         {seleccionado && renderDetalle(seleccionado)}
+
+        {completo && (
+          <>
+            {/* Filtros flotando sobre el mapa, arriba a la izquierda: el mapa ocupa todo el alto. */}
+            <div className={styles.filtrosFlotantes}>
+              <button
+                type="button"
+                className={styles.botonFiltros}
+                aria-expanded={filtrosAbiertos}
+                aria-controls="filtros-mapa"
+                onClick={() => setFiltrosAbiertos((abierto) => !abierto)}
+              >
+                Filtros
+                {filtrosActivos > 0 && <span className={styles.contadorFiltros}>{filtrosActivos}</span>}
+              </button>
+              <div
+                id="filtros-mapa"
+                role="group"
+                aria-label="Filtros del mapa"
+                className={`${styles.grupoFiltros} ${filtrosAbiertos ? styles.grupoAbierto : ''}`}
+              >
+      <label className={styles.filtro}>
+        <span>Región</span>
+        <select
+          value={seleccionRegion}
+          disabled={ubicando}
+          onChange={(e) => cambiarRegion(e.target.value)}
+        >
+          <option value="actual">
+            {ubicando ? 'Buscando tu ubicación…' : `Mi región${regionActual ? ' · ' + regionActual.nombreCorto : ''}`}
+          </option>
+          {regiones.map((r) => (
+            <option key={r.codigo} value={r.codigo}>
+              {r.nombreCorto}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.filtro}>
+        <span>Categoría</span>
+        <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)}>
+          <option value="todas">Todas</option>
+          {categorias.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.nombre}
+              {c.activa ? '' : ' (inactiva)'}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.filtro}>
+        <span>Estado</span>
+        <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+          <option value="todos">Todos</option>
+          {ESTADOS_EN_ORDEN.map((estado) => (
+            <option key={estado} value={estado}>
+              {ETIQUETA_POR_ESTADO[estado]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+              </div>
+              {mensajeUbicacion && <p className={styles.errorFlotante}>{mensajeUbicacion}</p>}
+            </div>
+
+            {/* El resumen y la leyenda, también sobre el mapa, abajo a la izquierda. */}
+            <div className={styles.resumenFlotante}>
+              {!sesionCargando && !user && <p className={styles.resumenTexto}>Inicia sesión para ver los reportes en el mapa.</p>}
+              {user && cargando && <p className={styles.resumenTexto}>Cargando las incidencias de {region?.nombreCorto}…</p>}
+              {user && !cargando && !error && region && visibles.length === 0 && (
+                <p className={styles.resumenTexto}>No hay incidencias en {region.nombreCorto} con estos filtros.</p>
+              )}
+              {user && !cargando && !error && visibles.length > 0 && (
+                <p className={styles.resumenTexto}>
+                  <strong>{visibles.length.toLocaleString('es-CL')}</strong> {visibles.length === 1 ? 'incidencia' : 'incidencias'} en{' '}
+                  {region?.nombreCorto}.{datos.hayMas && ` Se muestran las ${MAXIMO_POR_REGION} más recientes.`}
+                </p>
+              )}
+              {error && <p className={`${styles.resumenTexto} ${styles.resumenError}`}>{error}</p>}
+              {user && visibles.length > 0 && (
+                <ul className={styles.leyendaFlotante} aria-label="Leyenda del mapa">
+                  {ESTADOS_EN_ORDEN.map((estado) => (
+                    <li key={estado} className={styles.leyendaItem}>
+                      <span className={styles.leyendaPunto} style={{ background: COLOR_POR_ESTADO[estado] }} />
+                      {ETIQUETA_POR_ESTADO[estado]}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {!sesionCargando && !user && (
-        <p className={styles.status}>
-          Inicia sesión para ver los reportes en el mapa.
-        </p>
-      )}
-      {user && cargando && <p className={styles.status}>Cargando las incidencias de {region?.nombreCorto}…</p>}
-      {user && !cargando && !error && region && visibles.length === 0 && (
-        <p className={styles.status}>No hay incidencias en {region.nombreCorto} con estos filtros.</p>
-      )}
-      {user && !cargando && !error && visibles.length > 0 && (
-        <p className={styles.status}>
-          {visibles.length.toLocaleString('es-CL')} {visibles.length === 1 ? 'incidencia' : 'incidencias'} en{' '}
-          {region?.nombreCorto}, cada una en su ubicación. Las que están en el mismo lugar se juntan en un círculo con
-          el total: tócalo para acercarte.
-          {datos.hayMas && ` Se muestran las ${MAXIMO_POR_REGION} más recientes.`}
-        </p>
-      )}
-      {error && <p className={styles.statusError}>{error}</p>}
+      {!completo && (
+        <>
+          {!sesionCargando && !user && (
+            <p className={styles.status}>
+              Inicia sesión para ver los reportes en el mapa.
+            </p>
+          )}
+          {user && cargando && <p className={styles.status}>Cargando las incidencias de {region?.nombreCorto}…</p>}
+          {user && !cargando && !error && region && visibles.length === 0 && (
+            <p className={styles.status}>No hay incidencias en {region.nombreCorto} con estos filtros.</p>
+          )}
+          {user && !cargando && !error && visibles.length > 0 && (
+            <p className={styles.status}>
+              {visibles.length.toLocaleString('es-CL')} {visibles.length === 1 ? 'incidencia' : 'incidencias'} en{' '}
+              {region?.nombreCorto}, cada una en su ubicación. Las que están en el mismo lugar se juntan en un círculo con
+              el total: tócalo para acercarte.
+              {datos.hayMas && ` Se muestran las ${MAXIMO_POR_REGION} más recientes.`}
+            </p>
+          )}
+          {error && <p className={styles.statusError}>{error}</p>}
 
-      {user && visibles.length > 0 && (
-        <ul className={styles.leyenda}>
-          {ESTADOS_EN_ORDEN.map((estado) => (
-            <li key={estado} className={styles.leyendaItem}>
-              <span
-                className={styles.leyendaPunto}
-                style={{ background: COLOR_POR_ESTADO[estado] }}
-              />
-              {ETIQUETA_POR_ESTADO[estado]}
-            </li>
-          ))}
-        </ul>
+          {user && visibles.length > 0 && (
+            <ul className={styles.leyenda}>
+              {ESTADOS_EN_ORDEN.map((estado) => (
+                <li key={estado} className={styles.leyendaItem}>
+                  <span
+                    className={styles.leyendaPunto}
+                    style={{ background: COLOR_POR_ESTADO[estado] }}
+                  />
+                  {ETIQUETA_POR_ESTADO[estado]}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </div>
   )

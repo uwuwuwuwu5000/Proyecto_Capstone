@@ -1,0 +1,62 @@
+/* Icono de un cuadro de resumen: una pastilla de color con el trazo dentro. */
+
+.iconoKpi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-right: 9px;
+  border-radius: 8px;
+  vertical-align: middle;
+  color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.15);
+}
+
+.iconoKpi[data-tipo='sinOperador'] {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.iconoKpi[data-tipo='sinResolver'] {
+  color: var(--ca-danger);
+  background: rgba(224, 101, 107, 0.15);
+}
+
+.iconoKpi[data-tipo='finalizados'] {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.iconoKpi[data-tipo='pendientes'] {
+  color: var(--ca-signal);
+}
+
+.iconoKpi[data-tipo='espera'] {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.iconoKpi[data-tipo='veredicto'] {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.15);
+}
+
+.iconoKpi[data-tipo='revision'] {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+/* En un teléfono los cuadros son angostos y el icono le quita sitio al texto: se quita. */
+@media (max-width: 480px) {
+  .iconoKpi {
+    display: none;
+  }
+}
+
+@media print {
+  .iconoKpi {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

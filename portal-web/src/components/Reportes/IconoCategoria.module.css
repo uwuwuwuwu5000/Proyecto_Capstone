@@ -1,0 +1,54 @@
+.icono {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--ca-signal);
+  background: rgba(28, 169, 201, 0.15);
+}
+
+.icono[data-categoria='microbasural'] {
+  color: #a3e635;
+  background: rgba(163, 230, 53, 0.14);
+}
+
+.icono[data-categoria='luminaria'] {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+}
+
+.icono[data-categoria='fuga_agua'] {
+  color: #60a5fa;
+  background: rgba(96, 165, 250, 0.16);
+}
+
+.icono[data-categoria='arbol_peligroso'] {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+}
+
+.icono[data-categoria='calle_deteriorada'] {
+  color: #fb923c;
+  background: rgba(251, 146, 60, 0.15);
+}
+
+.icono[data-categoria='accesibilidad'] {
+  color: #a78bfa;
+  background: rgba(167, 139, 250, 0.16);
+}
+
+.icono[data-categoria='otro'],
+.icono[data-categoria='otra'] {
+  color: var(--ca-muted);
+  background: rgba(165, 180, 195, 0.14);
+}
+
+@media print {
+  .icono {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

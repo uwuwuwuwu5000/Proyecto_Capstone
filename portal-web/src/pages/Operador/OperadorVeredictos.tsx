@@ -4,6 +4,7 @@ import { formatearDuracion, mediana } from '../../components/Reportes/tiempos'
 import { useRequiereOperador } from '../../hooks/useRequiereOperador'
 import Navbar from '../../components/Navbar/Navbar'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
+import IconoKpi from '../../components/Iconos/IconoKpi'
 import FotoReporte from '../../components/Reportes/FotoReporte'
 import { EstadoPildora } from '../../components/Reportes/TarjetaReporte'
 import type { ResultadoAplicado } from '../../confianza/VeredictoReporte'
@@ -37,6 +38,7 @@ import styles from './OperadorVeredictos.module.css'
 const PERIODOS_FIJOS = PERIODOS.filter((p) => p.clave !== 'personalizado')
 
 /** Cuánto se queda el aviso «Veredicto guardado» antes de cerrarse solo (también se puede cerrar antes con su botón). */
+const HORA_MS = 3_600_000
 const DURACION_AVISO_MS = 8_000
 /** Cuánto dura la salida animada de una tarjeta que recibió su veredicto. */
 const DURACION_SALIDA_MS = 250
@@ -57,6 +59,8 @@ export default function OperadorVeredictos() {
   const { etiqueta, categorias } = useCategorias()
   const [params, setParams] = useSearchParams()
   const [periodo, setPeriodo] = useState<Periodo>('mes')
+  // En un teléfono los filtros se pliegan tras un botón; en escritorio siempre se ven (ver el CSS).
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
   // Copia del reporte al abrir el detalle: aunque reciba su veredicto y salga de la lista en vivo, el detalle sigue
   // abierto y muestra el resultado hasta que se cierre.
   const [detalle, setDetalle] = useState<Reporte | null>(null)
@@ -161,6 +165,7 @@ export default function OperadorVeredictos() {
   }
 
   const total = pendientes.reportes.length
+  const filtrosEnUso = [filtros.categoria, filtros.comuna, filtros.espera, filtros.foto, filtros.texto].filter(Boolean).length
   const mostrado = pendientes.hayMas && pendientes.total !== null ? pendientes.total : total
 
   return (
@@ -198,7 +203,10 @@ export default function OperadorVeredictos() {
         </label>
         <section className={estadisticas.kpis} aria-label="Indicadores">
           <div className={estadisticas.kpi} role="group" aria-label="Confirmados sin veredicto">
-            <span className={estadisticas.kpiEtiqueta}>Confirmados sin veredicto</span>
+            <span className={estadisticas.kpiEtiqueta}>
+              <IconoKpi tipo="pendientes" />
+              Confirmados sin veredicto
+            </span>
             <span className={estadisticas.kpiValor}>
               {cargando || pendientes.cargando ? '…' : `${mostrado.toLocaleString('es-CL')}${pendientes.hayMas && pendientes.total === null ? '+' : ''}`}
             </span>
@@ -210,7 +218,10 @@ export default function OperadorVeredictos() {
           </div>
 
           <div className={estadisticas.kpi} role="group" aria-label="Espera de los pendientes">
-            <span className={estadisticas.kpiEtiqueta}>Espera de los pendientes</span>
+            <span className={estadisticas.kpiEtiqueta}>
+              <IconoKpi tipo="espera" />
+              Espera de los pendientes
+            </span>
             <span className={estadisticas.kpiValor}>
               {pendientes.cargando ? '…' : medianaEspera !== null ? formatearDuracion(medianaEspera) : '—'}
             </span>
@@ -226,7 +237,10 @@ export default function OperadorVeredictos() {
             aria-label="Tiempo hasta el veredicto"
             aria-busy={conVeredicto.cargando}
           >
-            <span className={estadisticas.kpiEtiqueta}>Tiempo hasta el veredicto</span>
+            <span className={estadisticas.kpiEtiqueta}>
+              <IconoKpi tipo="veredicto" />
+              Tiempo hasta el veredicto
+            </span>
             <span className={estadisticas.kpiValor}>
               {conVeredicto.cargando && tiempos.cantidad === 0 ? '…' : tiempos.mediana !== null ? formatearDuracion(tiempos.mediana) : '—'}
             </span>
@@ -245,7 +259,10 @@ export default function OperadorVeredictos() {
             aria-label="Revisión hasta el cierre"
             aria-busy={revision.cargando}
           >
-            <span className={estadisticas.kpiEtiqueta}>Revisión hasta el cierre</span>
+            <span className={estadisticas.kpiEtiqueta}>
+              <IconoKpi tipo="revision" />
+              Revisión hasta el cierre
+            </span>
             <span className={estadisticas.kpiValor}>
               {revision.cargando && revision.cierre.cantidad === 0 ? '…' : revision.cierre.mediana !== null ? formatearDuracion(revision.cierre.mediana) : '—'}
             </span>
@@ -267,8 +284,22 @@ export default function OperadorVeredictos() {
           «En revisión» hasta que se cierra, según la fecha del cierre.
         </p>
 
-        {/* Filtros */}
-        <section className={comun.filtros} aria-label="Filtros">
+        {/* Filtros: en escritorio siempre se ven; en un teléfono se pliegan tras un botón. */}
+        <button
+          type="button"
+          className={styles.botonFiltros}
+          aria-expanded={filtrosAbiertos}
+          aria-controls="filtros-veredicto"
+          onClick={() => setFiltrosAbiertos((abierto) => !abierto)}
+        >
+          Filtros
+          {filtrosEnUso > 0 && <span className={styles.contadorFiltros}>{filtrosEnUso}</span>}
+        </button>
+        <section
+          id="filtros-veredicto"
+          className={`${comun.filtros} ${filtrosAbiertos ? '' : styles.plegado}`}
+          aria-label="Filtros"
+        >
           <label className={comun.campo}>
             <span className={comun.etiqueta}>Categoría</span>
             <select className={comun.entrada} value={filtros.categoria} onChange={(e) => cambiar({ categoria: e.target.value })}>
@@ -412,10 +443,18 @@ function TarjetaPendiente({
 }) {
   const espera = esperaActual(reporte, ahora)
   const demorado = estaDemorado(reporte, ahora)
+  // Cuánto lleva esperando, en tres tramos: menos de 24 h, más de 24 h y «Demorado» (el umbral de siempre).
+  const urgencia: 'reciente' | 'atencion' | 'demorado' | null = demorado
+    ? 'demorado'
+    : espera === null
+      ? null
+      : espera >= 24 * HORA_MS
+        ? 'atencion'
+        : 'reciente'
   const { puntos, votos } = reporte.validacion
 
   return (
-    <article className={`${styles.tarjeta} ${demorado ? styles.tarjetaDemorada : ''}`}>
+    <article className={`${styles.tarjeta} ${demorado ? styles.tarjetaDemorada : ''}`} data-urgencia={urgencia ?? undefined}>
       <div className={styles.foto}>
         <FotoReporte foto={reporte.foto} />
       </div>
@@ -424,9 +463,13 @@ function TarjetaPendiente({
           <span className={styles.categoria}>{categoria}</span>
           <span className={styles.comuna}>{reporte.comuna || 'Sin comuna'}</span>
           <EstadoPildora estado={reporte.estado} />
-          {demorado && (
-            <span className={styles.demorado} title={`Lleva más de ${UMBRAL_DEMORADO_HORAS} horas esperando`}>
-              Demorado
+          {urgencia && (
+            <span
+              className={styles.urgencia}
+              data-urgencia={urgencia}
+              title={urgencia === 'demorado' ? `Lleva más de ${UMBRAL_DEMORADO_HORAS} horas esperando` : 'Tiempo que lleva esperando el veredicto'}
+            >
+              {urgencia === 'demorado' ? 'Demorado' : urgencia === 'atencion' ? 'Más de 24 h' : 'Menos de 24 h'}
             </span>
           )}
         </div>
@@ -439,7 +482,7 @@ function TarjetaPendiente({
           </span>
         </p>
         <div className={styles.acciones}>
-          <button type="button" className={comun.accionBoton} onClick={onAbrir}>
+          <button type="button" className={styles.botonPrincipal} onClick={onAbrir}>
             Ver y dar veredicto
           </button>
         </div>

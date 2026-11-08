@@ -63,25 +63,47 @@
 
 .tarjeta {
   display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 16px;
   height: 100%;
-  padding: 14px;
+  padding: 16px;
   background: var(--ca-surface);
   border: 1px solid var(--ca-line);
+  border-left: 4px solid var(--ca-line);
   border-radius: 12px;
   box-shadow: var(--shadow-card);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
-/* Los que llevan mucho esperando se distinguen con un borde, además de la etiqueta. */
+.tarjeta:hover {
+  border-color: rgba(28, 169, 201, 0.55);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.4);
+}
+
+/* La franja de la izquierda dice de un vistazo cuánto lleva esperando. */
+.tarjeta[data-urgencia='reciente'] {
+  border-left-color: var(--ca-signal);
+}
+
+.tarjeta[data-urgencia='atencion'] {
+  border-left-color: #f59e0b;
+}
+
+.tarjeta[data-urgencia='demorado'] {
+  border-left-color: var(--ca-danger);
+}
+
+/* Los que llevan mucho esperando se distinguen además con el borde, como antes. */
 .tarjetaDemorada {
   border-color: var(--ca-danger);
 }
 
 .foto {
-  width: 112px;
+  width: 132px;
   align-self: start;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -110,13 +132,89 @@
   color: var(--ca-muted);
 }
 
-.demorado {
-  padding: 2px 8px;
+.urgencia {
+  padding: 2px 9px;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--ca-danger);
-  border: 1px solid var(--ca-danger);
+  border: 1px solid currentColor;
   border-radius: 999px;
+}
+
+.urgencia[data-urgencia='reciente'] {
+  color: var(--ca-signal);
+}
+
+.urgencia[data-urgencia='atencion'] {
+  color: #f59e0b;
+}
+
+.urgencia[data-urgencia='demorado'] {
+  color: var(--ca-danger);
+  background: rgba(224, 101, 107, 0.12);
+}
+
+/* «Ver y dar veredicto»: la acción principal de la tarjeta, rellena con el color de acento. */
+.botonPrincipal {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--ca-signal);
+  color: var(--ca-base);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.botonPrincipal:hover {
+  background: var(--ca-signal-dark);
+}
+
+.botonPrincipal:focus-visible {
+  outline: 2px solid var(--ca-ink);
+  outline-offset: 2px;
+}
+
+/* ---- Filtros: en un teléfono se pliegan tras un botón ---- */
+
+.botonFiltros {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 9px 16px;
+  border: 1px solid var(--ca-line);
+  border-radius: 10px;
+  background: var(--ca-surface);
+  color: var(--ca-ink);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.botonFiltros[aria-expanded='true'] {
+  border-color: var(--ca-signal);
+}
+
+.contadorFiltros {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--ca-base);
+  background: var(--ca-signal);
+}
+
+@media (max-width: 640px) {
+  .botonFiltros {
+    display: inline-flex;
+  }
+
+  .plegado {
+    display: none;
+  }
 }
 
 .descripcion {
@@ -153,12 +251,21 @@
 
 @media (max-width: 480px) {
   .tarjeta {
-    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-columns: 92px minmax(0, 1fr);
     gap: 12px;
+    padding: 14px;
   }
 
   .foto {
-    width: 88px;
+    width: 92px;
+  }
+}
+
+@media print {
+  .urgencia,
+  .tarjeta {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 }
 

@@ -12,6 +12,7 @@ import { db } from '../../firebase/config'
 import { useAuth } from '../../context/AuthContext'
 import Navbar from '../../components/Navbar/Navbar'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
+import IconoCategoria from '../../components/Reportes/IconoCategoria'
 import { mapearReporte } from '../../components/Reportes/reporte'
 import type { Reporte } from '../../components/Reportes/reporte'
 import { COLOR_POR_ESTADO, ETIQUETA_POR_ESTADO } from '../../constants/reportes'
@@ -109,15 +110,16 @@ export default function Historial() {
         {!cargando && !error && reportes.length > 0 && (
           <div className={styles.tableWrapper}>
             {/* En el teléfono cada fila se muestra como una tarjeta: las
-                celdas llevan data-label para rotular cada dato (ver CSS). */}
+                celdas llevan data-label para rotular cada dato (ver CSS). Según el ancho se quitan columnas
+                menos importantes: «Organismo» por debajo de 1180 px y «Confirmaciones» por debajo de 960 px. */}
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Categoría</th>
                   <th>Descripción</th>
                   <th>Estado</th>
-                  <th>Organismo</th>
-                  <th>Confirmaciones</th>
+                  <th className={styles.colOrganismo}>Organismo</th>
+                  <th className={styles.colConfirmaciones}>Confirmaciones</th>
                   <th>Fecha</th>
                   <th>Detalle</th>
                 </tr>
@@ -126,10 +128,15 @@ export default function Historial() {
                 {reportes.map((reporte) => (
                   <tr key={reporte.id}>
                     <td data-label="Categoría" className={styles.categoria}>
-                      {etiqueta(reporte.categoria)}
+                      <span className={styles.categoriaCelda}>
+                        <IconoCategoria categoria={reporte.categoria} />
+                        <span>{etiqueta(reporte.categoria)}</span>
+                      </span>
                     </td>
                     <td data-label="Descripción" className={styles.descripcion}>
-                      {reporte.descripcion}
+                      <span className={styles.descripcionTexto} title={reporte.descripcion}>
+                        {reporte.descripcion}
+                      </span>
                     </td>
                     <td data-label="Estado">
                       <span
@@ -140,18 +147,26 @@ export default function Historial() {
                             COLOR_POR_ESTADO[reporte.estado] ?? COLOR_POR_ESTADO.reportado,
                         }}
                       >
+                        <span
+                          className={styles.puntoEstado}
+                          data-punto-estado
+                          style={{ background: COLOR_POR_ESTADO[reporte.estado] ?? COLOR_POR_ESTADO.reportado }}
+                          aria-hidden="true"
+                        />
                         {ETIQUETA_POR_ESTADO[reporte.estado] ?? reporte.estado}
                       </span>
                     </td>
-                    <td data-label="Organismo">{reporte.organismoNombre ?? '—'}</td>
-                    <td data-label="Confirmaciones">
+                    <td data-label="Organismo" className={styles.colOrganismo}>
+                      {reporte.organismoNombre ?? '—'}
+                    </td>
+                    <td data-label="Confirmaciones" className={styles.colConfirmaciones}>
                       {confirmaciones[reporte.id] ?? '…'}
                     </td>
-                    <td data-label="Fecha">
+                    <td data-label="Fecha" className={styles.fecha}>
                       {reporte.fecha
                         ? reporte.fecha.toLocaleDateString('es-CL', {
                             day: 'numeric',
-                            month: 'long',
+                            month: 'short',
                             year: 'numeric',
                           })
                         : '—'}
@@ -163,6 +178,9 @@ export default function Historial() {
                         onClick={() => setDetalleId(reporte.id)}
                       >
                         Ver detalle
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="m9 6 6 6-6 6" />
+                        </svg>
                       </button>
                     </td>
                   </tr>
