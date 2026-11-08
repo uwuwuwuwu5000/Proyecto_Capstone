@@ -193,7 +193,7 @@ export default function Landing() {
         >
           <Sobretitulo>Tu ciudad, en tus manos</Sobretitulo>
           <h1 className={styles.titulo}>
-            Hagamos de nuestro barrio <span className={styles.acento}>un lugar mejor.</span>
+            Hagamos de nuestra ciudad <span className={styles.acento}>un lugar mejor.</span>
           </h1>
           <p className={styles.parrafo}>
             Reporta lo que necesita atención, conecta con tu comunidad y sé parte activa del cambio.
