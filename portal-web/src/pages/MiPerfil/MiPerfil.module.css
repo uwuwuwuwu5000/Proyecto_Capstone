@@ -184,6 +184,8 @@
 }
 
 .salir {
+  /* Separado de los enlaces de términos y privacidad, para no tocar «Cerrar sesión» sin querer. */
+  margin-top: 28px;
   padding: 9px 18px;
   border: 1px solid var(--ca-danger);
   border-radius: 8px;

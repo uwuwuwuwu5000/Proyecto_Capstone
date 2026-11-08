@@ -4,8 +4,9 @@ import { collection, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import { useRequiereAdmin } from '../../hooks/useRequiereAdmin'
 import GraficoColumnas from '../../components/Graficos/GraficoColumnas'
-import GraficoBarras from '../../components/Graficos/GraficoBarras'
+import GraficoTorta from '../../components/Graficos/GraficoTorta'
 import type { FilaBarra } from '../../components/Graficos/GraficoBarras'
+import IconoKpi from '../../components/Iconos/IconoKpi'
 import DetalleReporte from '../../components/Reportes/DetalleReporte'
 import { EstadoPildora } from '../../components/Reportes/TarjetaReporte'
 import { mapearReporte } from '../../components/Reportes/reporte'
@@ -343,14 +344,20 @@ export default function AdminEstadisticas() {
           <>
             <section className={styles.kpis} aria-label="Resumen">
               <div className={styles.kpi}>
-                <span className={styles.kpiEtiqueta}>Reportes</span>
+                <span className={styles.kpiEtiqueta}>
+                  <IconoKpi tipo="reportes" />
+                  Reportes
+                </span>
                 <span className={styles.kpiValor}>{estadisticas.total.toLocaleString('es-CL')}</span>
                 <span className={styles.kpiNota}>
                   en {estadisticas.comunasDistintas} comuna(s)
                 </span>
               </div>
               <div className={styles.kpi}>
-                <span className={styles.kpiEtiqueta}>Sin operador</span>
+                <span className={styles.kpiEtiqueta}>
+                  <IconoKpi tipo="sinOperador" />
+                  Sin operador
+                </span>
                 <span className={styles.kpiValor}>
                   {estadisticas.sinOperador.toLocaleString('es-CL')}
                 </span>
@@ -369,7 +376,10 @@ export default function AdminEstadisticas() {
                 </span>
               </div>
               <div className={styles.kpi}>
-                <span className={styles.kpiEtiqueta}>Sin resolver</span>
+                <span className={styles.kpiEtiqueta}>
+                  <IconoKpi tipo="sinResolver" />
+                  Sin resolver
+                </span>
                 <span className={styles.kpiValor}>
                   {estadisticas.sinResolver.toLocaleString('es-CL')}
                 </span>
@@ -378,7 +388,10 @@ export default function AdminEstadisticas() {
                 </span>
               </div>
               <div className={styles.kpi}>
-                <span className={styles.kpiEtiqueta}>Resueltos o cerrados</span>
+                <span className={styles.kpiEtiqueta}>
+                  <IconoKpi tipo="finalizados" />
+                  Resueltos o cerrados
+                </span>
                 <span className={styles.kpiValor}>
                   {estadisticas.finalizados.toLocaleString('es-CL')}
                 </span>
@@ -484,18 +497,18 @@ export default function AdminEstadisticas() {
                 <div className={styles.dosColumnas}>
                   <section className={styles.tarjeta}>
                     <h2 className={styles.tarjetaTitulo}>Por estado</h2>
-                    <GraficoBarras filas={estadisticas.filasEstado} total={estadisticas.total} />
+                    <GraficoTorta titulo="Por estado" filas={estadisticas.filasEstado} total={estadisticas.total} mostrarCeros />
                   </section>
                   <section className={styles.tarjeta}>
                     <h2 className={styles.tarjetaTitulo}>Por categoría</h2>
-                    <GraficoBarras filas={estadisticas.filasCategoria} total={estadisticas.total} />
+                    <GraficoTorta titulo="Por categoría" filas={estadisticas.filasCategoria} total={estadisticas.total} />
                   </section>
                 </div>
 
                 <div className={styles.dosColumnas}>
                   <section className={styles.tarjeta}>
                     <h2 className={styles.tarjetaTitulo}>Comunas con más reportes</h2>
-                    <GraficoBarras filas={estadisticas.filasComuna} total={estadisticas.total} />
+                    <GraficoTorta titulo="Comunas con más reportes" filas={estadisticas.filasComuna} total={estadisticas.total} />
                   </section>
                   <section className={styles.tarjeta}>
                     <h2 className={styles.tarjetaTitulo}>Abiertos más antiguos</h2>

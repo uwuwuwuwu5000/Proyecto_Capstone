@@ -29,11 +29,15 @@ export function agruparPorComuna(reportes: Reporte[], catalogo: ComunaCatalogo[]
   return agruparPorComunaComun(reportes, catalogo)
 }
 
-/** Colores del mapa: rojo de alerta del portal, de menos a más intenso. */
-const ROJO = '224, 101, 107'
-const OPACIDAD_RELLENO = [0.1, 0.22, 0.38, 0.55, 0.72, 0.9]
+/**
+ * Escala del mapa de calor, de pocos a muchos reportes sin resolver: azul → celeste → amarillo → naranja → rojo. Evita
+ * el verde, así no depende de distinguir rojo de verde. Las comunas sin reportes sin resolver (tramo 0) no llevan color.
+ */
+const ESCALA = ['59, 130, 246', '34, 184, 207', '250, 204, 21', '251, 146, 60', '239, 68, 68']
+const OPACIDAD_RELLENO = 0.6
 
 export function colorDeTramo(tramo: number): { relleno: string; borde: string } {
   if (tramo <= 0) return { relleno: 'rgba(17, 24, 39, 0.08)', borde: 'rgba(92, 103, 125, 0.95)' }
-  return { relleno: `rgba(${ROJO}, ${OPACIDAD_RELLENO[tramo]})`, borde: `rgba(${ROJO}, 1)` }
+  const rgb = ESCALA[Math.min(tramo, ESCALA.length) - 1]
+  return { relleno: `rgba(${rgb}, ${OPACIDAD_RELLENO})`, borde: `rgba(${rgb}, 1)` }
 }

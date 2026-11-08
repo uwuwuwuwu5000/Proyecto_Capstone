@@ -449,18 +449,24 @@ export default function AdminMapaCalor() {
               <p className={styles.nota}>Cargando…</p>
             ) : (
               <ol className={styles.listaRanking}>
-                {filas.slice(0, 10).map((f) => (
-                  <li key={f.codigo}>
-                    <button
-                      type="button"
-                      className={`${styles.filaRanking} ${f.codigo === seleccion ? styles.filaActiva : ''}`}
-                      onClick={() => setSeleccion(f.codigo)}
-                    >
-                      <span>{f.nombre}</span>
-                      <strong>{f.estadistica?.sinResolver ?? 0}</strong>
-                    </button>
-                  </li>
-                ))}
+                {filas.slice(0, 10).map((f) => {
+                  const valor = f.estadistica?.sinResolver ?? 0
+                  return (
+                    <li key={f.codigo}>
+                      <button
+                        type="button"
+                        className={`${styles.filaRanking} ${f.codigo === seleccion ? styles.filaActiva : ''}`}
+                        onClick={() => setSeleccion(f.codigo)}
+                      >
+                        <span>{f.nombre}</span>
+                        {/* El número lleva el color de su tramo en el mapa; el 0, sin color. */}
+                        <strong style={{ color: valor > 0 ? colorDeTramo(tramoDeIntensidad(valor, maximo)).borde : 'var(--ca-muted)' }}>
+                          {valor}
+                        </strong>
+                      </button>
+                    </li>
+                  )
+                })}
               </ol>
             )}
           </section>
